@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* TAQAT design system (ported from prototype) */
+@import "../styles/tokens.css";
+@import "../styles/foundations.css";
+@import "../styles/app.css";
+@import "../styles/public.css";
+@import "../styles/refine.css";
+
+/*
+  Map the most-used design tokens to Tailwind v4 utilities.
+  Because they point at CSS vars, [data-theme="dark"] swaps automatically.
+*/
+@theme {
+  /* Brand + semantic colors */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  /* Surface roles */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* Text roles */
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+
+  /* Status */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  /* Radii */
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-tile: var(--r-tile);
+  --radius-2xl: var(--r-2xl);
+  --radius-pill: var(--r-pill);
+
+  /* Fonts */
+  --font-ar: var(--font-ar);
+  --font-lt: var(--font-lt);
+  --font-num: var(--font-num);
+}
+
+/* tokens.css base rules already style <body>; just guarantee full height. */
+html,
+body {
+  min-height: 100%;
+}

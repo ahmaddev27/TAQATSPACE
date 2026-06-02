@@ -1,0 +1,341 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Seeders;
+
+use App\Enums\InvoiceStatus;
+use App\Enums\SeatStatus;
+use App\Enums\SeatType;
+use App\Enums\UserRole;
+use App\Enums\WorkspaceStatus;
+use App\Models\Announcement;
+use App\Models\BookingRequest;
+use App\Models\InternetPackage;
+use App\Models\Invoice;
+use App\Models\Message;
+use App\Models\Review;
+use App\Models\Seat;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Models\Workspace;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+
+class DatabaseSeeder extends Seeder
+{
+    private int $invoiceCounter = 1000;
+
+    public function run(): void
+    {
+        DB::transaction(function (): void {
+            $this->seedRoles();
+
+            $this->seedAdmin();
+            $freelancers = $this->seedFreelancers(20);
+            $activeWorkspaces = $this->seedOwnersAndWorkspaces();
+
+            $subscriptions = $this->seedSubscriptions($freelancers, $activeWorkspaces);
+            $this->seedInvoices($subscriptions);
+            $this->seedBookingRequests($freelancers, $activeWorkspaces);
+            $this->seedMessages($activeWorkspaces);
+            $this->seedAnnouncements($activeWorkspaces);
+            $this->seedReviews($subscriptions, $activeWorkspaces);
+        });
+
+        $this->command?->info('Seeded admin: admin@taqat.space (password: password)');
+    }
+
+    private function seedRoles(): void
+    {
+        foreach (UserRole::cases() as $role) {
+            Role::findOrCreate($role->value, 'web');
+        }
+    }
+
+    private function seedAdmin(): User
+    {
+        $admin = User::factory()->admin()->create([
+            'name' => 'مشرف المنصّة',
+            'email' => 'admin@taqat.space',
+        ]);
+        $admin->assignRole(UserRole::Admin->value);
+
+        return $admin;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function seedFreelancers(int $count): Collection
+    {
+        return User::factory()->freelancer()->count($count)->create()
+            ->each(fn (User $user) => $user->assignRole(UserRole::Freelancer->value));
+    }
+
+    /**
+     * Five owners, each with exactly one workspace (3 active, 1 pending, 1 suspended),
+     * plus seats and internet packages. Returns the active workspaces only.
+     *
+     * @return Collection<int, Workspace>
+     */
+    private function seedOwnersAndWorkspaces(): Collection
+    {
+        $statuses = [
+            WorkspaceStatus::Active,
+            WorkspaceStatus::Active,
+            WorkspaceStatus::Active,
+            WorkspaceStatus::Pending,
+            WorkspaceStatus::Suspended,
+        ];
+
+        $active = collect();
+
+        foreach ($statuses as $i => $status) {
+            $owner = User::factory()->owner()->create();
+            $owner->assignRole(UserRole::WorkspaceOwner->value);
+
+            $location = GazaData::LOCATIONS[$i % count(GazaData::LOCATIONS)];
+            $totalSeats = random_int(10, 20);
+
+            $workspace = Workspace::factory()->create([
+                'owner_id' => $owner->id,
+                'name' => GazaData::WORKSPACE_NAMES[$i % count(GazaData::WORKSPACE_NAMES)],
+                'city' => $location['city'],
+                'address' => $location['area'].'، '.$location['city'],
+                'total_seats' => $totalSeats,
+                'status' => $status,
+            ]);
+
+            $this->seedSeats($workspace, $totalSeats);
+            InternetPackage::factory()->count(random_int(2, 3))->create([
+                'workspace_id' => $workspace->id,
+            ]);
+
+            if ($status === WorkspaceStatus::Active) {
+                $active->push($workspace);
+            }
+        }
+
+        return $active;
+    }
+
+    private function seedSeats(Workspace $workspace, int $count): void
+    {
+        for ($n = 1; $n <= $count; $n++) {
+            Seat::factory()->create([
+                'workspace_id' => $workspace->id,
+                'seat_number' => 'A'.$n,
+                'type' => $n % 5 === 0 ? SeatType::PrivateOffice : ($n % 2 === 0 ? SeatType::Fixed : SeatType::Flexible),
+                'status' => SeatStatus::Available,
+            ]);
+        }
+    }
+
+    /**
+     * One active subscription per freelancer (seat assigned), plus a set of
+     * historical (expired/cancelled) subscriptions for realistic volume.
+     *
+     * @param  Collection<int, User>  $freelancers
+     * @param  Collection<int, Workspace>  $activeWorkspaces
+     * @return Collection<int, Subscription>
+     */
+    private function seedSubscriptions(Collection $freelancers, Collection $activeWorkspaces): Collection
+    {
+        $subscriptions = collect();
+
+        foreach ($freelancers as $i => $freelancer) {
+            $workspace = $activeWorkspaces[$i % $activeWorkspaces->count()];
+            $seat = $workspace->seats()
+                ->where('status', SeatStatus::Available->value)
+                ->whereNull('assigned_member_id')
+                ->first();
+
+            $subscription = Subscription::factory()->create([
+                'member_id' => $freelancer->id,
+                'workspace_id' => $workspace->id,
+                'seat_id' => $seat?->id,
+                'monthly_price' => $workspace->price_per_month,
+            ]);
+
+            $seat?->update([
+                'status' => SeatStatus::Occupied,
+                'assigned_member_id' => $freelancer->id,
+            ]);
+
+            $subscriptions->push($subscription);
+        }
+
+        // Historical subscriptions (members who have come and gone).
+        for ($i = 0; $i < 30; $i++) {
+            $state = fake()->boolean() ? 'expired' : 'cancelled';
+            $workspace = $activeWorkspaces->random();
+
+            $subscriptions->push(
+                Subscription::factory()->{$state}()->create([
+                    'member_id' => $freelancers->random()->id,
+                    'workspace_id' => $workspace->id,
+                    'seat_id' => null,
+                    'monthly_price' => $workspace->price_per_month,
+                ])
+            );
+        }
+
+        return $subscriptions;
+    }
+
+    /**
+     * Three months of invoice history per subscription, mixed statuses.
+     *
+     * @param  Collection<int, Subscription>  $subscriptions
+     */
+    private function seedInvoices(Collection $subscriptions): void
+    {
+        foreach ($subscriptions as $subscription) {
+            for ($monthsAgo = 2; $monthsAgo >= 0; $monthsAgo--) {
+                $dueDate = Carbon::now()->startOfMonth()->subMonths($monthsAgo)->addDays(14);
+
+                [$status, $paidAt] = $this->invoiceStatusFor($monthsAgo, $dueDate);
+
+                Invoice::factory()->create([
+                    'subscription_id' => $subscription->id,
+                    'amount' => $subscription->monthly_price,
+                    'due_date' => $dueDate,
+                    'status' => $status,
+                    'paid_at' => $paidAt,
+                    'invoice_number' => sprintf('TAQAT-%s-%04d', date('Y'), $this->invoiceCounter++),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @return array{0: InvoiceStatus, 1: ?Carbon}
+     */
+    private function invoiceStatusFor(int $monthsAgo, Carbon $dueDate): array
+    {
+        if ($monthsAgo === 0) {
+            return [InvoiceStatus::Pending, null];
+        }
+
+        // Older invoices are mostly paid, occasionally overdue.
+        if (fake()->boolean(80)) {
+            return [InvoiceStatus::Paid, (clone $dueDate)->subDays(random_int(0, 10))];
+        }
+
+        return [InvoiceStatus::Overdue, null];
+    }
+
+    /**
+     * 10 pending, 5 approved, 3 rejected booking requests.
+     *
+     * @param  Collection<int, User>  $freelancers
+     * @param  Collection<int, Workspace>  $activeWorkspaces
+     */
+    private function seedBookingRequests(Collection $freelancers, Collection $activeWorkspaces): void
+    {
+        $make = function (string $state, int $count) use ($freelancers, $activeWorkspaces): void {
+            for ($i = 0; $i < $count; $i++) {
+                $workspace = $activeWorkspaces->random();
+                $factory = BookingRequest::factory();
+
+                $factory = match ($state) {
+                    'approved' => $factory->approved($workspace->owner_id),
+                    'rejected' => $factory->rejected($workspace->owner_id),
+                    default => $factory,
+                };
+
+                $factory->create([
+                    'member_id' => $freelancers->random()->id,
+                    'workspace_id' => $workspace->id,
+                ]);
+            }
+        };
+
+        $make('pending', 10);
+        $make('approved', 5);
+        $make('rejected', 3);
+    }
+
+    /**
+     * Per active workspace: 20 direct messages (owner → members) + 5 broadcasts.
+     *
+     * @param  Collection<int, Workspace>  $activeWorkspaces
+     */
+    private function seedMessages(Collection $activeWorkspaces): void
+    {
+        foreach ($activeWorkspaces as $workspace) {
+            $memberIds = Subscription::query()
+                ->where('workspace_id', $workspace->id)
+                ->whereNotNull('seat_id')
+                ->pluck('member_id')
+                ->all();
+
+            if ($memberIds === []) {
+                continue;
+            }
+
+            for ($i = 0; $i < 20; $i++) {
+                Message::factory()->create([
+                    'sender_id' => $workspace->owner_id,
+                    'receiver_id' => Arr::random($memberIds),
+                    'workspace_id' => $workspace->id,
+                ]);
+            }
+
+            Message::factory()->broadcast()->count(5)->create([
+                'sender_id' => $workspace->owner_id,
+                'workspace_id' => $workspace->id,
+            ]);
+        }
+    }
+
+    /**
+     * A few published announcements per active workspace.
+     *
+     * @param  Collection<int, Workspace>  $activeWorkspaces
+     */
+    private function seedAnnouncements(Collection $activeWorkspaces): void
+    {
+        foreach ($activeWorkspaces as $workspace) {
+            Announcement::factory()->count(3)->create([
+                'workspace_id' => $workspace->id,
+                'created_by' => $workspace->owner_id,
+            ]);
+        }
+    }
+
+    /**
+     * 15 reviews across active workspaces (one per member/workspace pair),
+     * then recompute each workspace's denormalized avg_rating.
+     *
+     * @param  Collection<int, Subscription>  $subscriptions
+     * @param  Collection<int, Workspace>  $activeWorkspaces
+     */
+    private function seedReviews(Collection $subscriptions, Collection $activeWorkspaces): void
+    {
+        $pairs = $subscriptions
+            ->whereNotNull('seat_id')
+            ->unique(fn (Subscription $s) => $s->member_id.'|'.$s->workspace_id)
+            ->take(15);
+
+        foreach ($pairs as $subscription) {
+            Review::factory()->create([
+                'member_id' => $subscription->member_id,
+                'workspace_id' => $subscription->workspace_id,
+            ]);
+        }
+
+        foreach ($activeWorkspaces as $workspace) {
+            $average = Review::query()->where('workspace_id', $workspace->id)->avg('rating');
+
+            if ($average !== null) {
+                $workspace->update(['avg_rating' => round((float) $average, 2)]);
+            }
+        }
+    }
+}

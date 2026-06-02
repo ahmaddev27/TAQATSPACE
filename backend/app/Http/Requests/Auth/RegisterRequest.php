@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Auth;
+
+use App\Enums\UserRole;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class RegisterRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Role-conditional rules. Admins are never publicly registerable.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        $rules = [
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', Rule::in(UserRole::registerable())],
+            'phone' => ['nullable', 'string', 'max:30'],
+        ];
+
+        if ($this->input('role') === UserRole::Freelancer->value) {
+            $rules['specialty'] = ['nullable', 'string', 'max:120'];
+            $rules['bio'] = ['nullable', 'string', 'max:1000'];
+        }
+
+        if ($this->input('role') === UserRole::WorkspaceOwner->value) {
+            $rules['license_file'] = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
+            $rules['id_document'] = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
+        }
+
+        return $rules;
+    }
+}
