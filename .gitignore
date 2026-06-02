@@ -22,3 +22,6 @@ Thumbs.db
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# CI deploy keys / local secrets (never commit)
+/deploy/
