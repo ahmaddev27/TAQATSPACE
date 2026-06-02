@@ -9,19 +9,22 @@ set -euo pipefail
 KEY_FILE="deploy/taqat_deploy_key"
 [ -f "$KEY_FILE" ] || { echo "Missing $KEY_FILE — run: ssh-keygen -t ed25519 -f $KEY_FILE -N '' -C github-actions-deploy@taqat.space"; exit 1; }
 
+# Discovered from cPanel: host 68.178.169.85, account "space" (home /home/space), port 22.
 echo "== Secrets (connection) =="
 gh secret set SSH_HOST --body "68.178.169.85"
-read -rp "cPanel SSH username (main account): " SSH_USER && gh secret set SSH_USER --body "$SSH_USER"
+gh secret set SSH_USER --body "space"
 read -rp "cPanel SSH port [22]: " SSH_PORT && gh secret set SSH_PORT --body "${SSH_PORT:-22}"
 gh secret set SSH_PRIVATE_KEY < "$KEY_FILE"
 
+# Backend app roots — set each sub-domain's Document Root in cPanel to "<path>/public".
 echo "== Variables (paths + API URLs) =="
-read -rp "PROD_API_PATH    (e.g. /home/USER/api.taqat.space): " V && gh variable set PROD_API_PATH --body "$V"
-read -rp "PROD_WEB_PATH    (e.g. /home/USER/taqat.space): " V && gh variable set PROD_WEB_PATH --body "$V"
+gh variable set PROD_API_PATH --body "/home/space/public_html/api.taqat.space"
+gh variable set STAGING_API_PATH --body "/home/space/public_html/api.staging.taqat.space"
 gh variable set PROD_API_URL --body "https://api.taqat.space/api"
-read -rp "STAGING_API_PATH (e.g. /home/USER/api.staging.taqat.space): " V && gh variable set STAGING_API_PATH --body "$V"
-read -rp "STAGING_WEB_PATH (e.g. /home/USER/staging.taqat.space): " V && gh variable set STAGING_WEB_PATH --body "$V"
 gh variable set STAGING_API_URL --body "https://api.staging.taqat.space/api"
+# Frontend Node-app roots — confirm after creating the apps in cPanel "Setup Node.js App".
+read -rp "PROD_WEB_PATH    [/home/space/nodeapps/taqat.space]: " V && gh variable set PROD_WEB_PATH --body "${V:-/home/space/nodeapps/taqat.space}"
+read -rp "STAGING_WEB_PATH [/home/space/nodeapps/staging.taqat.space]: " V && gh variable set STAGING_WEB_PATH --body "${V:-/home/space/nodeapps/staging.taqat.space}"
 
 echo
 echo "Done. Next: add deploy/taqat_deploy_key.pub to cPanel → SSH Access → Manage SSH Keys (Import + Authorize)."

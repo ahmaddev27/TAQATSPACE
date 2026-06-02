@@ -11,6 +11,9 @@ Workflows: [`.github/workflows/deploy-production.yml`](.github/workflows/deploy-
 
 > The deploy jobs **skip safely** (a `preflight` job) until the secrets below are set — so merging now won't produce red runs.
 
+## ⚠️ Current blocker — enable SSH shell
+SSH **key auth + SFTP work** (server `68.178.169.85`, account `space`, home `/home/space`, port `22`), but **shell command execution is disabled** ("Shell access is not enabled"). The deploy workflows need shell to run `composer`/`php artisan`. **Action:** ask the host/support to **enable SSH shell access for cPanel account `space`** (jailshell is fine). Once enabled, set the secrets below and the pipeline works end‑to‑end.
+
 ---
 
 ## 1. GitHub configuration (one-time)
@@ -19,21 +22,21 @@ Workflows: [`.github/workflows/deploy-production.yml`](.github/workflows/deploy-
 | Name | Value |
 |------|-------|
 | `SSH_HOST` | `68.178.169.85` |
-| `SSH_PORT` | cPanel SSH port (usually `22`; some hosts use `2222`/`21098`) |
-| `SSH_USER` | **main cPanel account username** (NOT an FTP account like `live@…`) |
+| `SSH_PORT` | `22` |
+| `SSH_USER` | `space` |
 | `SSH_PRIVATE_KEY` | contents of `deploy/taqat_deploy_key` (generated locally; never committed) |
 
 ### Variables — same screen, **Variables** tab
 | Name | Example value |
 |------|---------------|
-| `PROD_API_PATH` | `/home/<cpaneluser>/api.taqat.space` |
-| `PROD_WEB_PATH` | `/home/<cpaneluser>/taqat.space` |
+| `PROD_API_PATH` | `/home/space/public_html/api.taqat.space` |
 | `PROD_API_URL`  | `https://api.taqat.space/api` |
-| `STAGING_API_PATH` | `/home/<cpaneluser>/api.staging.taqat.space` |
-| `STAGING_WEB_PATH` | `/home/<cpaneluser>/staging.taqat.space` |
+| `STAGING_API_PATH` | `/home/space/public_html/api.staging.taqat.space` |
 | `STAGING_API_URL`  | `https://api.staging.taqat.space/api` |
+| `PROD_WEB_PATH` | Node-app root for `taqat.space` (set after creating the Node app, e.g. `/home/space/nodeapps/taqat.space`) |
+| `STAGING_WEB_PATH` | Node-app root for `staging.taqat.space` (e.g. `/home/space/nodeapps/staging.taqat.space`) |
 
-Get the exact paths from cPanel → **Domains** (the “Document Root” of each sub‑domain; the backend path is that folder’s parent, since Laravel’s docroot is `…/public`).
+**Important (backend):** in cPanel → **Domains**, set the Document Root of `api.taqat.space` to `…/api.taqat.space/public` and `api.staging.taqat.space` to `…/api.staging.taqat.space/public` (Laravel serves from `public/`). The `*_API_PATH` above is the app root (the parent of `public`).
 
 Helper script (after `gh auth login`): [`scripts/setup-github-deploy.sh`](scripts/setup-github-deploy.sh).
 
