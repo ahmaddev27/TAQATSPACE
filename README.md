@@ -8,7 +8,7 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 
 | | |
 |---|---|
-| **Overall** | 17 / 80 tasks (21%) — **Phase 1 complete** (T004 CI deferred) |
+| **Overall** | 18 / 80 tasks (23%) — **Phase 1 complete** + CI/CD pipeline |
 | **Current phase** | Phase 1 ✅ → next: Phase 2 (M04 Public Site) |
 | **Current milestone** | M01 ✅ · M02 ✅ · M03 ✅ |
 | **Current sprint** | S2 done |
@@ -85,7 +85,7 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - ✅ **T001** — Next.js 16 init (App Router, TS, Tailwind v4, next-intl RTL ar/en, fonts, ported design tokens) · FE · SP3 · _`/` ar-rtl, `/en` en-ltr verified_
 - ✅ **T002** — Laravel 13 API-only init (CORS, Sanctum, .env) · BE · SP3 · _Sanctum/Spatie/Scramble, CORS, health, ApiResponse, role middleware; **S3 SDK deferred** (codeload throttled — local disk in dev, `composer require league/flysystem-aws-s3-v3` + `FILESYSTEM_DISK=s3` on server)_
 - ⏭ **T003** — Docker Compose dev env · DevOps · SP5 · _Deferred — Laragon native per decision_
-- ☐ **T004** — GitHub Actions CI (lint + test on PR) · DevOps · SP3
+- ✅ **T004** — GitHub Actions CI (backend tests + frontend lint/tsc/build on PR) · DevOps · SP3 · _+ SSH deploy workflows (prod/staging) — see [DEPLOYMENT.md](DEPLOYMENT.md)_
 - ✅ **T005** — Redis configuration (optional locally, env-gated) · DevOps · SP2 · _DB drivers default; `/api/health/redis` graceful (`unavailable`)_
 - ✅ **M01-DOC** — API docs: Scramble (`/docs/api` + `openapi.json`, 10 endpoints) + `composer api:docs` → Postman collection
 
@@ -123,4 +123,5 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 
 - **2026-06-02** — Project kickoff. Plan approved (Laravel 13 · Next.js 15 · MySQL 8 · AWS S3 · Laragon native · Scramble docs). Toolchain verified (PHP 8.4.5, Composer 2.8.10, Laravel 13.12, Node 24.11, MySQL 8.4.3). Scaffolded backend + frontend. Backend: 11 enums, 10 UUID models, all migrations (users/spatie/morphs UUID-adapted + core + supporting tables), CORS, role middleware, health endpoints, ApiResponse, auth FormRequests + UserResource. README converted to live progress tracker.
 - **2026-06-02 (cont.)** — **Backend Phase 1 complete & verified.** `migrate:fresh --seed` green; Gaza dataset seeded (factories + GazaData + DatabaseSeeder). Auth smoke-tested live: register 201, login 200, me 200, logout 204, forgot-password 200, 401/422 correct, health endpoints OK. Fixed: `package:discover` (skipped by earlier `--no-scripts`) registering Spatie/Scramble providers; `User` SPA notification overrides (queued verify/reset, frontend URLs). API docs live (`/docs/api`, `openapi.json` 10 paths) + Postman generated via `composer api:docs`. **Note:** AWS S3 SDK (`aws-sdk-php`) un-installable locally (codeload.github.com throttled ~839 B/s) → storage abstracted, local disk in dev, S3 enabled on server.
+- **2026-06-02 (cont.)** — **Pushed to GitHub + CI/CD.** Initial commit pushed to `ahmaddev27/TAQATSPACE` (`main`). Created `dev` branch (staging). Added CI (PHPUnit + frontend lint/tsc/build on PRs/pushes) and **SSH deploy workflows**: merge→`main` deploys production (`taqat.space` + `api.taqat.space`), merge→`dev` deploys staging. Next.js `output:'standalone'` for Node hosting. Deploy keypair generated (gitignored). Full guide in [DEPLOYMENT.md](DEPLOYMENT.md). Workflows skip until secrets configured. _Pending user: SSH user/port, install public key on cPanel, set Secrets/Variables, verify Node.js support, create subdomains+docroots+.env._
 - **2026-06-02 (cont.)** — **Frontend Phase 1 complete & verified → Phase 1 DONE.** Next.js 16 + React 19 + Tailwind v4 (CSS-first `@theme`) + next-intl (ar default RTL `/`, en `/en`). Design system ported verbatim from `DOCS/Desing` (tokens + 5 CSS files + typed `ui/` primitives + icons). Built: auth layer (`lib/api` server-fetch, route handlers, AuthProvider, middleware), 5 auth screens (login, freelancer/workspace register, forgot/reset). Gates green: `next build` ✓, `tsc --noEmit` ✓, `lint` ✓. **Live integration verified:** login via Next proxy → backend sets `taqat_token` (HttpOnly) + `taqat_role`; wrong-pw 401; unauth `/owner`,`/freelancer` → 307 `/login?redirect=`; `/` ar-rtl, `/en` en-ltr. Remaining Phase-1 item: T004 GitHub Actions CI (deferred — needs git repo/remote).
