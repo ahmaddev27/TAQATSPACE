@@ -1,8 +1,10 @@
 name: Deploy Production
 
-# Fires when a PR is merged (push) to main. Backend → api.taqat.space,
-# Frontend → taqat.space. Connection details come from repo Secrets/Variables
-# (see DEPLOYMENT.md). Until they are set, the preflight job skips deploy.
+# Fires when a PR is merged (push) to main. Backend -> api.taqat.space
+# (composer + migrate run ON the cPanel server, PHP 8.3). Frontend -> Next.js
+# standalone served by a Node process on :3002 behind a mod_proxy .htaccess.
+# Server-side one-time setup (.env, storage, .htaccess, cron) is documented in
+# DEPLOYMENT.md and is NOT performed by this workflow.
 
 on:
   push:
@@ -13,6 +15,9 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+env:
+  NODE_PORT: "3002"
+
 jobs:
   preflight:
     runs-on: ubuntu-latest
@@ -21,11 +26,11 @@ jobs:
     steps:
       - id: check
         run: |
-          if [ -n "${{ secrets.SSH_HOST }}" ] && [ -n "${{ secrets.SSH_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          if [ -n "${{ secrets.SSH_HOST }}" ] && [ -n "${{ secrets.SSH_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] && [ -n "${{ vars.PROD_API_PATH }}" ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Deploy secrets not configured — skipping. See DEPLOYMENT.md."
+            echo "::warning::Deploy secrets/variables not configured — skipping. See DEPLOYMENT.md."
           fi
 
   deploy-backend:
@@ -35,35 +40,30 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          coverage: none
-      - name: Build production vendor
-        working-directory: backend
-        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
-      - name: Rsync backend → server
+      - name: Rsync backend code → server (vendor built on server)
         run: |
           rsync -az --delete \
             --exclude='.env' --exclude='.git' --exclude='.github' \
             --exclude='storage' --exclude='bootstrap/cache' \
-            --exclude='node_modules' --exclude='tests' \
+            --exclude='vendor' --exclude='node_modules' --exclude='tests' \
             -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519" \
             backend/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ vars.PROD_API_PATH }}/"
-      - name: Migrate + cache + restart
+      - name: Composer + migrate + cache (on server, PHP 8.3)
         run: |
           ssh -p "${{ secrets.SSH_PORT }}" -i ~/.ssh/id_ed25519 \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "cd '${{ vars.PROD_API_PATH }}' && \
+             composer install --no-dev --optimize-autoloader --no-interaction && \
              php artisan migrate --force && \
              php artisan config:cache && php artisan route:cache && php artisan view:cache && \
-             php artisan queue:restart"
+             php artisan queue:restart && \
+             curl -sf -m 10 -o /dev/null '${{ vars.PROD_API_URL }}/health' && echo backend-ok"
 
   deploy-frontend:
     needs: preflight
@@ -77,18 +77,16 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      - name: Build (standalone)
+      - name: Build standalone
         working-directory: frontend
         run: |
           npm ci
+          rm -rf .next
           npm run build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_URL }}
-      - name: Assemble standalone bundle
-        working-directory: frontend
-        run: |
           cp -r .next/static .next/standalone/.next/static
           if [ -d public ]; then cp -r public .next/standalone/public; fi
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_URL }}
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -97,11 +95,14 @@ jobs:
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
       - name: Rsync standalone → server
         run: |
-          rsync -az --delete \
+          rsync -az --delete --exclude='app.log' \
             -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519" \
             frontend/.next/standalone/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ vars.PROD_WEB_PATH }}/"
-      - name: Restart Node app (Passenger)
+      - name: Restart Node (kill by port + start detached)
         run: |
           ssh -p "${{ secrets.SSH_PORT }}" -i ~/.ssh/id_ed25519 \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "mkdir -p '${{ vars.PROD_WEB_PATH }}/tmp' && touch '${{ vars.PROD_WEB_PATH }}/tmp/restart.txt'"
+            "fuser -k ${{ env.NODE_PORT }}/tcp 2>/dev/null || true; sleep 2; \
+             cd '${{ vars.PROD_WEB_PATH }}' && \
+             nohup env PORT=${{ env.NODE_PORT }} HOSTNAME=127.0.0.1 NODE_ENV=production NEXT_PUBLIC_API_URL='${{ vars.PROD_API_URL }}' node server.js > app.log 2>&1 & disown; \
+             sleep 5; curl -sf -m 10 -o /dev/null http://127.0.0.1:${{ env.NODE_PORT }}/en && echo frontend-ok"
