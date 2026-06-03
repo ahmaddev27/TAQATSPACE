@@ -17,6 +17,9 @@ const NAMESPACES = [
   "admin",
   "explore",
   "workspace",
+  "invoices",
+  "messaging",
+  "announcements",
 ] as const;
 
 /** Recursively merge `source` into `target` (objects deep, scalars overwrite). */

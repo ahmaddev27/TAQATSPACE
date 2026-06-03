@@ -1,0 +1,64 @@
+{
+  "announcements": {
+    "title": "Announcements",
+    "subtitle": "Share offers, updates and alerts with your members",
+
+    "create": "Create announcement",
+    "edit": "Edit",
+    "delete": "Delete",
+    "publish": "Publish now",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+
+    "filterAll": "All",
+
+    "types": {
+      "offer": "Offer",
+      "info": "Info",
+      "alert": "Alert"
+    },
+
+    "status": {
+      "live": "Live",
+      "draft": "Draft",
+      "expired": "Expired"
+    },
+
+    "publishedAt": "Published",
+    "notPublished": "Not published",
+    "expiresAt": "Expires",
+    "noExpiry": "No expiry",
+
+    "newTitle": "New announcement",
+    "editTitle": "Edit announcement",
+
+    "fType": "Type",
+    "fTitle": "Title",
+    "fTitlePlaceholder": "e.g. 20% off the first month",
+    "fBody": "Message",
+    "fBodyPlaceholder": "Write the details your members will see…",
+    "fSchedule": "Publishing",
+    "publishNow": "Publish now",
+    "schedule": "Schedule",
+    "fPublishAt": "Publish at",
+    "fPublishAtHint": "It stays a draft until this time arrives.",
+    "fHasExpiry": "Set an expiry date",
+    "fExpiresAt": "Expires at",
+    "fExpiresAtHint": "After this time the announcement is hidden from members.",
+
+    "emptyTitle": "No announcements yet",
+    "emptyBody": "Create your first announcement to keep members in the loop.",
+    "emptyFiltered": "Nothing here",
+    "emptyFilteredBody": "No announcements match this filter.",
+
+    "created": "Announcement created",
+    "updated": "Announcement updated",
+    "published": "Announcement published",
+    "deleted": "Announcement deleted",
+    "saveFailed": "Could not save the announcement",
+    "publishFailed": "Could not publish the announcement",
+    "deleteFailed": "Could not delete the announcement",
+    "deleteConfirm": "Delete this announcement? This cannot be undone."
+  }
+}
