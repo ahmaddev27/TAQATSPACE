@@ -1,0 +1,64 @@
+{
+  "announcements": {
+    "title": "الإعلانات",
+    "subtitle": "شارك العروض والتحديثات والتنبيهات مع أعضائك",
+
+    "create": "إنشاء إعلان",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "publish": "نشر الآن",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+
+    "filterAll": "الكل",
+
+    "types": {
+      "offer": "عرض",
+      "info": "معلومة",
+      "alert": "تنبيه"
+    },
+
+    "status": {
+      "live": "منشور",
+      "draft": "مسودة",
+      "expired": "منتهٍ"
+    },
+
+    "publishedAt": "النشر",
+    "notPublished": "غير منشور",
+    "expiresAt": "ينتهي",
+    "noExpiry": "بدون انتهاء",
+
+    "newTitle": "إعلان جديد",
+    "editTitle": "تعديل الإعلان",
+
+    "fType": "النوع",
+    "fTitle": "العنوان",
+    "fTitlePlaceholder": "مثال: خصم ٢٠٪ على الشهر الأول",
+    "fBody": "الرسالة",
+    "fBodyPlaceholder": "اكتب التفاصيل التي سيراها أعضاؤك…",
+    "fSchedule": "النشر",
+    "publishNow": "نشر الآن",
+    "schedule": "جدولة",
+    "fPublishAt": "موعد النشر",
+    "fPublishAtHint": "يبقى الإعلان مسودة حتى يحين هذا الموعد.",
+    "fHasExpiry": "تحديد تاريخ انتهاء",
+    "fExpiresAt": "موعد الانتهاء",
+    "fExpiresAtHint": "بعد هذا الموعد يُخفى الإعلان عن الأعضاء.",
+
+    "emptyTitle": "لا توجد إعلانات بعد",
+    "emptyBody": "أنشئ أول إعلان لإبقاء أعضائك على اطلاع.",
+    "emptyFiltered": "لا شيء هنا",
+    "emptyFilteredBody": "لا توجد إعلانات مطابقة لهذا التصفية.",
+
+    "created": "تم إنشاء الإعلان",
+    "updated": "تم تحديث الإعلان",
+    "published": "تم نشر الإعلان",
+    "deleted": "تم حذف الإعلان",
+    "saveFailed": "تعذر حفظ الإعلان",
+    "publishFailed": "تعذر نشر الإعلان",
+    "deleteFailed": "تعذر حذف الإعلان",
+    "deleteConfirm": "هل تريد حذف هذا الإعلان؟ لا يمكن التراجع عن ذلك."
+  }
+}

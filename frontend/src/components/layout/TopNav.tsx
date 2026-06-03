@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 
 export interface TopNavProps {
   userName: string;
@@ -45,14 +46,7 @@ export function TopNav({
       <LanguageToggle />
       <ThemeToggle />
 
-      <button
-        type="button"
-        className="icon-btn"
-        aria-label={t("notifications")}
-      >
-        <Icon name="bell" />
-        <span className="ind" />
-      </button>
+      <NotificationBell />
 
       <div className="topbar-user">
         <Avatar initial={avatarInitial} round />

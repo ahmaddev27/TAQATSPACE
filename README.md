@@ -8,9 +8,9 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 
 | | |
 |---|---|
-| **Overall** | 39 / 80 tasks (49%) — **Phase 1 + Phase 2 complete** |
-| **Current phase** | Phase 1 ✅ · Phase 2 ✅ → next: Phase 3 (Invoicing & Comms) |
-| **Current milestone** | M01–M06 ✅ |
+| **Overall** | 57 / 80 tasks (71%) — **Phases 1–3 complete** |
+| **Current phase** | Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ → next: Phase 4 (Admin, Reports, Launch) |
+| **Current milestone** | M01–M09 ✅ |
 | **Current sprint** | S1–S5 done |
 | **Last updated** | 2026-06-02 |
 
@@ -70,9 +70,9 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M04 | Public Marketing Site | P2 | S3 | ✅ | 100% |
 | M05 | Workspace Owner Dashboard — Core | P2 | S3–S4 | ✅ | 100% |
 | M06 | Freelancer Dashboard — Core | P2 | S4–S5 | ✅ | 100% |
-| M07 | Invoicing System | P3 | S6 | ☐ | 0% |
-| M08 | Messaging, Notifications & Real-time | P3 | S7 | ☐ | 0% |
-| M09 | Announcements, Packages & Reviews | P3 | S7 | ☐ | 0% |
+| M07 | Invoicing System | P3 | S6 | ✅ | 100% |
+| M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 95% (realtime needs Pusher creds) |
+| M09 | Announcements, Packages & Reviews | P3 | S7 | ✅ | 100% |
 | M10 | Super Admin Dashboard | P4 | S8 | ☐ | 0% |
 | M11 | Reports, Exports & Analytics | P4 | S8 | ☐ | 0% |
 | M12 | Testing, Hardening & Production Launch | P4 | S9 | ☐ | 0% |
@@ -114,8 +114,11 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - **M06** ✅ T033 Freelancer home · T034 Subscription · T035 Profile · T036 Booking submit · T037 Booking approval
 - _Built via multi-agent workflows (backend: 4 parallel · frontend: foundation + 3 parallel). 41 API endpoints; build+tsc+lint green; live smoke verified._
 
-## Phase 3 — Invoicing & Comms _(not started)_
-**M07** ☐ T040–T047 · **M08** ☐ T048–T054 · **M09** ☐ T055–T058
+## Phase 3 — Invoicing & Comms ✅
+- **M07** ✅ T040 monthly auto-gen (cron) · T041 model/status · T042 mark-paid+remind · T043 overdue cron · T044 Arabic PDF (DomPDF) · T045 owner invoices UI · T046 freelancer invoices · T047 alert cards
+- **M08** ✅ T048 messages · T049 broadcast · T050/051 broadcast events (realtime wired, `log` driver — needs Pusher creds) · T052 notifications · T053 notification center (bell+polling) · T054 owner messaging UI
+- **M09** ✅ T055/056 announcements · T057/058 reviews (done in P2)
+- _58 API endpoints; backend 3 parallel agents + frontend 3 parallel agents; build+tsc+lint green; live-smoke 200._
 
 ## Phase 4 — Admin & Launch _(not started)_
 **M10** ☐ T059–T068 · **M11** ☐ T069–T070 · **M12** ☐ T071–T080

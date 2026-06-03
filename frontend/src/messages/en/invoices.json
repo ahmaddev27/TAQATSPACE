@@ -1,0 +1,105 @@
+{
+  "invoices": {
+    "owner": {
+      "title": "Invoices",
+      "subtitle": "Issue invoices, track payments, and chase overdue balances.",
+      "newInvoice": "Issue invoice",
+      "summary": {
+        "outstanding": "Outstanding",
+        "outstandingFoot": "Pending + overdue",
+        "overdue": "Overdue",
+        "overdueFoot": "Past due date",
+        "paidThisMonth": "Collected this month",
+        "paidThisMonthFoot": "Payments received"
+      },
+      "filters": {
+        "all": "All",
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled",
+        "month": "Month",
+        "anyMonth": "Any month",
+        "clear": "Clear",
+        "count": "Total:"
+      },
+      "table": {
+        "invoice": "Invoice",
+        "member": "Member",
+        "period": "Period",
+        "due": "Due date",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "markPaid": "Mark paid",
+        "remind": "Remind",
+        "downloadPdf": "PDF"
+      },
+      "empty": {
+        "title": "No invoices yet",
+        "body": "Issue your first invoice to start tracking payments."
+      },
+      "emptyFiltered": {
+        "title": "No matching invoices",
+        "body": "Try changing the status or month filter.",
+        "reset": "Reset filters"
+      },
+      "toast": {
+        "paidTitle": "Invoice marked as paid",
+        "paidFailed": "Could not mark as paid",
+        "reminderSent": "Reminder sent",
+        "reminderFailed": "Could not send reminder",
+        "issued": "Invoice issued",
+        "issueFailed": "Could not issue invoice"
+      },
+      "issueModal": {
+        "title": "Issue new invoice",
+        "member": "Member",
+        "memberPlaceholder": "Select a member",
+        "amount": "Amount",
+        "dueDate": "Due date",
+        "notes": "Notes",
+        "notesPlaceholder": "Optional description shown on the invoice",
+        "cancel": "Cancel",
+        "submit": "Issue invoice",
+        "noMembers": "You have no active members to invoice yet."
+      }
+    },
+    "member": {
+      "title": "My invoices",
+      "subtitle": "View and download your invoice history.",
+      "overdueAlert": {
+        "title": "You have {count} overdue {count, plural, one {invoice} other {invoices}}",
+        "body": "Please settle the outstanding balance to keep your subscription active."
+      },
+      "table": {
+        "invoice": "Invoice",
+        "description": "Description",
+        "due": "Due date",
+        "paidAt": "Paid on",
+        "amount": "Amount",
+        "status": "Status"
+      },
+      "downloadPdf": "PDF",
+      "empty": {
+        "title": "No invoices yet",
+        "body": "Invoices will appear here once your subscription is billed."
+      },
+      "foot": {
+        "count": "{count} {count, plural, one {invoice} other {invoices}}",
+        "totalPaid": "Total paid"
+      }
+    },
+    "alert": {
+      "ownerTitle": "{overdue} overdue · {pending} pending",
+      "ownerBody": "Review unpaid invoices and send reminders.",
+      "memberOverdueTitle": "{count} overdue {count, plural, one {invoice} other {invoices}}",
+      "memberPendingTitle": "{count} unpaid {count, plural, one {invoice} other {invoices}}",
+      "memberBody": "Open your invoices to view and pay.",
+      "view": "View invoices",
+      "dismiss": "Dismiss"
+    }
+  }
+}

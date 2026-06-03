@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { getMemberSummary } from "@/lib/api/memberDashboard";
 import { Icon } from "@/components/ui/Icon";
@@ -6,6 +7,7 @@ import { NotificationBell } from "@/components/features/freelancer/NotificationB
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
 import { QuickLinks } from "@/components/features/freelancer/QuickLinks";
 import { formatDate, formatMoney } from "@/components/features/freelancer/format";
+import { MemberInvoiceAlert } from "@/components/features/invoices/MemberInvoiceAlert";
 
 export default async function FreelancerHomePage() {
   const [summary, t, tCommon] = await Promise.all([
@@ -20,6 +22,10 @@ export default async function FreelancerHomePage() {
 
   return (
     <div className="stack" style={{ gap: 24 }}>
+      <Suspense fallback={null}>
+        <MemberInvoiceAlert />
+      </Suspense>
+
       <div className="between wrap" style={{ gap: 16 }}>
         <div className="stack" style={{ gap: 4 }}>
           <h1 className="h1">{t("title")}</h1>

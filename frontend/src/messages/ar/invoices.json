@@ -1,0 +1,105 @@
+{
+  "invoices": {
+    "owner": {
+      "title": "الفواتير",
+      "subtitle": "أصدر الفواتير، وتابع المدفوعات، وذكّر بالمتأخرات.",
+      "newInvoice": "إصدار فاتورة",
+      "summary": {
+        "outstanding": "المستحق",
+        "outstandingFoot": "قيد الانتظار + متأخرة",
+        "overdue": "متأخرة",
+        "overdueFoot": "تجاوزت تاريخ الاستحقاق",
+        "paidThisMonth": "محصّل هذا الشهر",
+        "paidThisMonthFoot": "مدفوعات مستلمة"
+      },
+      "filters": {
+        "all": "الكل",
+        "paid": "مدفوعة",
+        "pending": "قيد الانتظار",
+        "overdue": "متأخرة",
+        "cancelled": "ملغاة",
+        "month": "الشهر",
+        "anyMonth": "كل الأشهر",
+        "clear": "مسح",
+        "count": "العدد:"
+      },
+      "table": {
+        "invoice": "رقم الفاتورة",
+        "member": "العضو",
+        "period": "الفترة",
+        "due": "تاريخ الاستحقاق",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "إجراءات"
+      },
+      "actions": {
+        "markPaid": "تحديد كمدفوعة",
+        "remind": "تذكير",
+        "downloadPdf": "PDF"
+      },
+      "empty": {
+        "title": "لا توجد فواتير بعد",
+        "body": "أصدر أول فاتورة لبدء تتبّع المدفوعات."
+      },
+      "emptyFiltered": {
+        "title": "لا فواتير مطابقة",
+        "body": "جرّب تغيير عامل تصفية الحالة أو الشهر.",
+        "reset": "إعادة التصفية"
+      },
+      "toast": {
+        "paidTitle": "تم تحديد الفاتورة كمدفوعة",
+        "paidFailed": "تعذّر تحديدها كمدفوعة",
+        "reminderSent": "تم إرسال التذكير",
+        "reminderFailed": "تعذّر إرسال التذكير",
+        "issued": "تم إصدار الفاتورة",
+        "issueFailed": "تعذّر إصدار الفاتورة"
+      },
+      "issueModal": {
+        "title": "إصدار فاتورة جديدة",
+        "member": "العضو",
+        "memberPlaceholder": "اختر عضواً",
+        "amount": "المبلغ",
+        "dueDate": "تاريخ الاستحقاق",
+        "notes": "ملاحظات",
+        "notesPlaceholder": "وصف اختياري يظهر على الفاتورة",
+        "cancel": "إلغاء",
+        "submit": "إصدار الفاتورة",
+        "noMembers": "لا يوجد أعضاء نشطون لإصدار فواتير لهم بعد."
+      }
+    },
+    "member": {
+      "title": "فواتيري",
+      "subtitle": "اعرض سجل فواتيرك وحمّلها.",
+      "overdueAlert": {
+        "title": "لديك {count} فاتورة متأخرة",
+        "body": "يرجى تسوية الرصيد المستحق للحفاظ على اشتراكك نشطاً."
+      },
+      "table": {
+        "invoice": "رقم الفاتورة",
+        "description": "الوصف",
+        "due": "تاريخ الاستحقاق",
+        "paidAt": "تاريخ الدفع",
+        "amount": "المبلغ",
+        "status": "الحالة"
+      },
+      "downloadPdf": "PDF",
+      "empty": {
+        "title": "لا توجد فواتير بعد",
+        "body": "ستظهر الفواتير هنا بمجرد إصدار فاتورة لاشتراكك."
+      },
+      "foot": {
+        "count": "{count} فاتورة",
+        "totalPaid": "إجمالي المدفوع"
+      }
+    },
+    "alert": {
+      "ownerTitle": "{overdue} متأخرة · {pending} قيد الانتظار",
+      "ownerBody": "راجع الفواتير غير المدفوعة وأرسل التذكيرات.",
+      "memberOverdueTitle": "{count} فاتورة متأخرة",
+      "memberPendingTitle": "{count} فاتورة غير مدفوعة",
+      "memberBody": "افتح فواتيرك للعرض والدفع.",
+      "view": "عرض الفواتير",
+      "dismiss": "إغلاق"
+    }
+  }
+}

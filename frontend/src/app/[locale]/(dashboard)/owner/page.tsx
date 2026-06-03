@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getOwnerStats } from "@/lib/api/ownerDashboard";
@@ -5,6 +6,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { LineChart, type LineChartPoint } from "@/components/ui/LineChart";
 import { Icon } from "@/components/ui/Icon";
 import { money } from "@/components/features/owner/format";
+import { OwnerInvoiceAlert } from "@/components/features/invoices/OwnerInvoiceAlert";
 import type { IconName } from "@/components/ui/Icon";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +58,10 @@ export default async function OwnerDashboardPage({
       </div>
 
       <div className="stack" style={{ gap: 24, marginTop: 8 }}>
+        <Suspense fallback={null}>
+          <OwnerInvoiceAlert />
+        </Suspense>
+
         <div className="grid-stats">
           <StatTile
             icon="grid"

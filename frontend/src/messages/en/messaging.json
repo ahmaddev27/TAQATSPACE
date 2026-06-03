@@ -1,0 +1,68 @@
+{
+  "messaging": {
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Stay on top of bookings, invoices and workspace activity.",
+      "filterAll": "All",
+      "filterUnread": "Unread",
+      "markAllRead": "Mark all read",
+      "markRead": "Mark as read",
+      "delete": "Delete",
+      "unreadCount": "{count, plural, =0 {No unread} one {# unread} other {# unread}}",
+      "emptyTitle": "You're all caught up",
+      "emptyBody": "New notifications will show up here.",
+      "emptyUnread": "No unread notifications.",
+      "viewAll": "View all notifications",
+      "recent": "Recent",
+      "allReadToast": "All notifications marked as read.",
+      "deletedToast": "Notification deleted.",
+      "actionFailed": "Could not update notifications.",
+      "panelTitle": "Notifications",
+      "bellLabel": "Notifications",
+      "types": {
+        "booking_approved": "Booking request approved",
+        "booking_rejected": "Booking request rejected",
+        "invoice_created": "New invoice awaiting payment",
+        "invoice_overdue": "Invoice overdue",
+        "invoice_paid": "Payment received",
+        "invoice_reminder": "Invoice payment reminder",
+        "new_announcement": "New announcement",
+        "new_message": "New message",
+        "new_workspace_registration": "New workspace registration",
+        "seat_assigned": "Your seat is confirmed",
+        "generic": "Notification"
+      }
+    },
+    "messages": {
+      "title": "Messages",
+      "subtitle": "Direct conversations with your members.",
+      "search": "Search members…",
+      "broadcast": "Broadcast",
+      "noThreadsTitle": "No conversations yet",
+      "noThreadsBody": "Start a conversation by messaging a member.",
+      "emptyThreadTitle": "Select a conversation",
+      "emptyThreadBody": "Choose a member from the list to view your messages.",
+      "noMessages": "No messages yet. Say hello!",
+      "you": "You",
+      "broadcastTag": "Broadcast",
+      "composerPlaceholder": "Write a message…",
+      "send": "Send",
+      "sendHint": "Enter to send · Shift+Enter for a new line",
+      "sentToast": "Message sent.",
+      "sendFailed": "Could not send the message.",
+      "loadFailed": "Could not load the conversation.",
+      "unread": "{count, plural, =0 {} one {# unread} other {# unread}}"
+    },
+    "broadcastModal": {
+      "title": "Broadcast to members",
+      "description": "Send one message to every active member of your workspace.",
+      "recipients": "{count, plural, =0 {No active members} one {# recipient} other {# recipients}}",
+      "placeholder": "Write your announcement…",
+      "send": "Send broadcast",
+      "cancel": "Cancel",
+      "sentToast": "Broadcast sent to your members.",
+      "failed": "Could not send the broadcast.",
+      "emptyError": "Write a message before sending."
+    }
+  }
+}
