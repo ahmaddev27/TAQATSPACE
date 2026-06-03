@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -57,21 +58,19 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const dir = locale === "ar" ? "rtl" : "ltr";
 
+  // Theme is persisted in a cookie so the server renders the correct
+  // [data-theme] up-front — no flash, and no inline <script> in the tree.
+  const theme =
+    (await cookies()).get("taqat_theme")?.value === "dark" ? "dark" : undefined;
+
   return (
     <html
       lang={locale}
       dir={dir}
+      data-theme={theme}
       className={`${cairo.variable} ${tajawal.variable} ${ibmArabic.variable} ${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <head>
-        {/* Apply persisted theme before paint to avoid a flash. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var t=localStorage.getItem('taqat_theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();",
-          }}
-        />
-      </head>
       <body className="min-h-full">
         <NextIntlClientProvider>
           <Providers>{children}</Providers>

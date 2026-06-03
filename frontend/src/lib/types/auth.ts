@@ -3,7 +3,7 @@ export type UserRole = "freelancer" | "workspace_owner" | "admin";
 export type UserStatus = "active" | "suspended" | "pending_verification";
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string | null;

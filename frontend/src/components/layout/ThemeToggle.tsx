@@ -40,6 +40,8 @@ export function ThemeToggle() {
     } catch {
       // storage unavailable — ignore
     }
+    // Mirror to a cookie so the server renders [data-theme] without a flash.
+    document.cookie = `${STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
   }
 
   return (
