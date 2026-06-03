@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\WorkspaceStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -94,5 +95,70 @@ class Workspace extends Model
     public function announcements(): HasMany
     {
         return $this->hasMany(Announcement::class);
+    }
+
+    // ---- Query scopes (T024) ----
+
+    /**
+     * Only publicly visible (approved) workspaces.
+     *
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('status', WorkspaceStatus::Active->value);
+    }
+
+    /**
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopeInCity(Builder $query, string $city): void
+    {
+        $query->where('city', $city);
+    }
+
+    /**
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopePriceRange(Builder $query, float $min, float $max): void
+    {
+        $query->whereBetween('price_per_month', [$min, $max]);
+    }
+
+    /**
+     * Each amenity must be present in the JSON `amenities` array (AND semantics).
+     *
+     * @param  Builder<Workspace>  $query
+     * @param  array<int, string>  $amenities
+     */
+    public function scopeWithAmenities(Builder $query, array $amenities): void
+    {
+        foreach ($amenities as $amenity) {
+            $query->whereJsonContains('amenities', $amenity);
+        }
+    }
+
+    /**
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopeMinRating(Builder $query, float $rating): void
+    {
+        $query->where('avg_rating', '>=', $rating);
+    }
+
+    /**
+     * Case-insensitive text search across name and description.
+     * MySQL's default collation makes LIKE case-insensitive.
+     *
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopeSearch(Builder $query, string $term): void
+    {
+        $like = '%'.$term.'%';
+
+        $query->where(function (Builder $inner) use ($like): void {
+            $inner->where('name', 'like', $like)
+                ->orWhere('description', 'like', $like);
+        });
     }
 }

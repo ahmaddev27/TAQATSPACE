@@ -42,17 +42,12 @@ Route::prefix('auth')->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
-| Role-gated route groups (populated in later phases)
+| Feature route modules (M04+)
 |--------------------------------------------------------------------------
+| Each file in routes/api/*.php self-registers its routes (with its own
+| middleware + prefixes). This keeps features decoupled — no shared edits
+| to this file when adding a module.
 */
-Route::middleware(['auth:sanctum', 'role.owner'])->prefix('workspace')->group(function (): void {
-    // Phase 2+: owner dashboard, members, seats, bookings, invoices, ...
-});
-
-Route::middleware(['auth:sanctum', 'role.freelancer'])->prefix('member')->group(function (): void {
-    // Phase 2+: freelancer dashboard, subscriptions, profile, ...
-});
-
-Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(function (): void {
-    // Phase 4+: analytics, workspace approval, users, commissions, ...
-});
+foreach (glob(__DIR__.'/api/*.php') as $routeModule) {
+    require $routeModule;
+}
