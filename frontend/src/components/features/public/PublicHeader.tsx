@@ -1,0 +1,54 @@
+"use client";
+
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/Button";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { TileLogo } from "@/components/layout/TileLogo";
+import type { PublicDict } from "./i18n";
+
+export interface PublicHeaderProps {
+  dict: PublicDict;
+}
+
+/** Sticky public marketing header (ported from prototype `PublicHeader`). */
+export function PublicHeader({ dict }: PublicHeaderProps) {
+  const nav = dict.nav;
+  const links: Array<{ href: string; label: string }> = [
+    { href: "/explore", label: nav.explore },
+    { href: "/about", label: nav.about },
+    { href: "/faq", label: nav.faq },
+    { href: "/contact", label: nav.contact },
+  ];
+
+  return (
+    <header className="pub-header">
+      <div className="container pub-header-in">
+        <Link href="/" className="logo" aria-label="TAQAT">
+          <TileLogo size={26} />
+        </Link>
+        <nav className="pub-nav">
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} className="pub-nav-link">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="row" style={{ gap: 8 }}>
+          <ThemeToggle />
+          <LanguageToggle />
+          <Link href="/login">
+            <Button variant="ghost" size="sm">
+              {nav.login}
+            </Button>
+          </Link>
+          <Link href="/register/freelancer">
+            <Button variant="primary" size="sm">
+              {nav.getStarted}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}

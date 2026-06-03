@@ -1,0 +1,80 @@
+{
+  "common": {
+    "currency": "₪",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search…",
+    "viewAll": "View all",
+    "results": "Results",
+    "of": "of",
+    "showing": "Showing",
+    "noData": "No data",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "logout": "Log out",
+    "notifications": "Notifications",
+    "all": "All"
+  },
+  "nav": {
+    "sectionManage": "Manage",
+    "sectionEngage": "Engage",
+    "sectionAccount": "My account",
+    "sectionManagement": "Management",
+    "sectionSystem": "System",
+    "ownerRole": "Space owner",
+    "freelancerRole": "Freelancer",
+    "adminRole": "Super admin",
+    "items": {
+      "dashboard": "Dashboard",
+      "members": "Members",
+      "seats": "Seats",
+      "requests": "Booking requests",
+      "invoices": "Invoices",
+      "packages": "Internet packages",
+      "messages": "Messages",
+      "announcements": "Announcements",
+      "reports": "Reports",
+      "settings": "Settings",
+      "home": "Home",
+      "explore": "Explore",
+      "subscription": "Subscription",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "analytics": "Analytics",
+      "workspaces": "Workspaces",
+      "users": "Users",
+      "finance": "Finance"
+    }
+  },
+  "status": {
+    "active": "Active",
+    "expired": "Expired",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "suspended": "Suspended",
+    "cancelled": "Cancelled",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "available": "Available",
+    "occupied": "Occupied",
+    "reserved": "Reserved",
+    "maintenance": "Maintenance"
+  },
+  "seatType": {
+    "fixed": "Fixed desk",
+    "flexible": "Flexible",
+    "private_office": "Private office"
+  },
+  "planType": {
+    "monthly": "Monthly",
+    "daily": "Daily",
+    "custom": "Custom"
+  }
+}
