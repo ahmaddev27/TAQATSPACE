@@ -8,10 +8,10 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 
 | | |
 |---|---|
-| **Overall** | 18 / 80 tasks (23%) — **Phase 1 complete** + CI/CD pipeline |
-| **Current phase** | Phase 1 ✅ → next: Phase 2 (M04 Public Site) |
-| **Current milestone** | M01 ✅ · M02 ✅ · M03 ✅ |
-| **Current sprint** | S2 done |
+| **Overall** | 39 / 80 tasks (49%) — **Phase 1 + Phase 2 complete** |
+| **Current phase** | Phase 1 ✅ · Phase 2 ✅ → next: Phase 3 (Invoicing & Comms) |
+| **Current milestone** | M01–M06 ✅ |
+| **Current sprint** | S1–S5 done |
 | **Last updated** | 2026-06-02 |
 
 **Legend:** ☐ Todo · 🔄 In Progress · ✅ Done · ⏸ Blocked · ⏭ Deferred
@@ -67,9 +67,9 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M01 | Project Setup & Dev Environment | P1 | S1 | ✅ | 90% (CI deferred) |
 | M02 | Authentication System (3 roles) | P1 | S2 | ✅ | 100% |
 | M03 | Database Schema — Core Tables | P1 | S2 | ✅ | 100% |
-| M04 | Public Marketing Site | P2 | S3 | ☐ | 0% |
-| M05 | Workspace Owner Dashboard — Core | P2 | S3–S4 | ☐ | 0% |
-| M06 | Freelancer Dashboard — Core | P2 | S4–S5 | ☐ | 0% |
+| M04 | Public Marketing Site | P2 | S3 | ✅ | 100% |
+| M05 | Workspace Owner Dashboard — Core | P2 | S3–S4 | ✅ | 100% |
+| M06 | Freelancer Dashboard — Core | P2 | S4–S5 | ✅ | 100% |
 | M07 | Invoicing System | P3 | S6 | ☐ | 0% |
 | M08 | Messaging, Notifications & Real-time | P3 | S7 | ☐ | 0% |
 | M09 | Announcements, Packages & Reviews | P3 | S7 | ☐ | 0% |
@@ -108,8 +108,11 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 
 ---
 
-## Phase 2 — Core Dashboards _(not started)_
-**M04** ☐ T019–T026 · **M05** ☐ T027–T032 · **M06** ☐ T033–T039
+## Phase 2 — Core Dashboards ✅
+- **M04** ✅ T019 Home · T020 Explore (Leaflet+filters) · T021 Detail · T022 About/FAQ/Contact · T023 Workspaces API · T024 Search · T025 Photos · T026 Seats API
+- **M05** ✅ T027 Owner dashboard · T028 Members · T029 Seat map · T030 Assignment · T031 Bookings · T032 Settings + T038/039 Packages
+- **M06** ✅ T033 Freelancer home · T034 Subscription · T035 Profile · T036 Booking submit · T037 Booking approval
+- _Built via multi-agent workflows (backend: 4 parallel · frontend: foundation + 3 parallel). 41 API endpoints; build+tsc+lint green; live smoke verified._
 
 ## Phase 3 — Invoicing & Comms _(not started)_
 **M07** ☐ T040–T047 · **M08** ☐ T048–T054 · **M09** ☐ T055–T058
@@ -124,4 +127,5 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - **2026-06-02** — Project kickoff. Plan approved (Laravel 13 · Next.js 15 · MySQL 8 · AWS S3 · Laragon native · Scramble docs). Toolchain verified (PHP 8.4.5, Composer 2.8.10, Laravel 13.12, Node 24.11, MySQL 8.4.3). Scaffolded backend + frontend. Backend: 11 enums, 10 UUID models, all migrations (users/spatie/morphs UUID-adapted + core + supporting tables), CORS, role middleware, health endpoints, ApiResponse, auth FormRequests + UserResource. README converted to live progress tracker.
 - **2026-06-02 (cont.)** — **Backend Phase 1 complete & verified.** `migrate:fresh --seed` green; Gaza dataset seeded (factories + GazaData + DatabaseSeeder). Auth smoke-tested live: register 201, login 200, me 200, logout 204, forgot-password 200, 401/422 correct, health endpoints OK. Fixed: `package:discover` (skipped by earlier `--no-scripts`) registering Spatie/Scramble providers; `User` SPA notification overrides (queued verify/reset, frontend URLs). API docs live (`/docs/api`, `openapi.json` 10 paths) + Postman generated via `composer api:docs`. **Note:** AWS S3 SDK (`aws-sdk-php`) un-installable locally (codeload.github.com throttled ~839 B/s) → storage abstracted, local disk in dev, S3 enabled on server.
 - **2026-06-02 (cont.)** — **Pushed to GitHub + CI/CD.** Initial commit pushed to `ahmaddev27/TAQATSPACE` (`main`). Created `dev` branch (staging). Added CI (PHPUnit + frontend lint/tsc/build on PRs/pushes) and **SSH deploy workflows**: merge→`main` deploys production (`taqat.space` + `api.taqat.space`), merge→`dev` deploys staging. Next.js `output:'standalone'` for Node hosting. Deploy keypair generated (gitignored). Full guide in [DEPLOYMENT.md](DEPLOYMENT.md). Workflows skip until secrets configured. _Pending user: SSH user/port, install public key on cPanel, set Secrets/Variables, verify Node.js support, create subdomains+docroots+.env._
+- **2026-06-02 (cont.)** — **Phase 2 complete (M04+M05+M06) via multi-agent workflows.** Backend: 4 parallel agents → 21 endpoints (workspaces discovery/search/photos, seats/bookings/subscriptions, owner dashboard/members, freelancer dashboard/profile/packages/reviews); modular `routes/api/*.php` (zero conflicts); 45 routes load; smoke-tested live (public + owner + member 200, role guard 403); tests 4/4; OpenAPI 10→41 endpoints. Frontend: foundation agent (DashShell + 14 primitives + typed API client + i18n) then 3 parallel screen agents (public site, owner dashboard, freelancer dashboard); `next build`+`tsc`+`lint` green; live: public pages 200 (ar-rtl/en-ltr), owner dashboard renders real data, middleware redirects. On branch `feat/phase-2`.
 - **2026-06-02 (cont.)** — **Frontend Phase 1 complete & verified → Phase 1 DONE.** Next.js 16 + React 19 + Tailwind v4 (CSS-first `@theme`) + next-intl (ar default RTL `/`, en `/en`). Design system ported verbatim from `DOCS/Desing` (tokens + 5 CSS files + typed `ui/` primitives + icons). Built: auth layer (`lib/api` server-fetch, route handlers, AuthProvider, middleware), 5 auth screens (login, freelancer/workspace register, forgot/reset). Gates green: `next build` ✓, `tsc --noEmit` ✓, `lint` ✓. **Live integration verified:** login via Next proxy → backend sets `taqat_token` (HttpOnly) + `taqat_role`; wrong-pw 401; unauth `/owner`,`/freelancer` → 307 `/login?redirect=`; `/` ar-rtl, `/en` en-ltr. Remaining Phase-1 item: T004 GitHub Actions CI (deferred — needs git repo/remote).
