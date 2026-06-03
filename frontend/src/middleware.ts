@@ -19,9 +19,8 @@ function stripLocale(pathname: string): { locale: string; rest: string } {
   return { locale: routing.defaultLocale, rest: pathname };
 }
 
-/** Re-attach the locale prefix (default locale has none under as-needed). */
+/** Re-attach the locale prefix (every locale is prefixed under "always"). */
 function withLocale(locale: string, path: string): string {
-  if (locale === routing.defaultLocale) return path;
   return `/${locale}${path === "/" ? "" : path}`;
 }
 
