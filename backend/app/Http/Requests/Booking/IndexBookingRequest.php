@@ -22,7 +22,7 @@ class IndexBookingRequest extends FormRequest
     {
         return [
             'status' => ['nullable', Rule::in(BookingStatus::values())],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];
     }
 }

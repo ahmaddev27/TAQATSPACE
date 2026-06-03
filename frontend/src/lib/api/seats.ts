@@ -1,13 +1,16 @@
 import { serverFetch } from "@/lib/api";
 import type { ApiEnvelope, Seat, SeatStatus, SeatType } from "@/lib/types";
 
-/** Seat map for a workspace (public; assignee names only for owner/admin). */
+/**
+ * Seat map for a workspace (public; assignee names only for owner/admin).
+ * The endpoint returns `{ seats, summary }`; callers want the seat array.
+ */
 export async function seatsForWorkspace(workspaceId: string): Promise<Seat[]> {
-  const res = await serverFetch<ApiEnvelope<Seat[]>>(
+  const res = await serverFetch<ApiEnvelope<{ seats: Seat[]; summary?: unknown }>>(
     `/workspaces/${workspaceId}/seats`,
     { auth: false },
   );
-  return res.data;
+  return res.data.seats;
 }
 
 export interface StoreSeatInput {

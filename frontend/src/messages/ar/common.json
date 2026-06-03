@@ -19,7 +19,14 @@
     "retry": "إعادة المحاولة",
     "logout": "تسجيل الخروج",
     "notifications": "الإشعارات",
-    "all": "الكل"
+    "all": "الكل",
+    "status": {
+      "active": "نشط", "expired": "منتهٍ", "pending": "قيد المراجعة", "approved": "مقبول",
+      "rejected": "مرفوض", "suspended": "موقوف", "cancelled": "ملغى", "paid": "مدفوعة",
+      "overdue": "متأخرة", "available": "متاح", "occupied": "مشغول", "reserved": "محجوز", "maintenance": "صيانة"
+    },
+    "seatType": { "fixed": "مكتب ثابت", "flexible": "مرن", "private_office": "مكتب خاص" },
+    "planType": { "monthly": "شهري", "daily": "يومي", "custom": "مخصص" }
   },
   "nav": {
     "sectionManage": "الإدارة",

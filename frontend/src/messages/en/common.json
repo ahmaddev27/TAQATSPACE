@@ -19,7 +19,14 @@
     "retry": "Retry",
     "logout": "Log out",
     "notifications": "Notifications",
-    "all": "All"
+    "all": "All",
+    "status": {
+      "active": "Active", "expired": "Expired", "pending": "Pending", "approved": "Approved",
+      "rejected": "Rejected", "suspended": "Suspended", "cancelled": "Cancelled", "paid": "Paid",
+      "overdue": "Overdue", "available": "Available", "occupied": "Occupied", "reserved": "Reserved", "maintenance": "Maintenance"
+    },
+    "seatType": { "fixed": "Fixed desk", "flexible": "Flexible", "private_office": "Private office" },
+    "planType": { "monthly": "Monthly", "daily": "Daily", "custom": "Custom" }
   },
   "nav": {
     "sectionManage": "Manage",
