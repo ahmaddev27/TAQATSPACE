@@ -1,0 +1,68 @@
+{
+  "messaging": {
+    "notifications": {
+      "title": "الإشعارات",
+      "subtitle": "تابع الحجوزات والفواتير ونشاط مساحة العمل أولًا بأول.",
+      "filterAll": "الكل",
+      "filterUnread": "غير المقروءة",
+      "markAllRead": "تعليم الكل كمقروء",
+      "markRead": "تعليم كمقروء",
+      "delete": "حذف",
+      "unreadCount": "{count, plural, =0 {لا إشعارات غير مقروءة} one {إشعار واحد غير مقروء} two {إشعاران غير مقروءين} few {# إشعارات غير مقروءة} many {# إشعارًا غير مقروء} other {# إشعار غير مقروء}}",
+      "emptyTitle": "أنت على اطّلاع بكل شيء",
+      "emptyBody": "ستظهر الإشعارات الجديدة هنا.",
+      "emptyUnread": "لا توجد إشعارات غير مقروءة.",
+      "viewAll": "عرض كل الإشعارات",
+      "recent": "الأحدث",
+      "allReadToast": "تم تعليم كل الإشعارات كمقروءة.",
+      "deletedToast": "تم حذف الإشعار.",
+      "actionFailed": "تعذّر تحديث الإشعارات.",
+      "panelTitle": "الإشعارات",
+      "bellLabel": "الإشعارات",
+      "types": {
+        "booking_approved": "تمت الموافقة على طلب الحجز",
+        "booking_rejected": "تم رفض طلب الحجز",
+        "invoice_created": "فاتورة جديدة بانتظار الدفع",
+        "invoice_overdue": "فاتورة متأخرة",
+        "invoice_paid": "تم استلام الدفعة",
+        "invoice_reminder": "تذكير بدفع الفاتورة",
+        "new_announcement": "إعلان جديد",
+        "new_message": "رسالة جديدة",
+        "new_workspace_registration": "تسجيل مساحة عمل جديدة",
+        "seat_assigned": "تم تأكيد مقعدك",
+        "generic": "إشعار"
+      }
+    },
+    "messages": {
+      "title": "الرسائل",
+      "subtitle": "محادثات مباشرة مع أعضائك.",
+      "search": "ابحث عن عضو…",
+      "broadcast": "رسالة جماعية",
+      "noThreadsTitle": "لا توجد محادثات بعد",
+      "noThreadsBody": "ابدأ محادثة بمراسلة أحد الأعضاء.",
+      "emptyThreadTitle": "اختر محادثة",
+      "emptyThreadBody": "اختر عضوًا من القائمة لعرض رسائلك.",
+      "noMessages": "لا توجد رسائل بعد. ابدأ بالترحيب!",
+      "you": "أنت",
+      "broadcastTag": "جماعية",
+      "composerPlaceholder": "اكتب رسالة…",
+      "send": "إرسال",
+      "sendHint": "Enter للإرسال · Shift+Enter لسطر جديد",
+      "sentToast": "تم إرسال الرسالة.",
+      "sendFailed": "تعذّر إرسال الرسالة.",
+      "loadFailed": "تعذّر تحميل المحادثة.",
+      "unread": "{count, plural, =0 {} one {غير مقروءة} two {غير مقروءتين} few {# غير مقروءة} many {# غير مقروءة} other {# غير مقروءة}}"
+    },
+    "broadcastModal": {
+      "title": "رسالة جماعية للأعضاء",
+      "description": "أرسل رسالة واحدة إلى جميع الأعضاء النشطين في مساحتك.",
+      "recipients": "{count, plural, =0 {لا يوجد أعضاء نشطون} one {مستلم واحد} two {مستلمان} few {# مستلمين} many {# مستلمًا} other {# مستلم}}",
+      "placeholder": "اكتب إعلانك…",
+      "send": "إرسال جماعي",
+      "cancel": "إلغاء",
+      "sentToast": "تم إرسال الرسالة الجماعية لأعضائك.",
+      "failed": "تعذّر إرسال الرسالة الجماعية.",
+      "emptyError": "اكتب رسالة قبل الإرسال."
+    }
+  }
+}
