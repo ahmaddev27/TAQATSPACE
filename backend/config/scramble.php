@@ -21,6 +21,13 @@ return [
     'api_path' => 'api',
 
     /*
+     * Whether the API docs UI (`/docs/api`) and spec (`/docs/api.json`) are
+     * reachable outside the local environment. Read by the `viewApiDocs` gate
+     * (see AppServiceProvider). Set API_DOCS_ENABLED=false to restrict access.
+     */
+    'docs_enabled' => env('API_DOCS_ENABLED', true),
+
+    /*
      * Your API domain. By default, app domain is used. This is also a part of the default API routes
      * matcher, so when implementing your own, make sure you use this config if needed.
      */

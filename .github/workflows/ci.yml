@@ -54,10 +54,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node 22
+      - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Match local dev (node 24 / npm 11) so the committed package-lock.json
+          # resolves identically — npm 10 (node 22) wants a different @swc/helpers.
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
