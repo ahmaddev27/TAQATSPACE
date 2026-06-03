@@ -30,14 +30,14 @@ export default async function DashboardLayout({
     // expired/invalid token reaching the Server Component.
     const status = error instanceof ApiError ? error.status : 401;
     if (status === 401 || status === 403) {
-      const prefix = locale === "en" ? "/en" : "";
+      const prefix = `/${locale}`;
       redirect(`${prefix}/login`);
     }
     throw error;
   }
 
   if (!isKnownRole(user.role)) {
-    const prefix = locale === "en" ? "/en" : "";
+    const prefix = `/${locale}`;
     redirect(`${prefix}/login`);
   }
 
@@ -46,7 +46,7 @@ export default async function DashboardLayout({
   // (not /login — middleware would bounce an authenticated user back here).
   if (user.status !== "active") {
     const isAr = locale === "ar";
-    const prefix = isAr ? "" : "/en";
+    const prefix = `/${locale}`;
     return (
       <div
         style={{
