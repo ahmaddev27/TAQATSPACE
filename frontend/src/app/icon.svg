@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TAQAT">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3F97D4"/>
+      <stop offset="1" stop-color="#1F82C7"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#tile)"/>
+  <!-- T monogram -->
+  <rect x="138" y="170" width="236" height="52" rx="10" fill="#ffffff"/>
+  <rect x="230" y="210" width="52" height="156" rx="10" fill="#ffffff"/>
+  <!-- amber accent dot (the brand spark) -->
+  <circle cx="368" cy="150" r="40" fill="#F6A91B" stroke="#1F82C7" stroke-width="10"/>
+</svg>
