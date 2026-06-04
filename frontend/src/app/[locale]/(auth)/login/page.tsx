@@ -6,10 +6,13 @@ import { LoginForm } from "@/components/features/auth/LoginForm";
 
 export default async function LoginPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ loggedout?: string }>;
 }) {
   const { locale } = await params;
+  const { loggedout } = await searchParams;
   const t = await getTranslations({ locale, namespace: "auth.login" });
 
   return (
@@ -43,7 +46,7 @@ export default async function LoginPage({
       </aside>
 
       <div className="auth-form-side">
-        <LoginForm />
+        <LoginForm loggedOut={loggedout === "1"} />
       </div>
     </div>
   );

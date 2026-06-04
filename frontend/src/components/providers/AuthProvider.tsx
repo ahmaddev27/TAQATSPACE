@@ -86,9 +86,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {
+      // Cookies are cleared server-side regardless; never block sign-out on a
+      // network hiccup.
+    }
     setUser(null);
-    router.push("/login");
+    // Land on login with a confirmation flag, then refresh so cached authed RSC
+    // payloads (dashboard shell) are discarded.
+    router.replace("/login?loggedout=1");
+    router.refresh();
   }, [router]);
 
   const value = useMemo<AuthContextValue>(
