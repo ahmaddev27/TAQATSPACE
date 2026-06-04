@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Workspace;
 
+use App\Enums\SeatType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreWorkspaceRequest extends FormRequest
 {
@@ -32,6 +34,14 @@ class StoreWorkspaceRequest extends FormRequest
             'amenities' => ['nullable', 'array'],
             'amenities.*' => ['string', 'max:60'],
             'working_hours' => ['nullable', 'array'],
+
+            // Optional per-seat-type pricing submitted alongside the workspace.
+            'seat_types' => ['nullable', 'array'],
+            'seat_types.*.type' => ['required', Rule::in(SeatType::values())],
+            'seat_types.*.price_monthly' => ['nullable', 'numeric', 'min:0'],
+            'seat_types.*.price_daily' => ['nullable', 'numeric', 'min:0'],
+            'seat_types.*.capacity' => ['nullable', 'integer', 'min:0'],
+            'seat_types.*.enabled' => ['boolean'],
         ];
     }
 }

@@ -31,6 +31,7 @@ class WorkspaceService
 
     public function __construct(
         private readonly WorkspaceRepository $workspaces,
+        private readonly SeatTypePricingService $seatTypePricing,
     ) {}
 
     /**
@@ -75,10 +76,22 @@ class WorkspaceService
             throw new RuntimeException('You already have a registered workspace.');
         }
 
+        /** @var array<int, array<string, mixed>> $seatTypes */
+        $seatTypes = $data['seat_types'] ?? [];
+        unset($data['seat_types']);
+
         $data['owner_id'] = $ownerId;
         $data['status'] = WorkspaceStatus::Pending->value;
 
-        return $this->workspaces->create($data);
+        return DB::transaction(function () use ($data, $seatTypes): Workspace {
+            $workspace = $this->workspaces->create($data);
+
+            if ($seatTypes !== []) {
+                $this->seatTypePricing->sync($workspace, $seatTypes);
+            }
+
+            return $workspace;
+        });
     }
 
     /**

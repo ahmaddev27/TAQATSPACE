@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\SeatTypePrice;
 use App\Models\Workspace;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class WorkspaceResource extends JsonResource
             'working_hours' => $this->working_hours,
             'status' => $this->status->value,
             'avg_rating' => $this->avg_rating,
+            'seat_types' => $this->seatTypeRows(),
             'created_at' => $this->created_at?->toIso8601String(),
 
             // Detail-only bundle: present when the controller attaches it.
@@ -50,6 +52,28 @@ class WorkspaceResource extends JsonResource
                 'phone' => $this->owner->phone,
             ]),
         ];
+    }
+
+    /**
+     * The workspace's per-seat-type pricing rows in the public contract shape.
+     * All rows are returned (including disabled ones); the public client hides
+     * disabled types itself.
+     *
+     * @return array<int, array{type: string, price_monthly: ?string, price_daily: ?string, capacity: int, enabled: bool}>
+     */
+    private function seatTypeRows(): array
+    {
+        $this->resource->loadMissing('seatTypes');
+
+        return $this->seatTypes
+            ->map(static fn (SeatTypePrice $row): array => [
+                'type' => $row->type->value,
+                'price_monthly' => $row->price_monthly,
+                'price_daily' => $row->price_daily,
+                'capacity' => $row->capacity,
+                'enabled' => $row->enabled,
+            ])
+            ->all();
     }
 
     /**

@@ -1,69 +1,71 @@
 {
-  "landing": {
-    "title": "Landing page",
-    "subtitle": "Edit the public landing page content. Anything left empty falls back to the built-in defaults.",
-    "save": "Save changes",
-    "saving": "Saving…",
-    "saved": "Landing page updated",
-    "saveFailed": "Could not save the landing page",
-    "labelAr": "Arabic",
-    "labelEn": "English",
-    "enabled": "Show this section",
-    "tabHero": "Hero",
-    "tabStats": "Stats",
-    "tabFeatured": "Featured",
-    "tabWhy": "Why",
-    "tabCapabilities": "Capabilities",
-    "tabTestimonials": "Testimonials",
-    "hero": {
-      "heading": "Hero section",
-      "hint": "The headline area at the top of the page.",
-      "fieldTitle": "Title",
-      "fieldHighlight": "Highlighted word",
-      "fieldSubtitle": "Subtitle",
-      "fieldCtaPrimary": "Primary button",
-      "fieldCtaSecondary": "Secondary button"
-    },
-    "stats": {
-      "heading": "Stats",
-      "hint": "Up to 4 quick stats shown under the hero.",
-      "value": "Value",
-      "label": "Label",
-      "add": "Add stat",
-      "remove": "Remove",
-      "empty": "No stats yet. The default stats will be shown.",
-      "limit": "You can add up to {max} stats."
-    },
-    "featured": {
-      "heading": "Featured spaces",
-      "hint": "Pick which workspaces appear in the featured grid.",
-      "fieldTitle": "Title",
-      "fieldSubtitle": "Subtitle",
-      "pick": "Featured workspaces",
-      "noWorkspaces": "No workspaces available to feature."
-    },
-    "why": {
-      "heading": "Why section",
-      "fieldTitle": "Title",
-      "fieldHighlight": "Highlighted word",
-      "fieldSubtitle": "Subtitle"
-    },
-    "capabilities": {
-      "heading": "Capabilities section",
-      "fieldTitle": "Title",
-      "fieldSubtitle": "Subtitle"
-    },
-    "testimonials": {
-      "heading": "Testimonials",
-      "hint": "Up to 12 testimonials. Leave empty to use the defaults.",
-      "fieldTitle": "Section title",
-      "text": "Quote",
-      "name": "Name",
-      "role": "Role",
-      "add": "Add testimonial",
-      "remove": "Remove",
-      "empty": "No testimonials yet. The default testimonials will be shown.",
-      "limit": "You can add up to {max} testimonials."
+  "admin": {
+    "landing": {
+      "title": "Landing page",
+      "subtitle": "Edit the public landing page content. Anything left empty falls back to the built-in defaults.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Landing page updated",
+      "saveFailed": "Could not save the landing page",
+      "labelAr": "Arabic",
+      "labelEn": "English",
+      "enabled": "Show this section",
+      "tabHero": "Hero",
+      "tabStats": "Stats",
+      "tabFeatured": "Featured",
+      "tabWhy": "Why",
+      "tabCapabilities": "Capabilities",
+      "tabTestimonials": "Testimonials",
+      "hero": {
+        "heading": "Hero section",
+        "hint": "The headline area at the top of the page.",
+        "fieldTitle": "Title",
+        "fieldHighlight": "Highlighted word",
+        "fieldSubtitle": "Subtitle",
+        "fieldCtaPrimary": "Primary button",
+        "fieldCtaSecondary": "Secondary button"
+      },
+      "stats": {
+        "heading": "Stats",
+        "hint": "Up to 4 quick stats shown under the hero.",
+        "value": "Value",
+        "label": "Label",
+        "add": "Add stat",
+        "remove": "Remove",
+        "empty": "No stats yet. The default stats will be shown.",
+        "limit": "You can add up to {max} stats."
+      },
+      "featured": {
+        "heading": "Featured spaces",
+        "hint": "Pick which workspaces appear in the featured grid.",
+        "fieldTitle": "Title",
+        "fieldSubtitle": "Subtitle",
+        "pick": "Featured workspaces",
+        "noWorkspaces": "No workspaces available to feature."
+      },
+      "why": {
+        "heading": "Why section",
+        "fieldTitle": "Title",
+        "fieldHighlight": "Highlighted word",
+        "fieldSubtitle": "Subtitle"
+      },
+      "capabilities": {
+        "heading": "Capabilities section",
+        "fieldTitle": "Title",
+        "fieldSubtitle": "Subtitle"
+      },
+      "testimonials": {
+        "heading": "Testimonials",
+        "hint": "Up to 12 testimonials. Leave empty to use the defaults.",
+        "fieldTitle": "Section title",
+        "text": "Quote",
+        "name": "Name",
+        "role": "Role",
+        "add": "Add testimonial",
+        "remove": "Remove",
+        "empty": "No testimonials yet. The default testimonials will be shown.",
+        "limit": "You can add up to {max} testimonials."
+      }
     }
   }
 }

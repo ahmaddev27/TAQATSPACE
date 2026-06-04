@@ -16,6 +16,7 @@ use App\Models\Invoice;
 use App\Models\Message;
 use App\Models\Review;
 use App\Models\Seat;
+use App\Models\SeatTypePrice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -112,6 +113,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $this->seedSeats($workspace, $totalSeats);
+            $this->seedSeatTypePrices($workspace);
             InternetPackage::factory()->count(random_int(2, 3))->create([
                 'workspace_id' => $workspace->id,
             ]);
@@ -132,6 +134,53 @@ class DatabaseSeeder extends Seeder
                 'seat_number' => 'A'.$n,
                 'type' => $n % 5 === 0 ? SeatType::PrivateOffice : ($n % 2 === 0 ? SeatType::Fixed : SeatType::Flexible),
                 'status' => SeatStatus::Available,
+            ]);
+        }
+    }
+
+    /**
+     * One pricing row per seat type, derived from the workspace base price.
+     * Flexible is the cheapest (hot-desk), fixed sits at the base, and a private
+     * office carries a premium. Capacities split the workspace's total seats.
+     */
+    private function seedSeatTypePrices(Workspace $workspace): void
+    {
+        $base = (float) $workspace->price_per_month;
+        $total = (int) $workspace->total_seats;
+
+        $flexibleCapacity = (int) round($total * 0.5);
+        $privateCapacity = (int) round($total * 0.2);
+        $fixedCapacity = max(0, $total - $flexibleCapacity - $privateCapacity);
+
+        $rows = [
+            [
+                'type' => SeatType::Flexible->value,
+                'price_monthly' => round($base * 0.5, 2),
+                'price_daily' => round($base / 22, 2),
+                'capacity' => $flexibleCapacity,
+            ],
+            [
+                'type' => SeatType::Fixed->value,
+                'price_monthly' => round($base, 2),
+                'price_daily' => round($base / 18, 2),
+                'capacity' => $fixedCapacity,
+            ],
+            [
+                'type' => SeatType::PrivateOffice->value,
+                'price_monthly' => round($base * 1.6, 2),
+                'price_daily' => round($base * 1.6 / 18, 2),
+                'capacity' => $privateCapacity,
+            ],
+        ];
+
+        foreach ($rows as $row) {
+            SeatTypePrice::query()->create([
+                'workspace_id' => $workspace->id,
+                'type' => $row['type'],
+                'price_monthly' => $row['price_monthly'],
+                'price_daily' => $row['price_daily'],
+                'capacity' => $row['capacity'],
+                'enabled' => true,
             ]);
         }
     }
