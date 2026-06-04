@@ -4237,6 +4237,158 @@
                 }
             }
         },
+        "/content/{key}": {
+            "get": {
+                "operationId": "siteContent.show",
+                "summary": "GET /api/content/{key} \u2014 public site-wide content for a whitelisted key\n(or [] when unset). Unknown keys 404",
+                "tags": [
+                    "SiteContent"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    }
+                }
+            }
+        },
+        "/admin/content/{key}": {
+            "get": {
+                "operationId": "admin.siteContent.show",
+                "summary": "GET /api/admin/content/{key} \u2014 current content for a whitelisted key\n(or [] when unset). Unknown keys 404",
+                "tags": [
+                    "SiteContent"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "siteContent.update",
+                "summary": "PUT /api/admin/content/{key} \u2014 upsert the content blob (partial\noverrides) for a whitelisted key. Unknown keys 404",
+                "tags": [
+                    "SiteContent"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSiteContentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Content updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/member/subscriptions": {
             "get": {
                 "operationId": "subscription.index",
@@ -7058,6 +7210,22 @@
                 ],
                 "title": "UpdateSeatTypesRequest"
             },
+            "UpdateSiteContentRequest": {
+                "type": "object",
+                "description": "Validates a site-wide CMS payload. The body is `{ \"content\": <blob> }` where\nthe blob is a free-form, bilingual, partial-override array whose shape varies\nper content key (site / faq / about / how_it_works). The nested structure is\nintentionally unconstrained \u2014 the frontend supplies i18n defaults for\nanything omitted, so partial saves must pass. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "content": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "title": "UpdateSiteContentRequest"
+            },
             "UpdateWorkspaceRequest": {
                 "type": "object",
                 "properties": {
@@ -7417,6 +7585,25 @@
             },
             "AuthenticationException": {
                 "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "NotFoundHttpException": {
+                "description": "Not found",
                 "content": {
                     "application/json": {
                         "schema": {
