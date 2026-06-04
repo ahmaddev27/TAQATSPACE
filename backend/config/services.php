@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Taqat SSO (OIDC Identity Provider)
+    |--------------------------------------------------------------------------
+    |
+    | "Sign in with Taqat" — Authorization Code + PKCE flow against the Taqat
+    | identity provider. The client_secret is a real secret: keep it only in
+    | the environment, never in source control. Endpoints are discovered from
+    | {issuer}/.well-known/openid-configuration at runtime.
+    |
+    */
+    'taqat_sso' => [
+        'issuer' => env('TAQAT_SSO_ISSUER'),
+        'client_id' => env('TAQAT_SSO_CLIENT_ID', 'taqat-space'),
+        'client_secret' => env('TAQAT_SSO_CLIENT_SECRET'),
+        'redirect_uri' => env('TAQAT_SSO_REDIRECT_URI'),
+    ],
+
 ];

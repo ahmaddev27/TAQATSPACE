@@ -9,10 +9,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ loggedout?: string }>;
+  searchParams: Promise<{ loggedout?: string; sso_error?: string }>;
 }) {
   const { locale } = await params;
-  const { loggedout } = await searchParams;
+  const { loggedout, sso_error } = await searchParams;
   const t = await getTranslations({ locale, namespace: "auth.login" });
 
   return (
@@ -46,7 +46,7 @@ export default async function LoginPage({
       </aside>
 
       <div className="auth-form-side">
-        <LoginForm loggedOut={loggedout === "1"} />
+        <LoginForm loggedOut={loggedout === "1"} ssoError={sso_error === "1"} />
       </div>
     </div>
   );
