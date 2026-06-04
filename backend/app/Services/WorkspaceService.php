@@ -21,9 +21,13 @@ use RuntimeException;
 
 class WorkspaceService
 {
-    private const PHOTO_DISK = 'public';
-
     private const MAX_PHOTOS = 10;
+
+    /** Disk used for workspace photos (`public` in dev, `s3` on servers). */
+    private function photoDisk(): string
+    {
+        return (string) config('filesystems.media', 'public');
+    }
 
     public function __construct(
         private readonly WorkspaceRepository $workspaces,
@@ -172,7 +176,7 @@ class WorkspaceService
 
         foreach ($files as $file) {
             $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
-            $paths[] = $file->storeAs($directory, $filename, ['disk' => self::PHOTO_DISK]);
+            $paths[] = $file->storeAs($directory, $filename, ['disk' => $this->photoDisk()]);
         }
 
         return $this->workspaces->update($workspace, [
@@ -193,7 +197,7 @@ class WorkspaceService
             throw new RuntimeException('Photo not found on this workspace.');
         }
 
-        $disk = Storage::disk(self::PHOTO_DISK);
+        $disk = Storage::disk($this->photoDisk());
 
         if ($disk->exists($path)) {
             $disk->delete($path);

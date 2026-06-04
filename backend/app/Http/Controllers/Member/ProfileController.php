@@ -36,7 +36,7 @@ class ProfileController extends Controller
             $attributes['avatar'] = $this->files->upload(
                 $request->file('avatar'),
                 "avatars/{$user->id}",
-                'public',
+                (string) config('filesystems.media', 'public'),
                 'public',
             );
         }

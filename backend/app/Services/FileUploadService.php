@@ -26,9 +26,14 @@ class FileUploadService
 
         $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
 
-        return $file->storeAs($directory, $filename, [
-            'disk' => $disk,
-            'visibility' => $visibility,
-        ]);
+        // Modern S3 buckets enforce bucket-owner ownership (ACLs disabled), so a
+        // per-object ACL request fails. Access is governed by the bucket policy
+        // instead — only pass visibility for local disks where it is meaningful.
+        $options = ['disk' => $disk];
+        if ($disk !== 's3') {
+            $options['visibility'] = $visibility;
+        }
+
+        return $file->storeAs($directory, $filename, $options);
     }
 }

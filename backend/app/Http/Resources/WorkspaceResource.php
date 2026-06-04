@@ -60,7 +60,7 @@ class WorkspaceResource extends JsonResource
      */
     private function photoUrls(): array
     {
-        $disk = Storage::disk('public');
+        $disk = Storage::disk((string) config('filesystems.media', 'public'));
 
         return array_map(
             static fn (string $path): string => $disk->exists($path)

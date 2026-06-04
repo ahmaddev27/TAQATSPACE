@@ -2,10 +2,10 @@ import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Rating } from "@/components/ui/Rating";
 import { Amenity } from "@/components/ui/Amenity";
-import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
+import { CoverImage } from "@/components/ui/CoverImage";
 import type { Workspace } from "@/lib/types";
 import type { PublicDict } from "./i18n";
-import { amenityLabel, occupancyPct, toNumber } from "./helpers";
+import { amenityLabel, coverImage, placeholderCover, occupancyPct, toNumber } from "./helpers";
 
 export interface WorkspaceCardProps {
   workspace: Workspace;
@@ -25,9 +25,10 @@ export function WorkspaceCard({ workspace, dict, locale }: WorkspaceCardProps) {
   return (
     <Link href={`/workspaces/${workspace.id}`} className="card card-hover ws-card">
       <div className="ws-card-img">
-        <ImgPlaceholder
-          label={locale === "ar" ? "صورة المساحة" : "workspace photo"}
-          color="#dbe7f0"
+        <CoverImage
+          src={coverImage(workspace.photos, workspace.id)}
+          fallbackSrc={placeholderCover(workspace.id)}
+          alt={workspace.name}
           h={158}
           radius="0"
         />

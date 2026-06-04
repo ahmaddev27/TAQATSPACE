@@ -264,7 +264,7 @@ export function FreelancerRegisterForm() {
           <Button
             type="button"
             variant="ghost"
-            icon="arrowR"
+            icon="arrowL"
             onClick={() => setStep((s) => Math.max(s - 1, 0))}
             disabled={step === 0}
           >
@@ -272,7 +272,7 @@ export function FreelancerRegisterForm() {
           </Button>
 
           {step < steps.length - 1 ? (
-            <Button type="button" variant="primary" iconEnd="arrowL" onClick={goNext}>
+            <Button type="button" variant="primary" iconEnd="arrowR" onClick={goNext}>
               {t("next")}
             </Button>
           ) : (

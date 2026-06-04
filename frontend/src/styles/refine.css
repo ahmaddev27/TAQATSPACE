@@ -269,3 +269,194 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .seat-row { grid-template-columns: 1fr 1fr; }
   .seat-row .icon-btn { grid-column: 2; justify-self: end; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Creative polish — soft shadows, tactile card lift, image zoom-on-hover.
+   Layered last so it refines the restrained base without rewriting it.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Borderless cards: drop the outline and rely on a very light soft shadow
+   for definition (capability cards included). */
+.card,
+.cap-card {
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 3px 10px rgba(16, 24, 40, 0.045);
+}
+
+/* Interactive cards lift gently and deepen their shadow on hover. */
+.card-hover {
+  transition: border-color var(--t-base), box-shadow var(--t-base), transform var(--t-base);
+  will-change: transform;
+}
+.card-hover:hover,
+.cap-card:hover {
+  border-color: transparent;
+  box-shadow: var(--sh-md);
+  transform: translateY(-3px);
+}
+
+/* Workspace cards: clip the cover and zoom it slightly on hover — the
+   classic marketplace "alive" feel. */
+.ws-card-img { overflow: hidden; }
+.ws-card-img img { transition: transform 450ms cubic-bezier(0.2, 0, 0, 1); }
+.ws-card:hover .ws-card-img img { transform: scale(1.06); }
+
+/* Hero collage imagery: real depth + a subtle zoom on hover. */
+.ed-img-main,
+.ed-img-sm {
+  overflow: hidden;
+  border-radius: var(--r-2xl);
+  box-shadow: var(--sh-md);
+}
+.ed-img-main img,
+.ed-img-sm img {
+  display: block;
+  transition: transform 450ms cubic-bezier(0.2, 0, 0, 1);
+}
+.ed-img-main:hover img,
+.ed-img-sm:hover img { transform: scale(1.04); }
+
+/* "Why" collage + detail gallery: soft shadow that deepens with a light
+   lift on hover (these images aren't inside a clipping wrapper). */
+.why-img-1,
+.why-img-2,
+.gallery-main,
+.gallery-side img {
+  box-shadow: var(--sh-sm);
+  transition: box-shadow var(--t-base), transform var(--t-base);
+}
+.why-img-1:hover,
+.why-img-2:hover,
+.gallery-main:hover,
+.gallery-side img:hover {
+  box-shadow: var(--sh-md);
+  transform: translateY(-2px);
+}
+
+/* Floating hero stat card: lift it off the collage with a stronger shadow
+   and an amber edge glow for a premium accent. */
+.ed-float-card {
+  box-shadow: var(--sh-md), 0 0 0 1px rgba(246, 169, 27, 0.12);
+}
+
+/* Hero highlight word: warm underline glow that draws the eye. */
+.ed-title .hl {
+  background-image: linear-gradient(120deg, rgba(246, 169, 27, 0.22), rgba(246, 169, 27, 0.22));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 100% 0.32em;
+  border-radius: 2px;
+}
+
+/* ── Responsive spacing refinements ──────────────────────────────────
+   Tighter gutters and slot sizes on small screens so content breathes
+   without overflowing. */
+@media (max-width: 1024px) {
+  /* Two-up workspace cards on tablets instead of jumping straight to one. */
+  .ws-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* Explore-row thumbnail is a fixed box; the CoverImage fills and is clipped by
+   it (it sets width:100%/height:100%, so the box must define the real size). */
+.explore-row-img {
+  width: 150px;
+  height: 104px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--r-md);
+}
+
+@media (max-width: 640px) {
+  .container { padding-inline: 16px; }
+  .ws-grid { grid-template-columns: 1fr; }
+  .explore-row { gap: 12px; padding: 12px; }
+  .explore-row-img { width: 112px; height: 92px; }
+  .cta-band { padding: 44px 22px; }
+}
+@media (max-width: 380px) {
+  .container { padding-inline: 13px; }
+  .ed-stats { gap: 12px; }
+}
+
+/* ── Dark mode: keep the primary button text white & high-contrast ────
+   The dark palette flips --on-primary to near-black on a light-blue fill;
+   use a deeper blue with white text so the label stays legible. */
+[data-theme="dark"] .btn-primary {
+  color: #fff;
+  background: var(--blue-600);
+}
+[data-theme="dark"] .btn-primary:hover { background: var(--blue-500); }
+[data-theme="dark"] .btn-primary:active { background: var(--blue-700); }
+
+/* ── Demo accounts panel (login) ─────────────────────────────────────── */
+.demo-accounts {
+  margin-top: 22px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.demo-accounts-h {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.demo-accounts-list { display: grid; gap: 8px; }
+.demo-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: start;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.demo-chip:hover { border-color: var(--primary); box-shadow: var(--sh-sm); transform: translateY(-1px); }
+.demo-chip-role { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.demo-chip-email { font-size: var(--fs-xs); color: var(--text-3); font-family: var(--font-num, monospace); }
+.demo-accounts-pw { margin-top: 10px; font-size: var(--fs-xs); color: var(--text-3); }
+.demo-accounts-pw code {
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* ── Mobile polish: hero + "Why TAQAT" ───────────────────────────────── */
+@media (max-width: 640px) {
+  .ed-hero { padding: 24px 0 30px; }
+  .ed-hero-in { gap: 24px; }
+  .ed-title { font-size: clamp(2rem, 8.4vw, 2.7rem); line-height: 1.12; }
+  .ed-lead { font-size: var(--fs-md); line-height: 1.7; }
+  .ed-stats { grid-template-columns: repeat(2, 1fr); gap: 16px 20px; padding-top: 20px; }
+  .ed-stat-n { font-size: 1.5rem; }
+
+  /* Collage: single column; the floating card flows below instead of
+     overlapping, the badge tucks into the top corner. */
+  .ed-collage { grid-template-columns: 1fr; gap: 12px; }
+  .ed-img-main { grid-row: auto; }
+  .ed-float-card {
+    position: static;
+    width: auto;
+    inset: auto;
+    margin-top: 2px;
+    box-shadow: var(--sh-md), 0 0 0 1px rgba(246, 169, 27, 0.12);
+  }
+  .ed-float-badge { top: 8px; inset-inline-end: 8px; padding: 9px 13px; }
+  .ed-badge-n { font-size: 1.3rem; }
+
+  /* Why: stack the collage cleanly and tighten the checklist. */
+  .why-grid { gap: 30px; }
+  .why-collage { grid-template-columns: 1fr; gap: 12px; }
+  .why-img-1, .why-img-2, .why-blob { grid-column: 1 / -1; }
+  .why-blob { min-height: auto; padding: 18px 20px; }
+  .check-list { gap: 11px; margin-top: 20px; }
+  .check-row { font-size: var(--fs-md); }
+}
