@@ -25,6 +25,18 @@ export type {
   LandingContent,
 } from "./landing";
 
+export type {
+  ContentKey,
+  SiteSocial,
+  SiteContent,
+  FaqItem,
+  FaqContent,
+  AboutSection,
+  AboutContent,
+  HowItWorksStep,
+  HowItWorksContent,
+} from "./content";
+
 /* -------------------------------------------------------------------------- */
 /*  Enums (string-backed, mirror App\Enums\*)                                  */
 /* -------------------------------------------------------------------------- */
