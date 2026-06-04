@@ -10,7 +10,7 @@ import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { CoverImage } from "@/components/ui/CoverImage";
 import type { Workspace } from "@/lib/types";
 import type { PublicDict } from "./i18n";
-import { amenityLabel, coverImage, occupancyPct, toNumber } from "./helpers";
+import { amenityLabel, coverImage, placeholderCover, occupancyPct, toNumber } from "./helpers";
 
 // Leaflet touches `window`; load it only on the client.
 const MapView = dynamic(() => import("./MapView").then((m) => m.MapView), {
@@ -87,6 +87,7 @@ export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps
             >
               <CoverImage
                 src={coverImage(w.photos, w.id)}
+                fallbackSrc={placeholderCover(w.id)}
                 alt={w.name}
                 h={104}
                 radius="var(--r-md)"
