@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Invoice;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoicePdfService
@@ -37,15 +39,54 @@ class InvoicePdfService
 
         $invoice->loadMissing('subscription.member', 'subscription.seat', 'subscription.workspace');
 
-        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $invoice])
-            ->setPaper('a4')
-            ->setOption('defaultFont', 'DejaVu Sans');
-
-        $disk->put($path, $pdf->output());
+        $disk->put($path, $this->render($invoice));
 
         $invoice->forceFill(['invoice_pdf_path' => $path])->save();
 
         return $path;
+    }
+
+    /**
+     * Render the invoice as a PDF binary string using mPDF, which performs
+     * native Arabic shaping (letter joining) and RTL bidi — something DomPDF
+     * cannot do — so the Arabic-first template renders correctly.
+     */
+    private function render(Invoice $invoice): string
+    {
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'tempDir' => $this->tempDir(),
+            'autoScriptToLang' => true,
+            'autoArabic' => true,
+            'autoLangToFont' => true,
+            'margin_top' => 14,
+            'margin_bottom' => 14,
+            'margin_left' => 14,
+            'margin_right' => 14,
+        ]);
+
+        $mpdf->SetDirectionality('rtl');
+
+        $html = View::make('pdf.invoice', ['invoice' => $invoice])->render();
+
+        $mpdf->WriteHTML($html);
+
+        return $mpdf->Output('', Destination::STRING_RETURN);
+    }
+
+    /**
+     * mPDF requires a writable temp directory; ensure it exists before use.
+     */
+    private function tempDir(): string
+    {
+        $dir = storage_path('app/mpdf');
+
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        return $dir;
     }
 
     private function fileName(Invoice $invoice): string

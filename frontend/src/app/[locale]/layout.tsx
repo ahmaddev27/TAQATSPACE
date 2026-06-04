@@ -34,10 +34,43 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "TAQAT.space",
-  description: "Coworking-space marketplace",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === "ar";
+  const title = isAr
+    ? "طاقات سبيس — مساحات العمل المشتركة في غزة"
+    : "TAQAT.space — Coworking spaces across Gaza";
+  const description = isAr
+    ? "اكتشف واحجز مساحات العمل المشتركة في قطاع غزة — منصّة تجمع المستقلين وأصحاب المساحات."
+    : "Discover and book coworking spaces across the Gaza Strip — connecting freelancers with workspace owners.";
+
+  return {
+    metadataBase: new URL("https://taqat.space"),
+    applicationName: "TAQAT.space",
+    title: {
+      default: title,
+      template: isAr ? "%s · طاقات سبيس" : "%s · TAQAT.space",
+    },
+    description,
+    openGraph: {
+      type: "website",
+      siteName: "TAQAT.space",
+      title,
+      description,
+      url: `https://taqat.space/${locale}`,
+      locale: isAr ? "ar_PS" : "en_US",
+    },
+    twitter: { card: "summary_large_image", title, description },
+    alternates: {
+      canonical: `https://taqat.space/${locale}`,
+      languages: { ar: "/ar", en: "/en" },
+    },
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

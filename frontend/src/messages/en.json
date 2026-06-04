@@ -50,6 +50,12 @@
       "quoteName": "Lian Abu Shawish",
       "quoteRole": "UI/UX Designer · Gaza"
     },
+    "sso": {
+      "button": "Sign in with Taqat",
+      "divider": "or",
+      "signingIn": "Signing you in…",
+      "error": "Could not sign in with Taqat, please try again."
+    },
     "forgot": {
       "title": "Forgot password",
       "subtitle": "Enter your email and we'll send you a reset link.",

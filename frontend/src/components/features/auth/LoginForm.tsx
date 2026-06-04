@@ -23,8 +23,21 @@ const DEMO_ACCOUNTS: Array<{ key: string; ar: string; en: string; email: string 
   { key: "admin", ar: "مدير المنصّة", en: "Admin", email: "admin@taqat.space" },
 ];
 
-export function LoginForm({ loggedOut = false }: { loggedOut?: boolean }) {
+/**
+ * Base URL of the Laravel API, e.g. https://api.taqat.space/api. Inlined into
+ * the client bundle by Next at build time (NEXT_PUBLIC_*).
+ */
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+
+export function LoginForm({
+  loggedOut = false,
+  ssoError = false,
+}: {
+  loggedOut?: boolean;
+  ssoError?: boolean;
+}) {
   const t = useTranslations("auth.login");
+  const tSso = useTranslations("auth.sso");
   const tv = useTranslations("validation");
   const locale = useLocale();
   const { login } = useAuth();
@@ -79,11 +92,25 @@ export function LoginForm({ loggedOut = false }: { loggedOut?: boolean }) {
         </div>
       )}
 
+      {ssoError && !serverError && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert tone="danger" title={tSso("error")} />
+        </div>
+      )}
+
       {serverError && (
         <div style={{ marginBottom: 16 }}>
           <Alert tone="danger" title={serverError} />
         </div>
       )}
+
+      <a className="btn btn-secondary btn-lg btn-block" href={`${API_URL}/auth/taqat/redirect`}>
+        {tSso("button")}
+      </a>
+
+      <div className="auth-divider" role="separator">
+        <span>{tSso("divider")}</span>
+      </div>
 
       <div className="stack" style={{ gap: 16 }}>
         <Field label={t("email")} error={errors.email?.message}>
