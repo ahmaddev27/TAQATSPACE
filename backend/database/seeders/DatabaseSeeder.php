@@ -17,6 +17,7 @@ use App\Models\Message;
 use App\Models\Review;
 use App\Models\Seat;
 use App\Models\SeatTypePrice;
+use App\Models\SiteSetting;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -46,6 +47,7 @@ class DatabaseSeeder extends Seeder
             $this->seedMessages($activeWorkspaces);
             $this->seedAnnouncements($activeWorkspaces);
             $this->seedReviews($subscriptions, $activeWorkspaces);
+            $this->seedSiteContent();
         });
 
         $this->command?->info('Seeded admin: admin@taqat.space (password: password)');
@@ -386,5 +388,29 @@ class DatabaseSeeder extends Seeder
                 $workspace->update(['avg_rating' => round((float) $average, 2)]);
             }
         }
+    }
+
+    /**
+     * Placeholder contact details so the public footer renders something before
+     * a Super Admin fills in the real values. Other CMS keys (faq/about/
+     * how_it_works) rely on the frontend's i18n fallbacks until edited.
+     */
+    private function seedSiteContent(): void
+    {
+        SiteSetting::updateOrCreate(
+            ['key' => 'site'],
+            ['value' => [
+                'contact_email' => 'info@taqat.space',
+                'contact_phone' => '+970 59 000 0000',
+                'whatsapp' => '+970 59 000 0000',
+                'address' => ['ar' => 'غزة، فلسطين', 'en' => 'Gaza, Palestine'],
+                'social' => [
+                    'facebook' => null,
+                    'instagram' => null,
+                    'twitter' => null,
+                    'linkedin' => null,
+                ],
+            ]],
+        );
     }
 }
