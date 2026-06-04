@@ -1,11 +1,12 @@
 import { Link } from "@/i18n/navigation";
-import { Icon } from "@/components/ui/Icon";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { CoverImage } from "@/components/ui/CoverImage";
 import { listWorkspaces } from "@/lib/api/workspaces";
 import { getLanding } from "@/lib/api/landing";
-import type { LandingContent, LocalizedText, Workspace } from "@/lib/types";
+import { getContent } from "@/lib/api/content";
+import type { HowItWorksContent, LandingContent, LocalizedText, Workspace } from "@/lib/types";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { WorkspaceCard } from "@/components/features/public/WorkspaceCard";
 import { HeroSeatMini } from "@/components/features/public/HeroSeatMini";
@@ -79,14 +80,28 @@ export default async function HomePage({
         ];
 
   const whys = [h.why1, h.why2, h.why3, h.why4];
-  const caps = [
-    { n: "01", ico: "search", t: dict.caps["1"], d: dict.caps["1d"] },
-    { n: "02", ico: "calendar", t: dict.caps["2"], d: dict.caps["2d"] },
-    { n: "03", ico: "receipt", t: dict.caps["3"], d: dict.caps["3d"] },
-    { n: "04", ico: "grid", t: dict.caps["4"], d: dict.caps["4d"] },
-    { n: "05", ico: "wifi", t: dict.caps["5"], d: dict.caps["5d"] },
-    { n: "06", ico: "chart", t: dict.caps["6"], d: dict.caps["6d"] },
-  ] as const;
+  // Admin-managed "how it works" steps override the default capabilities grid.
+  const hiw: HowItWorksContent = await getContent("how_it_works").catch(() => ({}));
+  const CAP_ICONS: IconName[] = ["search", "calendar", "receipt", "grid", "wifi", "chart"];
+  const cmsSteps = (hiw.steps ?? [])
+    .map((s, i) => ({
+      n: String(i + 1).padStart(2, "0"),
+      ico: CAP_ICONS[i % CAP_ICONS.length],
+      t: pick(loc(s.title, locale), ""),
+      d: pick(loc(s.description, locale), ""),
+    }))
+    .filter((s) => s.t || s.d);
+  const caps: Array<{ n: string; ico: IconName; t: string; d: string }> =
+    cmsSteps.length > 0
+      ? cmsSteps
+      : [
+          { n: "01", ico: "search", t: dict.caps["1"], d: dict.caps["1d"] },
+          { n: "02", ico: "calendar", t: dict.caps["2"], d: dict.caps["2d"] },
+          { n: "03", ico: "receipt", t: dict.caps["3"], d: dict.caps["3d"] },
+          { n: "04", ico: "grid", t: dict.caps["4"], d: dict.caps["4d"] },
+          { n: "05", ico: "wifi", t: dict.caps["5"], d: dict.caps["5d"] },
+          { n: "06", ico: "chart", t: dict.caps["6"], d: dict.caps["6d"] },
+        ];
 
   // Testimonials: CMS list when present, else the default trio.
   const cmsTestimonials = cms.testimonials ?? [];
