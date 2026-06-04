@@ -559,6 +559,29 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .hours-closed { justify-content: flex-start; justify-self: start; }
 }
 
+/* ── Owner settings: per-seat-type pricing cards ─────────────────────── */
+.seat-type-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 13px 14px;
+  background: var(--surface);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.seat-type-card.is-on {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: var(--primary-soft);
+}
+.seat-type-head { display: flex; align-items: center; }
+.seat-type-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 560px) {
+  .seat-type-fields { grid-template-columns: 1fr; }
+}
+
 /* Adaptive gallery: 1 photo = full width, 2 = side-by-side, 3+ = main+side. */
 .gallery-1 { grid-template-columns: 1fr; }
 .gallery-2 { grid-template-columns: 1fr 1fr; }

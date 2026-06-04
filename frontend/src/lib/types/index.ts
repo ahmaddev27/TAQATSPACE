@@ -98,6 +98,20 @@ export interface SeatsSummary {
   maintenance: number;
 }
 
+/**
+ * Per-seat-type pricing row, mirroring `WorkspaceResource::seat_types`.
+ *
+ * Money fields arrive as decimal strings (e.g. `"120.00"`) or `null` when unset.
+ * The public side only renders `enabled` rows; the owner side edits all three.
+ */
+export interface SeatTypePrice {
+  type: SeatType;
+  price_monthly: string | null;
+  price_daily: string | null;
+  capacity: number;
+  enabled: boolean;
+}
+
 export interface RecentReview {
   rating: number;
   comment: string | null;
@@ -122,6 +136,11 @@ export interface Workspace {
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
   avg_rating: number | null;
+  /**
+   * Per-seat-type pricing. All three types may be present; disabled ones are
+   * included (hide them on the public side). Absent on legacy rows.
+   */
+  seat_types?: SeatTypePrice[];
   created_at: string | null;
   /** Present on the public detail endpoint only. */
   seats_summary?: SeatsSummary;
