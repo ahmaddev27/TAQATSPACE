@@ -2,7 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
+import { CoverImage } from "@/components/ui/CoverImage";
 import { listWorkspaces } from "@/lib/api/workspaces";
 import type { Workspace } from "@/lib/types";
 import { getPublicDict } from "@/components/features/public/i18n";
@@ -57,10 +57,6 @@ export default async function HomePage({
       <section className="ed-hero">
         <div className="container ed-hero-in">
           <div className="ed-hero-copy">
-            <span className="ed-pill">
-              <span className="dot-amber" />
-              {h.heroKicker}
-            </span>
             <h1 className="ed-title">
               {h.heroT1} <span className="hl">{h.heroT2}</span>
               {h.heroT3}
@@ -90,10 +86,10 @@ export default async function HomePage({
 
           <div className="ed-collage">
             <div className="ed-img-main">
-              <ImgPlaceholder label={h.imgWorkspace} color="#cfe0ee" h={420} radius="var(--r-2xl)" />
+              <CoverImage src="/images/workspaces/placeholder-1.svg" alt={h.imgWorkspace} h={420} radius="var(--r-2xl)" />
             </div>
             <div className="ed-img-sm">
-              <ImgPlaceholder label={h.imgLounge} color="#e6ddd0" h={196} radius="var(--r-2xl)" />
+              <CoverImage src="/images/workspaces/placeholder-3.svg" alt={h.imgLounge} h={196} radius="var(--r-2xl)" />
             </div>
             <div className="ed-float-card card">
               <div className="between" style={{ marginBottom: 10 }}>
@@ -127,16 +123,16 @@ export default async function HomePage({
       <section className="container section" id="about">
         <div className="why-grid">
           <div className="why-collage">
-            <ImgPlaceholder
-              label={h.imgInside}
-              color="#d3dde7"
+            <CoverImage
+              src="/images/workspaces/placeholder-2.svg"
+              alt={h.imgInside}
               h={300}
               radius="var(--r-2xl)"
               className="why-img-1"
             />
-            <ImgPlaceholder
-              label={h.imgTeam}
-              color="#e7ddd2"
+            <CoverImage
+              src="/images/workspaces/placeholder-1.svg"
+              alt={h.imgTeam}
               h={190}
               radius="var(--r-2xl)"
               className="why-img-2"

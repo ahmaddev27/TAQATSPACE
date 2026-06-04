@@ -1,33 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 
 export interface GalleryProps {
   photos: string[];
   alt: string;
 }
 
+const PLACEHOLDERS = [
+  "/images/workspaces/placeholder-1.svg",
+  "/images/workspaces/placeholder-2.svg",
+  "/images/workspaces/placeholder-3.svg",
+] as const;
+
 interface PhotoSlotProps {
   src: string | undefined;
+  fallbackSrc: string;
   alt: string;
   h: number;
-  color: string;
   className?: string;
 }
 
-/** A photo slot that falls back to the striped placeholder on load error. */
-function PhotoSlot({ src, alt, h, color, className }: PhotoSlotProps) {
+/** A photo slot that falls back to an on-brand placeholder when no real photo. */
+function PhotoSlot({ src, fallbackSrc, alt, h, className }: PhotoSlotProps) {
   const [failed, setFailed] = useState(false);
-  if (!src || failed) {
-    return <ImgPlaceholder label="" color={color} h={h} radius="var(--r-lg)" className={className} />;
-  }
+  const url = !src || failed ? fallbackSrc : src;
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={url}
       alt={alt}
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (!failed) setFailed(true);
+      }}
       className={className}
       style={{
         height: h,
@@ -44,10 +49,10 @@ function PhotoSlot({ src, alt, h, color, className }: PhotoSlotProps) {
 export function Gallery({ photos, alt }: GalleryProps) {
   return (
     <div className="gallery">
-      <PhotoSlot src={photos[0]} alt={alt} h={320} color="#cfe0ee" className="gallery-main" />
+      <PhotoSlot src={photos[0]} fallbackSrc={PLACEHOLDERS[0]} alt={alt} h={320} className="gallery-main" />
       <div className="gallery-side">
-        <PhotoSlot src={photos[1]} alt={alt} h={152} color="#e4ddd4" />
-        <PhotoSlot src={photos[2]} alt={alt} h={152} color="#dde7e1" />
+        <PhotoSlot src={photos[1]} fallbackSrc={PLACEHOLDERS[1]} alt={alt} h={152} />
+        <PhotoSlot src={photos[2]} fallbackSrc={PLACEHOLDERS[2]} alt={alt} h={152} />
       </div>
     </div>
   );
