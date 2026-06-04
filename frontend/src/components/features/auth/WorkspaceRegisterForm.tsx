@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -20,6 +20,7 @@ import {
   workspaceRegisterSchema,
   WORKSPACE_STEP_FIELDS,
   AMENITY_CODES,
+  SEAT_TYPE_CODES,
   type WorkspaceRegisterValues,
 } from "@/lib/validations/auth";
 import { PendingReviewScreen } from "./PendingReviewScreen";
@@ -92,12 +93,18 @@ export function WorkspaceRegisterForm() {
       address: "",
       lat: GAZA_CENTER.lat,
       lng: GAZA_CENTER.lng,
-      seats: [{ name: "", price: 0, unit: "daily" }],
+      seat_types: SEAT_TYPE_CODES.map((type, i) => ({
+        type,
+        enabled: i === 0, // Flexible on by default; owner toggles the rest.
+        price_monthly: "",
+        price_daily: "",
+        capacity: "",
+      })),
       amenities: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "seats" });
+  const seatTypes = useWatch({ control, name: "seat_types" });
   const amenities = useWatch({ control, name: "amenities" }) ?? [];
   const lat = useWatch({ control, name: "lat" }) ?? GAZA_CENTER.lat;
   const lng = useWatch({ control, name: "lng" }) ?? GAZA_CENTER.lng;
@@ -128,11 +135,22 @@ export function WorkspaceRegisterForm() {
     fd.append("address", values.address);
     fd.append("lat", String(values.lat));
     fd.append("lng", String(values.lng));
-    values.seats.forEach((s, i) => {
-      fd.append(`seats[${i}][name]`, s.name);
-      fd.append(`seats[${i}][price]`, String(s.price));
-      fd.append(`seats[${i}][unit]`, s.unit);
-    });
+    // Only submit the seat types the owner enabled (matches backend contract).
+    const num = (v: string): string => (v.trim() === "" ? "" : String(Number(v)));
+    values.seat_types
+      .filter((s) => s.enabled)
+      .forEach((s, i) => {
+        fd.append(`seat_types[${i}][type]`, s.type);
+        fd.append(`seat_types[${i}][enabled]`, "1");
+        fd.append(
+          `seat_types[${i}][capacity]`,
+          s.capacity.trim() === "" ? "0" : String(Math.trunc(Number(s.capacity))),
+        );
+        const monthly = num(s.price_monthly);
+        const daily = num(s.price_daily);
+        if (monthly !== "") fd.append(`seat_types[${i}][price_monthly]`, monthly);
+        if (daily !== "") fd.append(`seat_types[${i}][price_daily]`, daily);
+      });
     (values.amenities ?? []).forEach((a, i) => fd.append(`amenities[${i}]`, a));
     if (values.license_file) fd.append("license_file", values.license_file);
     if (values.id_document) fd.append("id_document", values.id_document);
@@ -267,55 +285,81 @@ export function WorkspaceRegisterForm() {
                 {t("seatsIntro")}
               </p>
 
-              {fields.map((fieldRow, i) => (
-                <div key={fieldRow.id} className="seat-row">
-                  <Field error={errors.seats?.[i]?.name?.message}>
-                    <Input
-                      placeholder={t("seatName")}
-                      {...register(`seats.${i}.name`)}
-                    />
-                  </Field>
-                  <Field error={errors.seats?.[i]?.price?.message}>
-                    <Input
-                      className="ltr tnum"
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      {...register(`seats.${i}.price`, { valueAsNumber: true })}
-                    />
-                  </Field>
-                  <Field>
-                    <Select {...register(`seats.${i}.unit`)}>
-                      <option value="daily">{t("seatUnitDaily")}</option>
-                      <option value="monthly">{t("seatUnitMonthly")}</option>
-                    </Select>
-                  </Field>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    onClick={() => remove(i)}
-                    aria-label={t("removeSeat")}
-                    disabled={fields.length === 1}
+              {SEAT_TYPE_CODES.map((type, i) => {
+                const on = seatTypes?.[i]?.enabled ?? false;
+                return (
+                  <div
+                    key={type}
+                    className={`seat-type-card ${on ? "is-on" : ""}`}
                   >
-                    <Icon name="trash" size={18} />
-                  </button>
-                </div>
-              ))}
+                    <div className="seat-type-head">
+                      <Checkbox
+                        checked={on}
+                        onChange={(e) =>
+                          setValue(`seat_types.${i}.enabled`, e.target.checked, {
+                            shouldValidate: true,
+                          })
+                        }
+                      >
+                        <span className="hours-day">
+                          {t(`seatTypeNames.${type}`)}
+                        </span>
+                      </Checkbox>
+                    </div>
+                    {on && (
+                      <div className="seat-type-fields">
+                        <Field
+                          label={t("seatMonthlyPrice")}
+                          error={errors.seat_types?.[i]?.price_monthly?.message}
+                        >
+                          <Input
+                            className="ltr tnum"
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            {...register(`seat_types.${i}.price_monthly`)}
+                          />
+                        </Field>
+                        <Field
+                          label={t("seatDailyPrice")}
+                          error={errors.seat_types?.[i]?.price_daily?.message}
+                        >
+                          <Input
+                            className="ltr tnum"
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            {...register(`seat_types.${i}.price_daily`)}
+                          />
+                        </Field>
+                        <Field
+                          label={t("seatCapacity")}
+                          error={errors.seat_types?.[i]?.capacity?.message}
+                        >
+                          <Input
+                            className="ltr tnum"
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            {...register(`seat_types.${i}.capacity`)}
+                          />
+                        </Field>
+                      </div>
+                    )}
+                    <input
+                      type="hidden"
+                      {...register(`seat_types.${i}.type`)}
+                      value={type}
+                    />
+                  </div>
+                );
+              })}
 
-              {typeof errors.seats?.message === "string" && (
+              {typeof errors.seat_types?.message === "string" && (
                 <span className="hint" style={{ color: "var(--danger)" }}>
-                  {errors.seats.message}
+                  {errors.seat_types.message}
                 </span>
               )}
-
-              <Button
-                type="button"
-                variant="ghost"
-                icon="plus"
-                onClick={() => append({ name: "", price: 0, unit: "daily" })}
-              >
-                {t("addSeat")}
-              </Button>
 
               <div>
                 <label className="label" style={{ marginBottom: 8, display: "block" }}>

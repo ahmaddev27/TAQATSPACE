@@ -134,14 +134,15 @@
       "addressPlaceholder": "Omar Al-Mukhtar St, building…",
       "mapLabel": "pin location on map",
       "mapStubNote": "Interactive map arrives in the next phase. A default location in central Gaza has been set.",
-      "seatsIntro": "Add the seat types and prices you offer.",
-      "seatName": "Seat type",
-      "seatPrice": "Price",
-      "seatUnit": "Unit",
-      "seatUnitDaily": "Daily",
-      "seatUnitMonthly": "Monthly",
-      "addSeat": "Add seat type",
-      "removeSeat": "Remove",
+      "seatsIntro": "Enable each seat type you offer and set its prices. Prices are optional; capacity is the number of seats of that type.",
+      "seatMonthlyPrice": "Monthly price",
+      "seatDailyPrice": "Daily price",
+      "seatCapacity": "Capacity",
+      "seatTypeNames": {
+        "flexible": "Flexible",
+        "fixed": "Fixed",
+        "private_office": "Private office"
+      },
       "amenities": "Available amenities",
       "amenityCodes": {
         "wifi": "Wi-Fi",

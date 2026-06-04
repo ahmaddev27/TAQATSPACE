@@ -8,6 +8,7 @@ import type {
   Member,
   Package,
   Seat,
+  SeatType,
   SubscriptionStatus,
   Workspace,
 } from "@/lib/types";
@@ -231,6 +232,37 @@ export async function updateSettings(
   const result = await authedMutate<Workspace>("/workspace/settings", {
     method: "PUT",
     body: input,
+  });
+  if (result.ok) {
+    revalidateOwner("settings");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Seat types & pricing                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** A single per-seat-type pricing row submitted to `PUT /workspace/seat-types`. */
+export interface SeatTypeInput {
+  type: SeatType;
+  price_monthly: number | null;
+  price_daily: number | null;
+  capacity: number;
+  enabled: boolean;
+}
+
+/**
+ * Upsert the owner's per-seat-type pricing. The backend returns the refreshed
+ * workspace (all rows), so the page can re-render from authoritative data.
+ */
+export async function updateSeatTypes(
+  rows: SeatTypeInput[],
+): Promise<ActionResult<Workspace>> {
+  const result = await authedMutate<Workspace>("/workspace/seat-types", {
+    method: "PUT",
+    body: { seat_types: rows },
   });
   if (result.ok) {
     revalidateOwner("settings");

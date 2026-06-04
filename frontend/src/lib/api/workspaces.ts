@@ -2,6 +2,7 @@ import { serverFetch } from "@/lib/api";
 import type {
   ApiEnvelope,
   Paginated,
+  SeatType,
   Workspace,
 } from "@/lib/types";
 
@@ -58,6 +59,15 @@ export async function showWorkspace(id: string): Promise<Workspace> {
   return res.data;
 }
 
+/** Optional per-seat-type pricing accepted by `POST /workspace/create`. */
+export interface CreateSeatTypeInput {
+  type: SeatType;
+  price_monthly?: number | null;
+  price_daily?: number | null;
+  capacity?: number;
+  enabled?: boolean;
+}
+
 /** Owner: create the (single) workspace. */
 export interface CreateWorkspaceInput {
   name: string;
@@ -71,6 +81,7 @@ export interface CreateWorkspaceInput {
   price_per_month: number;
   amenities?: string[];
   working_hours?: Record<string, unknown> | null;
+  seat_types?: CreateSeatTypeInput[];
 }
 
 export async function createWorkspace(

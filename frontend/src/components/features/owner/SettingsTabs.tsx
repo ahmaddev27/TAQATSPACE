@@ -12,8 +12,13 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
-import { updateSettings, type WorkspaceSettingsInput } from "@/lib/actions/owner";
-import type { Workspace } from "@/lib/types";
+import {
+  updateSeatTypes,
+  updateSettings,
+  type SeatTypeInput,
+  type WorkspaceSettingsInput,
+} from "@/lib/actions/owner";
+import type { SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
 
 export interface SettingsTabsProps {
@@ -57,10 +62,22 @@ const DAY_KEYS = [
   "friday",
 ] as const;
 
+/** The three backend seat types, in display order. */
+const SEAT_TYPE_KEYS: SeatType[] = ["flexible", "fixed", "private_office"];
+
 interface DayHours {
   open: boolean;
   from: string;
   to: string;
+}
+
+/** Editable per-seat-type pricing row (strings keep inputs controlled). */
+interface SeatTypeRow {
+  type: SeatType;
+  enabled: boolean;
+  priceMonthly: string;
+  priceDaily: string;
+  capacity: string;
 }
 
 interface FormState {
@@ -75,6 +92,25 @@ interface FormState {
   pricePerMonth: string;
   amenities: string[];
   hours: Record<string, DayHours>;
+  seatTypes: SeatTypeRow[];
+}
+
+/**
+ * Build one editable row per backend seat type, seeded from the workspace's
+ * saved rows when present and defaulted (disabled, empty) otherwise.
+ */
+function parseSeatTypes(raw: Workspace["seat_types"]): SeatTypeRow[] {
+  const byType = new Map((raw ?? []).map((row) => [row.type, row]));
+  return SEAT_TYPE_KEYS.map((type) => {
+    const row = byType.get(type);
+    return {
+      type,
+      enabled: row?.enabled ?? false,
+      priceMonthly: row?.price_monthly ?? "",
+      priceDaily: row?.price_daily ?? "",
+      capacity: row?.capacity != null ? String(row.capacity) : "",
+    };
+  });
 }
 
 function parseHours(raw: Workspace["working_hours"]): Record<string, DayHours> {
@@ -104,6 +140,7 @@ function buildInitial(ws: Workspace): FormState {
     pricePerMonth: ws.price_per_month != null ? String(ws.price_per_month) : "",
     amenities: ws.amenities ?? [],
     hours: parseHours(ws.working_hours),
+    seatTypes: parseSeatTypes(ws.seat_types),
   };
 }
 
@@ -134,6 +171,14 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
       hours: { ...f.hours, [day]: { ...f.hours[day], ...patch } },
     }));
 
+  const setSeatType = (type: SeatType, patch: Partial<SeatTypeRow>) =>
+    setForm((f) => ({
+      ...f,
+      seatTypes: f.seatTypes.map((row) =>
+        row.type === type ? { ...row, ...patch } : row,
+      ),
+    }));
+
   const save = () => {
     const payload: WorkspaceSettingsInput = {
       name: form.name.trim(),
@@ -160,10 +205,39 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
     });
   };
 
+  const toNullableNumber = (value: string): number | null => {
+    const trimmed = value.trim();
+    if (trimmed === "") return null;
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const saveSeatTypes = () => {
+    const rows: SeatTypeInput[] = form.seatTypes.map((row) => ({
+      type: row.type,
+      price_monthly: toNullableNumber(row.priceMonthly),
+      price_daily: toNullableNumber(row.priceDaily),
+      capacity: Math.max(0, Math.trunc(Number(row.capacity) || 0)),
+      enabled: row.enabled,
+    }));
+
+    startTransition(async () => {
+      const res = await updateSeatTypes(rows);
+      if (res.ok) {
+        setErrors({});
+        toast({ tone: "ok", title: t("settings.saved") });
+      } else {
+        setErrors(res.errors ?? {});
+        toast({ tone: "err", title: t("settings.saveFailed"), body: res.message });
+      }
+    });
+  };
+
   const tabs = [
     { id: "basic", label: t("settings.tabBasic") },
     { id: "location", label: t("settings.tabLocation") },
     { id: "pricing", label: t("settings.tabPricing") },
+    { id: "seatTypes", label: t("settings.tabSeatTypes") },
     { id: "amenities", label: t("settings.tabAmenities") },
     { id: "photos", label: t("settings.tabPhotos") },
     { id: "hours", label: t("settings.tabHours") },
@@ -270,6 +344,81 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
           </div>
         )}
 
+        {tab === "seatTypes" && (
+          <div className="stack" style={{ gap: 14 }}>
+            <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+              {t("settings.seatTypesHint")}
+            </p>
+            <div className="stack" style={{ gap: 12 }}>
+              {form.seatTypes.map((row) => (
+                <div
+                  key={row.type}
+                  className={`seat-type-card ${row.enabled ? "is-on" : ""}`}
+                >
+                  <div className="seat-type-head">
+                    <Checkbox
+                      checked={row.enabled}
+                      onChange={(e) =>
+                        setSeatType(row.type, { enabled: e.target.checked })
+                      }
+                    >
+                      <span className="hours-day">
+                        {t(`settings.seatTypeNames.${row.type}` as never)}
+                      </span>
+                    </Checkbox>
+                  </div>
+                  {row.enabled && (
+                    <div className="seat-type-fields">
+                      <Field label={t("settings.seatMonthlyPrice")}>
+                        <Input
+                          className="tnum"
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={row.priceMonthly}
+                          onChange={(e) =>
+                            setSeatType(row.type, { priceMonthly: e.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label={t("settings.seatDailyPrice")}>
+                        <Input
+                          className="tnum"
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={row.priceDaily}
+                          onChange={(e) =>
+                            setSeatType(row.type, { priceDaily: e.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label={t("settings.seatCapacity")}>
+                        <Input
+                          className="tnum"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={row.capacity}
+                          onChange={(e) =>
+                            setSeatType(row.type, { capacity: e.target.value })
+                          }
+                        />
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="primary"
+              icon="check"
+              loading={pending}
+              onClick={saveSeatTypes}
+              style={{ alignSelf: "flex-start" }}
+            >
+              {pending ? t("settings.saving") : t("settings.save")}
+            </Button>
+          </div>
+        )}
+
         {tab === "amenities" && (
           <div className="stack" style={{ gap: 14 }}>
             <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
@@ -342,7 +491,7 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
         )}
       </div>
 
-      {tab !== "photos" && (
+      {tab !== "photos" && tab !== "seatTypes" && (
         <Button
           variant="primary"
           icon="check"

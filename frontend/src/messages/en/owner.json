@@ -174,6 +174,7 @@
       "tabBasic": "Basic",
       "tabLocation": "Location",
       "tabPricing": "Pricing & seats",
+      "tabSeatTypes": "Seat types & pricing",
       "tabAmenities": "Amenities",
       "tabPhotos": "Photos",
       "tabHours": "Hours",
@@ -187,6 +188,15 @@
       "mapHint": "Enter coordinates manually or drag the pin on the map.",
       "totalSeats": "Total seats",
       "pricePerMonth": "Monthly price",
+      "seatTypesHint": "Enable each seat type you offer and set its monthly and daily prices. Prices are optional; capacity is the number of seats of that type.",
+      "seatMonthlyPrice": "Monthly price",
+      "seatDailyPrice": "Daily price",
+      "seatCapacity": "Capacity",
+      "seatTypeNames": {
+        "flexible": "Flexible",
+        "fixed": "Fixed",
+        "private_office": "Private office"
+      },
       "amenitiesHint": "Select the amenities available in your space.",
       "photosHint": "Drag and drop photos here, or click to browse.",
       "addPhotos": "Add photos",

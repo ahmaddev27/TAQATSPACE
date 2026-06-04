@@ -11,6 +11,7 @@ use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceStatus;
 use App\Models\BookingRequest;
 use App\Models\Seat;
+use App\Models\SeatTypePrice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -110,7 +111,7 @@ class BookingService
                 'seat_id' => $seat?->id,
                 'plan_type' => PlanType::Monthly->value,
                 'start_date' => Carbon::today()->toDateString(),
-                'monthly_price' => $workspace->price_per_month,
+                'monthly_price' => $this->resolveMonthlyPrice($booking, $workspace),
                 'status' => SubscriptionStatus::Active->value,
             ]);
 
@@ -188,5 +189,28 @@ class BookingService
         if ($booking->status !== BookingStatus::Pending) {
             abort(409, 'This booking request has already been reviewed.');
         }
+    }
+
+    /**
+     * Resolve the subscription's monthly price from the requested seat type's
+     * pricing, falling back to the workspace base price when the type has no
+     * monthly price configured (or no preferred type was requested).
+     */
+    private function resolveMonthlyPrice(BookingRequest $booking, Workspace $workspace): string
+    {
+        $seatType = $booking->preferred_seat_type;
+
+        if ($seatType !== null) {
+            $price = SeatTypePrice::query()
+                ->where('workspace_id', $workspace->id)
+                ->where('type', $seatType->value)
+                ->value('price_monthly');
+
+            if ($price !== null) {
+                return (string) $price;
+            }
+        }
+
+        return (string) $workspace->price_per_month;
     }
 }

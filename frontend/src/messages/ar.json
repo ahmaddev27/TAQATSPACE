@@ -134,14 +134,15 @@
       "addressPlaceholder": "شارع عمر المختار، عمارة…",
       "mapLabel": "حدّد الموقع على الخريطة",
       "mapStubNote": "ستتوفر الخريطة التفاعلية في المرحلة القادمة. تم تعيين موقع افتراضي في وسط غزة.",
-      "seatsIntro": "أضف أنواع المقاعد والأسعار التي تقدّمها.",
-      "seatName": "نوع المقعد",
-      "seatPrice": "السعر",
-      "seatUnit": "الوحدة",
-      "seatUnitDaily": "يومي",
-      "seatUnitMonthly": "شهري",
-      "addSeat": "إضافة نوع مقعد",
-      "removeSeat": "حذف",
+      "seatsIntro": "فعّل كل نوع مقعد تقدّمه وحدّد أسعاره. الأسعار اختيارية، والسعة هي عدد المقاعد من هذا النوع.",
+      "seatMonthlyPrice": "السعر الشهري",
+      "seatDailyPrice": "السعر اليومي",
+      "seatCapacity": "السعة",
+      "seatTypeNames": {
+        "flexible": "مرن",
+        "fixed": "ثابت",
+        "private_office": "مكتب خاص"
+      },
       "amenities": "المرافق المتاحة",
       "amenityCodes": {
         "wifi": "واي فاي",

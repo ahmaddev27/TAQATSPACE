@@ -67,6 +67,12 @@ class Workspace extends Model
         return $this->hasMany(Seat::class);
     }
 
+    /** @return HasMany<SeatTypePrice, $this> */
+    public function seatTypes(): HasMany
+    {
+        return $this->hasMany(SeatTypePrice::class);
+    }
+
     /** @return HasMany<Subscription, $this> */
     public function subscriptions(): HasMany
     {

@@ -10,16 +10,25 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import type { PublicDict } from "./i18n";
 import { submitBookingAction } from "./actions";
-import type { SeatType } from "@/lib/types";
+import { seatTypeLabel, toNumber } from "./helpers";
+import type { SeatType, SeatTypePrice } from "@/lib/types";
 
 export interface BookingPanelProps {
   workspaceId: string;
+  /** Fallback monthly price used when no seat type provides one. */
   price: number;
+  /** Per-seat-type pricing rows (only enabled rows are bookable). */
+  seatTypes?: SeatTypePrice[];
   dict: PublicDict;
 }
 
 /** Sticky booking panel — submits a request or routes guests to login. */
-export function BookingPanel({ workspaceId, price, dict }: BookingPanelProps) {
+export function BookingPanel({
+  workspaceId,
+  price,
+  seatTypes,
+  dict,
+}: BookingPanelProps) {
   const d = dict.detail;
   const c = dict.common;
   const { isAuthenticated, isLoading, role } = useAuth();
@@ -27,8 +36,22 @@ export function BookingPanel({ workspaceId, price, dict }: BookingPanelProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  const [seatType, setSeatType] = useState<SeatType>("flexible");
+  // Only enabled types are bookable; fall back to the three defaults if none.
+  const bookable = (seatTypes ?? []).filter((row) => row.enabled);
+  const options: SeatType[] =
+    bookable.length > 0
+      ? bookable.map((row) => row.type)
+      : ["flexible", "fixed", "private_office"];
+
+  const [seatType, setSeatType] = useState<SeatType>(options[0]);
   const [message, setMessage] = useState("");
+
+  // Price shown reflects the selected type's monthly price when available.
+  const selectedRow = bookable.find((row) => row.type === seatType);
+  const displayPrice =
+    selectedRow?.price_monthly != null
+      ? toNumber(selectedRow.price_monthly)
+      : price;
 
   const redirectTarget = `/workspaces/${workspaceId}`;
   // Only freelancers can book; treat any other authenticated role as a guest CTA.
@@ -62,7 +85,7 @@ export function BookingPanel({ workspaceId, price, dict }: BookingPanelProps) {
         <div className="row" style={{ gap: 8, alignItems: "baseline" }}>
           <span className="ws-price tnum" style={{ fontSize: "2rem" }}>
             {c.currency}
-            {price}
+            {displayPrice}
           </span>
           <span className="muted">{c.perMonth}</span>
         </div>
@@ -70,10 +93,15 @@ export function BookingPanel({ workspaceId, price, dict }: BookingPanelProps) {
         <div className="divider" style={{ margin: "16px 0" }} />
 
         <Field label={d.seatTypeLabel}>
-          <Select value={seatType} onChange={(ev) => setSeatType(ev.target.value as SeatType)}>
-            <option value="flexible">{d.seatOpen}</option>
-            <option value="fixed">{d.seatFixed}</option>
-            <option value="private_office">{d.seatPrivate}</option>
+          <Select
+            value={seatType}
+            onChange={(ev) => setSeatType(ev.target.value as SeatType)}
+          >
+            {options.map((type) => (
+              <option key={type} value={type}>
+                {seatTypeLabel(type, d)}
+              </option>
+            ))}
           </Select>
         </Field>
 

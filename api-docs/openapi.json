@@ -4140,6 +4140,103 @@
                 }
             }
         },
+        "/workspace/seat-types": {
+            "put": {
+                "operationId": "seatType.update",
+                "description": "Upserts the per-seat-type pricing for the authenticated owner's workspace\nand returns the refreshed workspace (including all seat_types rows).",
+                "summary": "PUT /api/workspace/seat-types \u2014 owner only, authorized via gate",
+                "tags": [
+                    "SeatType"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSeatTypesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkspaceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Seat type pricing updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "This action is unauthorized."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "You have no workspace to update."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/member/subscriptions": {
             "get": {
                 "operationId": "subscription.index",
@@ -4278,6 +4375,191 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/taqat/redirect": {
+            "get": {
+                "operationId": "taqatSso.redirect",
+                "summary": "Kick off the flow: build the authorize URL and redirect the browser to the IdP",
+                "tags": [
+                    "TaqatSso"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/taqat/callback": {
+            "get": {
+                "operationId": "taqatSso.callback",
+                "summary": "IdP redirect target: exchange the code, provision the user, bridge a token",
+                "tags": [
+                    "TaqatSso"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/taqat/exchange": {
+            "post": {
+                "operationId": "taqatSso.exchange",
+                "summary": "Redeem the one-time exchange code for the real token (token leaves the URL here)",
+                "tags": [
+                    "TaqatSso"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string"
+                                                },
+                                                "token_type": {
+                                                    "type": "string",
+                                                    "const": "Bearer"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "token",
+                                                "token_type",
+                                                "role",
+                                                "user"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "User not found."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid or expired exchange code."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Missing exchange code."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5950,6 +6232,53 @@
                             "type": "string",
                             "maxLength": 60
                         }
+                    },
+                    "seat_types": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Optional per-seat-type pricing submitted alongside the workspace.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "fixed",
+                                        "flexible",
+                                        "private_office"
+                                    ]
+                                },
+                                "price_monthly": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "price_daily": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "capacity": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "type"
+                            ]
+                        }
                     }
                 },
                 "required": [
@@ -6676,6 +7005,59 @@
                 },
                 "title": "UpdateSeatRequest"
             },
+            "UpdateSeatTypesRequest": {
+                "type": "object",
+                "properties": {
+                    "seat_types": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "fixed",
+                                        "flexible",
+                                        "private_office"
+                                    ]
+                                },
+                                "price_monthly": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "price_daily": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "capacity": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "minimum": 0
+                                },
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "type"
+                            ]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "seat_types"
+                ],
+                "title": "UpdateSeatTypesRequest"
+            },
             "UpdateWorkspaceRequest": {
                 "type": "object",
                 "properties": {
@@ -6886,6 +7268,42 @@
                     "avg_rating": {
                         "type": "string"
                     },
+                    "seat_types": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "price_monthly": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "price_daily": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "capacity": {
+                                    "type": "integer"
+                                },
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "price_monthly",
+                                "price_daily",
+                                "capacity",
+                                "enabled"
+                            ]
+                        }
+                    },
                     "created_at": {
                         "type": "string"
                     },
@@ -6941,6 +7359,7 @@
                     "working_hours",
                     "status",
                     "avg_rating",
+                    "seat_types",
                     "created_at"
                 ],
                 "title": "WorkspaceResource"

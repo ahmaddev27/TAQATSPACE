@@ -83,11 +83,23 @@ export const FREELANCER_STEP_FIELDS: (keyof FreelancerRegisterValues)[][] = [
   ["id_document", "terms"],
 ];
 
+/** The three backend seat types, in display order. */
+export const SEAT_TYPE_CODES = ["flexible", "fixed", "private_office"] as const;
+export type SeatTypeCode = (typeof SEAT_TYPE_CODES)[number];
+
 export function workspaceRegisterSchema(t: Translate) {
-  const seat = z.object({
-    name: z.string().min(1, t("required")),
-    price: z.number({ message: t("required") }).min(0, t("required")),
-    unit: z.enum(["daily", "monthly"]),
+  // Numeric text fields stay strings (text inputs); coerced to numbers on submit.
+  // Empty is allowed (price/capacity are optional); non-empty must be a ≥0 number.
+  const numericText = z
+    .string()
+    .refine((v) => v.trim() === "" || Number(v) >= 0, t("required"));
+
+  const seatType = z.object({
+    type: z.enum(SEAT_TYPE_CODES),
+    enabled: z.boolean(),
+    price_monthly: numericText,
+    price_daily: numericText,
+    capacity: numericText,
   });
 
   return z
@@ -103,8 +115,10 @@ export function workspaceRegisterSchema(t: Translate) {
       address: z.string().min(1, t("required")),
       lat: z.number(),
       lng: z.number(),
-      // Step 2 — seats + amenities
-      seats: z.array(seat).min(1, t("minSeat")),
+      // Step 2 — seat types + amenities
+      seat_types: z
+        .array(seatType)
+        .refine((rows) => rows.some((r) => r.enabled), { message: t("minSeat") }),
       amenities: z.array(z.string()).optional(),
       // Step 3 — documents
       license_file: fileSchema(t),
@@ -119,7 +133,7 @@ export type WorkspaceRegisterValues = z.infer<
 export const WORKSPACE_STEP_FIELDS: (keyof WorkspaceRegisterValues)[][] = [
   ["name", "description", "capacity", "hours"],
   ["city", "area", "address"],
-  ["seats", "amenities"],
+  ["seat_types", "amenities"],
   ["license_file", "id_document", "terms"],
 ];
 

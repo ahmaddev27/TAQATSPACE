@@ -141,7 +141,13 @@ export default async function WorkspaceDetailPage({
     </div>
   );
 
-  const seatsTab = <SeatPricing monthlyPrice={price} dict={dict} />;
+  const seatsTab = (
+    <SeatPricing
+      seatTypes={workspace.seat_types}
+      monthlyPrice={price}
+      dict={dict}
+    />
+  );
   const reviewsTab = (
     <ReviewList reviews={reviews} avgRating={rating} total={reviewsTotal} dict={dict} />
   );
@@ -186,7 +192,12 @@ export default async function WorkspaceDetailPage({
           <DetailTabs dict={dict} overview={overview} seats={seatsTab} reviews={reviewsTab} />
         </div>
 
-        <BookingPanel workspaceId={workspace.id} price={price} dict={dict} />
+        <BookingPanel
+          workspaceId={workspace.id}
+          price={price}
+          seatTypes={workspace.seat_types}
+          dict={dict}
+        />
       </div>
     </div>
   );
