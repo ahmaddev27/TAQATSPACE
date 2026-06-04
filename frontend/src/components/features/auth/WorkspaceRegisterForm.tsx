@@ -66,6 +66,7 @@ export function WorkspaceRegisterForm() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const steps = [
+    t("steps.account"),
     t("steps.info"),
     t("steps.location"),
     t("steps.seats"),
@@ -85,6 +86,11 @@ export function WorkspaceRegisterForm() {
     mode: "onTouched",
     defaultValues: {
       name: "",
+      email: "",
+      phone: "",
+      password: "",
+      password_confirmation: "",
+      workspace_name: "",
       description: "",
       capacity: 1,
       hours: "",
@@ -126,7 +132,14 @@ export function WorkspaceRegisterForm() {
     setServerError(null);
     const fd = new FormData();
     fd.append("role", "workspace_owner");
+    // Owner account.
     fd.append("name", values.name);
+    fd.append("email", values.email);
+    fd.append("phone", values.phone);
+    fd.append("password", values.password);
+    fd.append("password_confirmation", values.password_confirmation);
+    // Workspace profile.
+    fd.append("workspace_name", values.workspace_name);
     fd.append("description", values.description);
     fd.append("capacity", String(values.capacity));
     fd.append("hours", values.hours);
@@ -214,8 +227,57 @@ export function WorkspaceRegisterForm() {
 
           {step === 0 && (
             <div className="stack" style={{ gap: 16 }}>
-              <Field label={t("name")} error={errors.name?.message}>
-                <Input placeholder={t("namePlaceholder")} {...register("name")} />
+              <Field label={t("ownerName")} error={errors.name?.message}>
+                <Input
+                  placeholder={t("ownerNamePlaceholder")}
+                  {...register("name")}
+                />
+              </Field>
+              <Field label={t("email")} error={errors.email?.message}>
+                <Input
+                  icon="mail"
+                  type="email"
+                  placeholder="name@mail.ps"
+                  {...register("email")}
+                />
+              </Field>
+              <Field
+                label={t("phone")}
+                hint={t("phoneHint")}
+                error={errors.phone?.message}
+              >
+                <Input
+                  icon="phone"
+                  className="ltr"
+                  placeholder={t("phonePlaceholder")}
+                  {...register("phone")}
+                />
+              </Field>
+              <div className="grid2">
+                <Field label={t("password")} error={errors.password?.message}>
+                  <Input icon="lock" type="password" {...register("password")} />
+                </Field>
+                <Field
+                  label={t("passwordConfirm")}
+                  error={errors.password_confirmation?.message}
+                >
+                  <Input
+                    icon="lock"
+                    type="password"
+                    {...register("password_confirmation")}
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="stack" style={{ gap: 16 }}>
+              <Field label={t("name")} error={errors.workspace_name?.message}>
+                <Input
+                  placeholder={t("namePlaceholder")}
+                  {...register("workspace_name")}
+                />
               </Field>
               <Field label={t("description")} error={errors.description?.message}>
                 <Textarea
@@ -240,7 +302,7 @@ export function WorkspaceRegisterForm() {
             </div>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <div className="stack" style={{ gap: 16 }}>
               <div className="grid2">
                 <Field label={t("city")} error={errors.city?.message}>
@@ -279,7 +341,7 @@ export function WorkspaceRegisterForm() {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="stack" style={{ gap: 16 }}>
               <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
                 {t("seatsIntro")}
@@ -388,7 +450,7 @@ export function WorkspaceRegisterForm() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="stack" style={{ gap: 16 }}>
               <div
                 className="card"
