@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin User
@@ -34,17 +34,9 @@ class UserResource extends JsonResource
         ];
     }
 
-    /** Resolve the stored avatar path to a public URL (local or S3). */
+    /** Resolve the stored avatar path to a viewable URL (local or presigned S3). */
     private function avatarUrl(): ?string
     {
-        if (! $this->avatar) {
-            return null;
-        }
-
-        $disk = Storage::disk((string) config('filesystems.media', 'public'));
-
-        return $disk->exists($this->avatar)
-            ? $disk->url($this->avatar)
-            : $this->avatar;
+        return MediaUrl::resolve($this->avatar);
     }
 }
