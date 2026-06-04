@@ -1,9 +1,9 @@
 "use client";
 
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
-import Map, { Marker, NavigationControl, type MapRef } from "react-map-gl";
-import { MAPBOX_TOKEN, GAZA_CENTER, hasMapboxToken, useMapStyle } from "@/lib/mapbox";
+import Map, { Marker, NavigationControl, type MapRef } from "react-map-gl/maplibre";
+import { GAZA_CENTER, MAP_STYLE } from "@/lib/map";
 
 export interface MapPoint {
   id: string;
@@ -20,9 +20,8 @@ export interface MapViewProps {
   currency: string;
 }
 
-/** Explore map: a price pin per workspace, panning to the active card. */
+/** Explore map: a price pin per workspace, flying to the active card. */
 export function MapView({ points, activeId, onSelect, currency }: MapViewProps) {
-  const mapStyle = useMapStyle();
   const mapRef = useRef<MapRef>(null);
   const center =
     points.length > 0
@@ -36,21 +35,12 @@ export function MapView({ points, activeId, onSelect, currency }: MapViewProps) 
     }
   }, [activeId, points]);
 
-  if (!hasMapboxToken()) {
-    return (
-      <div className="map-canvas">
-        <div className="map-fallback" style={{ height: 520 }} />
-      </div>
-    );
-  }
-
   return (
     <div className="map-canvas">
       <Map
         ref={mapRef}
-        mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{ ...center, zoom: 12 }}
-        mapStyle={mapStyle}
+        mapStyle={MAP_STYLE}
         style={{ height: 520, width: "100%", borderRadius: "var(--r-lg)" }}
         scrollZoom={false}
       >

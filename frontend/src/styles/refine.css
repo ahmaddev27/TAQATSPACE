@@ -467,12 +467,12 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   background: var(--surface-2);
   border-radius: var(--r-lg);
 }
-/* The prototype .map-pin is absolutely positioned; inside a Mapbox marker the
+/* The prototype .map-pin is absolutely positioned; inside a MapLibre marker the
    library already anchors the element at the coordinate, so neutralise it. */
-.mapboxgl-marker .map-pin {
+.maplibregl-marker .map-pin {
   position: static;
   transform: none;
   font-family: inherit;
 }
-.mapboxgl-marker .map-pin.is-active { transform: scale(1.08); }
-.mapboxgl-map { font: inherit; }
+.maplibregl-marker .map-pin.is-active { transform: scale(1.08); }
+.maplibregl-map { font: inherit; }

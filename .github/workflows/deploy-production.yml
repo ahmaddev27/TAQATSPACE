@@ -88,7 +88,6 @@ jobs:
           if [ -d public ]; then cp -r public .next/standalone/public; fi
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_URL }}
-          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ vars.NEXT_PUBLIC_MAPBOX_TOKEN }}
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh

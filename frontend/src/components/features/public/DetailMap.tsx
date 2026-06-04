@@ -1,8 +1,8 @@
 "use client";
 
-import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { Marker } from "react-map-gl";
-import { MAPBOX_TOKEN, hasMapboxToken, useMapStyle } from "@/lib/mapbox";
+import "maplibre-gl/dist/maplibre-gl.css";
+import Map, { Marker } from "react-map-gl/maplibre";
+import { MAP_STYLE } from "@/lib/map";
 
 export interface DetailMapProps {
   lat: number;
@@ -12,22 +12,11 @@ export interface DetailMapProps {
 
 /** Non-interactive locator map for the workspace detail page. */
 export function DetailMap({ lat, lng, label }: DetailMapProps) {
-  const mapStyle = useMapStyle();
-
-  if (!hasMapboxToken()) {
-    return (
-      <div className="map-canvas" aria-label={label}>
-        <div className="map-fallback" style={{ height: 240 }} />
-      </div>
-    );
-  }
-
   return (
     <div className="map-canvas" aria-label={label}>
       <Map
-        mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{ latitude: lat, longitude: lng, zoom: 14 }}
-        mapStyle={mapStyle}
+        mapStyle={MAP_STYLE}
         interactive={false}
         style={{ height: 240, width: "100%", borderRadius: "var(--r-lg)" }}
       >
