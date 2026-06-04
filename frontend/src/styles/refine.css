@@ -558,3 +558,10 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .hours-times,
   .hours-closed { justify-content: flex-start; justify-self: start; }
 }
+
+/* Adaptive gallery: 1 photo = full width, 2 = side-by-side, 3+ = main+side. */
+.gallery-1 { grid-template-columns: 1fr; }
+.gallery-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) {
+  .gallery-2 { grid-template-columns: 1fr; }
+}
