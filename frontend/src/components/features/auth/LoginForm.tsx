@@ -23,7 +23,7 @@ const DEMO_ACCOUNTS: Array<{ key: string; ar: string; en: string; email: string 
   { key: "admin", ar: "مدير المنصّة", en: "Admin", email: "admin@taqat.space" },
 ];
 
-export function LoginForm() {
+export function LoginForm({ loggedOut = false }: { loggedOut?: boolean }) {
   const t = useTranslations("auth.login");
   const tv = useTranslations("validation");
   const locale = useLocale();
@@ -69,6 +69,15 @@ export function LoginForm() {
       <p className="muted" style={{ marginTop: 6, marginBottom: 28 }}>
         {t("subtitle")}
       </p>
+
+      {loggedOut && !serverError && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert
+            tone="success"
+            title={locale === "ar" ? "تم تسجيل الخروج بنجاح" : "You have been signed out."}
+          />
+        </div>
+      )}
 
       {serverError && (
         <div style={{ marginBottom: 16 }}>

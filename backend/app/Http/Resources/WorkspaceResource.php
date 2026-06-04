@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Workspace;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin Workspace
@@ -60,12 +60,8 @@ class WorkspaceResource extends JsonResource
      */
     private function photoUrls(): array
     {
-        $disk = Storage::disk((string) config('filesystems.media', 'public'));
-
         return array_map(
-            static fn (string $path): string => $disk->exists($path)
-                ? $disk->url($path)
-                : $path,
+            static fn (string $path): string => MediaUrl::resolve($path) ?? $path,
             $this->photos ?? [],
         );
     }

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
@@ -18,6 +20,19 @@ export interface SettingsTabsProps {
   workspace: Workspace;
   locale: string;
 }
+
+// MapLibre touches `window`, so load the picker on the client only.
+const LocationPicker = dynamic(
+  () => import("@/components/features/public/LocationPicker").then((m) => m.LocationPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="map-canvas">
+        <div className="map-fallback" style={{ height: 300 }} />
+      </div>
+    ),
+  },
+);
 
 const AMENITY_KEYS = [
   "wifi",
@@ -200,6 +215,16 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
             <Field label={t("settings.city")} error={errors.city?.[0]}>
               <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
             </Field>
+            <LocationPicker
+              lat={Number(form.latitude)}
+              lng={Number(form.longitude)}
+              label={t("settings.tabLocation")}
+              hint={t("settings.mapHint")}
+              onChange={(la, ln) => {
+                set("latitude", String(la));
+                set("longitude", String(ln));
+              }}
+            />
             <div className="grid2">
               <Field label={t("settings.latitude")} error={errors.latitude?.[0]}>
                 <Input
@@ -218,9 +243,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 />
               </Field>
             </div>
-            <p className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-              {t("settings.mapHint")}
-            </p>
           </div>
         )}
 
@@ -254,15 +276,21 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
               {t("settings.amenitiesHint")}
             </p>
             <div className="amenity-grid">
-              {AMENITY_KEYS.map((key) => (
-                <Checkbox
-                  key={key}
-                  checked={form.amenities.includes(key)}
-                  onChange={() => toggleAmenity(key)}
-                >
-                  {t(`settings.amenityList.${key}` as never)}
-                </Checkbox>
-              ))}
+              {AMENITY_KEYS.map((key) => {
+                const on = form.amenities.includes(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`amenity-toggle ${on ? "is-on" : ""}`}
+                    onClick={() => toggleAmenity(key)}
+                    aria-pressed={on}
+                  >
+                    <span className="check">{on && <Icon name="check" size={13} />}</span>
+                    {t(`settings.amenityList.${key}` as never)}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -274,40 +302,42 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
             <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
               {t("settings.hoursHint")}
             </p>
-            {DAY_KEYS.map((day) => {
-              const d = form.hours[day];
-              return (
-                <div key={day} className="between wrap" style={{ gap: 12 }}>
-                  <Checkbox
-                    checked={d.open}
-                    onChange={(e) => setDay(day, { open: e.target.checked })}
-                  >
-                    <span style={{ minWidth: 80, display: "inline-block" }}>
-                      {t(`settings.days.${day}` as never)}
-                    </span>
-                  </Checkbox>
-                  {d.open ? (
-                    <div className="row" style={{ gap: 8 }}>
-                      <Input
-                        type="time"
-                        className="tnum ltr"
-                        value={d.from}
-                        onChange={(e) => setDay(day, { from: e.target.value })}
-                      />
-                      <span className="muted">{t("settings.to")}</span>
-                      <Input
-                        type="time"
-                        className="tnum ltr"
-                        value={d.to}
-                        onChange={(e) => setDay(day, { to: e.target.value })}
-                      />
-                    </div>
-                  ) : (
-                    <span className="muted-3">{t("settings.closed")}</span>
-                  )}
-                </div>
-              );
-            })}
+            <div className="stack" style={{ gap: 8 }}>
+              {DAY_KEYS.map((day) => {
+                const d = form.hours[day];
+                return (
+                  <div key={day} className={`hours-row ${d.open ? "is-open" : ""}`}>
+                    <Checkbox
+                      checked={d.open}
+                      onChange={(e) => setDay(day, { open: e.target.checked })}
+                    >
+                      <span className="hours-day">
+                        {t(`settings.days.${day}` as never)}
+                      </span>
+                    </Checkbox>
+                    {d.open ? (
+                      <div className="hours-times">
+                        <Input
+                          type="time"
+                          className="tnum ltr"
+                          value={d.from}
+                          onChange={(e) => setDay(day, { from: e.target.value })}
+                        />
+                        <span className="muted">{t("settings.to")}</span>
+                        <Input
+                          type="time"
+                          className="tnum ltr"
+                          value={d.to}
+                          onChange={(e) => setDay(day, { to: e.target.value })}
+                        />
+                      </div>
+                    ) : (
+                      <span className="muted-3 hours-closed">{t("settings.closed")}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

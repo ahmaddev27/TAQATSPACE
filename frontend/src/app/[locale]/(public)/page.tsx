@@ -4,13 +4,30 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { CoverImage } from "@/components/ui/CoverImage";
 import { listWorkspaces } from "@/lib/api/workspaces";
-import type { Workspace } from "@/lib/types";
+import { getLanding } from "@/lib/api/landing";
+import type { LandingContent, LocalizedText, Workspace } from "@/lib/types";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { WorkspaceCard } from "@/components/features/public/WorkspaceCard";
 import { HeroSeatMini } from "@/components/features/public/HeroSeatMini";
 import { Marquee } from "@/components/features/public/Marquee";
 
 export const dynamic = "force-dynamic";
+
+/** First non-empty string wins: CMS override for the active locale, else default. */
+function pick(value: string | undefined, fallback: string): string {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : fallback;
+}
+
+/** Read the active-locale side of a CMS bilingual field. */
+function loc(field: LocalizedText | undefined, locale: string): string | undefined {
+  return locale === "en" ? field?.en : field?.ar;
+}
+
+/** A section is shown unless the CMS has explicitly disabled it. */
+function isEnabled(enabled: boolean | undefined): boolean {
+  return enabled !== false;
+}
 
 export default async function HomePage({
   params,
@@ -22,20 +39,45 @@ export default async function HomePage({
   const h = dict.home;
   const c = dict.common;
 
+  // A CMS failure must never break the landing page.
+  const cms: LandingContent = await getLanding().catch(() => ({}));
+  const sections = cms.sections ?? {};
+
+  // Featured workspaces: prefer the admin-selected ids (in their chosen order),
+  // otherwise fall back to top-rated discovery — same as before the CMS.
+  const featuredIds = sections.featured?.workspaceIds ?? [];
   let featured: Workspace[] = [];
   try {
-    const page = await listWorkspaces({ sort: "rating", page: 1 });
-    featured = page.data.slice(0, 6);
+    if (featuredIds.length > 0) {
+      const page = await listWorkspaces({ page: 1 });
+      const byId = new Map(page.data.map((w) => [w.id, w]));
+      featured = featuredIds
+        .map((id) => byId.get(id))
+        .filter((w): w is Workspace => w !== undefined);
+    } else {
+      const page = await listWorkspaces({ sort: "rating", page: 1 });
+      featured = page.data.slice(0, 6);
+    }
   } catch {
     featured = [];
   }
 
-  const stats = [
-    { n: "+128", l: h.statSpaces },
-    { n: "3,400", l: h.statFree },
-    { n: "72%", l: h.statOcc },
-    { n: "24/7", l: h.statAlways },
-  ];
+  // Stats: CMS list (value + localized label) when present, else the defaults.
+  const cmsStats = cms.stats ?? [];
+  const stats =
+    cmsStats.length > 0
+      ? cmsStats.map((s, i) => ({
+          n: s.value ?? "",
+          l: pick(loc(s.label, locale), ""),
+          key: `cms-${i}`,
+        }))
+      : [
+          { n: "+128", l: h.statSpaces, key: "statSpaces" },
+          { n: "3,400", l: h.statFree, key: "statFree" },
+          { n: "72%", l: h.statOcc, key: "statOcc" },
+          { n: "24/7", l: h.statAlways, key: "statAlways" },
+        ];
+
   const whys = [h.why1, h.why2, h.why3, h.why4];
   const caps = [
     { n: "01", ico: "search", t: dict.caps["1"], d: dict.caps["1d"] },
@@ -45,11 +87,47 @@ export default async function HomePage({
     { n: "05", ico: "wifi", t: dict.caps["5"], d: dict.caps["5d"] },
     { n: "06", ico: "chart", t: dict.caps["6"], d: dict.caps["6d"] },
   ] as const;
-  const testimonials = [
-    { text: dict.tstm["1"], name: dict.tstm["1n"], role: dict.tstm["1r"], avatar: dict.tstm["1a"] },
-    { text: dict.tstm["2"], name: dict.tstm["2n"], role: dict.tstm["2r"], avatar: dict.tstm["2a"] },
-    { text: dict.tstm["3"], name: dict.tstm["3n"], role: dict.tstm["3r"], avatar: dict.tstm["3a"] },
-  ];
+
+  // Testimonials: CMS list when present, else the default trio.
+  const cmsTestimonials = cms.testimonials ?? [];
+  const testimonials =
+    cmsTestimonials.length > 0
+      ? cmsTestimonials.map((m, i) => {
+          const name = m.name ?? "";
+          return {
+            text: pick(loc(m.text, locale), ""),
+            name,
+            role: pick(loc(m.role, locale), ""),
+            avatar: name.trim().charAt(0) || "•",
+            key: `cms-${i}`,
+          };
+        })
+      : [
+          { text: dict.tstm["1"], name: dict.tstm["1n"], role: dict.tstm["1r"], avatar: dict.tstm["1a"], key: "t1" },
+          { text: dict.tstm["2"], name: dict.tstm["2n"], role: dict.tstm["2r"], avatar: dict.tstm["2a"], key: "t2" },
+          { text: dict.tstm["3"], name: dict.tstm["3n"], role: dict.tstm["3r"], avatar: dict.tstm["3a"], key: "t3" },
+        ];
+
+  // Hero copy: CMS override per field, else the dictionary default.
+  const heroTitle = pick(loc(cms.hero?.title, locale), h.heroT1);
+  const heroHighlight = pick(loc(cms.hero?.highlight, locale), h.heroT2);
+  const heroSub = pick(loc(cms.hero?.subtitle, locale), h.heroSub);
+  const heroCta1 = pick(loc(cms.hero?.ctaPrimary, locale), h.heroCta1);
+  const heroCta2 = pick(loc(cms.hero?.ctaSecondary, locale), h.heroCta2);
+
+  // Section headings.
+  const whyTitle = pick(loc(sections.why?.title, locale), h.whyTitle1);
+  const whyHighlight = pick(loc(sections.why?.highlight, locale), h.whyTitle2);
+  const whySub = pick(loc(sections.why?.subtitle, locale), h.whySub);
+  const capsTitle = pick(loc(sections.capabilities?.title, locale), h.capsTitle1);
+  const capsHighlight = pick(loc(sections.capabilities?.subtitle, locale), h.capsTitle2);
+  const featuredTitle = pick(loc(sections.featured?.title, locale), h.featured);
+  const tstmTitle = pick(loc(sections.testimonials?.title, locale), h.tstmTitle1);
+
+  const showWhy = isEnabled(sections.why?.enabled);
+  const showCapabilities = isEnabled(sections.capabilities?.enabled);
+  const showFeatured = isEnabled(sections.featured?.enabled) && featured.length > 0;
+  const showTestimonials = isEnabled(sections.testimonials?.enabled);
 
   return (
     <>
@@ -58,25 +136,25 @@ export default async function HomePage({
         <div className="container ed-hero-in">
           <div className="ed-hero-copy">
             <h1 className="ed-title">
-              {h.heroT1} <span className="hl">{h.heroT2}</span>
+              {heroTitle} <span className="hl">{heroHighlight}</span>
               {h.heroT3}
             </h1>
-            <p className="ed-lead">{h.heroSub}</p>
+            <p className="ed-lead">{heroSub}</p>
             <div className="row wrap" style={{ gap: 12, marginTop: 4 }}>
               <Link href="/register/freelancer">
                 <Button variant="primary" size="lg" icon="user">
-                  {h.heroCta1}
+                  {heroCta1}
                 </Button>
               </Link>
               <Link href="/register/workspace">
                 <Button variant="secondary" size="lg" icon="building">
-                  {h.heroCta2}
+                  {heroCta2}
                 </Button>
               </Link>
             </div>
             <div className="ed-stats">
               {stats.map((s) => (
-                <div key={s.l} className="ed-stat">
+                <div key={s.key} className="ed-stat">
                   <div className="ed-stat-n tnum">{s.n}</div>
                   <div className="ed-stat-l">{s.l}</div>
                 </div>
@@ -120,91 +198,95 @@ export default async function HomePage({
       <Marquee dict={dict} />
 
       {/* WHY / ABOUT */}
-      <section className="container section" id="about">
-        <div className="why-grid">
-          <div className="why-collage">
-            <CoverImage
-              src="/images/workspaces/placeholder-2.svg"
-              alt={h.imgInside}
-              h="clamp(190px, 36vw, 300px)"
-              radius="var(--r-2xl)"
-              className="why-img-1"
-            />
-            <CoverImage
-              src="/images/workspaces/placeholder-1.svg"
-              alt={h.imgTeam}
-              h="clamp(140px, 26vw, 190px)"
-              radius="var(--r-2xl)"
-              className="why-img-2"
-            />
-            <div className="why-blob">
-              <Icon name="bulb" size={22} />
-              <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>
-                +3.4k
+      {showWhy && (
+        <section className="container section" id="about">
+          <div className="why-grid">
+            <div className="why-collage">
+              <CoverImage
+                src="/images/workspaces/placeholder-2.svg"
+                alt={h.imgInside}
+                h="clamp(190px, 36vw, 300px)"
+                radius="var(--r-2xl)"
+                className="why-img-1"
+              />
+              <CoverImage
+                src="/images/workspaces/placeholder-1.svg"
+                alt={h.imgTeam}
+                h="clamp(140px, 26vw, 190px)"
+                radius="var(--r-2xl)"
+                className="why-img-2"
+              />
+              <div className="why-blob">
+                <Icon name="bulb" size={22} />
+                <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>
+                  +3.4k
+                </div>
+                <div className="ed-badge-l">{h.activeMembers}</div>
               </div>
-              <div className="ed-badge-l">{h.activeMembers}</div>
+            </div>
+            <div className="why-copy">
+              <span className="eyebrow">{h.whyEyebrow}</span>
+              <h2 className="ed-h2">
+                {whyTitle} <span className="hl">{whyHighlight}</span>
+              </h2>
+              <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 14 }}>
+                {whySub}
+              </p>
+              <div className="check-list">
+                {whys.map((w) => (
+                  <div key={w} className="check-row">
+                    <span className="check-mark">
+                      <Icon name="check" size={15} />
+                    </span>
+                    {w}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="why-copy">
-            <span className="eyebrow">{h.whyEyebrow}</span>
-            <h2 className="ed-h2">
-              {h.whyTitle1} <span className="hl">{h.whyTitle2}</span>
-            </h2>
-            <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 14 }}>
-              {h.whySub}
-            </p>
-            <div className="check-list">
-              {whys.map((w) => (
-                <div key={w} className="check-row">
-                  <span className="check-mark">
-                    <Icon name="check" size={15} />
-                  </span>
-                  {w}
+        </section>
+      )}
+
+      {/* CAPABILITIES */}
+      {showCapabilities && (
+        <section className="caps-band" id="feat">
+          <div className="container">
+            <div className="caps-head">
+              <span className="eyebrow">{h.capsEyebrow}</span>
+              <h2 className="ed-h2">
+                {capsTitle} <span className="hl">{capsHighlight}</span>
+              </h2>
+            </div>
+            <div className="caps-grid">
+              {caps.map((cap) => (
+                <div key={cap.n} className="cap-card">
+                  <div className="cap-top">
+                    <span className="cap-num tnum">{cap.n}</span>
+                    <span className="cap-ico">
+                      <Icon name={cap.ico} size={22} />
+                    </span>
+                  </div>
+                  <h3 className="h3" style={{ marginTop: 18 }}>
+                    {cap.t}
+                  </h3>
+                  <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
+                    {cap.d}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CAPABILITIES */}
-      <section className="caps-band" id="feat">
-        <div className="container">
-          <div className="caps-head">
-            <span className="eyebrow">{h.capsEyebrow}</span>
-            <h2 className="ed-h2">
-              {h.capsTitle1} <span className="hl">{h.capsTitle2}</span>
-            </h2>
-          </div>
-          <div className="caps-grid">
-            {caps.map((cap) => (
-              <div key={cap.n} className="cap-card">
-                <div className="cap-top">
-                  <span className="cap-num tnum">{cap.n}</span>
-                  <span className="cap-ico">
-                    <Icon name={cap.ico} size={22} />
-                  </span>
-                </div>
-                <h3 className="h3" style={{ marginTop: 18 }}>
-                  {cap.t}
-                </h3>
-                <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
-                  {cap.d}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FEATURED SPACES */}
-      {featured.length > 0 && (
+      {showFeatured && (
         <section className="container section">
           <div className="page-head" style={{ alignItems: "flex-end" }}>
             <div>
               <span className="eyebrow">{h.featuredEyebrow}</span>
               <h2 className="ed-h2" style={{ marginTop: 8 }}>
-                {h.featured}
+                {featuredTitle}
               </h2>
             </div>
             <Link href="/explore">
@@ -222,35 +304,37 @@ export default async function HomePage({
       )}
 
       {/* TESTIMONIALS */}
-      <section className="tstm-band">
-        <div className="container">
-          <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 44px" }}>
-            <span className="eyebrow">{h.tstmEyebrow}</span>
-            <h2 className="ed-h2" style={{ marginTop: 8 }}>
-              {h.tstmTitle1} <span className="hl">{h.tstmTitle2}</span>
-            </h2>
-          </div>
-          <div className="tstm-grid">
-            {testimonials.map((m) => (
-              <div key={m.name} className="tstm-card">
-                <div className="tstm-quote">
-                  <Icon name="megaphone" size={20} />
-                </div>
-                <p className="tstm-text">{m.text}</p>
-                <div className="row" style={{ gap: 11, marginTop: "auto", paddingTop: 20 }}>
-                  <Avatar initial={m.avatar} round />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: "var(--fs-sm)" }}>{m.name}</div>
-                    <div className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
-                      {m.role}
+      {showTestimonials && testimonials.length > 0 && (
+        <section className="tstm-band">
+          <div className="container">
+            <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 44px" }}>
+              <span className="eyebrow">{h.tstmEyebrow}</span>
+              <h2 className="ed-h2" style={{ marginTop: 8 }}>
+                {tstmTitle} <span className="hl">{h.tstmTitle2}</span>
+              </h2>
+            </div>
+            <div className="tstm-grid">
+              {testimonials.map((m) => (
+                <div key={m.key} className="tstm-card">
+                  <div className="tstm-quote">
+                    <Icon name="megaphone" size={20} />
+                  </div>
+                  <p className="tstm-text">{m.text}</p>
+                  <div className="row" style={{ gap: 11, marginTop: "auto", paddingTop: 20 }}>
+                    <Avatar initial={m.avatar} round />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: "var(--fs-sm)" }}>{m.name}</div>
+                      <div className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+                        {m.role}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA band */}
       <section className="container">
@@ -265,12 +349,12 @@ export default async function HomePage({
           <div className="row wrap" style={{ gap: 12, justifyContent: "center", marginTop: 8 }}>
             <Link href="/register/freelancer">
               <Button variant="accent" size="lg">
-                {h.heroCta1}
+                {heroCta1}
               </Button>
             </Link>
             <Link href="/register/workspace">
               <Button variant="secondary" size="lg">
-                {h.heroCta2}
+                {heroCta2}
               </Button>
             </Link>
           </div>

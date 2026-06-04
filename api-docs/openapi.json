@@ -1690,6 +1690,125 @@
                 }
             }
         },
+        "/landing": {
+            "get": {
+                "operationId": "landing.show",
+                "summary": "GET /api/landing \u2014 public landing page content (or {} when unset)",
+                "tags": [
+                    "Landing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/landing": {
+            "get": {
+                "operationId": "admin.landing.show",
+                "summary": "GET /api/admin/landing \u2014 current landing content (or {} when unset)",
+                "tags": [
+                    "Landing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "landing.update",
+                "summary": "PUT /api/admin/landing \u2014 upsert the landing content (partial overrides)",
+                "tags": [
+                    "Landing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateLandingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Landing content updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/workspace/members": {
             "get": {
                 "operationId": "member.index",
@@ -5992,6 +6111,436 @@
                     }
                 },
                 "title": "UpdateAnnouncementRequest"
+            },
+            "UpdateLandingRequest": {
+                "type": "object",
+                "description": "Validates the bilingual landing-page CMS payload. Every field is optional\n(partial overrides) so any subset of the schema is accepted; the frontend\nsupplies i18n defaults for anything omitted. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "sections": {
+                        "type": "object",
+                        "description": "--- Sections ---",
+                        "properties": {
+                            "featured": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "enabled": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ]
+                                    },
+                                    "workspaceIds": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "maxItems": 6
+                                    },
+                                    "title": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        }
+                                    },
+                                    "subtitle": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "why": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "enabled": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ]
+                                    },
+                                    "title": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        }
+                                    },
+                                    "highlight": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        }
+                                    },
+                                    "subtitle": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "capabilities": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "enabled": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ]
+                                    },
+                                    "title": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        }
+                                    },
+                                    "subtitle": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 1000
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "testimonials": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "enabled": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ]
+                                    },
+                                    "title": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ar": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            },
+                                            "en": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "maxLength": 500
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "hero": {
+                        "type": "object",
+                        "description": "--- Hero ---",
+                        "properties": {
+                            "title": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "highlight": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "subtitle": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                }
+                            },
+                            "ctaPrimary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "ctaSecondary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "stats": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "--- Stats (max 4) ---",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                },
+                                "label": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ar": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        },
+                                        "en": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "maxItems": 4
+                    },
+                    "testimonials": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "--- Testimonials (max 12) ---",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                },
+                                "text": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ar": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 1000
+                                        },
+                                        "en": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 1000
+                                        }
+                                    }
+                                },
+                                "role": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ar": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        },
+                                        "en": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "maxLength": 500
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "maxItems": 12
+                    }
+                },
+                "title": "UpdateLandingRequest"
             },
             "UpdateMemberStatusRequest": {
                 "type": "object",

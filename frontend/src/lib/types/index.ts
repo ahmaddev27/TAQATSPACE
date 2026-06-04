@@ -12,6 +12,19 @@ export type {
   ApiErrorBody,
 } from "./auth";
 
+export type {
+  LocalizedText,
+  LandingHero,
+  LandingStat,
+  FeaturedSection,
+  WhySection,
+  CapabilitiesSection,
+  TestimonialsSection,
+  LandingSections,
+  LandingTestimonial,
+  LandingContent,
+} from "./landing";
+
 /* -------------------------------------------------------------------------- */
 /*  Enums (string-backed, mirror App\Enums\*)                                  */
 /* -------------------------------------------------------------------------- */
