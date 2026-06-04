@@ -85,14 +85,15 @@ export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps
                 if (ev.key === "Enter") router.push(`/workspaces/${w.id}`);
               }}
             >
-              <CoverImage
-                src={coverImage(w.photos, w.id)}
-                fallbackSrc={placeholderCover(w.id)}
-                alt={w.name}
-                h={104}
-                radius="var(--r-md)"
-                className="explore-row-img"
-              />
+              <div className="explore-row-img">
+                <CoverImage
+                  src={coverImage(w.photos, w.id)}
+                  fallbackSrc={placeholderCover(w.id)}
+                  alt={w.name}
+                  h="100%"
+                  radius="0"
+                />
+              </div>
               <div className="grow stack" style={{ gap: 6 }}>
                 <div className="between">
                   <h3 className="h3" style={{ fontSize: "var(--fs-lg)" }}>
