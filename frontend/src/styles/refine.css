@@ -588,3 +588,42 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
 @media (max-width: 760px) {
   .gallery-2 { grid-template-columns: 1fr; }
 }
+
+/* ── Branded route loader (logo + animated equalizer bars) ───────────── */
+.brand-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+.brand-loader-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.loader-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 34px;
+}
+.loader-bars span {
+  width: 7px;
+  border-radius: 3px;
+  transform-origin: bottom;
+  animation: loaderBar 1s ease-in-out infinite;
+}
+.loader-bars span:nth-child(1) { height: 38%; background: var(--blue-300); animation-delay: 0s; }
+.loader-bars span:nth-child(2) { height: 58%; background: var(--blue-400); animation-delay: 0.14s; }
+.loader-bars span:nth-child(3) { height: 80%; background: var(--accent); animation-delay: 0.28s; }
+.loader-bars span:nth-child(4) { height: 100%; background: var(--primary); animation-delay: 0.42s; }
+@keyframes loaderBar {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-bars span { animation: none; }
+}
