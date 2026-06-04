@@ -1,9 +1,9 @@
 name: CI
 
 on:
+  # Validate on the PR only. The merge to dev/main then triggers the deploy
+  # workflow (no redundant CI re-run on the merge push).
   pull_request:
-    branches: [main, dev]
-  push:
     branches: [main, dev]
 
 concurrency:
