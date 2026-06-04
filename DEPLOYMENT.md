@@ -11,8 +11,17 @@ Workflows: [`.github/workflows/deploy-production.yml`](.github/workflows/deploy-
 
 > The deploy jobs **skip safely** (a `preflight` job) until the secrets below are set — so merging now won't produce red runs.
 
-## ⚠️ Current blocker — enable SSH shell
-SSH **key auth + SFTP work** (server `68.178.169.85`, account `space`, home `/home/space`, port `22`), but **shell command execution is disabled** ("Shell access is not enabled"). The deploy workflows need shell to run `composer`/`php artisan`. **Action:** ask the host/support to **enable SSH shell access for cPanel account `space`** (jailshell is fine). Once enabled, set the secrets below and the pipeline works end‑to‑end.
+## ✅ Status — both environments are live
+SSH shell access is enabled (server `68.178.169.85`, account `space`, home `/home/space`, port `22`) and both environments have been deployed and verified:
+
+| Environment | Frontend | Backend |
+|-------------|----------|---------|
+| **Production** | `https://taqat.space` (→ `/ar`, Arabic RTL) | `https://api.taqat.space/api/health` → `200` |
+| **Staging** | `https://staging.taqat.space` (→ `/ar`) | `https://api.staging.taqat.space/api/health` → `200` |
+
+The one-time server setup below is **already done** for both. To finish wiring the GitHub Actions automation so future merges deploy automatically, set the secrets/variables in §1 — the concrete values are filled in.
+
+> **Architecture note:** this host has **no Passenger / "Setup Node.js App" feature**. The frontend therefore runs as a plain **Next.js `standalone` Node process** (staging `:3001`, prod `:3002`) behind a **`mod_proxy` reverse-proxy `.htaccess`**, kept alive by a cron health-check. See §2 Frontend.
 
 ---
 
@@ -33,8 +42,10 @@ SSH **key auth + SFTP work** (server `68.178.169.85`, account `space`, home `/ho
 | `PROD_API_URL`  | `https://api.taqat.space/api` |
 | `STAGING_API_PATH` | `/home/space/public_html/api.staging.taqat.space` |
 | `STAGING_API_URL`  | `https://api.staging.taqat.space/api` |
-| `PROD_WEB_PATH` | Node-app root for `taqat.space` (set after creating the Node app, e.g. `/home/space/nodeapps/taqat.space`) |
-| `STAGING_WEB_PATH` | Node-app root for `staging.taqat.space` (e.g. `/home/space/nodeapps/staging.taqat.space`) |
+| `PROD_WEB_PATH` | `/home/space/nodeapps/prod-frontend` |
+| `STAGING_WEB_PATH` | `/home/space/nodeapps/staging-frontend` |
+
+> These are the **actual** paths used by the live deploys — set them verbatim so the first automated run targets the same directories (otherwise it would deploy to a new, unwired location).
 
 **Important (backend):** in cPanel → **Domains**, set the Document Root of `api.taqat.space` to `…/api.taqat.space/public` and `api.staging.taqat.space` to `…/api.staging.taqat.space/public` (Laravel serves from `public/`). The `*_API_PATH` above is the app root (the parent of `public`).
 
@@ -63,26 +74,72 @@ In each backend app folder (e.g. `~/api.taqat.space`):
    - `* * * * * cd ~/api.taqat.space && php artisan schedule:run >> /dev/null 2>&1`
    - A persistent worker (cPanel “Setup … / Cron”): `php artisan queue:work --sleep=3 --tries=3 --max-time=3600` (the deploy runs `queue:restart` so workers pick up new code).
 
-### Frontend (Next.js) per environment — needs Node.js
-This project uses SSR + route handlers, so it **must** run as a Node app (it can’t be a static export).
-1. cPanel → **Setup Node.js App** → Create:
-   - Node version **≥ 20**, Application mode **Production**.
-   - Application root = `taqat.space` (the `PROD_WEB_PATH`), Application URL = `taqat.space`.
-   - **Application startup file = `server.js`** (Next’s standalone entry).
-2. Deploy once (merge to `main`/`dev` or run the workflow manually) so the `standalone` bundle lands there, then **Restart** the app.
-3. If your host has **no Node support**, host the frontend on **Vercel** instead (connect the repo, set `NEXT_PUBLIC_API_URL`, root dir `frontend/`) and keep only the backend on cPanel — tell me and I’ll switch the frontend workflow to Vercel.
+### Frontend (Next.js) per environment — standalone Node behind a reverse-proxy
+This project uses SSR + route handlers, so it **must** run as a Node process (no static export). This host has **no Passenger / "Setup Node.js App"**, so each environment runs the Next.js `standalone` bundle directly and Apache reverse-proxies to it.
+
+| Environment | App root (`*_WEB_PATH`) | Node port | Apex/site docroot for the proxy `.htaccess` |
+|-------------|-------------------------|-----------|---------------------------------------------|
+| Production | `/home/space/nodeapps/prod-frontend` | `3002` | `/home/space/public_html` (primary domain `taqat.space`) |
+| Staging | `/home/space/nodeapps/staging-frontend` | `3001` | `…/staging.taqat.space` (sub-domain docroot) |
+
+Per environment (done once; the deploy workflow only re-syncs the bundle and restarts Node afterwards):
+
+1. **Land the bundle** — the deploy job rsyncs `frontend/.next/standalone/` to the app root (with `.next/static` and `public/` copied in).
+2. **Start Node** (the deploy job also does this on every release):
+   ```sh
+   fuser -k 3002/tcp 2>/dev/null || true        # clear any stale listener by PORT (not pkill)
+   cd /home/space/nodeapps/prod-frontend
+   nohup env PORT=3002 HOSTNAME=127.0.0.1 NODE_ENV=production \
+     NEXT_PUBLIC_API_URL=https://api.taqat.space/api node server.js > app.log 2>&1 &
+   ```
+3. **Reverse-proxy `.htaccess`** in the site docroot (requires `mod_proxy` + `mod_proxy_http`, both available here):
+   ```apache
+   DirectoryIndex disabled
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteCond %{HTTP_HOST} ^(www\.)?taqat\.space$ [NC]
+     RewriteRule ^(.*)$ http://127.0.0.1:3002/$1 [P,L]
+   </IfModule>
+   ```
+   - On the **primary domain**, the `api.*`/`staging.*` sub-domains live **under the same docroot** (`/home/space/public_html`), so the `RewriteCond %{HTTP_HOST}` scope is **mandatory** — without it the proxy would hijack `api.staging.taqat.space` (which has no own `.htaccess` to shield it). Keep the cPanel-generated PHP handler block at the top of the file.
+   - `DirectoryIndex disabled` is **required** so a bare `/` is proxied as `/` (Next redirects it to `/ar`) instead of being remapped to a stray `index.*` placeholder that Node 404s. Retire any leftover `public_html/index.html` placeholder.
+4. **Keep-alive cron** (cPanel → Cron Jobs) restarts Node if it dies:
+   ```sh
+   */2 * * * * /bin/sh -c 'curl -sf -m 5 -o /dev/null http://127.0.0.1:3002/en || (cd /home/space/nodeapps/prod-frontend && nohup env PORT=3002 HOSTNAME=127.0.0.1 NODE_ENV=production NEXT_PUBLIC_API_URL=https://api.taqat.space/api node server.js > app.log 2>&1 &)'
+   ```
+   (Staging is identical with port `3001`, the `staging-frontend` path, and `https://api.staging.taqat.space/api`.)
 
 ---
 
 ## 3. How a release flows
-1. Branch off `dev`, open a PR → **CI** runs (tests + lint + build).
-2. Merge to `dev` → **Deploy Staging** runs → verify on `staging.taqat.space`.
-3. Open PR `dev → main`, merge → **Deploy Production** runs → live on `taqat.space`.
+1. Branch off `dev`, open a PR → **CI** runs (tests + lint + build). **CI never touches the server** — it only validates the PR.
+2. Merge to `dev` → **Deploy Staging** runs (push to `dev`) → verify on `staging.taqat.space`.
+3. Open PR `dev → main`, merge → **Deploy Production** runs (push to `main`) → live on `taqat.space`.
 4. `workflow_dispatch` lets you re-deploy either environment manually from the Actions tab.
+
+> **Deploy is gated behind merge, not PR-open.** The deploy workflows trigger only on `push` to `dev`/`main` (which happens when a PR is merged). Opening a PR runs CI only.
+
+### Approval gate (branch protection)
+To guarantee nothing reaches `dev`/`main` (and therefore deploys) without passing review + CI, protect both branches in **Settings → Branches**:
+- ✅ **Require a pull request before merging**
+- ✅ **Require status checks to pass** → `Backend (Laravel)` and `Frontend (Next.js)`
+- ✅ **Require approvals = 1** — *only if a second collaborator exists.* **Solo maintainer:** leave approvals at **0** (GitHub forbids self-approving your own PR, so `1` would block every merge); the gate is then **PR + green CI**, which still blocks merging broken code.
+
+Net flow: review + green CI → merge → automatic deploy.
 
 ---
 
-## 4. Security
+## 4. API documentation
+Auto-generated by **Scramble** from routes/FormRequests/Resources — always in sync with the code. Regenerate the committed spec + Postman collection with `composer api:docs` (in `backend/`).
+- Interactive UI (Stoplight Elements, with "Try It"): `https://api.taqat.space/docs/api` · `https://api.staging.taqat.space/docs/api`
+- OpenAPI spec: `…/docs/api.json` · committed copy in [`api-docs/openapi.json`](api-docs/openapi.json)
+- Postman: [`api-docs/postman/`](api-docs/postman/)
+- Access is controlled by the `viewApiDocs` gate (`AppServiceProvider`) → open by default; set **`API_DOCS_ENABLED=false`** in a server `.env` (then `php artisan config:cache`) to lock the docs down for that environment.
+
+---
+
+## 5. Security
 - The FTP password shared earlier is **not used** by this pipeline (we deploy over SSH with a key). Still, **rotate it** in cPanel since it was exposed.
 - Secrets live only in GitHub (encrypted) and the server `.env` — never in git.
+- **Rotate the DB password and AWS key** that were shared in chat (update only the server `.env` files + GitHub Secrets).
 - Restrict the deploy SSH key in cPanel if your host supports `command=`/source-IP limits.

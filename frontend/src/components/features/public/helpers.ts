@@ -20,6 +20,24 @@ export function photoUrl(path: string): string {
   return `${STORAGE_ORIGIN}/storage/${clean}`;
 }
 
+/** Bundled on-brand cover placeholders (used until real photos are uploaded). */
+const PLACEHOLDER_COVERS = 3;
+
+/** Pick a stable placeholder cover from any id string (so cards vary, not repeat). */
+export function placeholderCover(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return `/images/workspaces/placeholder-${(hash % PLACEHOLDER_COVERS) + 1}.svg`;
+}
+
+/** Cover image for a workspace: first real photo if any, else a placeholder. */
+export function coverImage(photos: string[] | undefined, seed: string): string {
+  const first = photos?.find(Boolean);
+  return first ? photoUrl(first) : placeholderCover(seed);
+}
+
 /** Amenity code -> representative icon (mirrors the prototype amenity map). */
 export const AMENITY_ICON: Record<string, IconName> = {
   wifi: "wifi",

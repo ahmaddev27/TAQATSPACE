@@ -16,6 +16,14 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
+     * Disk for publicly served media (workspace photos, avatars). Local-served
+     * `public` in dev; set MEDIA_DISK=s3 on the servers so all images live on
+     * S3. Public read for S3 is granted via a bucket policy (not per-object ACL,
+     * since modern buckets disable ACLs) — see DEPLOYMENT.md.
+     */
+    'media' => env('MEDIA_DISK', 'public'),
+
+    /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------

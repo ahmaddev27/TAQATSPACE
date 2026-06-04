@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Coworking space — meeting room">
+  <defs>
+    <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef6ee"/>
+      <stop offset="1" stop-color="#dcecf6"/>
+    </linearGradient>
+    <linearGradient id="wall2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fbfe"/>
+      <stop offset="1" stop-color="#eaf1f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#wall2)"/>
+  <!-- glass wall meeting room -->
+  <rect x="160" y="120" width="880" height="430" rx="14" fill="url(#sky2)" stroke="#c7d9ea" stroke-width="8"/>
+  <line x1="450" y1="120" x2="450" y2="550" stroke="#c7d9ea" stroke-width="6"/>
+  <line x1="740" y1="120" x2="740" y2="550" stroke="#c7d9ea" stroke-width="6"/>
+  <!-- conference table -->
+  <ellipse cx="600" cy="470" rx="280" ry="70" fill="#1F82C7"/>
+  <ellipse cx="600" cy="452" rx="280" ry="70" fill="#2f93d6"/>
+  <!-- chairs -->
+  <circle cx="360" cy="452" r="34" fill="#34526b"/>
+  <circle cx="600" cy="408" r="34" fill="#34526b"/>
+  <circle cx="840" cy="452" r="34" fill="#34526b"/>
+  <circle cx="480" cy="520" r="34" fill="#3c5e79"/>
+  <circle cx="720" cy="520" r="34" fill="#3c5e79"/>
+  <!-- wall screen -->
+  <rect x="500" y="180" width="200" height="120" rx="8" fill="#34526b"/>
+  <rect x="540" y="215" width="120" height="12" rx="4" fill="#F6A91B"/>
+  <rect x="540" y="240" width="80" height="10" rx="4" fill="#ffffff80"/>
+  <!-- brand mark -->
+  <g opacity="0.5" transform="translate(545,690)">
+    <circle cx="0" cy="0" r="9" fill="#F6A91B"/>
+    <text x="20" y="6" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#1F82C7">TAQAT</text>
+  </g>
+</svg>
