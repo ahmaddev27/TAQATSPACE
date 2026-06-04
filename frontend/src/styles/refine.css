@@ -460,3 +460,19 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .check-list { gap: 11px; margin-top: 20px; }
   .check-row { font-size: var(--fs-md); }
 }
+
+/* ── Mapbox maps ─────────────────────────────────────────────────────── */
+.map-fallback {
+  width: 100%;
+  background: var(--surface-2);
+  border-radius: var(--r-lg);
+}
+/* The prototype .map-pin is absolutely positioned; inside a Mapbox marker the
+   library already anchors the element at the coordinate, so neutralise it. */
+.mapboxgl-marker .map-pin {
+  position: static;
+  transform: none;
+  font-family: inherit;
+}
+.mapboxgl-marker .map-pin.is-active { transform: scale(1.08); }
+.mapboxgl-map { font: inherit; }

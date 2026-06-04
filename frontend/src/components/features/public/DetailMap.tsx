@@ -1,8 +1,8 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import "mapbox-gl/dist/mapbox-gl.css";
+import Map, { Marker } from "react-map-gl";
+import { MAPBOX_TOKEN, hasMapboxToken, useMapStyle } from "@/lib/mapbox";
 
 export interface DetailMapProps {
   lat: number;
@@ -10,35 +10,29 @@ export interface DetailMapProps {
   label: string;
 }
 
-const PIN = L.divIcon({
-  className: "detail-pin-wrap",
-  html: '<span class="detail-pin"></span>',
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
 /** Non-interactive locator map for the workspace detail page. */
 export function DetailMap({ lat, lng, label }: DetailMapProps) {
+  const mapStyle = useMapStyle();
+
+  if (!hasMapboxToken()) {
+    return (
+      <div className="map-canvas" aria-label={label}>
+        <div className="map-fallback" style={{ height: 240 }} />
+      </div>
+    );
+  }
+
   return (
     <div className="map-canvas" aria-label={label}>
-      <style>{`
-        .detail-pin { display:block; width:16px; height:16px; border-radius:999px;
-          background: var(--primary); border: 3px solid #fff; box-shadow: var(--sh-sm); }
-        .leaflet-container { font-family: inherit; background: var(--surface-2); }
-      `}</style>
-      <MapContainer
-        center={[lat, lng]}
-        zoom={15}
-        scrollWheelZoom={false}
-        dragging={false}
-        doubleClickZoom={false}
-        zoomControl={false}
-        attributionControl={false}
+      <Map
+        mapboxAccessToken={MAPBOX_TOKEN}
+        initialViewState={{ latitude: lat, longitude: lng, zoom: 14 }}
+        mapStyle={mapStyle}
+        interactive={false}
         style={{ height: 240, width: "100%", borderRadius: "var(--r-lg)" }}
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={[lat, lng]} icon={PIN} />
-      </MapContainer>
+        <Marker latitude={lat} longitude={lng} color="#1F82C7" anchor="bottom" />
+      </Map>
     </div>
   );
 }
