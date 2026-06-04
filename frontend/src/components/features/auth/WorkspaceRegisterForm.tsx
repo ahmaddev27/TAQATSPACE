@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -23,8 +24,17 @@ import {
 } from "@/lib/validations/auth";
 import { PendingReviewScreen } from "./PendingReviewScreen";
 
-// P1 STUB — Leaflet in Phase 2. Default to Gaza center.
+// Default to Gaza centre until the owner picks an exact point on the map.
 const GAZA_CENTER = { lat: 31.5, lng: 34.47 };
+
+// Mapbox GL touches `window`, so load the picker on the client only.
+const LocationPicker = dynamic(
+  () => import("@/components/features/public/LocationPicker").then((m) => m.LocationPicker),
+  {
+    ssr: false,
+    loading: () => <div className="map-canvas"><div className="map-fallback" style={{ height: 320 }} /></div>,
+  },
+);
 
 const CITY_KEYS = ["gaza", "khanyounis", "rafah", "jabalia", "deirelbalah"] as const;
 
@@ -89,6 +99,8 @@ export function WorkspaceRegisterForm() {
 
   const { fields, append, remove } = useFieldArray({ control, name: "seats" });
   const amenities = useWatch({ control, name: "amenities" }) ?? [];
+  const lat = useWatch({ control, name: "lat" }) ?? GAZA_CENTER.lat;
+  const lng = useWatch({ control, name: "lng" }) ?? GAZA_CENTER.lng;
 
   function toggleAmenity(code: string) {
     const set = new Set(amenities);
@@ -234,14 +246,16 @@ export function WorkspaceRegisterForm() {
                 />
               </Field>
 
-              {/* P1 STUB — Leaflet map arrives in Phase 2. */}
-              <div className="map-stub" role="img" aria-label={t("mapLabel")}>
-                <Icon name="pin" size={28} />
-                <span style={{ fontWeight: 600, color: "var(--text-2)" }}>
-                  {t("mapLabel")}
-                </span>
-                <span className="map-stub-note">{t("mapStubNote")}</span>
-              </div>
+              <LocationPicker
+                lat={lat}
+                lng={lng}
+                label={t("mapLabel")}
+                hint={t("mapStubNote")}
+                onChange={(nextLat, nextLng) => {
+                  setValue("lat", nextLat, { shouldValidate: true });
+                  setValue("lng", nextLng, { shouldValidate: true });
+                }}
+              />
               <input type="hidden" {...register("lat", { valueAsNumber: true })} />
               <input type="hidden" {...register("lng", { valueAsNumber: true })} />
             </div>
