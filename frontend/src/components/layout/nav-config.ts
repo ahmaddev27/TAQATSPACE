@@ -91,6 +91,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "workspaces", href: "/admin/workspaces", icon: "building" },
           { key: "users", href: "/admin/users", icon: "users" },
           { key: "landing", href: "/admin/landing", icon: "grid" },
+          { key: "rm", href: "/admin/rm", icon: "settings" },
         ],
       },
     ],

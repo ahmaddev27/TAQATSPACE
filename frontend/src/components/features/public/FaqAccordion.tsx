@@ -12,17 +12,19 @@ interface QA {
 
 export interface FaqAccordionProps {
   dict: PublicDict;
-  freelancer: QA[];
-  owner: QA[];
+  freelancer?: QA[];
+  owner?: QA[];
+  /** Admin-managed flat Q/A list. When set, the segmented control is hidden. */
+  flat?: QA[];
 }
 
-/** Role-segmented FAQ accordion. */
-export function FaqAccordion({ dict, freelancer, owner }: FaqAccordionProps) {
+/** Role-segmented FAQ accordion (or a flat CMS list when `flat` is provided). */
+export function FaqAccordion({ dict, freelancer = [], owner = [], flat }: FaqAccordionProps) {
   const f = dict.faq;
   const [segment, setSegment] = useState<"freelancer" | "owner">("freelancer");
   const [open, setOpen] = useState<number | null>(0);
 
-  const items = segment === "freelancer" ? freelancer : owner;
+  const items = flat ?? (segment === "freelancer" ? freelancer : owner);
 
   function selectSegment(id: string) {
     setSegment(id as "freelancer" | "owner");
@@ -31,22 +33,24 @@ export function FaqAccordion({ dict, freelancer, owner }: FaqAccordionProps) {
 
   return (
     <div className="stack" style={{ gap: 24, maxWidth: 760, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <Segmented
-          value={segment}
-          onChange={selectSegment}
-          items={[
-            { id: "freelancer", label: f.segFreelancer },
-            { id: "owner", label: f.segOwner },
-          ]}
-        />
-      </div>
+      {!flat && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Segmented
+            value={segment}
+            onChange={selectSegment}
+            items={[
+              { id: "freelancer", label: f.segFreelancer },
+              { id: "owner", label: f.segOwner },
+            ]}
+          />
+        </div>
+      )}
 
       <div className="stack" style={{ gap: 12 }}>
         {items.map((item, i) => {
           const isOpen = open === i;
           return (
-            <div key={`${segment}-${i}`} className="card" style={{ overflow: "hidden" }}>
+            <div key={`${flat ? "cms" : segment}-${i}`} className="card" style={{ overflow: "hidden" }}>
               <button
                 type="button"
                 className="between"

@@ -627,3 +627,19 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
 @media (prefers-reduced-motion: reduce) {
   .loader-bars span { animation: none; }
 }
+
+/* ── Footer admin-managed contact block ──────────────────────────────── */
+.pf-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: var(--fs-sm);
+}
+.pf-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2px;
+  text-transform: capitalize;
+}

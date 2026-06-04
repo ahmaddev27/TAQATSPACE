@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { FaqAccordion } from "@/components/features/public/FaqAccordion";
+import { getContent } from "@/lib/api/content";
+import { cmsText } from "@/lib/cms";
+import type { FaqContent } from "@/lib/types";
 
 export async function generateMetadata({
   params,
@@ -24,6 +27,12 @@ export default async function FaqPage({
   const dict = getPublicDict(locale);
   const f = dict.faq;
 
+  // Admin-managed FAQ overrides the default role-segmented list when present.
+  const faq: FaqContent = await getContent("faq").catch(() => ({}));
+  const cmsItems = (faq.items ?? [])
+    .map((item) => ({ q: cmsText(item.question, locale), a: cmsText(item.answer, locale) }))
+    .filter((item) => item.q && item.a);
+
   return (
     <section className="container section">
       <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 40px" }}>
@@ -36,7 +45,11 @@ export default async function FaqPage({
         </p>
       </div>
 
-      <FaqAccordion dict={dict} freelancer={f.freelancer} owner={f.owner} />
+      {cmsItems.length > 0 ? (
+        <FaqAccordion dict={dict} flat={cmsItems} />
+      ) : (
+        <FaqAccordion dict={dict} freelancer={f.freelancer} owner={f.owner} />
+      )}
     </section>
   );
 }
