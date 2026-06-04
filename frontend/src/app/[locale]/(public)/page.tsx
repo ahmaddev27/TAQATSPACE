@@ -86,10 +86,10 @@ export default async function HomePage({
 
           <div className="ed-collage">
             <div className="ed-img-main">
-              <CoverImage src="/images/workspaces/placeholder-1.svg" alt={h.imgWorkspace} h={420} radius="var(--r-2xl)" />
+              <CoverImage src="/images/workspaces/placeholder-1.svg" alt={h.imgWorkspace} h="clamp(240px, 44vw, 420px)" radius="var(--r-2xl)" />
             </div>
             <div className="ed-img-sm">
-              <CoverImage src="/images/workspaces/placeholder-3.svg" alt={h.imgLounge} h={196} radius="var(--r-2xl)" />
+              <CoverImage src="/images/workspaces/placeholder-3.svg" alt={h.imgLounge} h="clamp(150px, 22vw, 196px)" radius="var(--r-2xl)" />
             </div>
             <div className="ed-float-card card">
               <div className="between" style={{ marginBottom: 10 }}>
@@ -126,14 +126,14 @@ export default async function HomePage({
             <CoverImage
               src="/images/workspaces/placeholder-2.svg"
               alt={h.imgInside}
-              h={300}
+              h="clamp(190px, 36vw, 300px)"
               radius="var(--r-2xl)"
               className="why-img-1"
             />
             <CoverImage
               src="/images/workspaces/placeholder-1.svg"
               alt={h.imgTeam}
-              h={190}
+              h="clamp(140px, 26vw, 190px)"
               radius="var(--r-2xl)"
               className="why-img-2"
             />

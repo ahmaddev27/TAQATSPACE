@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -15,9 +15,18 @@ import { Alert } from "@/components/ui/Alert";
 import { Icon } from "@/components/ui/Icon";
 import { loginSchema, type LoginValues } from "@/lib/validations/auth";
 
+/** Seeded demo logins (all share the password below). Remove before public launch. */
+const DEMO_PASSWORD = "password";
+const DEMO_ACCOUNTS: Array<{ key: string; ar: string; en: string; email: string }> = [
+  { key: "owner", ar: "مالك مساحة", en: "Workspace owner", email: "owner@taqat.space" },
+  { key: "freelancer", ar: "مستقل", en: "Freelancer", email: "freelancer@taqat.space" },
+  { key: "admin", ar: "مدير المنصّة", en: "Admin", email: "admin@taqat.space" },
+];
+
 export function LoginForm() {
   const t = useTranslations("auth.login");
   const tv = useTranslations("validation");
+  const locale = useLocale();
   const { login } = useAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
@@ -26,11 +35,18 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema(tv)),
     defaultValues: { email: "", password: "", remember: true },
   });
+
+  function fillDemo(email: string) {
+    setValue("email", email, { shouldValidate: true });
+    setValue("password", DEMO_PASSWORD, { shouldValidate: true });
+    setServerError(null);
+  }
 
   async function onSubmit(values: LoginValues) {
     setServerError(null);
@@ -116,6 +132,28 @@ export function LoginForm() {
           {t("registerWorkspace")}
         </Link>
       </p>
+
+      <div className="demo-accounts">
+        <div className="demo-accounts-h">
+          {locale === "ar" ? "حسابات تجريبية — اضغط للتعبئة" : "Demo accounts — click to fill"}
+        </div>
+        <div className="demo-accounts-list">
+          {DEMO_ACCOUNTS.map((a) => (
+            <button
+              key={a.key}
+              type="button"
+              className="demo-chip"
+              onClick={() => fillDemo(a.email)}
+            >
+              <span className="demo-chip-role">{locale === "ar" ? a.ar : a.en}</span>
+              <span className="demo-chip-email">{a.email}</span>
+            </button>
+          ))}
+        </div>
+        <div className="demo-accounts-pw">
+          {locale === "ar" ? "كلمة المرور" : "Password"}: <code>{DEMO_PASSWORD}</code>
+        </div>
+      </div>
     </form>
   );
 }
