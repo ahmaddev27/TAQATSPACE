@@ -3072,6 +3072,485 @@
                 }
             }
         },
+        "/workspace/messaging": {
+            "put": {
+                "operationId": "messaging.update",
+                "summary": "PUT /api/workspace/messaging \u2014 set `use_platform` and/or the workspace's\nown SMTP/SMS config. Secrets are encrypted; blank/omitted secrets\npreserve the stored value",
+                "tags": [
+                    "Messaging"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateWorkspaceMessagingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "use_platform": {
+                                                    "type": "boolean"
+                                                },
+                                                "smtp": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "host": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "port": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "username": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "encryption": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_address": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "host",
+                                                        "port",
+                                                        "username",
+                                                        "encryption",
+                                                        "from_address",
+                                                        "from_name",
+                                                        "has_password"
+                                                    ]
+                                                },
+                                                "sms": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "provider": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "sender": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_credentials": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "provider",
+                                                        "sender",
+                                                        "has_credentials"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "use_platform",
+                                                "smtp",
+                                                "sms"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Workspace messaging settings updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "This action is unauthorized."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "You have no workspace to update."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/settings/messaging": {
+            "get": {
+                "operationId": "messagingSettings.show",
+                "summary": "GET /api/admin/settings/messaging \u2014 masked platform config",
+                "tags": [
+                    "MessagingSettings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "smtp": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "host": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "port": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "username": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "encryption": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_address": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "host",
+                                                        "port",
+                                                        "username",
+                                                        "encryption",
+                                                        "from_address",
+                                                        "from_name",
+                                                        "has_password"
+                                                    ]
+                                                },
+                                                "sms": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "provider": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "sender": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_credentials": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "provider",
+                                                        "sender",
+                                                        "has_credentials"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "smtp",
+                                                "sms"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "messagingSettings.update",
+                "summary": "PUT /api/admin/settings/messaging \u2014 upsert the platform config.\nSecrets are encrypted; blank/omitted secrets preserve the stored value",
+                "tags": [
+                    "MessagingSettings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateMessagingSettingsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "smtp": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "host": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "port": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "username": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "encryption": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_address": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "from_name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "host",
+                                                        "port",
+                                                        "username",
+                                                        "encryption",
+                                                        "from_address",
+                                                        "from_name",
+                                                        "has_password"
+                                                    ]
+                                                },
+                                                "sms": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "provider": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "sender": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "has_credentials": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "provider",
+                                                        "sender",
+                                                        "has_credentials"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "smtp",
+                                                "sms"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Messaging settings updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/settings/messaging/test": {
+            "post": {
+                "operationId": "messagingSettings.test",
+                "summary": "POST /api/admin/settings/messaging/test \u2014 send a test email/SMS through\nthe platform config. Driver errors are reported, not thrown",
+                "tags": [
+                    "MessagingSettings"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TestMessagingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/notifications": {
             "get": {
                 "operationId": "notification.index",
@@ -7318,6 +7797,28 @@
                 ],
                 "title": "SubscriptionResource"
             },
+            "TestMessagingRequest": {
+                "type": "object",
+                "description": "Validates the messaging test payload `{ channel: \"email\"|\"sms\", to }`.\nFor email, `to` must be a valid address; for SMS it is a free-form recipient\nnumber. Authorization is handled by route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "email",
+                            "sms"
+                        ]
+                    },
+                    "to": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "channel",
+                    "to"
+                ],
+                "title": "TestMessagingRequest"
+            },
             "UpdateAnnouncementRequest": {
                 "type": "object",
                 "properties": {
@@ -7808,6 +8309,116 @@
                 ],
                 "title": "UpdateMemberStatusRequest"
             },
+            "UpdateMessagingSettingsRequest": {
+                "type": "object",
+                "description": "Validates the platform messaging payload `{ smtp?: {...}, sms?: {...} }`.\nEvery field is optional so partial updates work; secrets may be omitted or\nsent blank to preserve the stored value. Authorization is handled by route\nmiddleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "smtp": {
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "port": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 65535
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "password": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "encryption": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "tls",
+                                    "ssl",
+                                    "none"
+                                ]
+                            },
+                            "from_address": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email",
+                                "maxLength": 255
+                            },
+                            "from_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            }
+                        }
+                    },
+                    "sms": {
+                        "type": "object",
+                        "properties": {
+                            "provider": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "hotsms",
+                                    "mtcsms"
+                                ]
+                            },
+                            "sender": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "password": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "api_key": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            }
+                        }
+                    }
+                },
+                "title": "UpdateMessagingSettingsRequest"
+            },
             "UpdatePackageRequest": {
                 "type": "object",
                 "properties": {
@@ -8000,6 +8611,119 @@
                     "status"
                 ],
                 "title": "UpdateUserStatusRequest"
+            },
+            "UpdateWorkspaceMessagingRequest": {
+                "type": "object",
+                "description": "Validates a workspace owner's own messaging payload\n`{ use_platform?: bool, smtp?: {...}, sms?: {...} }`. Same secret-blank rules\nas the platform request: omit or blank a secret to keep the stored value.\nOwnership is enforced via the 'manage-workspace' gate in the controller.",
+                "properties": {
+                    "use_platform": {
+                        "type": "boolean"
+                    },
+                    "smtp": {
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "port": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ],
+                                "minimum": 1,
+                                "maximum": 65535
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "password": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "encryption": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "tls",
+                                    "ssl",
+                                    "none"
+                                ]
+                            },
+                            "from_address": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email",
+                                "maxLength": 255
+                            },
+                            "from_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            }
+                        }
+                    },
+                    "sms": {
+                        "type": "object",
+                        "properties": {
+                            "provider": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "hotsms",
+                                    "mtcsms"
+                                ]
+                            },
+                            "sender": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "password": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "api_key": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            }
+                        }
+                    }
+                },
+                "title": "UpdateWorkspaceMessagingRequest"
             },
             "UpdateWorkspaceRequest": {
                 "type": "object",
@@ -8285,6 +9009,10 @@
                             "email",
                             "phone"
                         ]
+                    },
+                    "messaging": {
+                        "type": "object",
+                        "additionalProperties": {}
                     }
                 },
                 "required": [
