@@ -110,11 +110,23 @@
         "custom": "Custom"
       },
       "subscriptions": {
-        "title": "Subscription status",
+        "title": "Subscription history",
         "active": "Active",
         "expired": "Expired",
         "activeCount": "{count} active",
         "totalCount": "{count} total",
+        "upcomingCount": "{count} upcoming",
+        "expiredCount": "{count} expired",
+        "cancelledCount": "{count} cancelled",
+        "lifecycle": {
+          "active": "Active",
+          "upcoming": "Upcoming",
+          "expired": "Expired",
+          "cancelled": "Cancelled",
+          "suspended": "Suspended"
+        },
+        "city": "City",
+        "seat": "Seat",
         "plan": "Plan",
         "price": "Monthly price",
         "start": "Start",
@@ -129,8 +141,27 @@
         "city": "City",
         "seats": "Seats",
         "price": "Monthly price",
+        "rating": "Rating",
         "created": "Created",
-        "empty": "This owner has no workspace yet."
+        "empty": "This owner has no workspace yet.",
+        "seatsTotal": "Total seats",
+        "seatsOccupied": "Occupied",
+        "seatsAvailable": "Available",
+        "seatTypes": {
+          "title": "Seat types & pricing",
+          "type": "Type",
+          "monthly": "Monthly",
+          "daily": "Daily",
+          "capacity": "Capacity",
+          "enabled": "Enabled",
+          "on": "On",
+          "off": "Off",
+          "types": {
+            "fixed": "Fixed",
+            "flexible": "Flexible",
+            "private_office": "Private office"
+          }
+        }
       },
       "documents": {
         "title": "Verification documents",

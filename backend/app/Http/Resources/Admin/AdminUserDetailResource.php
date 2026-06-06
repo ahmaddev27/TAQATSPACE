@@ -6,6 +6,7 @@ namespace App\Http\Resources\Admin;
 
 use App\Enums\SubscriptionStatus;
 use App\Models\BookingRequest;
+use App\Models\SeatTypePrice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -117,6 +118,50 @@ class AdminUserDetailResource extends JsonResource
             'price_per_month' => $workspace->price_per_month,
             'avg_rating' => $workspace->avg_rating,
             'created_at' => $workspace->created_at?->toIso8601String(),
+            'seat_types' => $this->seatTypes($workspace),
+            'seats' => $this->seatAvailability($workspace),
+        ];
+    }
+
+    /**
+     * The workspace's configured seat-type pricing tiers.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function seatTypes(Workspace $workspace): array
+    {
+        if (! $workspace->relationLoaded('seatTypes')) {
+            return [];
+        }
+
+        return $workspace->seatTypes
+            ->map(fn (SeatTypePrice $seatType): array => [
+                'id' => $seatType->id,
+                'type' => $seatType->type->value,
+                'monthly_price' => $seatType->price_monthly,
+                'daily_price' => $seatType->price_daily,
+                'capacity' => $seatType->capacity,
+                'enabled' => $seatType->enabled,
+            ])
+            ->all();
+    }
+
+    /**
+     * Seat availability for the workspace. `occupied` is the live count of
+     * occupied seats (eager-loaded as `occupied_seats_count` by the service);
+     * `available` is the headline capacity minus those occupied seats.
+     *
+     * @return array<string, int>
+     */
+    private function seatAvailability(Workspace $workspace): array
+    {
+        $total = (int) $workspace->total_seats;
+        $occupied = (int) ($workspace->occupied_seats_count ?? 0);
+
+        return [
+            'total' => $total,
+            'occupied' => $occupied,
+            'available' => max(0, $total - $occupied),
         ];
     }
 
@@ -174,6 +219,10 @@ class AdminUserDetailResource extends JsonResource
             'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
             'created_at' => $subscription->created_at?->toIso8601String(),
             'is_active' => $this->subscriptionIsActive($subscription),
+            'lifecycle' => $this->subscriptionLifecycle($subscription),
+            'seat_number' => $subscription->relationLoaded('seat') && $subscription->seat !== null
+                ? $subscription->seat->seat_number
+                : null,
             'workspace' => $subscription->relationLoaded('workspace') && $subscription->workspace !== null
                 ? [
                     'id' => $subscription->workspace->id,
@@ -200,7 +249,46 @@ class AdminUserDetailResource extends JsonResource
     }
 
     /**
-     * Counts the freelancer needs at a glance: total vs. currently-active subs.
+     * A single lifecycle label the UI can badge directly, derived from status
+     * and dates:
+     *  - cancelled / suspended / expired follow the stored status verbatim;
+     *  - an Active subscription whose start date is in the future is `upcoming`;
+     *  - an Active subscription past its end date is `expired`;
+     *  - otherwise `active`.
+     */
+    private function subscriptionLifecycle(Subscription $subscription): string
+    {
+        if ($subscription->status === SubscriptionStatus::Cancelled) {
+            return 'cancelled';
+        }
+
+        if ($subscription->status === SubscriptionStatus::Suspended) {
+            return 'suspended';
+        }
+
+        if ($subscription->status === SubscriptionStatus::Expired) {
+            return 'expired';
+        }
+
+        $now = Carbon::now();
+        $startDate = $subscription->start_date;
+
+        if ($startDate !== null && $startDate->startOfDay()->greaterThan($now)) {
+            return 'upcoming';
+        }
+
+        $endDate = $subscription->end_date;
+
+        if ($endDate !== null && $endDate->endOfDay()->lessThan($now)) {
+            return 'expired';
+        }
+
+        return 'active';
+    }
+
+    /**
+     * Counts the freelancer needs at a glance, bucketed by lifecycle so the
+     * admin sees the spread (active vs. expired vs. cancelled) at one look.
      *
      * @return array<string, int>
      */
@@ -209,13 +297,18 @@ class AdminUserDetailResource extends JsonResource
         return $this->whenLoaded('subscriptions', function (): array {
             $subscriptions = $this->resource->subscriptions;
 
+            $byLifecycle = $subscriptions
+                ->groupBy(fn (Subscription $subscription): string => $this->subscriptionLifecycle($subscription))
+                ->map(fn ($group): int => $group->count());
+
             return [
                 'total' => $subscriptions->count(),
-                'active' => $subscriptions
-                    ->filter(fn (Subscription $subscription): bool => $this->subscriptionIsActive($subscription))
-                    ->count(),
+                'active' => (int) $byLifecycle->get('active', 0),
+                'upcoming' => (int) $byLifecycle->get('upcoming', 0),
+                'expired' => (int) $byLifecycle->get('expired', 0),
+                'cancelled' => (int) $byLifecycle->get('cancelled', 0),
             ];
-        }, ['total' => 0, 'active' => 0]);
+        }, ['total' => 0, 'active' => 0, 'upcoming' => 0, 'expired' => 0, 'cancelled' => 0]);
     }
 
     /**
