@@ -70,6 +70,7 @@
       "colJoined": "Joined",
       "activate": "Activate",
       "suspend": "Suspend",
+      "viewDetails": "View details",
       "count": "Total",
       "filterRole": "Role",
       "filterStatus": "Status",
@@ -92,6 +93,49 @@
         "activated": "Account activated",
         "suspended": "Account suspended",
         "statusFailed": "Could not update the account status"
+      }
+    },
+    "userDetail": {
+      "back": "Back to users",
+      "joined": "Joined",
+      "specialty": "Specialty",
+      "role": {
+        "freelancer": "Freelancer",
+        "workspace_owner": "Workspace owner",
+        "admin": "Admin"
+      },
+      "plan": {
+        "monthly": "Monthly",
+        "daily": "Daily",
+        "custom": "Custom"
+      },
+      "subscriptions": {
+        "title": "Subscription status",
+        "active": "Active",
+        "expired": "Expired",
+        "activeCount": "{count} active",
+        "totalCount": "{count} total",
+        "plan": "Plan",
+        "price": "Monthly price",
+        "start": "Start",
+        "end": "End",
+        "empty": "This member has no subscriptions yet."
+      },
+      "bookings": {
+        "title": "Recent booking requests"
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "city": "City",
+        "seats": "Seats",
+        "price": "Monthly price",
+        "created": "Created",
+        "empty": "This owner has no workspace yet."
+      },
+      "documents": {
+        "title": "Verification documents",
+        "license": "Commercial license",
+        "id": "ID document"
       }
     },
     "subscriptions": {

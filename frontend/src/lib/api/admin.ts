@@ -1,6 +1,7 @@
 import { serverFetch } from "@/lib/api";
 import type {
   ApiEnvelope,
+  BookingStatus,
   InvoiceStatus,
   Paginated,
   PlanType,
@@ -100,6 +101,90 @@ export async function getAllAdminUsers(
   return collectPages((page) =>
     getAdminUsers({ per_page: 200, ...filters, page }),
   );
+}
+
+/* --- Single-user detail (GET /admin/users/{id}) --------------------------- */
+
+/** One of the freelancer's subscriptions, enriched for the admin detail view. */
+export interface AdminUserSubscription {
+  id: string;
+  plan_type: PlanType;
+  /** Decimal string, e.g. "250.00". */
+  monthly_price: string;
+  status: SubscriptionStatus;
+  start_date: string | null;
+  end_date: string | null;
+  cancelled_at: string | null;
+  created_at: string | null;
+  /** Active status AND not past its end date (server-derived). */
+  is_active: boolean;
+  workspace: { id: string; name: string; city: string } | null;
+}
+
+/** Headline counts for a freelancer's subscriptions. */
+export interface AdminUserSubscriptionsSummary {
+  total: number;
+  active: number;
+}
+
+/** A workspace owned by the user, as shown on the admin detail view. */
+export interface AdminUserWorkspace {
+  id: string;
+  name: string;
+  status: WorkspaceStatus;
+  city: string;
+  total_seats: number;
+  /** Decimal string, e.g. "250.00". */
+  price_per_month: string;
+  avg_rating: string | null;
+  created_at: string | null;
+}
+
+/** Owner verification documents resolved to viewable URLs. */
+export interface AdminUserDocuments {
+  license_file: string | null;
+  id_document: string | null;
+}
+
+/** A recent booking request made by a freelancer. */
+export interface AdminUserBooking {
+  id: string;
+  status: BookingStatus;
+  workspace: { id: string; name: string } | null;
+  created_at: string | null;
+}
+
+/**
+ * Full single-user payload (AdminUserDetailResource). The role-specific keys
+ * are present only for the matching role; branch on `role`.
+ */
+export interface AdminUserDetail {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  role: UserRole;
+  status: UserStatus;
+  specialty: string | null;
+  bio: string | null;
+  avatar: string | null;
+  email_verified_at: string | null;
+  created_at: string | null;
+  /** Freelancer only. */
+  subscriptions?: AdminUserSubscription[];
+  subscriptions_summary?: AdminUserSubscriptionsSummary;
+  recent_bookings?: AdminUserBooking[];
+  /** Workspace-owner only. */
+  workspaces?: AdminUserWorkspace[];
+  documents?: AdminUserDocuments | null;
+}
+
+/** Full profile with role-specific detail for a single user. */
+export async function getAdminUserDetail(id: string): Promise<AdminUserDetail> {
+  const res = await serverFetch<ApiEnvelope<AdminUserDetail>>(
+    `/admin/users/${id}`,
+  );
+  return res.data;
 }
 
 /* -------------------------------------------------------------------------- */

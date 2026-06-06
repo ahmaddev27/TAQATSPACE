@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserStatusRequest;
+use App\Http\Resources\Admin\AdminUserDetailResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Admin\AdminUserService;
@@ -29,6 +30,17 @@ class UserController extends Controller
         $paginator = $this->users->paginate($filters);
 
         return ApiResponse::success(UserResource::collection($paginator)->response()->getData(true));
+    }
+
+    /**
+     * GET /api/admin/users/{user} — full profile with role-specific detail
+     * (a freelancer's subscriptions, an owner's workspace).
+     */
+    public function show(User $user): JsonResponse
+    {
+        $detail = $this->users->findForDetail($user);
+
+        return ApiResponse::success(new AdminUserDetailResource($detail));
     }
 
     /**

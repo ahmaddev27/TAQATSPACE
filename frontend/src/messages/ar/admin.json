@@ -70,6 +70,7 @@
       "colJoined": "تاريخ الانضمام",
       "activate": "تفعيل",
       "suspend": "إيقاف",
+      "viewDetails": "عرض التفاصيل",
       "count": "العدد",
       "filterRole": "الدور",
       "filterStatus": "الحالة",
@@ -92,6 +93,49 @@
         "activated": "تم تفعيل الحساب",
         "suspended": "تم إيقاف الحساب",
         "statusFailed": "تعذّر تحديث حالة الحساب"
+      }
+    },
+    "userDetail": {
+      "back": "العودة إلى المستخدمين",
+      "joined": "تاريخ الانضمام",
+      "specialty": "التخصّص",
+      "role": {
+        "freelancer": "مستقل",
+        "workspace_owner": "صاحب مساحة",
+        "admin": "مشرف"
+      },
+      "plan": {
+        "monthly": "شهري",
+        "daily": "يومي",
+        "custom": "مخصّص"
+      },
+      "subscriptions": {
+        "title": "حالة الاشتراك",
+        "active": "نشط",
+        "expired": "منتهٍ",
+        "activeCount": "{count} نشط",
+        "totalCount": "{count} إجمالاً",
+        "plan": "الخطة",
+        "price": "السعر الشهري",
+        "start": "تاريخ البدء",
+        "end": "تاريخ الانتهاء",
+        "empty": "لا توجد اشتراكات لهذا العضو بعد."
+      },
+      "bookings": {
+        "title": "أحدث طلبات الحجز"
+      },
+      "workspaces": {
+        "title": "المساحات",
+        "city": "المدينة",
+        "seats": "المقاعد",
+        "price": "السعر الشهري",
+        "created": "تاريخ الإنشاء",
+        "empty": "لا توجد مساحة لهذا المالك بعد."
+      },
+      "documents": {
+        "title": "مستندات التحقّق",
+        "license": "السجل التجاري",
+        "id": "وثيقة الهوية"
       }
     },
     "subscriptions": {

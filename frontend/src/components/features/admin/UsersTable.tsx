@@ -15,6 +15,7 @@ import {
   type SortState,
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
+import { Link } from "@/i18n/navigation";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { updateUserStatus } from "@/lib/actions/admin";
 import type { User, UserRole, UserStatus } from "@/lib/types";
@@ -147,6 +148,14 @@ export function UsersTable({ users }: UsersTableProps) {
       header: "",
       cell: (u) => (
         <div className="row-actions">
+          <Link
+            href={`/admin/users/${u.id}`}
+            className="icon-btn"
+            aria-label={t("viewDetails")}
+            title={t("viewDetails")}
+          >
+            <Icon name="eye" />
+          </Link>
           {u.status !== "active" && (
             <Button
               variant="primary"
