@@ -21,12 +21,30 @@
     "notifications": "Notifications",
     "all": "All",
     "status": {
-      "active": "Active", "expired": "Expired", "pending": "Pending", "approved": "Approved",
-      "rejected": "Rejected", "suspended": "Suspended", "cancelled": "Cancelled", "paid": "Paid",
-      "overdue": "Overdue", "available": "Available", "occupied": "Occupied", "reserved": "Reserved", "maintenance": "Maintenance"
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended",
+      "cancelled": "Cancelled",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "available": "Available",
+      "occupied": "Occupied",
+      "reserved": "Reserved",
+      "maintenance": "Maintenance"
     },
-    "seatType": { "fixed": "Fixed desk", "flexible": "Flexible", "private_office": "Private office" },
-    "planType": { "monthly": "Monthly", "daily": "Daily", "custom": "Custom" }
+    "seatType": {
+      "fixed": "Fixed desk",
+      "flexible": "Flexible",
+      "private_office": "Private office"
+    },
+    "planType": {
+      "monthly": "Monthly",
+      "daily": "Daily",
+      "custom": "Custom"
+    }
   },
   "nav": {
     "sectionManage": "Manage",
@@ -58,8 +76,10 @@
       "users": "Users",
       "subscriptions": "Subscriptions",
       "landing": "Landing page",
-      "finance": "Finance"
-    }
+      "finance": "Finance",
+      "crm": "Content (CRM)"
+    },
+    "sectionCrm": "Content"
   },
   "status": {
     "active": "Active",

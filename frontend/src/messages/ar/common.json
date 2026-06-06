@@ -21,12 +21,30 @@
     "notifications": "الإشعارات",
     "all": "الكل",
     "status": {
-      "active": "نشط", "expired": "منتهٍ", "pending": "قيد المراجعة", "approved": "مقبول",
-      "rejected": "مرفوض", "suspended": "موقوف", "cancelled": "ملغى", "paid": "مدفوعة",
-      "overdue": "متأخرة", "available": "متاح", "occupied": "مشغول", "reserved": "محجوز", "maintenance": "صيانة"
+      "active": "نشط",
+      "expired": "منتهٍ",
+      "pending": "قيد المراجعة",
+      "approved": "مقبول",
+      "rejected": "مرفوض",
+      "suspended": "موقوف",
+      "cancelled": "ملغى",
+      "paid": "مدفوعة",
+      "overdue": "متأخرة",
+      "available": "متاح",
+      "occupied": "مشغول",
+      "reserved": "محجوز",
+      "maintenance": "صيانة"
     },
-    "seatType": { "fixed": "مكتب ثابت", "flexible": "مرن", "private_office": "مكتب خاص" },
-    "planType": { "monthly": "شهري", "daily": "يومي", "custom": "مخصص" }
+    "seatType": {
+      "fixed": "مكتب ثابت",
+      "flexible": "مرن",
+      "private_office": "مكتب خاص"
+    },
+    "planType": {
+      "monthly": "شهري",
+      "daily": "يومي",
+      "custom": "مخصص"
+    }
   },
   "nav": {
     "sectionManage": "الإدارة",
@@ -58,8 +76,10 @@
       "users": "إدارة المستخدمين",
       "subscriptions": "الاشتراكات",
       "landing": "الصفحة الرئيسية",
-      "finance": "المالية والعمولات"
-    }
+      "finance": "المالية والعمولات",
+      "crm": "المحتوى (CRM)"
+    },
+    "sectionCrm": "إدارة المحتوى"
   },
   "status": {
     "active": "نشط",

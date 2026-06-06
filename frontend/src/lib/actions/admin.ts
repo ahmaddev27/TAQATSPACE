@@ -52,7 +52,7 @@ const CONTENT_REVALIDATE: Record<ContentKey, string[]> = {
  * Persist a site-wide content blob (`PUT /admin/content/{key}`).
  *
  * The backend expects the blob wrapped as `{ content }`. On success we
- * revalidate the admin "rm" hub plus every public path that renders this key so
+ * revalidate the admin CRM hub plus every public path that renders this key so
  * the new copy is served immediately.
  */
 export async function updateContent<K extends ContentKey>(
@@ -65,7 +65,7 @@ export async function updateContent<K extends ContentKey>(
   });
 
   if (result.ok) {
-    revalidatePath("/[locale]/(dashboard)/admin/rm", "page");
+    revalidatePath("/[locale]/(dashboard)/admin/crm", "page");
     for (const path of CONTENT_REVALIDATE[key]) {
       revalidatePath(path, "page");
     }
