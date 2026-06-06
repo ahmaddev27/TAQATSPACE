@@ -195,6 +195,7 @@ export interface Workspace {
 export interface SeatAssignedMember {
   id: string;
   name: string;
+  avatar_url: string | null;
 }
 
 export interface Seat {

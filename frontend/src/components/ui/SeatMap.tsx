@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
 
 export type SeatMapState =
@@ -8,10 +9,19 @@ export type SeatMapState =
   | "reserved"
   | "disabled";
 
+/** Assignee shown on an occupied seat tile. */
+export interface SeatMapMember {
+  name: string;
+  initial: string;
+  avatarUrl?: string | null;
+}
+
 export interface SeatMapSeat {
   id: string;
   label: string;
   state: SeatMapState;
+  /** Present only for occupied seats the viewer is allowed to see. */
+  member?: SeatMapMember | null;
 }
 
 export interface SeatMapProps {
@@ -41,6 +51,7 @@ export function SeatMap({ seats, selected, onSelect, cols = 8 }: SeatMapProps) {
                   ? "is-selected"
                   : "";
         const locked = s.state === "disabled" || s.state === "occupied";
+        const occupiedWithMember = s.state === "occupied" && s.member != null;
         return (
           <button
             key={s.id}
@@ -48,9 +59,21 @@ export function SeatMap({ seats, selected, onSelect, cols = 8 }: SeatMapProps) {
             className={`seat ${cls}`.trim()}
             disabled={locked}
             onClick={() => onSelect?.(s.id)}
-            title={s.label}
+            title={s.member ? `${s.label} — ${s.member.name}` : s.label}
           >
-            {s.state === "occupied" ? (
+            {occupiedWithMember ? (
+              <span className="seat-occupant">
+                <span className="seat-tag tnum">{s.label}</span>
+                <Avatar
+                  initial={s.member!.initial}
+                  src={s.member!.avatarUrl}
+                  alt={s.member!.name}
+                  size="sm"
+                  round
+                />
+                <span className="seat-occupant-name">{s.member!.name}</span>
+              </span>
+            ) : s.state === "occupied" ? (
               <Icon name="user" size={15} />
             ) : s.state === "disabled" ? (
               <Icon name="x" size={14} />

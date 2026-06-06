@@ -158,6 +158,13 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
                   id: s.id,
                   label: s.seat_number,
                   state: toState(s.status),
+                  member: s.assigned_member
+                    ? {
+                        name: s.assigned_member.name,
+                        initial: avatarInitial(s.assigned_member.name),
+                        avatarUrl: s.assigned_member.avatar_url,
+                      }
+                    : null,
                 }))}
                 selected={selectedId}
                 onSelect={setSelectedId}
@@ -200,6 +207,8 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
                 <div className="row" style={{ gap: 10 }}>
                   <Avatar
                     initial={avatarInitial(selectedSeat.assigned_member.name)}
+                    src={selectedSeat.assigned_member.avatar_url}
+                    alt={selectedSeat.assigned_member.name}
                     size="sm"
                     round
                   />
