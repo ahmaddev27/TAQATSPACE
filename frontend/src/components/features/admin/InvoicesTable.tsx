@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Field } from "@/components/ui/Field";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
@@ -31,6 +32,7 @@ type StatusTab = "all" | InvoiceStatus;
 const TABS: StatusTab[] = ["all", "paid", "pending", "overdue", "cancelled"];
 const FILTER_KEYS = ["status", "search", "date_from", "date_to"] as const;
 const PAGE_SIZE = 10;
+const RECEIPT_ACCEPT = "application/pdf,image/png,image/jpeg,image/jpg";
 
 export interface InvoicesTableProps {
   invoices: AdminInvoice[];
@@ -39,6 +41,7 @@ export interface InvoicesTableProps {
 /** Super-admin invoice tracking: mark paid/unpaid, upload receipt, PDF/receipt. */
 export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const t = useTranslations("admin.invoices");
+  const tPay = useTranslations("adminInvoices.payModal");
   const locale = useLocale();
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
@@ -57,6 +60,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const [receiptTarget, setReceiptTarget] = useState<AdminInvoice | null>(null);
   const [payTarget, setPayTarget] = useState<AdminInvoice | null>(null);
   const [payDate, setPayDate] = useState("");
+  const [payReceipt, setPayReceipt] = useState<File | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -101,14 +105,19 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
     });
   };
 
+  const closePayModal = () => {
+    setPayTarget(null);
+    setPayDate("");
+    setPayReceipt(null);
+  };
+
   const submitPaid = () => {
     if (!payTarget) return;
     startTransition(async () => {
-      const res = await markInvoicePaid(payTarget.id, payDate || null);
+      const res = await markInvoicePaid(payTarget.id, payDate || null, payReceipt);
       if (res.ok) {
         toast({ tone: "ok", title: t("toast.markedPaid") });
-        setPayTarget(null);
-        setPayDate("");
+        closePayModal();
       } else {
         toast({ tone: "err", title: t("toast.markFailed"), body: res.message });
       }
@@ -193,6 +202,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 loading={pending}
                 onClick={() => {
                   setPayDate("");
+                  setPayReceipt(null);
                   setPayTarget(inv);
                 }}
               >
@@ -327,13 +337,13 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
 
       {payTarget && (
         <Modal
-          title={t("payModal.title")}
+          title={tPay("title")}
           icon="check"
-          onClose={() => setPayTarget(null)}
+          onClose={closePayModal}
           footer={
             <>
-              <Button variant="ghost" onClick={() => setPayTarget(null)}>
-                {t("payModal.cancel")}
+              <Button variant="ghost" onClick={closePayModal}>
+                {tPay("cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -341,19 +351,19 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 loading={pending}
                 onClick={submitPaid}
               >
-                {t("payModal.confirm")}
+                {tPay("confirm")}
               </Button>
             </>
           }
         >
           <div className="stack" style={{ gap: 16 }}>
             <p className="muted">
-              {t("payModal.body", { invoice: payTarget.invoice_number })}
+              {tPay("body", { invoice: payTarget.invoice_number })}
             </p>
             <Field
-              label={t("payModal.paidAt")}
+              label={tPay("paidAt")}
               optional
-              optionalLabel={t("payModal.optional")}
+              optionalLabel={tPay("optional")}
             >
               <Input
                 className="ltr"
@@ -362,6 +372,32 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 onChange={(e) => setPayDate(e.target.value)}
               />
             </Field>
+            <Field
+              label={tPay("receipt")}
+              hint={tPay("receiptHint")}
+              optional
+              optionalLabel={tPay("optional")}
+            >
+              <FileDropzone
+                value={payReceipt}
+                onChange={setPayReceipt}
+                accept={RECEIPT_ACCEPT}
+                label={tPay("dropLabel")}
+                hint={tPay("dropHint")}
+                clearLabel={tPay("remove")}
+              />
+            </Field>
+            {!payReceipt && payTarget.receipt_url && (
+              <a
+                className="btn btn-ghost btn-sm"
+                href={payTarget.receipt_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="eye" size={15} />
+                {tPay("viewAttached")}
+              </a>
+            )}
           </div>
         </Modal>
       )}

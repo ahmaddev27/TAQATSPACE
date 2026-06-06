@@ -45,6 +45,7 @@ class InvoiceController extends Controller
             $updated = $this->invoices->markPaid(
                 $invoice,
                 $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
+                $request->file('receipt'),
             );
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);

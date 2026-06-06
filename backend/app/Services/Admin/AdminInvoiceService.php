@@ -46,12 +46,18 @@ class AdminInvoiceService
     }
 
     /**
-     * Mark an invoice paid, reloading the contract relations for the response.
+     * Mark an invoice paid, optionally attaching the payment receipt in the same
+     * step, and reload the contract relations for the response. The receipt is
+     * stored first so a storage failure aborts before the invoice flips to paid.
      *
      * @throws \RuntimeException when the invoice is already paid
      */
-    public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
+    public function markPaid(Invoice $invoice, ?Carbon $paidAt = null, ?UploadedFile $receipt = null): Invoice
     {
+        if ($receipt !== null) {
+            $invoice->forceFill(['receipt_path' => $this->storeReceipt($invoice, $receipt)])->save();
+        }
+
         $this->invoices->markPaid($invoice, $paidAt);
 
         return $invoice->load(self::RELATIONS);
@@ -74,27 +80,35 @@ class AdminInvoiceService
     }
 
     /**
-     * Store the uploaded payment receipt under receipts/{invoice}, persist its
-     * path, and record the payment. Uploading a receipt is the admin's proof of
-     * payment, so the invoice is marked paid in the same action (idempotent when
-     * it was already paid).
+     * Store (or replace) the uploaded payment receipt and record the payment.
+     * Uploading a receipt is the admin's proof of payment, so the invoice is
+     * marked paid in the same action (idempotent when it was already paid) —
+     * this endpoint also serves to replace a receipt on an already-paid invoice.
      */
     public function attachReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
-        $path = $this->uploads->upload(
-            $receipt,
-            'receipts/'.$invoice->id,
-            (string) config('filesystems.media', 'public'),
-            'public',
-        );
-
-        $invoice->forceFill(['receipt_path' => $path])->save();
+        $invoice->forceFill(['receipt_path' => $this->storeReceipt($invoice, $receipt)])->save();
 
         if ($invoice->status !== InvoiceStatus::Paid) {
             $this->invoices->markPaid($invoice, $paidAt);
         }
 
         return $invoice->load(self::RELATIONS);
+    }
+
+    /**
+     * Persist an uploaded receipt under receipts/{invoice} on the media disk and
+     * return its stored path. Single source of truth for receipt storage so the
+     * mark-paid and standalone upload paths stay consistent.
+     */
+    private function storeReceipt(Invoice $invoice, UploadedFile $receipt): string
+    {
+        return $this->uploads->upload(
+            $receipt,
+            'receipts/'.$invoice->id,
+            (string) config('filesystems.media', 'public'),
+            'public',
+        );
     }
 
     /**

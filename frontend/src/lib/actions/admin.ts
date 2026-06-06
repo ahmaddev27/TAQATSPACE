@@ -134,17 +134,30 @@ function revalidateInvoiceTracking(): void {
   revalidatePath("/[locale]/(dashboard)/admin", "page");
 }
 
-/** Record a manual payment. `paidAt` is an optional ISO date string. */
+/**
+ * Record a manual payment, optionally attaching the payment receipt in the same
+ * step. When a receipt file is provided the request is sent as multipart so the
+ * backend stores the file and flips the invoice to paid in one action; otherwise
+ * a plain JSON body carries just the optional paid date.
+ */
 export async function markInvoicePaid(
   invoiceId: string,
   paidAt?: string | null,
+  receipt?: File | null,
 ): Promise<ActionResult<AdminInvoice>> {
-  const body = paidAt != null && paidAt !== "" ? { paid_at: paidAt } : undefined;
+  const path = `/admin/invoices/${invoiceId}/mark-paid`;
 
-  const result = await authedMutate<AdminInvoice>(
-    `/admin/invoices/${invoiceId}/mark-paid`,
-    { method: "PUT", body },
-  );
+  let result: ActionResult<AdminInvoice>;
+  if (receipt) {
+    const formData = new FormData();
+    formData.append("receipt", receipt);
+    if (paidAt != null && paidAt !== "") formData.append("paid_at", paidAt);
+    result = await authedMutate<AdminInvoice>(path, { method: "PUT", formData });
+  } else {
+    const body = paidAt != null && paidAt !== "" ? { paid_at: paidAt } : undefined;
+    result = await authedMutate<AdminInvoice>(path, { method: "PUT", body });
+  }
+
   if (result.ok) revalidateInvoiceTracking();
   return result;
 }

@@ -102,5 +102,22 @@
       "view": "View invoices",
       "dismiss": "Dismiss"
     }
+  },
+  "adminInvoices": {
+    "payModal": {
+      "title": "Mark invoice as paid",
+      "body": "Record a manual payment for invoice {invoice} and attach the payment receipt.",
+      "paidAt": "Paid date",
+      "optional": "(optional)",
+      "receipt": "Payment receipt",
+      "receiptHint": "Attach the receipt as proof of payment.",
+      "dropLabel": "Drop a file here or click to choose",
+      "dropHint": "PDF, PNG or JPG · up to 5MB",
+      "remove": "Remove",
+      "attached": "Receipt attached",
+      "viewAttached": "View receipt",
+      "cancel": "Cancel",
+      "confirm": "Confirm payment"
+    }
   }
 }
