@@ -148,6 +148,57 @@ export const WORKSPACE_STEP_FIELDS: (keyof WorkspaceRegisterValues)[][] = [
   ["license_file", "id_document", "terms"],
 ];
 
+/* ---------------------------------------------------------------------------
+ * SSO onboarding — a freshly-provisioned SSO user picks a role and completes
+ * the role-specific data. Account identity (name/email/password) already exists,
+ * so these schemas omit it; documents are collected later, not at onboarding.
+ * ------------------------------------------------------------------------- */
+
+export function freelancerOnboardingSchema(t: Translate) {
+  return z.object({
+    phone: z.string().min(6, t("phone")),
+    specialty: z.string().min(1, t("required")),
+    bio: z.string().optional(),
+  });
+}
+export type FreelancerOnboardingValues = z.infer<
+  ReturnType<typeof freelancerOnboardingSchema>
+>;
+
+export function ownerOnboardingSchema(t: Translate) {
+  const numericText = z
+    .string()
+    .refine((v) => v.trim() === "" || Number(v) >= 0, t("required"));
+
+  const seatType = z.object({
+    type: z.enum(SEAT_TYPE_CODES),
+    enabled: z.boolean(),
+    price_monthly: numericText,
+    price_daily: numericText,
+    capacity: numericText,
+  });
+
+  return z.object({
+    phone: z.string().min(6, t("phone")),
+    workspace_name: z.string().min(2, t("required")),
+    description: z.string().min(1, t("required")),
+    capacity: z.number({ message: t("required") }).min(1, t("required")),
+    hours: z.string().min(1, t("required")),
+    city: z.string().min(1, t("required")),
+    area: z.string().min(1, t("required")),
+    address: z.string().min(1, t("required")),
+    lat: z.number(),
+    lng: z.number(),
+    seat_types: z
+      .array(seatType)
+      .refine((rows) => rows.some((r) => r.enabled), { message: t("minSeat") }),
+    amenities: z.array(z.string()).optional(),
+  });
+}
+export type OwnerOnboardingValues = z.infer<
+  ReturnType<typeof ownerOnboardingSchema>
+>;
+
 export const AMENITY_CODES = [
   "wifi",
   "printer",

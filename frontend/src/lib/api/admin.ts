@@ -6,6 +6,7 @@ import type {
   Paginated,
   PlanType,
   PlatformMessagingConfig,
+  SeatType,
   SubscriptionStatus,
   User,
   UserRole,
@@ -105,6 +106,14 @@ export async function getAllAdminUsers(
 
 /* --- Single-user detail (GET /admin/users/{id}) --------------------------- */
 
+/** A subscription's derived lifecycle stage (single badge-able label). */
+export type AdminUserSubscriptionLifecycle =
+  | "active"
+  | "upcoming"
+  | "expired"
+  | "cancelled"
+  | "suspended";
+
 /** One of the freelancer's subscriptions, enriched for the admin detail view. */
 export interface AdminUserSubscription {
   id: string;
@@ -118,13 +127,39 @@ export interface AdminUserSubscription {
   created_at: string | null;
   /** Active status AND not past its end date (server-derived). */
   is_active: boolean;
+  /** Single derived lifecycle stage for badging (server-derived). */
+  lifecycle: AdminUserSubscriptionLifecycle;
+  /** The assigned seat's number, when a seat is linked. */
+  seat_number: string | null;
   workspace: { id: string; name: string; city: string } | null;
 }
 
-/** Headline counts for a freelancer's subscriptions. */
+/** Headline counts for a freelancer's subscriptions, bucketed by lifecycle. */
 export interface AdminUserSubscriptionsSummary {
   total: number;
   active: number;
+  upcoming: number;
+  expired: number;
+  cancelled: number;
+}
+
+/** A configured seat-type pricing tier on an owned workspace. */
+export interface AdminUserSeatType {
+  id: string;
+  type: SeatType;
+  /** Decimal string, e.g. "250.00". */
+  monthly_price: string;
+  /** Decimal string, e.g. "40.00". */
+  daily_price: string;
+  capacity: number;
+  enabled: boolean;
+}
+
+/** Live seat availability for an owned workspace. */
+export interface AdminUserSeatAvailability {
+  total: number;
+  occupied: number;
+  available: number;
 }
 
 /** A workspace owned by the user, as shown on the admin detail view. */
@@ -138,6 +173,10 @@ export interface AdminUserWorkspace {
   price_per_month: string;
   avg_rating: string | null;
   created_at: string | null;
+  /** Configured seat-type pricing tiers. */
+  seat_types: AdminUserSeatType[];
+  /** Live seat availability (total / occupied / available). */
+  seats: AdminUserSeatAvailability;
 }
 
 /** Owner verification documents resolved to viewable URLs. */

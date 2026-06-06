@@ -56,6 +56,23 @@
       "signingIn": "Signing you in…",
       "error": "Could not sign in with Taqat, please try again."
     },
+    "onboarding": {
+      "eyebrow": "One last step",
+      "title": "How will you use Taqat?",
+      "subtitle": "Choose your account type to finish setting up",
+      "choose": "Choose",
+      "freelancer": {
+        "title": "Freelancer",
+        "desc": "Discover workspaces, book a seat, and manage your subscriptions."
+      },
+      "owner": {
+        "title": "Workspace owner",
+        "desc": "Register your space and manage seats, members, and subscriptions."
+      },
+      "finish": "Finish and create account",
+      "submitOwner": "Submit for review",
+      "error": "Could not complete setup, please try again."
+    },
     "forgot": {
       "title": "Forgot password",
       "subtitle": "Enter your email and we'll send you a reset link.",

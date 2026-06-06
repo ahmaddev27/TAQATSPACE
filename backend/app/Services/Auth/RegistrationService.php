@@ -44,6 +44,8 @@ class RegistrationService
                 'status' => UserStatus::PendingVerification->value,
                 'specialty' => $data['specialty'] ?? null,
                 'bio' => $data['bio'] ?? null,
+                // Self-registration explicitly picks a role, so onboarding is done.
+                'onboarding_completed_at' => now(),
             ]);
 
             $user->assignRole($role->value);
@@ -77,6 +79,66 @@ class RegistrationService
             'user' => $user,
             'token' => $user->createToken('auth_token')->plainTextToken,
         ];
+    }
+
+    /**
+     * Complete onboarding for an already-authenticated user who arrived via SSO
+     * and now picks freelancer vs workspace-owner. Mirrors {@see register()} but
+     * mutates the existing account instead of creating one (no new password/token):
+     *
+     *  - freelancer      -> store specialty/phone, account becomes Active.
+     *  - workspace_owner  -> store profile, create the (pending) workspace, stay
+     *                        PendingVerification until admin approval.
+     *
+     * @param  array<string, mixed>  $data  validated, excluding files
+     */
+    public function completeOnboarding(User $user, array $data): User
+    {
+        $role = UserRole::from($data['role']);
+
+        $user = DB::transaction(function () use ($user, $data, $role): User {
+            $attributes = [
+                'role' => $role->value,
+                'phone' => $data['phone'] ?? $user->phone,
+                'onboarding_completed_at' => now(),
+                'status' => $role === UserRole::WorkspaceOwner
+                    ? UserStatus::PendingVerification->value
+                    : UserStatus::Active->value,
+            ];
+
+            if ($role === UserRole::Freelancer) {
+                $attributes['specialty'] = $data['specialty'] ?? null;
+                $attributes['bio'] = $data['bio'] ?? null;
+            }
+
+            $user->update($attributes);
+            $this->resetRole($user, $role);
+
+            if ($role === UserRole::WorkspaceOwner) {
+                $this->workspaces->createForOwner(
+                    (string) $user->id,
+                    $this->workspaceAttributes($data),
+                );
+            }
+
+            return $user;
+        });
+
+        if ($role === UserRole::WorkspaceOwner) {
+            $this->notifyAdmins($user);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Replace the user's Spatie role with the freshly-chosen one. SSO accounts
+     * were provisioned with a Freelancer placeholder; swapping owners over keeps
+     * the permission role aligned with the `role` column.
+     */
+    private function resetRole(User $user, UserRole $role): void
+    {
+        $user->syncRoles([$role->value]);
     }
 
     /**

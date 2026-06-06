@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'status',
         'sso_sub',
+        'onboarding_completed_at',
         'avatar',
         'specialty',
         'bio',
@@ -53,6 +54,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
@@ -120,6 +122,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;
+    }
+
+    /**
+     * Whether the user still has to pick a role and complete role-specific data.
+     * True only for freshly-provisioned SSO accounts that have not onboarded yet.
+     */
+    public function needsOnboarding(): bool
+    {
+        return $this->onboarding_completed_at === null;
     }
 
     // ---- Notifications (SPA-aware, queued) ----

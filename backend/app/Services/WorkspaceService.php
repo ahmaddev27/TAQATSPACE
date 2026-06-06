@@ -32,6 +32,7 @@ class WorkspaceService
     public function __construct(
         private readonly WorkspaceRepository $workspaces,
         private readonly SeatTypePricingService $seatTypePricing,
+        private readonly SeatService $seats,
     ) {}
 
     /**
@@ -89,6 +90,7 @@ class WorkspaceService
             if ($seatTypes !== []) {
                 $this->seatTypePricing->sync($workspace, $seatTypes);
                 $this->syncDerivedPricing($workspace);
+                $this->seats->syncSeatsToCapacity($workspace);
             }
 
             return $workspace;
@@ -119,8 +121,10 @@ class WorkspaceService
     {
         return DB::transaction(function () use ($workspace, $rows): Workspace {
             $this->seatTypePricing->sync($workspace, $rows);
+            $updated = $this->syncDerivedPricing($workspace);
+            $this->seats->syncSeatsToCapacity($workspace);
 
-            return $this->syncDerivedPricing($workspace);
+            return $updated;
         });
     }
 

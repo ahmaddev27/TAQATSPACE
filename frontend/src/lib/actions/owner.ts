@@ -5,6 +5,8 @@ import { serverFetch } from "@/lib/api";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ApiEnvelope,
+  BroadcastInput,
+  BroadcastResult,
   Member,
   Package,
   Seat,
@@ -70,6 +72,50 @@ export async function updateMemberStatus(
   );
   if (result.ok) {
     revalidateOwner("members");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Subscriptions                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Renew a subscription: the backend extends the period by one plan cycle,
+ * reactivates it, and raises the next pending invoice for the new term.
+ */
+export async function renewSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/renew`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("invoices");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/**
+ * Cancel a subscription and free its seat (the backend reuses the shared
+ * cancel path, so this mirrors suspending a member).
+ */
+export async function cancelSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/cancel`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("seats");
     revalidateOwner("");
   }
   return result;
@@ -299,6 +345,21 @@ export async function updateWorkspaceMessaging(
     revalidateOwner("");
   }
   return result;
+}
+
+/**
+ * Compose and broadcast an email and/or SMS to THIS workspace's members
+ * (`POST /workspace/messaging/broadcast`). Recipients are scoped to the owner's
+ * workspace server-side; the send is queued and the result reports the
+ * queued/skipped counts per channel.
+ */
+export async function sendOwnerBroadcast(
+  input: BroadcastInput,
+): Promise<ActionResult<BroadcastResult>> {
+  return authedMutate<BroadcastResult>("/workspace/messaging/broadcast", {
+    method: "POST",
+    body: input,
+  });
 }
 
 export async function uploadPhotos(

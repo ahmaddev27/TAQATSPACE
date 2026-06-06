@@ -203,6 +203,10 @@ class TaqatSsoService
 
     private function provision(string $sub, string $email, string $name, ?string $phone): User
     {
+        // A freshly-provisioned SSO user has not yet chosen freelancer vs
+        // workspace-owner. `role` carries a Freelancer placeholder only to keep
+        // the non-null column valid; `onboarding_completed_at = null` is the
+        // authoritative "must onboard" signal (status stays pending until then).
         $role = UserRole::Freelancer;
 
         // The `password` cast hashes this; a random value keeps the row valid
@@ -213,8 +217,9 @@ class TaqatSsoService
             'password' => Str::random(64),
             'phone' => $phone,
             'role' => $role->value,
-            'status' => UserStatus::Active->value,
+            'status' => UserStatus::PendingVerification->value,
             'sso_sub' => $sub,
+            'onboarding_completed_at' => null,
             'email_verified_at' => now(),
         ]);
 

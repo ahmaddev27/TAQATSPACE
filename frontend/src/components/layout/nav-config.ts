@@ -39,6 +39,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionManage",
         items: [
           { key: "members", href: "/owner/members", icon: "users" },
+          { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
           { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "invoices", href: "/owner/invoices", icon: "receipt" },
@@ -49,6 +50,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionEngage",
         items: [
           { key: "messages", href: "/owner/messages", icon: "chat" },
+          { key: "broadcast", href: "/owner/messaging", icon: "send" },
           { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
           { key: "reports", href: "/owner/reports", icon: "chart" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
@@ -109,6 +111,11 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             key: "messaging",
             href: "/admin/settings/messaging",
             icon: "chat",
+          },
+          {
+            key: "broadcast",
+            href: "/admin/settings/messaging/broadcast",
+            icon: "send",
           },
         ],
       },

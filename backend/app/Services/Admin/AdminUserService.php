@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Admin;
 
+use App\Enums\SeatStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
@@ -43,13 +44,25 @@ class AdminUserService
             $user->load([
                 'subscriptions' => fn ($query) => $query->latest(),
                 'subscriptions.workspace:id,name,city',
+                'subscriptions.seat:id,seat_number',
                 'bookingRequests' => fn ($query) => $query->latest()->limit(5),
                 'bookingRequests.workspace:id,name',
             ]);
         }
 
         if ($user->isOwner()) {
-            $user->load('workspace');
+            // The owner's workspace plus everything the detail view renders:
+            // seat-type pricing and a live count of occupied seats (for the
+            // availability stat). withCount keeps the count a single query, and
+            // loading seatTypes alongside it avoids a per-row N+1.
+            $user->load([
+                'workspace' => fn ($query) => $query
+                    ->with('seatTypes')
+                    ->withCount([
+                        'seats as occupied_seats_count' => fn (Builder $seats) => $seats
+                            ->where('status', SeatStatus::Occupied->value),
+                    ]),
+            ]);
         }
 
         return $user;

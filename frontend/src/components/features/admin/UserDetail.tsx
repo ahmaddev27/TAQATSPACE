@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/Icon";
 import type {
   AdminUserDetail,
   AdminUserSubscription,
+  AdminUserSubscriptionLifecycle,
   AdminUserWorkspace,
 } from "@/lib/api/admin";
 import { invoiceMoney } from "@/components/features/invoices/format";
@@ -54,6 +55,18 @@ const SUNK_ROW: React.CSSProperties = {
   padding: "14px 16px",
 };
 
+/** Badge tone per derived subscription lifecycle stage. */
+const LIFECYCLE_TONE: Record<
+  AdminUserSubscriptionLifecycle,
+  "success" | "info" | "neutral" | "danger"
+> = {
+  active: "success",
+  upcoming: "info",
+  expired: "neutral",
+  cancelled: "neutral",
+  suspended: "danger",
+};
+
 /** Common header: avatar, name/email/phone, role + status badges, joined date. */
 function Header({ user, locale, t }: { user: AdminUserDetail; locale: string; t: T }) {
   return (
@@ -96,18 +109,33 @@ function Header({ user, locale, t }: { user: AdminUserDetail; locale: string; t:
 
 /** Freelancer body: a subscription-status panel plus optional recent bookings. */
 function FreelancerBody({ user, locale, t }: { user: AdminUserDetail; locale: string; t: T }) {
-  const summary = user.subscriptions_summary ?? { total: 0, active: 0 };
+  const summary = user.subscriptions_summary ?? {
+    total: 0,
+    active: 0,
+    upcoming: 0,
+    expired: 0,
+    cancelled: 0,
+  };
   const subscriptions = user.subscriptions ?? [];
   const bookings = user.recent_bookings ?? [];
 
   return (
     <>
       <section className="card card-pad stack" style={{ gap: 14 }}>
-        <div className="between" style={{ alignItems: "center" }}>
+        <div className="between row wrap" style={{ alignItems: "center", gap: 10 }}>
           <h3 className="h3" style={{ margin: 0 }}>{t("subscriptions.title")}</h3>
-          <div className="row" style={{ gap: 8 }}>
-            <Badge tone="success">{t("subscriptions.activeCount", { count: summary.active })}</Badge>
+          <div className="row wrap" style={{ gap: 8 }}>
             <Badge tone="neutral">{t("subscriptions.totalCount", { count: summary.total })}</Badge>
+            <Badge tone="success">{t("subscriptions.activeCount", { count: summary.active })}</Badge>
+            {summary.upcoming > 0 && (
+              <Badge tone="info">{t("subscriptions.upcomingCount", { count: summary.upcoming })}</Badge>
+            )}
+            {summary.expired > 0 && (
+              <Badge tone="neutral">{t("subscriptions.expiredCount", { count: summary.expired })}</Badge>
+            )}
+            {summary.cancelled > 0 && (
+              <Badge tone="neutral">{t("subscriptions.cancelledCount", { count: summary.cancelled })}</Badge>
+            )}
           </div>
         </div>
 
@@ -146,22 +174,28 @@ function FreelancerBody({ user, locale, t }: { user: AdminUserDetail; locale: st
   );
 }
 
-/** A single subscription card: status, workspace, plan, price and date span. */
+/** A single subscription card: lifecycle, workspace, plan, price and date span. */
 function SubscriptionRow({ sub, locale, t }: { sub: AdminUserSubscription; locale: string; t: T }) {
   return (
     <div className="stack" style={{ ...SUNK_ROW, gap: 10 }}>
       <div className="between row wrap" style={{ gap: 10 }}>
         <span style={{ fontWeight: 600 }}>{sub.workspace?.name ?? "—"}</span>
         <div className="row" style={{ gap: 8 }}>
-          {sub.is_active ? (
-            <Badge tone="success" dot>{t("subscriptions.active")}</Badge>
-          ) : (
-            <Badge tone="neutral" dot>{t("subscriptions.expired")}</Badge>
-          )}
+          <Badge tone={LIFECYCLE_TONE[sub.lifecycle]} dot>
+            {t(`subscriptions.lifecycle.${sub.lifecycle}`)}
+          </Badge>
           <StatusBadge status={sub.status} locale={locale} />
         </div>
       </div>
       <div className="row wrap muted-3" style={{ gap: 18, fontSize: "var(--fs-sm)" }}>
+        {sub.workspace?.city && (
+          <Field label={t("subscriptions.city")}>{sub.workspace.city}</Field>
+        )}
+        {sub.seat_number && (
+          <Field label={t("subscriptions.seat")}>
+            <span className="cell-num ltr">{sub.seat_number}</span>
+          </Field>
+        )}
         <Field label={t("subscriptions.plan")}>{t(`plan.${sub.plan_type}`)}</Field>
         <Field label={t("subscriptions.price")}>
           <span className="cell-num ltr">{invoiceMoney(sub.monthly_price)}</span>
@@ -217,27 +251,107 @@ function OwnerBody({ user, locale, t }: { user: AdminUserDetail; locale: string;
   );
 }
 
-/** A single owned workspace with its headline figures. */
+/** A single owned workspace: headline figures, seat availability and pricing. */
 function WorkspaceRow({ workspace, locale, t }: { workspace: AdminUserWorkspace; locale: string; t: T }) {
+  const seatTypes = workspace.seat_types ?? [];
+  const seats = workspace.seats ?? { total: workspace.total_seats, occupied: 0, available: workspace.total_seats };
+
   return (
-    <div className="stack" style={{ ...SUNK_ROW, gap: 10 }}>
+    <div className="stack" style={{ ...SUNK_ROW, gap: 12 }}>
       <div className="between row wrap" style={{ gap: 10 }}>
         <Link href={`/admin/workspaces?search=${encodeURIComponent(workspace.name)}`} style={{ fontWeight: 600 }}>
           {workspace.name}
         </Link>
         <StatusBadge status={workspace.status} locale={locale} />
       </div>
+
       <div className="row wrap muted-3" style={{ gap: 18, fontSize: "var(--fs-sm)" }}>
         <Field label={t("workspaces.city")}>{workspace.city}</Field>
-        <Field label={t("workspaces.seats")}>
-          <span className="cell-num ltr">{workspace.total_seats}</span>
-        </Field>
         <Field label={t("workspaces.price")}>
           <span className="cell-num ltr">{invoiceMoney(workspace.price_per_month)}</span>
         </Field>
+        {workspace.avg_rating != null && (
+          <Field label={t("workspaces.rating")}>
+            <span className="cell-num ltr">{workspace.avg_rating}</span>
+          </Field>
+        )}
         <Field label={t("workspaces.created")}>
           <span className="cell-num ltr">{adminDate(workspace.created_at)}</span>
         </Field>
+      </div>
+
+      <div className="row wrap" style={{ gap: 10 }}>
+        <SeatStat label={t("workspaces.seatsTotal")} value={seats.total} tone="neutral" />
+        <SeatStat label={t("workspaces.seatsOccupied")} value={seats.occupied} tone="warning" />
+        <SeatStat label={t("workspaces.seatsAvailable")} value={seats.available} tone="success" />
+      </div>
+
+      {seatTypes.length > 0 && (
+        <div className="stack" style={{ gap: 6 }}>
+          <span className="muted-3" style={{ fontSize: "var(--fs-xs)", fontWeight: 600 }}>
+            {t("workspaces.seatTypes.title")}
+          </span>
+          <div className="tbl-scroll" style={{ border: "1px solid var(--border)", borderRadius: "var(--r-md)" }}>
+            <table className="tbl" style={{ minWidth: 420 }}>
+              <thead>
+                <tr>
+                  <th>{t("workspaces.seatTypes.type")}</th>
+                  <th>{t("workspaces.seatTypes.monthly")}</th>
+                  <th>{t("workspaces.seatTypes.daily")}</th>
+                  <th>{t("workspaces.seatTypes.capacity")}</th>
+                  <th>{t("workspaces.seatTypes.enabled")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seatTypes.map((seatType) => (
+                  <tr key={seatType.id}>
+                    <td>{t(`workspaces.seatTypes.types.${seatType.type}`)}</td>
+                    <td className="cell-num ltr">{invoiceMoney(seatType.monthly_price)}</td>
+                    <td className="cell-num ltr">{invoiceMoney(seatType.daily_price)}</td>
+                    <td className="cell-num ltr">{seatType.capacity}</td>
+                    <td>
+                      <Badge tone={seatType.enabled ? "success" : "neutral"}>
+                        {seatType.enabled ? t("workspaces.seatTypes.on") : t("workspaces.seatTypes.off")}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A compact total/occupied/available seat counter pill. */
+function SeatStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "neutral" | "warning" | "success";
+}) {
+  return (
+    <div
+      className="stack"
+      style={{
+        gap: 2,
+        padding: "8px 14px",
+        borderRadius: "var(--r-md)",
+        border: "1px solid var(--border)",
+        background: "var(--surface-1)",
+        minWidth: 92,
+      }}
+    >
+      <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>{label}</span>
+      <div className="row" style={{ gap: 6, alignItems: "center" }}>
+        <Badge tone={tone} dot>
+          <span className="cell-num ltr">{value}</span>
+        </Badge>
       </div>
     </div>
   );

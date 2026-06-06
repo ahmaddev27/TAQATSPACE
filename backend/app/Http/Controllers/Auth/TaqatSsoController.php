@@ -69,7 +69,10 @@ class TaqatSsoController extends Controller
                 'user_id' => $user->id,
             ], self::EXCHANGE_TTL);
 
-            return redirect()->away($this->frontendUrl()."/auth/taqat/finish?code={$exchangeCode}");
+            // The finish page lives at /{locale}/taqat/finish — the (auth) route
+            // group adds no URL segment — and next-intl prefixes the locale. A
+            // stray /auth segment here is what produced the 404 on return.
+            return redirect()->away($this->frontendUrl()."/taqat/finish?code={$exchangeCode}");
         } catch (Throwable $e) {
             Log::warning('Taqat SSO callback failed', ['error' => $e->getMessage()]);
 

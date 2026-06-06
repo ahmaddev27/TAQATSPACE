@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Drawer } from "@/components/ui/Drawer";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import type { Member } from "@/lib/types";
 import { avatarInitial, money, shortDate } from "./format";
 
@@ -28,7 +29,19 @@ export function MemberDrawer({
 }: MemberDrawerProps) {
   const t = useTranslations("owner");
   const tc = useTranslations();
+  const confirm = useConfirm();
   const isSuspended = member.status === "suspended";
+
+  const askSuspend = async () => {
+    const ok = await confirm({
+      title: t("members.suspend"),
+      message: t("members.suspendConfirm"),
+      confirmLabel: t("members.suspend"),
+      tone: "danger",
+      icon: "x",
+    });
+    if (ok) onSuspend();
+  };
 
   const rows: Array<[string, string, string?]> = [
     [t("members.email"), member.user.email, "ltr"],
@@ -63,9 +76,7 @@ export function MemberDrawer({
               variant="danger"
               icon="x"
               loading={pending}
-              onClick={() => {
-                if (window.confirm(t("members.suspendConfirm"))) onSuspend();
-              }}
+              onClick={askSuspend}
             >
               {t("members.suspend")}
             </Button>

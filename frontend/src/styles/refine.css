@@ -628,6 +628,34 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .loader-bars span { animation: none; }
 }
 
+/* ── Top navigation progress bar (client route changes) ──────────────── */
+.nav-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 3px;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.nav-progress.is-active { opacity: 1; }
+.nav-progress-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  /* Grow from the inline-start edge. `transform-origin` takes only physical
+     keywords, so flip explicitly for RTL below. */
+  transform-origin: left center;
+  background: var(--primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 60%, transparent);
+  transition: transform 200ms cubic-bezier(.2, 0, 0, 1);
+}
+[dir="rtl"] .nav-progress-bar { transform-origin: right center; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress-bar { transition: none; }
+}
+
 /* ============================================================
    LANDING EDITOR — two-column shell, layout-order rows, live preview
    ============================================================ */

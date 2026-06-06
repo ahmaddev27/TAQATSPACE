@@ -19,6 +19,7 @@ const NAMESPACES = [
   "workspace",
   "invoices",
   "messaging",
+  "broadcast",
   "announcements",
 ] as const;
 

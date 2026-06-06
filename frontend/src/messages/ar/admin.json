@@ -110,11 +110,23 @@
         "custom": "مخصّص"
       },
       "subscriptions": {
-        "title": "حالة الاشتراك",
+        "title": "سجل الاشتراكات",
         "active": "نشط",
         "expired": "منتهٍ",
         "activeCount": "{count} نشط",
         "totalCount": "{count} إجمالاً",
+        "upcomingCount": "{count} قادم",
+        "expiredCount": "{count} منتهٍ",
+        "cancelledCount": "{count} ملغى",
+        "lifecycle": {
+          "active": "نشط",
+          "upcoming": "قادم",
+          "expired": "منتهٍ",
+          "cancelled": "ملغى",
+          "suspended": "موقوف"
+        },
+        "city": "المدينة",
+        "seat": "المقعد",
         "plan": "الخطة",
         "price": "السعر الشهري",
         "start": "تاريخ البدء",
@@ -129,8 +141,27 @@
         "city": "المدينة",
         "seats": "المقاعد",
         "price": "السعر الشهري",
+        "rating": "التقييم",
         "created": "تاريخ الإنشاء",
-        "empty": "لا توجد مساحة لهذا المالك بعد."
+        "empty": "لا توجد مساحة لهذا المالك بعد.",
+        "seatsTotal": "إجمالي المقاعد",
+        "seatsOccupied": "مشغولة",
+        "seatsAvailable": "متاحة",
+        "seatTypes": {
+          "title": "أنواع المقاعد والتسعير",
+          "type": "النوع",
+          "monthly": "شهري",
+          "daily": "يومي",
+          "capacity": "السعة",
+          "enabled": "مُفعّل",
+          "on": "مُفعّل",
+          "off": "معطّل",
+          "types": {
+            "fixed": "ثابت",
+            "flexible": "مرن",
+            "private_office": "مكتب خاص"
+          }
+        }
       },
       "documents": {
         "title": "مستندات التحقّق",

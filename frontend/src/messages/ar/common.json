@@ -8,6 +8,8 @@
     "add": "إضافة",
     "close": "إغلاق",
     "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "areYouSure": "هل أنت متأكد؟",
     "search": "بحث…",
     "viewAll": "عرض الكل",
     "results": "النتائج",
@@ -19,6 +21,9 @@
     "retry": "إعادة المحاولة",
     "logout": "تسجيل الخروج",
     "notifications": "الإشعارات",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "navigation": "القائمة الرئيسية",
     "all": "الكل",
     "status": {
       "active": "نشط",
@@ -79,7 +84,8 @@
       "landing": "الصفحة الرئيسية",
       "finance": "المالية والعمولات",
       "crm": "المحتوى (CRM)",
-      "messaging": "المراسلة"
+      "messaging": "المراسلة",
+      "broadcast": "بثّ رسالة"
     },
     "sectionCrm": "إدارة المحتوى"
   },

@@ -9,6 +9,8 @@ export interface User {
   phone: string | null;
   role: UserRole;
   status: UserStatus;
+  /** True for a freshly-provisioned SSO account that must still pick a role. */
+  needs_onboarding: boolean;
   specialty: string | null;
   bio: string | null;
   avatar: string | null;

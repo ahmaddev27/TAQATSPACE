@@ -80,3 +80,44 @@ export interface WorkspaceMessagingUpdateInput extends PlatformMessagingUpdateIn
 
 /** The two channels a test message can be sent through. */
 export type MessagingTestChannel = "email" | "sms";
+
+/* -------------------------------------------------------------------------- */
+/*  Broadcast (compose & send to an audience)                                  */
+/* -------------------------------------------------------------------------- */
+
+/** A broadcast channel — at least one is required. */
+export type BroadcastChannel = "email" | "sms";
+
+/** Who a broadcast targets. */
+export type BroadcastAudience = "all" | "segment" | "specific";
+
+/**
+ * Body for `POST /admin/messaging/broadcast` and
+ * `POST /workspace/messaging/broadcast`. The `segment` shape differs by scope:
+ * admin filters by user role/status, owner filters by subscription status.
+ */
+export interface BroadcastInput {
+  channels: BroadcastChannel[];
+  audience: BroadcastAudience;
+  /** Present when `audience = "segment"`. */
+  segment?: { role?: string | null; status?: string | null };
+  /** Present when `audience = "specific"` — recipient (user/member) ids. */
+  user_ids?: string[];
+  /** Required when the email channel is selected. */
+  subject?: string | null;
+  /** Email body + SMS text. */
+  body: string;
+}
+
+/** Per-channel counts returned by a broadcast dispatch. */
+export interface BroadcastChannelCounts {
+  email: number;
+  sms: number;
+  total: number;
+}
+
+/** The queued/skipped summary the broadcast endpoints return. */
+export interface BroadcastResult {
+  queued: BroadcastChannelCounts;
+  skipped: BroadcastChannelCounts;
+}

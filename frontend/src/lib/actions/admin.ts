@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
+  BroadcastInput,
+  BroadcastResult,
   ContentKey,
   LandingContent,
   MessagingTestChannel,
@@ -134,17 +136,30 @@ function revalidateInvoiceTracking(): void {
   revalidatePath("/[locale]/(dashboard)/admin", "page");
 }
 
-/** Record a manual payment. `paidAt` is an optional ISO date string. */
+/**
+ * Record a manual payment, optionally attaching the payment receipt in the same
+ * step. When a receipt file is provided the request is sent as multipart so the
+ * backend stores the file and flips the invoice to paid in one action; otherwise
+ * a plain JSON body carries just the optional paid date.
+ */
 export async function markInvoicePaid(
   invoiceId: string,
   paidAt?: string | null,
+  receipt?: File | null,
 ): Promise<ActionResult<AdminInvoice>> {
-  const body = paidAt != null && paidAt !== "" ? { paid_at: paidAt } : undefined;
+  const path = `/admin/invoices/${invoiceId}/mark-paid`;
 
-  const result = await authedMutate<AdminInvoice>(
-    `/admin/invoices/${invoiceId}/mark-paid`,
-    { method: "PUT", body },
-  );
+  let result: ActionResult<AdminInvoice>;
+  if (receipt) {
+    const formData = new FormData();
+    formData.append("receipt", receipt);
+    if (paidAt != null && paidAt !== "") formData.append("paid_at", paidAt);
+    result = await authedMutate<AdminInvoice>(path, { method: "PUT", formData });
+  } else {
+    const body = paidAt != null && paidAt !== "" ? { paid_at: paidAt } : undefined;
+    result = await authedMutate<AdminInvoice>(path, { method: "PUT", body });
+  }
+
   if (result.ok) revalidateInvoiceTracking();
   return result;
 }
@@ -220,5 +235,20 @@ export async function sendMessagingTest(
   return authedMutate("/admin/settings/messaging/test", {
     method: "POST",
     body: { channel, to },
+  });
+}
+
+/**
+ * Compose and broadcast an email and/or SMS to a platform audience
+ * (`POST /admin/messaging/broadcast`). The send is queued; the result reports
+ * how many recipients were queued/skipped per channel. A channel whose account
+ * is not configured is rejected as a 422 with a friendly message.
+ */
+export async function sendAdminBroadcast(
+  input: BroadcastInput,
+): Promise<ActionResult<BroadcastResult>> {
+  return authedMutate<BroadcastResult>("/admin/messaging/broadcast", {
+    method: "POST",
+    body: input,
   });
 }

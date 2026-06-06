@@ -39,6 +39,11 @@ export type {
   PlatformMessagingUpdateInput,
   WorkspaceMessagingUpdateInput,
   MessagingTestChannel,
+  BroadcastChannel,
+  BroadcastAudience,
+  BroadcastInput,
+  BroadcastChannelCounts,
+  BroadcastResult,
 } from "./messaging";
 import type { WorkspaceMessagingConfig } from "./messaging";
 
