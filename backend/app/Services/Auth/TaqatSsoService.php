@@ -28,6 +28,15 @@ class TaqatSsoService
 
     private const DISCOVERY_CACHE_KEY = 'sso:discovery';
 
+    /**
+     * How long an SSO-session marker lives. Bounded so the cache cannot grow
+     * unbounded; it only needs to outlive an active browser session long enough
+     * to power single logout, after which a normal local logout is harmless.
+     */
+    private const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days (matches token cookie)
+
+    private const SESSION_CACHE_PREFIX = 'sso:session:';
+
     public function __construct(
         private readonly UserRepositoryInterface $users,
     ) {}
@@ -70,7 +79,11 @@ class TaqatSsoService
      * Validate state, complete the PKCE token exchange, then fetch the user's
      * claims from /userinfo.
      *
-     * @return array<string, mixed> the userinfo claims
+     * The raw `id_token` from the token response is returned alongside the
+     * claims so the caller can keep it server-side for RP-initiated single
+     * logout (`id_token_hint`). It is never exposed to the browser.
+     *
+     * @return array{claims: array<string, mixed>, id_token: ?string}
      *
      * @throws RuntimeException on any invalid/expired state or IdP failure
      */
@@ -104,6 +117,8 @@ class TaqatSsoService
             throw new RuntimeException('No access token returned by the identity provider.');
         }
 
+        $idToken = $tokenResponse->json('id_token');
+
         $userinfoResponse = Http::withToken($accessToken)
             ->acceptJson()
             ->get($endpoints['userinfo_endpoint']);
@@ -118,7 +133,89 @@ class TaqatSsoService
             throw new RuntimeException('Userinfo response missing subject claim.');
         }
 
-        return $claims;
+        return [
+            'claims' => $claims,
+            'id_token' => is_string($idToken) && $idToken !== '' ? $idToken : null,
+        ];
+    }
+
+    /**
+     * Mark a freshly-issued Sanctum access token as SSO-backed and stash the
+     * `id_token` for later single logout. Keyed by the token's server-side id
+     * (never the plaintext token), the id_token never reaches the browser.
+     */
+    public function rememberSession(int|string $accessTokenId, ?string $idToken): void
+    {
+        Cache::put(
+            self::SESSION_CACHE_PREFIX.$accessTokenId,
+            ['id_token' => $idToken],
+            self::SESSION_TTL,
+        );
+    }
+
+    /**
+     * Build the IdP RP-initiated logout (end-session) URL for an SSO-backed
+     * Sanctum token, then forget the stored session marker. Returns null when
+     * the token was not SSO-backed, the provider exposes no end_session_endpoint,
+     * or discovery is unavailable — the caller then performs a plain local
+     * logout with no hard failure.
+     */
+    public function buildLogoutUrl(int|string $accessTokenId): ?string
+    {
+        $session = Cache::pull(self::SESSION_CACHE_PREFIX.$accessTokenId);
+
+        if (! is_array($session)) {
+            return null;
+        }
+
+        try {
+            $endpoint = $this->endSessionEndpoint();
+        } catch (RuntimeException) {
+            // Discovery failed — degrade gracefully to a local-only logout.
+            return null;
+        }
+
+        if ($endpoint === null) {
+            return null;
+        }
+
+        $config = $this->config();
+
+        $params = array_filter([
+            'client_id' => $config['client_id'],
+            'post_logout_redirect_uri' => $this->postLogoutRedirectUri(),
+            'id_token_hint' => is_string($session['id_token'] ?? null) ? $session['id_token'] : null,
+        ], static fn ($value): bool => $value !== null && $value !== '');
+
+        return $endpoint.'?'.http_build_query($params);
+    }
+
+    /**
+     * The IdP's RP-initiated logout endpoint from discovery, or null when the
+     * provider does not advertise one.
+     */
+    private function endSessionEndpoint(): ?string
+    {
+        $endpoints = $this->discover();
+
+        $endpoint = $endpoints['end_session_endpoint'] ?? null;
+
+        return is_string($endpoint) && $endpoint !== '' ? $endpoint : null;
+    }
+
+    /**
+     * Where the IdP returns the browser after ending the SSO session. Falls
+     * back to the configured redirect_uri host's frontend when unset.
+     */
+    private function postLogoutRedirectUri(): string
+    {
+        $configured = $this->config()['post_logout_redirect_uri'] ?? null;
+
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        return rtrim((string) config('app.frontend_url'), '/').'/login?loggedout=1';
     }
 
     /**
@@ -269,11 +366,11 @@ class TaqatSsoService
     }
 
     /**
-     * @return array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string}
+     * @return array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string, post_logout_redirect_uri: ?string}
      */
     private function config(): array
     {
-        /** @var array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string} $config */
+        /** @var array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string, post_logout_redirect_uri: ?string} $config */
         $config = config('services.taqat_sso');
 
         return $config;
