@@ -86,6 +86,37 @@ class InvoiceService
     }
 
     /**
+     * Raise the next pending invoice for a renewed subscription period, due on
+     * the new period-end date. Idempotent: returns the existing invoice when one
+     * already covers that due date (guards against a double renew click). The
+     * member is notified of the freshly created invoice, matching monthly billing.
+     */
+    public function createForRenewal(Subscription $subscription, Carbon $periodEnd): Invoice
+    {
+        $existing = Invoice::query()
+            ->where('subscription_id', $subscription->id)
+            ->whereDate('due_date', $periodEnd->toDateString())
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $invoice = Invoice::create([
+            'subscription_id' => $subscription->id,
+            'amount' => $subscription->monthly_price,
+            'due_date' => $periodEnd->toDateString(),
+            'status' => InvoiceStatus::Pending->value,
+            'invoice_number' => $this->nextInvoiceNumber(),
+        ]);
+
+        $subscription->loadMissing('member');
+        $subscription->member?->notify(new InvoiceCreatedNotification($invoice));
+
+        return $invoice;
+    }
+
+    /**
      * Manual invoice raised by an owner against a member's active subscription
      * inside the given workspace.
      *

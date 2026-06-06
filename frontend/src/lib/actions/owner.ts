@@ -76,6 +76,50 @@ export async function updateMemberStatus(
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Subscriptions                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Renew a subscription: the backend extends the period by one plan cycle,
+ * reactivates it, and raises the next pending invoice for the new term.
+ */
+export async function renewSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/renew`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("invoices");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/**
+ * Cancel a subscription and free its seat (the backend reuses the shared
+ * cancel path, so this mirrors suspending a member).
+ */
+export async function cancelSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/cancel`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("seats");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Seats                                                                     */
 /* -------------------------------------------------------------------------- */
 

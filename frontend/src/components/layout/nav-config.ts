@@ -39,6 +39,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionManage",
         items: [
           { key: "members", href: "/owner/members", icon: "users" },
+          { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
           { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "invoices", href: "/owner/invoices", icon: "receipt" },
