@@ -214,6 +214,11 @@ export async function unassignPackage(
 /*  Settings + photos                                                         */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Settings update payload. total_seats and price_per_month are intentionally
+ * absent: they are derived from the seat types (the single source of truth) and
+ * recomputed by the backend whenever seat types are saved.
+ */
 export interface WorkspaceSettingsInput {
   name?: string;
   description?: string | null;
@@ -222,8 +227,6 @@ export interface WorkspaceSettingsInput {
   phone?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  total_seats?: number;
-  price_per_month?: number;
   amenities?: string[];
   working_hours?: Record<string, unknown> | null;
 }

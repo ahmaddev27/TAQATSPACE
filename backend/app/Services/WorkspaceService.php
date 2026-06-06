@@ -88,6 +88,7 @@ class WorkspaceService
 
             if ($seatTypes !== []) {
                 $this->seatTypePricing->sync($workspace, $seatTypes);
+                $this->syncDerivedPricing($workspace);
             }
 
             return $workspace;
@@ -96,14 +97,85 @@ class WorkspaceService
 
     /**
      * Update mutable profile fields. status/owner_id are never accepted here.
+     * total_seats/price_per_month are derived from seat types — never client-set.
      *
      * @param  array<string, mixed>  $data
      */
     public function updateSettings(Workspace $workspace, array $data): Workspace
     {
-        unset($data['status'], $data['owner_id']);
+        unset($data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month']);
 
         return $this->workspaces->update($workspace, $data);
+    }
+
+    /**
+     * Upsert the owner's per-seat-type pricing, then recompute the derived
+     * legacy columns so public discovery (price filter/sort) stays accurate.
+     * Seat types are the single source of truth for pricing & capacity.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public function updateSeatTypes(Workspace $workspace, array $rows): Workspace
+    {
+        return DB::transaction(function () use ($workspace, $rows): Workspace {
+            $this->seatTypePricing->sync($workspace, $rows);
+
+            return $this->syncDerivedPricing($workspace);
+        });
+    }
+
+    /**
+     * Recompute the legacy discovery columns from the enabled seat types — the
+     * single source of truth. Kept (not dropped) so public price filter/sort and
+     * the seat-capacity ceiling keep working without a schema change:
+     *   - total_seats     = sum of capacity over enabled types.
+     *   - price_per_month = the lowest monthly price among enabled types
+     *                       (the public "starting from" figure). When no enabled
+     *                       type has a monthly price, fall back to the lowest
+     *                       daily price; if neither exists, keep the prior value.
+     */
+    public function syncDerivedPricing(Workspace $workspace): Workspace
+    {
+        $enabled = $workspace->seatTypes()
+            ->where('enabled', true)
+            ->get();
+
+        $totalSeats = (int) $enabled->sum('capacity');
+
+        $monthly = $enabled
+            ->pluck('price_monthly')
+            ->filter(static fn ($price): bool => $price !== null)
+            ->map(static fn ($price): float => (float) $price);
+
+        $startingPrice = $monthly->isNotEmpty()
+            ? (float) $monthly->min()
+            : $this->fallbackPrice($enabled, $workspace);
+
+        return $this->workspaces->update($workspace, [
+            'total_seats' => max(1, $totalSeats),
+            'price_per_month' => $startingPrice,
+        ]);
+    }
+
+    /**
+     * Fallback "starting from" price when no enabled type has a monthly price:
+     * the lowest daily price among enabled types, else the workspace's current
+     * value (so we never overwrite a meaningful price with zero).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\SeatTypePrice>  $enabled
+     */
+    private function fallbackPrice($enabled, Workspace $workspace): float
+    {
+        $daily = $enabled
+            ->pluck('price_daily')
+            ->filter(static fn ($price): bool => $price !== null)
+            ->map(static fn ($price): float => (float) $price);
+
+        if ($daily->isNotEmpty()) {
+            return (float) $daily->min();
+        }
+
+        return (float) ($workspace->price_per_month ?? 0);
     }
 
     /**

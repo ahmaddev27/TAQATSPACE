@@ -89,8 +89,6 @@ interface FormState {
   city: string;
   latitude: string;
   longitude: string;
-  totalSeats: string;
-  pricePerMonth: string;
   amenities: string[];
   hours: Record<string, DayHours>;
   seatTypes: SeatTypeRow[];
@@ -137,8 +135,6 @@ function buildInitial(ws: Workspace): FormState {
     city: ws.city ?? "",
     latitude: ws.latitude != null ? String(ws.latitude) : "",
     longitude: ws.longitude != null ? String(ws.longitude) : "",
-    totalSeats: ws.total_seats != null ? String(ws.total_seats) : "",
-    pricePerMonth: ws.price_per_month != null ? String(ws.price_per_month) : "",
     amenities: ws.amenities ?? [],
     hours: parseHours(ws.working_hours),
     seatTypes: parseSeatTypes(ws.seat_types),
@@ -190,8 +186,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
       city: form.city.trim(),
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
-      total_seats: Number(form.totalSeats) || undefined,
-      price_per_month: Number(form.pricePerMonth) || undefined,
       amenities: form.amenities,
       working_hours: form.hours,
     };
@@ -238,7 +232,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const tabs = [
     { id: "basic", label: t("settings.tabBasic") },
     { id: "location", label: t("settings.tabLocation") },
-    { id: "pricing", label: t("settings.tabPricing") },
     { id: "seatTypes", label: t("settings.tabSeatTypes") },
     { id: "amenities", label: t("settings.tabAmenities") },
     { id: "photos", label: t("settings.tabPhotos") },
@@ -320,30 +313,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 />
               </Field>
             </div>
-          </div>
-        )}
-
-        {tab === "pricing" && (
-          <div className="grid2">
-            <Field label={t("settings.totalSeats")} error={errors.total_seats?.[0]}>
-              <Input
-                className="tnum"
-                inputMode="numeric"
-                value={form.totalSeats}
-                onChange={(e) => set("totalSeats", e.target.value)}
-              />
-            </Field>
-            <Field
-              label={t("settings.pricePerMonth")}
-              error={errors.price_per_month?.[0]}
-            >
-              <Input
-                className="tnum"
-                inputMode="decimal"
-                value={form.pricePerMonth}
-                onChange={(e) => set("pricePerMonth", e.target.value)}
-              />
-            </Field>
           </div>
         )}
 
