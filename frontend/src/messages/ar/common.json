@@ -21,6 +21,9 @@
     "retry": "إعادة المحاولة",
     "logout": "تسجيل الخروج",
     "notifications": "الإشعارات",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "navigation": "القائمة الرئيسية",
     "all": "الكل",
     "status": {
       "active": "نشط",

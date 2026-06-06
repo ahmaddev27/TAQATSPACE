@@ -36,15 +36,22 @@ export function Sidebar({
   const pathname = usePathname();
   const indexHref = nav.groups[0]?.items[0]?.href ?? "/";
 
+  // The desktop rail can be collapsed to icons, but the mobile drawer always
+  // shows full labels — so labels render whenever the drawer is open, even if
+  // `collapsed` was toggled on a wider viewport before resizing down.
+  const showLabels = !collapsed || mobileOpen;
+
   return (
     <aside
+      id="dash-sidebar"
       className={`dash-nav ${collapsed ? "is-collapsed" : ""} ${
         mobileOpen ? "mobile-open" : ""
       }`.trim()}
+      aria-label={tc("navigation")}
     >
       <div className="dash-brand">
         <Link href={indexHref} className="logo" onClick={onNavigate}>
-          {collapsed ? (
+          {!showLabels ? (
             <span className="tile-glyph" style={{ fontSize: 24 }}>
               T
             </span>
@@ -57,10 +64,10 @@ export function Sidebar({
       <div className="dash-nav-scroll">
         {nav.groups.map((group, gi) => (
           <div key={gi}>
-            {group.titleKey && !collapsed && (
+            {group.titleKey && showLabels && (
               <div className="nav-section">{t(group.titleKey)}</div>
             )}
-            {group.titleKey && collapsed && <div className="nav-sep" />}
+            {group.titleKey && !showLabels && <div className="nav-sep" />}
             {group.items.map((item) => {
               const active = isActive(pathname, item.href, indexHref);
               const label = t(`items.${item.key}`);
@@ -73,8 +80,8 @@ export function Sidebar({
                   onClick={onNavigate}
                 >
                   <Icon name={item.icon} />
-                  {!collapsed && <span>{label}</span>}
-                  {!collapsed && item.badge ? (
+                  {showLabels && <span>{label}</span>}
+                  {showLabels && item.badge ? (
                     <span className="nav-badge tnum">{item.badge}</span>
                   ) : null}
                 </Link>
@@ -87,7 +94,7 @@ export function Sidebar({
       <div className="dash-nav-foot">
         <button type="button" className="nav-item" onClick={onLogout}>
           <Icon name="logout" />
-          {!collapsed && <span>{tc("logout")}</span>}
+          {showLabels && <span>{tc("logout")}</span>}
         </button>
       </div>
     </aside>

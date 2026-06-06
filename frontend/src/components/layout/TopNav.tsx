@@ -15,6 +15,8 @@ export interface TopNavProps {
   userName: string;
   roleLabel: string;
   avatarInitial: string;
+  /** Whether the mobile off-canvas drawer is open (drives the hamburger state). */
+  mobileOpen: boolean;
   onMenu: () => void;
   onLogout: () => void;
 }
@@ -37,6 +39,7 @@ export function TopNav({
   userName,
   roleLabel,
   avatarInitial,
+  mobileOpen,
   onMenu,
   onLogout,
 }: TopNavProps) {
@@ -60,11 +63,13 @@ export function TopNav({
     <div className="topbar">
       <button
         type="button"
-        className="icon-btn"
+        className="icon-btn nav-toggle"
         onClick={onMenu}
-        aria-label="menu"
+        aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
+        aria-expanded={mobileOpen}
+        aria-controls="dash-sidebar"
       >
-        <Icon name="menu" />
+        <Icon name={mobileOpen ? "x" : "menu"} />
       </button>
 
       {searchPath && (

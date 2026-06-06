@@ -21,6 +21,9 @@
     "retry": "Retry",
     "logout": "Log out",
     "notifications": "Notifications",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "navigation": "Main navigation",
     "all": "All",
     "status": {
       "active": "Active",

@@ -73,21 +73,43 @@
 .thread-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .thread-item:hover, .thread-item.active { background: var(--surface-2); }
 
-/* ===== Mobile off-canvas nav ===== */
+/* ===== Mobile off-canvas nav =====
+   Below the breakpoint the sidebar becomes a drawer pinned to the INLINE-START
+   edge (right in RTL, left in LTR). It is hidden off-canvas by translating it
+   toward that same edge, then slid to 0 when `.mobile-open` is set. The hidden
+   transform is direction-specific because translateX is physical, not logical:
+   start = left in LTR (translate -100%), right in RTL (translate +100%). */
 .nav-backdrop { position: fixed; inset: 0; background: rgba(10,12,16,.5); z-index: 70; animation: fade var(--t-slow); }
 [data-theme="dark"] .nav-backdrop { background: rgba(0,0,0,.6); }
 @media (max-width: 860px) {
+  /* The fixed drawer is out of flow, so the shell collapses to a single column. */
   .dash { grid-template-columns: 1fr !important; }
-  .dash-nav { position: fixed; top: 0; bottom: 0; inset-inline-end: 0; z-index: 80; width: 264px !important;
-    transform: translateX(100%); transition: transform var(--t-slow); box-shadow: var(--sh-md); }
-  [dir="ltr"] .dash-nav { inset-inline-start: 0; inset-inline-end: auto; transform: translateX(-100%); }
+
+  .dash-nav {
+    position: fixed; top: 0; bottom: 0; inset-inline-start: 0; inset-inline-end: auto;
+    z-index: 80; width: 264px !important; max-width: 86vw;
+    transition: transform var(--t-slow); box-shadow: var(--sh-md);
+  }
+  [dir="ltr"] .dash-nav { transform: translateX(-100%); }
+  [dir="rtl"] .dash-nav { transform: translateX(100%); }
+  /* Open: slide flush to the inline-start edge (wins via later source order). */
   .dash-nav.mobile-open { transform: translateX(0); }
-  /* always show full labels in the mobile drawer even if desktop was collapsed */
+
+  /* Always show full labels in the mobile drawer even if desktop was collapsed. */
+  .dash-nav.is-collapsed .nav-section,
   .dash-nav .nav-section { display: block; }
-  .dash-nav .nav-item { justify-content: flex-start; padding: 9px 11px; }
+  .dash-nav .nav-item,
+  .dash-nav.is-collapsed .nav-item { justify-content: flex-start; padding: 9px 11px; }
+
   .page { padding: 18px; }
   .page-head { padding: 18px 18px 0 !important; }
   .topbar { padding: 0 14px; gap: 8px; }
+}
+
+/* Respect users who reduce motion: snap the drawer instead of sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-nav { transition: none !important; }
+  .nav-backdrop { animation: none !important; }
 }
 @media (max-width: 480px) {
   .grid-stats { grid-template-columns: 1fr 1fr; }
