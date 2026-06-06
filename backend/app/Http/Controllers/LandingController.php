@@ -19,6 +19,6 @@ class LandingController extends Controller
      */
     public function show(): JsonResponse
     {
-        return ApiResponse::success($this->landing->get());
+        return ApiResponse::success($this->landing->presented());
     }
 }

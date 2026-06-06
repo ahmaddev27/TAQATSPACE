@@ -140,6 +140,7 @@ return [
     // Admin content / landing / settings
     'content_updated' => 'Content updated.',
     'landing_content_updated' => 'Landing content updated.',
+    'landing_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'messaging_settings_updated' => 'Messaging settings updated.',
     'workspace_messaging_updated' => 'Workspace messaging settings updated.',

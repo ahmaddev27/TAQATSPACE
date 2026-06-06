@@ -36,6 +36,11 @@ class UpdateLandingRequest extends FormRequest
             ...$this->bilingual('hero.subtitle', 1000),
             ...$this->bilingual('hero.ctaPrimary'),
             ...$this->bilingual('hero.ctaSecondary'),
+            // Section image: stored media PATH (uploaded via POST .../images).
+            // The resolved display URL (`imageUrl`) is added by the service on
+            // read and accepted here so a round-tripped payload still validates.
+            'hero.image' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'hero.imageUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
 
             // --- Stats (max 4) ---
             'stats' => ['sometimes', 'nullable', 'array', 'max:4'],
@@ -57,6 +62,8 @@ class UpdateLandingRequest extends FormRequest
             ...$this->bilingual('sections.why.title'),
             ...$this->bilingual('sections.why.highlight'),
             ...$this->bilingual('sections.why.subtitle', 1000),
+            'sections.why.image' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'sections.why.imageUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
 
             'sections.capabilities' => ['sometimes', 'nullable', 'array'],
             'sections.capabilities.enabled' => ['nullable', 'boolean'],

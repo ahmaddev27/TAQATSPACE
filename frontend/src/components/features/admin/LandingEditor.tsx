@@ -5,12 +5,13 @@ import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
-import { updateLanding } from "@/lib/actions/admin";
+import { updateLanding, uploadLandingImage } from "@/lib/actions/admin";
 import type {
   LandingContent,
   LocalizedText,
@@ -46,12 +47,25 @@ interface TextPair {
   en: string;
 }
 
+/**
+ * A per-section image: the canonical storage `path` (round-tripped on save) and
+ * a resolved `url` used only for the preview. Both empty means "no override".
+ */
+interface ImageState {
+  path: string;
+  url: string;
+}
+
+/** The sections whose imagery the admin can override. */
+type ImageSectionKey = "hero" | "why";
+
 interface HeroState {
   title: TextPair;
   highlight: TextPair;
   subtitle: TextPair;
   ctaPrimary: TextPair;
   ctaSecondary: TextPair;
+  image: ImageState;
 }
 
 interface StatState {
@@ -71,6 +85,7 @@ interface WhyState {
   title: TextPair;
   highlight: TextPair;
   subtitle: TextPair;
+  image: ImageState;
 }
 
 interface CapabilitiesState {
@@ -108,6 +123,13 @@ function toPair(value?: LocalizedText): TextPair {
   return { ar: value?.ar ?? "", en: value?.en ?? "" };
 }
 
+const emptyImage = (): ImageState => ({ path: "", url: "" });
+
+/** Seed an image control from the stored path + backend-resolved display URL. */
+function toImage(path?: string, url?: string): ImageState {
+  return { path: path ?? "", url: url ?? "" };
+}
+
 function buildInitial(c: LandingContent): FormState {
   return {
     hero: {
@@ -116,6 +138,7 @@ function buildInitial(c: LandingContent): FormState {
       subtitle: toPair(c.hero?.subtitle),
       ctaPrimary: toPair(c.hero?.ctaPrimary),
       ctaSecondary: toPair(c.hero?.ctaSecondary),
+      image: toImage(c.hero?.image, c.hero?.imageUrl),
     },
     stats: (c.stats ?? []).slice(0, MAX_STATS).map((s) => ({
       value: s.value ?? "",
@@ -132,6 +155,7 @@ function buildInitial(c: LandingContent): FormState {
       title: toPair(c.sections?.why?.title),
       highlight: toPair(c.sections?.why?.highlight),
       subtitle: toPair(c.sections?.why?.subtitle),
+      image: toImage(c.sections?.why?.image, c.sections?.why?.imageUrl),
     },
     capabilities: {
       enabled: c.sections?.capabilities?.enabled ?? true,
@@ -154,6 +178,12 @@ function buildInitial(c: LandingContent): FormState {
 /* -------------------------------------------------------------------------- */
 /*  Payload builder — prune empties so the saved JSON stays clean             */
 /* -------------------------------------------------------------------------- */
+
+/** The stored image path, or `undefined` when no image is set for the section. */
+function imagePath(image: ImageState): string | undefined {
+  const path = image.path.trim();
+  return path ? path : undefined;
+}
 
 /** A `{ar,en}` pair → `LocalizedText`, or `undefined` when both sides empty. */
 function pairToText(pair: TextPair): LocalizedText | undefined {
@@ -179,6 +209,7 @@ function buildPayload(form: FormState): LandingContent {
     subtitle: pairToText(form.hero.subtitle),
     ctaPrimary: pairToText(form.hero.ctaPrimary),
     ctaSecondary: pairToText(form.hero.ctaSecondary),
+    image: imagePath(form.hero.image),
   });
 
   const stats = form.stats
@@ -202,6 +233,7 @@ function buildPayload(form: FormState): LandingContent {
     title: pairToText(form.why.title),
     highlight: pairToText(form.why.highlight),
     subtitle: pairToText(form.why.subtitle),
+    image: imagePath(form.why.image),
   };
 
   const capabilities = {
@@ -323,6 +355,88 @@ function BilingualField({
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Section image control                                                     */
+/* -------------------------------------------------------------------------- */
+
+interface SectionImageLabels {
+  /** Title for the whole control, e.g. "Section image". */
+  label: string;
+  /** Helper text under the title (recommended size, fallback note). */
+  hint: string;
+  /** Dropzone call-to-action when no image is set. */
+  upload: string;
+  /** Button/label to replace the current image. */
+  replace: string;
+  /** Button to clear the override and fall back to the default. */
+  remove: string;
+}
+
+interface SectionImageFieldProps {
+  value: ImageState;
+  onSelect: (file: File | null) => void;
+  uploading: boolean;
+  labels: SectionImageLabels;
+}
+
+/**
+ * A per-section image control: a dropzone to upload/replace plus a live preview
+ * with a Remove button. Clearing it (Remove) drops the override so the public
+ * page falls back to its built-in default illustration. Presentational only —
+ * the parent owns the upload + state.
+ */
+function SectionImageField({
+  value,
+  onSelect,
+  uploading,
+  labels,
+}: SectionImageFieldProps) {
+  const hasImage = value.url.trim() !== "";
+
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <span className="label">{labels.label}</span>
+      <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+        {labels.hint}
+      </p>
+      {hasImage && (
+        <div className="stack" style={{ gap: 8 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value.url}
+            alt=""
+            style={{
+              width: "100%",
+              maxWidth: 360,
+              height: 160,
+              objectFit: "cover",
+              borderRadius: "var(--r-lg)",
+              display: "block",
+              border: "1px solid var(--line)",
+            }}
+          />
+          <Button
+            variant="ghost"
+            icon="trash"
+            onClick={() => onSelect(null)}
+            disabled={uploading}
+            style={{ alignSelf: "flex-start" }}
+          >
+            {labels.remove}
+          </Button>
+        </div>
+      )}
+      <FileDropzone
+        value={null}
+        onChange={onSelect}
+        accept="image/png,image/jpeg,image/jpg,image/webp"
+        label={hasImage ? labels.replace : labels.upload}
+        disabled={uploading}
+      />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Editor                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -336,13 +450,53 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
   const [tab, setTab] = useState("hero");
   const [form, setForm] = useState<FormState>(() => buildInitial(initial));
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  // Which section's image is currently uploading (so its dropzone can show a
+  // pending state). `null` when no upload is in flight.
+  const [uploading, setUploading] = useState<ImageSectionKey | null>(null);
 
   // Localised labels for the Arabic/English sub-inputs, passed to each
   // module-level `BilingualField` so no component is created during render.
   const labels: BilingualLabels = { ar: t("labelAr"), en: t("labelEn") };
 
+  // Localised labels for the per-section image control (shared by hero + why).
+  const imageLabels: SectionImageLabels = {
+    label: t("image.label"),
+    hint: t("image.hint"),
+    upload: t("image.upload"),
+    replace: t("image.replace"),
+    remove: t("image.remove"),
+  };
+
   const setHero = (key: keyof HeroState, pair: TextPair) =>
     setForm((f) => ({ ...f, hero: { ...f.hero, [key]: pair } }));
+
+  // Write an image (uploaded or cleared) into the right section's form slice.
+  const setSectionImage = (key: ImageSectionKey, image: ImageState) =>
+    setForm((f) =>
+      key === "hero"
+        ? { ...f, hero: { ...f.hero, image } }
+        : { ...f, why: { ...f.why, image } },
+    );
+
+  // Upload a dropped file to the media disk, then store the returned path (for
+  // saving) and url (for preview) on the section. A failed upload is toasted
+  // and leaves the current image untouched.
+  const uploadImage = (key: ImageSectionKey, file: File | null) => {
+    if (file === null) {
+      setSectionImage(key, emptyImage());
+      return;
+    }
+    setUploading(key);
+    startTransition(async () => {
+      const res = await uploadLandingImage(file);
+      setUploading(null);
+      if (res.ok) {
+        setSectionImage(key, { path: res.data.path, url: res.data.url });
+      } else {
+        toast({ tone: "err", title: t("image.uploadFailed"), body: res.message });
+      }
+    });
+  };
 
   const setStat = (index: number, patch: Partial<StatState>) =>
     setForm((f) => ({
@@ -543,6 +697,12 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
               value={form.hero.ctaSecondary}
               onChange={(p) => setHero("ctaSecondary", p)}
             />
+            <SectionImageField
+              labels={imageLabels}
+              value={form.hero.image}
+              uploading={uploading === "hero"}
+              onSelect={(file) => uploadImage("hero", file)}
+            />
           </div>
         )}
 
@@ -677,6 +837,12 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
                 setForm((f) => ({ ...f, why: { ...f.why, subtitle: p } }))
               }
               multiline
+            />
+            <SectionImageField
+              labels={imageLabels}
+              value={form.why.image}
+              uploading={uploading === "why"}
+              onSelect={(file) => uploadImage("why", file)}
             />
           </div>
         )}

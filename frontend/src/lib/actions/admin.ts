@@ -41,6 +41,31 @@ export async function updateLanding(
   return result;
 }
 
+/** A stored landing-section image: canonical path (saved) + display URL. */
+export interface LandingImageUpload {
+  path: string;
+  url: string;
+}
+
+/**
+ * Upload a single landing-section image (`POST /admin/landing/images`).
+ *
+ * Returns the canonical storage `path` (persisted into the section's `image`
+ * field via {@link updateLanding}) and a resolved `url` for immediate preview.
+ * Uploading does not itself publish anything — the admin must still save.
+ */
+export async function uploadLandingImage(
+  file: File,
+): Promise<ActionResult<LandingImageUpload>> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  return authedMutate<LandingImageUpload>("/admin/landing/images", {
+    method: "POST",
+    formData,
+  });
+}
+
 /**
  * Public path each content key feeds into. The home page (`/[locale]/(public)`)
  * also reads `how_it_works`, and the footer (shared layout) reads `site`, so

@@ -280,6 +280,14 @@
         "hint": "Updates as you type and reorder.",
         "disabled": "Hidden"
       },
+      "image": {
+        "label": "Section image",
+        "hint": "Recommended 1200×800px (JPG, PNG or WebP, max 4MB). Leave empty to use the default illustration.",
+        "upload": "Drop an image here or click to upload",
+        "replace": "Replace image",
+        "remove": "Remove image",
+        "uploadFailed": "Could not upload the image"
+      },
       "hero": {
         "heading": "Hero section",
         "hint": "The headline area at the top of the page.",

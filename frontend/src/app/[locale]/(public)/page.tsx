@@ -142,6 +142,13 @@ export default async function HomePage({
   const featuredSub = pick(loc(sections.featured?.subtitle, locale), h.featuredEyebrow);
   const tstmTitle = pick(loc(sections.testimonials?.title, locale), h.tstmTitle1);
 
+  // Section illustrations: the admin-chosen image (resolved URL) when set,
+  // otherwise the built-in default — so an unset image renders exactly as before.
+  const HERO_IMG_DEFAULT = "/images/workspaces/placeholder-1.svg";
+  const WHY_IMG_DEFAULT = "/images/workspaces/placeholder-2.svg";
+  const heroImage = pick(cms.hero?.imageUrl, HERO_IMG_DEFAULT);
+  const whyImage = pick(sections.why?.imageUrl, WHY_IMG_DEFAULT);
+
   const showWhy = isEnabled(sections.why?.enabled);
   const showCapabilities = isEnabled(sections.capabilities?.enabled);
   const showFeatured = isEnabled(sections.featured?.enabled) && featured.length > 0;
@@ -156,7 +163,8 @@ export default async function HomePage({
         <div className="why-grid">
           <div className="why-collage">
             <CoverImage
-              src="/images/workspaces/placeholder-2.svg"
+              src={whyImage}
+              fallbackSrc={WHY_IMG_DEFAULT}
               alt={h.imgInside}
               h="clamp(190px, 36vw, 300px)"
               radius="var(--r-2xl)"
@@ -327,7 +335,7 @@ export default async function HomePage({
 
           <div className="ed-collage">
             <div className="ed-img-main">
-              <CoverImage src="/images/workspaces/placeholder-1.svg" alt={h.imgWorkspace} h="clamp(240px, 44vw, 420px)" radius="var(--r-2xl)" />
+              <CoverImage src={heroImage} fallbackSrc={HERO_IMG_DEFAULT} alt={h.imgWorkspace} h="clamp(240px, 44vw, 420px)" radius="var(--r-2xl)" />
             </div>
             <div className="ed-img-sm">
               <CoverImage src="/images/workspaces/placeholder-3.svg" alt={h.imgLounge} h="clamp(150px, 22vw, 196px)" radius="var(--r-2xl)" />
