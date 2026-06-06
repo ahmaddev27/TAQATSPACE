@@ -190,6 +190,17 @@
       "tabWhy": "Why",
       "tabCapabilities": "Capabilities",
       "tabTestimonials": "Testimonials",
+      "tabLayout": "Layout & order",
+      "layout": {
+        "hint": "Reorder the sections and toggle each on or off. The order here is how they appear on the public page (Hero is always first).",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+      },
+      "preview": {
+        "title": "Live preview",
+        "hint": "Updates as you type and reorder.",
+        "disabled": "Hidden"
+      },
       "hero": {
         "heading": "Hero section",
         "hint": "The headline area at the top of the page.",

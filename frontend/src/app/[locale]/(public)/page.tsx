@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
@@ -7,6 +8,7 @@ import { listWorkspaces } from "@/lib/api/workspaces";
 import { getLanding } from "@/lib/api/landing";
 import { getContent } from "@/lib/api/content";
 import type { HowItWorksContent, LandingContent, LocalizedText, Workspace } from "@/lib/types";
+import { sanitizeSectionsOrder } from "@/lib/types";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { WorkspaceCard } from "@/components/features/public/WorkspaceCard";
 import { HeroSeatMini } from "@/components/features/public/HeroSeatMini";
@@ -145,6 +147,151 @@ export default async function HomePage({
   const showFeatured = isEnabled(sections.featured?.enabled) && featured.length > 0;
   const showTestimonials = isEnabled(sections.testimonials?.enabled);
 
+  // The reorderable sections, keyed so they can render in the admin-chosen
+  // order. Each entry is the same JSX as before; only the surrounding ordering
+  // changed. `null` when the section is disabled (or has nothing to show).
+  const sectionNodes: Record<string, ReactNode> = {
+    why: showWhy ? (
+      <section key="why" className="container section" id="about">
+        <div className="why-grid">
+          <div className="why-collage">
+            <CoverImage
+              src="/images/workspaces/placeholder-2.svg"
+              alt={h.imgInside}
+              h="clamp(190px, 36vw, 300px)"
+              radius="var(--r-2xl)"
+              className="why-img-1"
+            />
+            <CoverImage
+              src="/images/workspaces/placeholder-1.svg"
+              alt={h.imgTeam}
+              h="clamp(140px, 26vw, 190px)"
+              radius="var(--r-2xl)"
+              className="why-img-2"
+            />
+            <div className="why-blob">
+              <Icon name="bulb" size={22} />
+              <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>
+                +3.4k
+              </div>
+              <div className="ed-badge-l">{h.activeMembers}</div>
+            </div>
+          </div>
+          <div className="why-copy">
+            <span className="eyebrow">{h.whyEyebrow}</span>
+            <h2 className="ed-h2">
+              {whyTitle} <span className="hl">{whyHighlight}</span>
+            </h2>
+            <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 14 }}>
+              {whySub}
+            </p>
+            <div className="check-list">
+              {whys.map((w) => (
+                <div key={w} className="check-row">
+                  <span className="check-mark">
+                    <Icon name="check" size={15} />
+                  </span>
+                  {w}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    ) : null,
+
+    capabilities: showCapabilities ? (
+      <section key="capabilities" className="caps-band" id="feat">
+        <div className="container">
+          <div className="caps-head">
+            <span className="eyebrow">{h.capsEyebrow}</span>
+            <h2 className="ed-h2">
+              {capsTitle} <span className="hl">{capsHighlight}</span>
+            </h2>
+          </div>
+          <div className="caps-grid">
+            {caps.map((cap) => (
+              <div key={cap.n} className="cap-card">
+                <div className="cap-top">
+                  <span className="cap-num tnum">{cap.n}</span>
+                  <span className="cap-ico">
+                    <Icon name={cap.ico} size={22} />
+                  </span>
+                </div>
+                <h3 className="h3" style={{ marginTop: 18 }}>
+                  {cap.t}
+                </h3>
+                <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
+                  {cap.d}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null,
+
+    featured: showFeatured ? (
+      <section key="featured" className="container section">
+        <div className="page-head" style={{ alignItems: "flex-end" }}>
+          <div>
+            <span className="eyebrow">{featuredSub}</span>
+            <h2 className="ed-h2" style={{ marginTop: 8 }}>
+              {featuredTitle}
+            </h2>
+          </div>
+          <Link href="/explore">
+            <Button variant="ghost" iconEnd="arrowR">
+              {c.viewAll}
+            </Button>
+          </Link>
+        </div>
+        <div className="ws-grid">
+          {featured.map((w) => (
+            <WorkspaceCard key={w.id} workspace={w} dict={dict} locale={locale} />
+          ))}
+        </div>
+      </section>
+    ) : null,
+
+    testimonials:
+      showTestimonials && testimonials.length > 0 ? (
+        <section key="testimonials" className="tstm-band">
+          <div className="container">
+            <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 44px" }}>
+              <span className="eyebrow">{h.tstmEyebrow}</span>
+              <h2 className="ed-h2" style={{ marginTop: 8 }}>
+                {tstmTitle} <span className="hl">{h.tstmTitle2}</span>
+              </h2>
+            </div>
+            <div className="tstm-grid">
+              {testimonials.map((m) => (
+                <div key={m.key} className="tstm-card">
+                  <div className="tstm-quote">
+                    <Icon name="megaphone" size={20} />
+                  </div>
+                  <p className="tstm-text">{m.text}</p>
+                  <div className="row" style={{ gap: 11, marginTop: "auto", paddingTop: 20 }}>
+                    <Avatar initial={m.avatar} round />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: "var(--fs-sm)" }}>{m.name}</div>
+                      <div className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+                        {m.role}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null,
+  };
+
+  // Sanitised admin-chosen order (unknown dropped, missing appended); an unset
+  // value resolves to the default order so the page is unchanged from before.
+  const order = sanitizeSectionsOrder(cms.sections_order);
+
   return (
     <>
       {/* HERO */}
@@ -213,144 +360,8 @@ export default async function HomePage({
       {/* MARQUEE */}
       <Marquee dict={dict} />
 
-      {/* WHY / ABOUT */}
-      {showWhy && (
-        <section className="container section" id="about">
-          <div className="why-grid">
-            <div className="why-collage">
-              <CoverImage
-                src="/images/workspaces/placeholder-2.svg"
-                alt={h.imgInside}
-                h="clamp(190px, 36vw, 300px)"
-                radius="var(--r-2xl)"
-                className="why-img-1"
-              />
-              <CoverImage
-                src="/images/workspaces/placeholder-1.svg"
-                alt={h.imgTeam}
-                h="clamp(140px, 26vw, 190px)"
-                radius="var(--r-2xl)"
-                className="why-img-2"
-              />
-              <div className="why-blob">
-                <Icon name="bulb" size={22} />
-                <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>
-                  +3.4k
-                </div>
-                <div className="ed-badge-l">{h.activeMembers}</div>
-              </div>
-            </div>
-            <div className="why-copy">
-              <span className="eyebrow">{h.whyEyebrow}</span>
-              <h2 className="ed-h2">
-                {whyTitle} <span className="hl">{whyHighlight}</span>
-              </h2>
-              <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 14 }}>
-                {whySub}
-              </p>
-              <div className="check-list">
-                {whys.map((w) => (
-                  <div key={w} className="check-row">
-                    <span className="check-mark">
-                      <Icon name="check" size={15} />
-                    </span>
-                    {w}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CAPABILITIES */}
-      {showCapabilities && (
-        <section className="caps-band" id="feat">
-          <div className="container">
-            <div className="caps-head">
-              <span className="eyebrow">{h.capsEyebrow}</span>
-              <h2 className="ed-h2">
-                {capsTitle} <span className="hl">{capsHighlight}</span>
-              </h2>
-            </div>
-            <div className="caps-grid">
-              {caps.map((cap) => (
-                <div key={cap.n} className="cap-card">
-                  <div className="cap-top">
-                    <span className="cap-num tnum">{cap.n}</span>
-                    <span className="cap-ico">
-                      <Icon name={cap.ico} size={22} />
-                    </span>
-                  </div>
-                  <h3 className="h3" style={{ marginTop: 18 }}>
-                    {cap.t}
-                  </h3>
-                  <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
-                    {cap.d}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* FEATURED SPACES */}
-      {showFeatured && (
-        <section className="container section">
-          <div className="page-head" style={{ alignItems: "flex-end" }}>
-            <div>
-              <span className="eyebrow">{featuredSub}</span>
-              <h2 className="ed-h2" style={{ marginTop: 8 }}>
-                {featuredTitle}
-              </h2>
-            </div>
-            <Link href="/explore">
-              <Button variant="ghost" iconEnd="arrowR">
-                {c.viewAll}
-              </Button>
-            </Link>
-          </div>
-          <div className="ws-grid">
-            {featured.map((w) => (
-              <WorkspaceCard key={w.id} workspace={w} dict={dict} locale={locale} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* TESTIMONIALS */}
-      {showTestimonials && testimonials.length > 0 && (
-        <section className="tstm-band">
-          <div className="container">
-            <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 44px" }}>
-              <span className="eyebrow">{h.tstmEyebrow}</span>
-              <h2 className="ed-h2" style={{ marginTop: 8 }}>
-                {tstmTitle} <span className="hl">{h.tstmTitle2}</span>
-              </h2>
-            </div>
-            <div className="tstm-grid">
-              {testimonials.map((m) => (
-                <div key={m.key} className="tstm-card">
-                  <div className="tstm-quote">
-                    <Icon name="megaphone" size={20} />
-                  </div>
-                  <p className="tstm-text">{m.text}</p>
-                  <div className="row" style={{ gap: 11, marginTop: "auto", paddingTop: 20 }}>
-                    <Avatar initial={m.avatar} round />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: "var(--fs-sm)" }}>{m.name}</div>
-                      <div className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
-                        {m.role}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Reorderable sections — admin-controlled order via cms.sections_order */}
+      {order.map((key) => sectionNodes[key])}
 
       {/* CTA band */}
       <section className="container">
