@@ -313,6 +313,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
 @media (max-width: 900px) { .grid-stats { grid-template-columns: repeat(2, 1fr); } }
 
+/* 5-card variant (owner dashboard): all cards in one row on desktop, balanced wrapping below */
+.grid-stats--5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1280px) { .grid-stats--5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) { .grid-stats--5 { grid-template-columns: repeat(2, 1fr); } }
+
 /* icon dir mirroring */
 [dir="rtl"] .dir-ico { transform: scaleX(-1); }
 

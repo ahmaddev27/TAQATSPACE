@@ -25,7 +25,7 @@ class EmailVerificationController extends Controller
         $user = User::query()->findOrFail($id);
 
         if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-            return ApiResponse::error('Invalid verification link.', 403);
+            return ApiResponse::error(__('messages.invalid_verification_link'), 403);
         }
 
         if (! $user->hasVerifiedEmail()) {
@@ -48,11 +48,11 @@ class EmailVerificationController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return ApiResponse::message('Email already verified.');
+            return ApiResponse::message(__('messages.email_already_verified'));
         }
 
         $user->sendEmailVerificationNotification();
 
-        return ApiResponse::message('Verification link sent.');
+        return ApiResponse::message(__('messages.verification_link_sent'));
     }
 }

@@ -58,6 +58,9 @@ export function WorkspaceCard({ workspace, dict, locale }: WorkspaceCardProps) {
         <div className="divider" style={{ margin: "2px 0" }} />
         <div className="between">
           <div>
+            <span className="muted-3" style={{ fontSize: "var(--fs-xs)", marginInlineEnd: 4 }}>
+              {c.startingFrom}
+            </span>
             <span className="ws-price tnum">
               {c.currency}
               {price}

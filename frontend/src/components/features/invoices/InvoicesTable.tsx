@@ -13,6 +13,8 @@ import {
   type DataTableColumn,
   type SortState,
 } from "@/components/ui/DataTable";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
+import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 import type { Invoice } from "@/lib/api/invoices";
 import type { InvoiceStatus } from "@/lib/types";
 import {
@@ -27,6 +29,7 @@ import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 type StatusTab = "all" | InvoiceStatus;
 
 const TABS: StatusTab[] = ["all", "paid", "pending", "overdue"];
+const FILTER_KEYS = ["status", "month"] as const;
 const PAGE_SIZE = 8;
 
 export interface InvoicesTableProps {
@@ -39,8 +42,11 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
   const t = useTranslations("invoices.owner");
   const locale = useLocale();
 
-  const [tab, setTab] = useState<StatusTab>("all");
-  const [month, setMonth] = useState<string>("");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link (the download then matches the on-screen view).
+  const { filters, setFilter, clearFilters } = useUrlFilters(FILTER_KEYS);
+  const tab: StatusTab = (filters.status as StatusTab) || "all";
+  const month = filters.month;
   const [sort, setSort] = useState<SortState | null>({ key: "due", dir: "desc" });
   const [page, setPage] = useState(1);
   const [issueOpen, setIssueOpen] = useState(false);
@@ -78,8 +84,7 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
 
   const isFiltered = tab !== "all" || month !== "";
   const resetFilters = () => {
-    setTab("all");
-    setMonth("");
+    clearFilters();
     setPage(1);
   };
 
@@ -167,7 +172,7 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
           items={tabs}
           value={tab}
           onChange={(v) => {
-            setTab(v as StatusTab);
+            setFilter("status", v === "all" ? null : v);
             setPage(1);
           }}
         />
@@ -180,7 +185,7 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             <Select
               value={month}
               onChange={(e) => {
-                setMonth(e.target.value);
+                setFilter("month", e.target.value);
                 setPage(1);
               }}
               aria-label={t("filters.month")}
@@ -193,6 +198,15 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
               ))}
             </Select>
           )}
+          <ExportCsvLink
+            type="invoices"
+            label={t("filters.export")}
+            basePath="/api/owner/exports"
+            query={{
+              status: tab === "all" ? undefined : tab,
+              month: month || undefined,
+            }}
+          />
           <Button
             variant="primary"
             size="sm"

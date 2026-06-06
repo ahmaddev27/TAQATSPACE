@@ -31,6 +31,31 @@ class AdminUserService
     }
 
     /**
+     * Load a single user with the relations its role needs for the detail view.
+     *
+     * A freelancer gets their subscriptions (with each workspace) and a handful
+     * of recent bookings; an owner gets their workspace. Relations are eager-
+     * loaded here so the resource issues no further queries (no N+1).
+     */
+    public function findForDetail(User $user): User
+    {
+        if ($user->isFreelancer()) {
+            $user->load([
+                'subscriptions' => fn ($query) => $query->latest(),
+                'subscriptions.workspace:id,name,city',
+                'bookingRequests' => fn ($query) => $query->latest()->limit(5),
+                'bookingRequests.workspace:id,name',
+            ]);
+        }
+
+        if ($user->isOwner()) {
+            $user->load('workspace');
+        }
+
+        return $user;
+    }
+
+    /**
      * Transition a user's account status (admin moderation).
      */
     public function changeStatus(User $user, UserStatus $status): User

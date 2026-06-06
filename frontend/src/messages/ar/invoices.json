@@ -21,7 +21,8 @@
         "month": "الشهر",
         "anyMonth": "كل الأشهر",
         "clear": "مسح",
-        "count": "العدد:"
+        "count": "العدد:",
+        "export": "تصدير CSV"
       },
       "table": {
         "invoice": "رقم الفاتورة",

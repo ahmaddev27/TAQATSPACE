@@ -135,6 +135,15 @@ class AdminInvoiceService
             });
         }
 
+        // Inclusive due-date range; either bound may be supplied on its own.
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('due_date', '>=', (string) $filters['date_from']);
+        }
+
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('due_date', '<=', (string) $filters['date_to']);
+        }
+
         return $query;
     }
 

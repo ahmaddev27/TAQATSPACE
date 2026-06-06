@@ -5,6 +5,9 @@ import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ContentKey,
   LandingContent,
+  MessagingTestChannel,
+  PlatformMessagingConfig,
+  PlatformMessagingUpdateInput,
   User,
   UserStatus,
   Workspace,
@@ -178,4 +181,44 @@ export async function uploadInvoiceReceipt(
   );
   if (result.ok) revalidateInvoiceTracking();
   return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Platform messaging settings (PUT + POST test)                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist Taqat's own SMTP + SMS configuration (`PUT /admin/settings/messaging`).
+ *
+ * Secrets are write-only: a blank/omitted password or SMS credential preserves
+ * the stored value, so callers send only the secrets the admin actually typed.
+ * The backend returns the refreshed masked config (with `has_*` flags).
+ */
+export async function updatePlatformMessaging(
+  input: PlatformMessagingUpdateInput,
+): Promise<ActionResult<PlatformMessagingConfig>> {
+  const result = await authedMutate<PlatformMessagingConfig>(
+    "/admin/settings/messaging",
+    { method: "PUT", body: input },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/settings/messaging", "page");
+  }
+  return result;
+}
+
+/**
+ * Send a test email or SMS through the saved platform config
+ * (`POST /admin/settings/messaging/test`). The backend never throws on a
+ * driver error — it reports it as a 422 with a friendly message, surfaced here
+ * as `ActionResult.message`.
+ */
+export async function sendMessagingTest(
+  channel: MessagingTestChannel,
+  to: string,
+): Promise<ActionResult> {
+  return authedMutate("/admin/settings/messaging/test", {
+    method: "POST",
+    body: { channel, to },
+  });
 }

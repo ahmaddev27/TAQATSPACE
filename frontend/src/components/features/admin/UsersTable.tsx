@@ -15,9 +15,12 @@ import {
   type SortState,
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
+import { Link } from "@/i18n/navigation";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { updateUserStatus } from "@/lib/actions/admin";
 import type { User, UserRole, UserStatus } from "@/lib/types";
 import { adminDate, nameInitial } from "./format";
+import { ExportCsvLink } from "./ExportCsvLink";
 
 type RoleFilter = "all" | UserRole;
 type StatusFilter = "all" | UserStatus;
@@ -34,6 +37,7 @@ const STATUS_FILTERS: StatusFilter[] = [
   "suspended",
   "pending_verification",
 ];
+const FILTER_KEYS = ["role", "status", "search"] as const;
 const PAGE_SIZE = 10;
 
 export interface UsersTableProps {
@@ -47,9 +51,12 @@ export function UsersTable({ users }: UsersTableProps) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
-  const [role, setRole] = useState<RoleFilter>("all");
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [query, setQuery] = useState("");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link below (the download then matches the on-screen view).
+  const { filters, setFilter } = useUrlFilters(FILTER_KEYS);
+  const role: RoleFilter = (filters.role as RoleFilter) || "all";
+  const status: StatusFilter = (filters.status as StatusFilter) || "all";
+  const query = filters.search;
   const [sort, setSort] = useState<SortState | null>({ key: "joined", dir: "desc" });
   const [page, setPage] = useState(1);
 
@@ -141,6 +148,14 @@ export function UsersTable({ users }: UsersTableProps) {
       header: "",
       cell: (u) => (
         <div className="row-actions">
+          <Link
+            href={`/admin/users/${u.id}`}
+            className="icon-btn"
+            aria-label={t("viewDetails")}
+            title={t("viewDetails")}
+          >
+            <Icon name="eye" />
+          </Link>
           {u.status !== "active" && (
             <Button
               variant="primary"
@@ -175,7 +190,7 @@ export function UsersTable({ users }: UsersTableProps) {
           <Select
             value={role}
             onChange={(e) => {
-              setRole(e.target.value as RoleFilter);
+              setFilter("role", e.target.value === "all" ? null : e.target.value);
               setPage(1);
             }}
             aria-label={t("filterRole")}
@@ -189,7 +204,7 @@ export function UsersTable({ users }: UsersTableProps) {
           <Select
             value={status}
             onChange={(e) => {
-              setStatus(e.target.value as StatusFilter);
+              setFilter("status", e.target.value === "all" ? null : e.target.value);
               setPage(1);
             }}
             aria-label={t("filterStatus")}
@@ -208,12 +223,21 @@ export function UsersTable({ users }: UsersTableProps) {
             className="input"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
+              setFilter("search", e.target.value);
               setPage(1);
             }}
             placeholder={t("searchPlaceholder")}
           />
         </div>
+        <ExportCsvLink
+          type="users"
+          label={t("exportCsv")}
+          query={{
+            role: role === "all" ? undefined : role,
+            status: status === "all" ? undefined : status,
+            search: query || undefined,
+          }}
+        />
       </div>
 
       <div className="table-wrap">

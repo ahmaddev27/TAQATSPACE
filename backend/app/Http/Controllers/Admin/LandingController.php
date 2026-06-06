@@ -31,6 +31,6 @@ class LandingController extends Controller
     {
         $saved = $this->landing->update($request->validated());
 
-        return ApiResponse::success($saved, 'Landing content updated.');
+        return ApiResponse::success($saved, __('messages.landing_content_updated'));
     }
 }

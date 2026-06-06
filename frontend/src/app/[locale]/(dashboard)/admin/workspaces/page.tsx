@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAllAdminWorkspaces } from "@/lib/api/admin";
 import { WorkspacesTable } from "@/components/features/admin/WorkspacesTable";
-import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,6 @@ export default async function AdminWorkspacesPage({
             {t("subtitle")}
           </p>
         </div>
-        <ExportCsvLink type="workspaces" label={t("exportCsv")} />
       </div>
 
       <div style={{ marginTop: 16 }}>

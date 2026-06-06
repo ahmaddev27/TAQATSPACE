@@ -69,6 +69,15 @@ class AdminSubscriptionService
             });
         }
 
+        // Inclusive start-date range; either bound may be supplied on its own.
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('start_date', '>=', (string) $filters['date_from']);
+        }
+
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('start_date', '<=', (string) $filters['date_to']);
+        }
+
         return $query;
     }
 

@@ -33,6 +33,7 @@ class Workspace extends Model
         'amenities',
         'photos',
         'working_hours',
+        'messaging',
         'status',
         'avg_rating',
     ];
@@ -46,6 +47,7 @@ class Workspace extends Model
             'amenities' => 'array',
             'photos' => 'array',
             'working_hours' => 'array',
+            'messaging' => 'array',
             'status' => WorkspaceStatus::class,
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',

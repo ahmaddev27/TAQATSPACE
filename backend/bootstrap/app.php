@@ -13,6 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Resolve the request locale before validation runs so error messages
+        // (and every other translated string) come back in the caller's language.
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
         $middleware->alias([
             'role.freelancer' => \App\Http\Middleware\EnsureFreelancer::class,
             'role.owner' => \App\Http\Middleware\EnsureWorkspaceOwner::class,

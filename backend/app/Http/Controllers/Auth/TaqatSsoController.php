@@ -83,19 +83,19 @@ class TaqatSsoController extends Controller
         $code = $request->input('code');
 
         if (! is_string($code) || $code === '') {
-            return ApiResponse::error('Missing exchange code.', 401);
+            return ApiResponse::error(__('messages.sso_missing_code'), 401);
         }
 
         $entry = Cache::pull("sso:exchange:{$code}");
 
         if (! is_array($entry) || ! isset($entry['token'], $entry['user_id'])) {
-            return ApiResponse::error('Invalid or expired exchange code.', 401);
+            return ApiResponse::error(__('messages.sso_invalid_code'), 401);
         }
 
         $user = User::query()->find($entry['user_id']);
 
         if ($user === null) {
-            return ApiResponse::error('User not found.', 401);
+            return ApiResponse::error(__('messages.sso_user_not_found'), 401);
         }
 
         return ApiResponse::success([

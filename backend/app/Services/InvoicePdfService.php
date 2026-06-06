@@ -53,17 +53,37 @@ class InvoicePdfService
      */
     private function render(Invoice $invoice): string
     {
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4',
             'tempDir' => $this->tempDir(),
-            'autoScriptToLang' => true,
+            // Keep Arabic letter-shaping/bidi, but DO NOT let mPDF auto-substitute
+            // its bundled Arabic fonts (XB Riyaz) for our CSS-declared Cairo font.
+            'autoScriptToLang' => false,
             'autoArabic' => true,
-            'autoLangToFont' => true,
+            'autoLangToFont' => false,
             'margin_top' => 14,
             'margin_bottom' => 14,
             'margin_left' => 14,
             'margin_right' => 14,
+
+            // Register the brand font (Cairo) so the Arabic-first invoice renders
+            // with a modern, properly-shaped typeface instead of mPDF's default.
+            'fontDir' => array_merge($defaultConfig['fontDir'], [$this->fontDir()]),
+            'fontdata' => $defaultFontConfig['fontdata'] + [
+                'cairo' => [
+                    'R' => 'Cairo-Regular.ttf',
+                    'B' => 'Cairo-Bold.ttf',
+                    // mPDF's built-in autoArabic shaper handles letter joining;
+                    // skip OTL/GPOS (Cairo's MarkGlyphSets table is unsupported).
+                    'useOTL' => 0x00,
+                    'useKashida' => 0,
+                ],
+            ],
+            'default_font' => 'cairo',
         ]);
 
         $mpdf->SetDirectionality('rtl');
@@ -87,6 +107,14 @@ class InvoicePdfService
         }
 
         return $dir;
+    }
+
+    /**
+     * Directory holding the bundled Cairo TTF files registered with mPDF.
+     */
+    private function fontDir(): string
+    {
+        return resource_path('fonts');
     }
 
     private function fileName(Invoice $invoice): string

@@ -27,11 +27,11 @@ class PhotoController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         if (Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error('This action is unauthorized.', 403);
+            return ApiResponse::error(__('messages.unauthorized_action'), 403);
         }
 
         try {
@@ -40,7 +40,7 @@ class PhotoController extends Controller
             return ApiResponse::error($e->getMessage(), 422);
         }
 
-        return ApiResponse::success(new WorkspaceResource($updated), 'Photos uploaded.', 201);
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.photos_uploaded'), 201);
     }
 
     /**
@@ -55,11 +55,11 @@ class PhotoController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         if (Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error('This action is unauthorized.', 403);
+            return ApiResponse::error(__('messages.unauthorized_action'), 403);
         }
 
         try {
@@ -68,6 +68,6 @@ class PhotoController extends Controller
             return ApiResponse::error($e->getMessage(), 404);
         }
 
-        return ApiResponse::success(new WorkspaceResource($updated), 'Photo removed.');
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.photo_removed'));
     }
 }

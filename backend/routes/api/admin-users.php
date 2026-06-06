@@ -16,5 +16,6 @@ Route::middleware(['auth:sanctum', 'role.admin'])
     ->prefix('admin/users')
     ->group(function (): void {
         Route::get('/', [UserController::class, 'index']);
+        Route::get('/{user}', [UserController::class, 'show']);
         Route::put('/{user}/status', [UserController::class, 'updateStatus']);
     });

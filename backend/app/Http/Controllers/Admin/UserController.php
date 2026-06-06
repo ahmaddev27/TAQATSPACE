@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserStatusRequest;
+use App\Http\Resources\Admin\AdminUserDetailResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Admin\AdminUserService;
@@ -32,12 +33,23 @@ class UserController extends Controller
     }
 
     /**
+     * GET /api/admin/users/{user} — full profile with role-specific detail
+     * (a freelancer's subscriptions, an owner's workspace).
+     */
+    public function show(User $user): JsonResponse
+    {
+        $detail = $this->users->findForDetail($user);
+
+        return ApiResponse::success(new AdminUserDetailResource($detail));
+    }
+
+    /**
      * PUT /api/admin/users/{user}/status — activate/suspend an account.
      */
     public function updateStatus(UpdateUserStatusRequest $request, User $user): JsonResponse
     {
         $updated = $this->users->changeStatus($user, $request->status());
 
-        return ApiResponse::success(new UserResource($updated), 'User status updated.');
+        return ApiResponse::success(new UserResource($updated), __('messages.user_status_updated'));
     }
 }

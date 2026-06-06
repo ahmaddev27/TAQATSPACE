@@ -70,6 +70,7 @@
       "colJoined": "Joined",
       "activate": "Activate",
       "suspend": "Suspend",
+      "viewDetails": "View details",
       "count": "Total",
       "filterRole": "Role",
       "filterStatus": "Status",
@@ -94,6 +95,49 @@
         "statusFailed": "Could not update the account status"
       }
     },
+    "userDetail": {
+      "back": "Back to users",
+      "joined": "Joined",
+      "specialty": "Specialty",
+      "role": {
+        "freelancer": "Freelancer",
+        "workspace_owner": "Workspace owner",
+        "admin": "Admin"
+      },
+      "plan": {
+        "monthly": "Monthly",
+        "daily": "Daily",
+        "custom": "Custom"
+      },
+      "subscriptions": {
+        "title": "Subscription status",
+        "active": "Active",
+        "expired": "Expired",
+        "activeCount": "{count} active",
+        "totalCount": "{count} total",
+        "plan": "Plan",
+        "price": "Monthly price",
+        "start": "Start",
+        "end": "End",
+        "empty": "This member has no subscriptions yet."
+      },
+      "bookings": {
+        "title": "Recent booking requests"
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "city": "City",
+        "seats": "Seats",
+        "price": "Monthly price",
+        "created": "Created",
+        "empty": "This owner has no workspace yet."
+      },
+      "documents": {
+        "title": "Verification documents",
+        "license": "Commercial license",
+        "id": "ID document"
+      }
+    },
     "subscriptions": {
       "title": "Subscriptions",
       "subtitle": "Track subscriptions across the platform (read-only).",
@@ -106,6 +150,8 @@
       "colEnd": "End date",
       "colStatus": "Status",
       "count": "Total",
+      "dateFrom": "Start date from",
+      "dateTo": "Start date to",
       "searchPlaceholder": "Search by member or workspace…",
       "emptyTitle": "No subscriptions",
       "emptyBody": "No subscriptions match the current filters.",
@@ -135,6 +181,8 @@
       "downloadPdf": "Download PDF",
       "viewReceipt": "View receipt",
       "count": "Total",
+      "dateFrom": "Due date from",
+      "dateTo": "Due date to",
       "searchPlaceholder": "Search by invoice #, member or workspace…",
       "emptyTitle": "No invoices",
       "emptyBody": "No invoices match the current filters.",
@@ -286,6 +334,61 @@
         "subscriptions": "Subscriptions CSV",
         "users": "Users CSV",
         "workspaces": "Workspaces CSV"
+      }
+    },
+    "rm": {
+      "title": "Content management",
+      "subtitle": "Control site content: contact details, FAQ, About, and How it works",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "remove": "Remove",
+      "labelAr": "Arabic",
+      "labelEn": "English",
+      "tabSite": "Site info",
+      "tabFaq": "FAQ",
+      "tabAbout": "About",
+      "tabHow": "How it works",
+      "tabLanding": "Landing",
+      "site": {
+        "hint": "Contact details shown in the footer and the Contact page",
+        "email": "Email",
+        "phone": "Phone",
+        "whatsapp": "WhatsApp",
+        "address": "Address",
+        "social": "Social links",
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "twitter": "Twitter / X",
+        "linkedin": "LinkedIn"
+      },
+      "faq": {
+        "hint": "Questions and answers shown on the FAQ page",
+        "add": "Add question",
+        "question": "Question",
+        "answer": "Answer",
+        "empty": "No questions yet"
+      },
+      "about": {
+        "hint": "About-page content",
+        "lead": "Lead",
+        "sections": "Sections",
+        "add": "Add section",
+        "heading": "Heading",
+        "body": "Body",
+        "empty": "No sections yet"
+      },
+      "how": {
+        "hint": "How-it-works steps shown on the landing",
+        "add": "Add step",
+        "title": "Title",
+        "description": "Description",
+        "empty": "No steps yet"
+      },
+      "landing": {
+        "hint": "Edit the landing page content (hero, stats, sections...)",
+        "open": "Open landing editor"
       }
     }
   }

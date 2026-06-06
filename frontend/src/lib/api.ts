@@ -1,10 +1,14 @@
 // This module is server-only: it imports `next/headers` (cookies), which Next
 // refuses to bundle into client components. No `server-only` package needed.
 import { cookies } from "next/headers";
+import { getLocale } from "next-intl/server";
 import { TOKEN_COOKIE } from "./auth";
 import type { ApiErrorBody } from "./types/auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+
+/** Locale sent to the backend when the request locale cannot be resolved. */
+const DEFAULT_LOCALE = "ar";
 
 /** Base class for any failed backend call. */
 export class ApiError extends Error {
@@ -46,6 +50,19 @@ export class ValidationError extends ApiError {
 async function readToken(): Promise<string | undefined> {
   const store = await cookies();
   return store.get(TOKEN_COOKIE)?.value;
+}
+
+/**
+ * Resolve the active next-intl locale so the backend can localise its
+ * responses (validation errors, messages). Stays defensive: outside a request
+ * scope `getLocale()` can throw, so we fall back to the app default.
+ */
+async function readLocale(): Promise<string> {
+  try {
+    return (await getLocale()) || DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
 }
 
 function buildUrl(path: string): string {
@@ -95,6 +112,10 @@ export async function serverFetch<T>(
 
   const finalHeaders = new Headers(headers);
   finalHeaders.set("Accept", "application/json");
+
+  if (!finalHeaders.has("Accept-Language")) {
+    finalHeaders.set("Accept-Language", await readLocale());
+  }
 
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   if (!isFormData && !finalHeaders.has("Content-Type") && body != null) {

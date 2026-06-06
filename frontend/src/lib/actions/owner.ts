@@ -11,6 +11,8 @@ import type {
   SeatType,
   SubscriptionStatus,
   Workspace,
+  WorkspaceMessagingConfig,
+  WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
@@ -212,6 +214,11 @@ export async function unassignPackage(
 /*  Settings + photos                                                         */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Settings update payload. total_seats and price_per_month are intentionally
+ * absent: they are derived from the seat types (the single source of truth) and
+ * recomputed by the backend whenever seat types are saved.
+ */
 export interface WorkspaceSettingsInput {
   name?: string;
   description?: string | null;
@@ -220,8 +227,6 @@ export interface WorkspaceSettingsInput {
   phone?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  total_seats?: number;
-  price_per_month?: number;
   amenities?: string[];
   working_hours?: Record<string, unknown> | null;
 }
@@ -264,6 +269,31 @@ export async function updateSeatTypes(
     method: "PUT",
     body: { seat_types: rows },
   });
+  if (result.ok) {
+    revalidateOwner("settings");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Messaging                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Set whether the workspace inherits Taqat's platform accounts and/or supply
+ * its own SMTP + SMS config (`PUT /workspace/messaging`).
+ *
+ * Secrets are write-only: a blank/omitted password or SMS credential preserves
+ * the stored value. The backend returns the refreshed masked messaging block.
+ */
+export async function updateWorkspaceMessaging(
+  input: WorkspaceMessagingUpdateInput,
+): Promise<ActionResult<WorkspaceMessagingConfig>> {
+  const result = await authedMutate<WorkspaceMessagingConfig>(
+    "/workspace/messaging",
+    { method: "PUT", body: input },
+  );
   if (result.ok) {
     revalidateOwner("settings");
     revalidateOwner("");

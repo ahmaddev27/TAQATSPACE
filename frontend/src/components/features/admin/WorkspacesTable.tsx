@@ -17,13 +17,18 @@ import {
   type SortState,
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { updateWorkspaceStatus } from "@/lib/actions/admin";
 import type { Workspace, WorkspaceStatus } from "@/lib/types";
 import { adminDate } from "./format";
+import { ExportCsvLink } from "./ExportCsvLink";
 
 type StatusTab = "all" | WorkspaceStatus;
 
 const TABS: StatusTab[] = ["all", "pending", "active", "suspended", "rejected"];
+// Only `status` is honoured by the backend workspace export; `search` is a
+// client-only convenience and is intentionally NOT forwarded to the download.
+const FILTER_KEYS = ["status", "search"] as const;
 const PAGE_SIZE = 10;
 
 export interface WorkspacesTableProps {
@@ -37,8 +42,11 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
-  const [tab, setTab] = useState<StatusTab>("all");
-  const [query, setQuery] = useState("");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link below (the download then matches the on-screen view).
+  const { filters, setFilter } = useUrlFilters(FILTER_KEYS);
+  const tab: StatusTab = (filters.status as StatusTab) || "all";
+  const query = filters.search;
   const [sort, setSort] = useState<SortState | null>({ key: "created", dir: "desc" });
   const [page, setPage] = useState(1);
   const [suspendTarget, setSuspendTarget] = useState<Workspace | null>(null);
@@ -181,7 +189,7 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
           items={tabs}
           value={tab}
           onChange={(v) => {
-            setTab(v as StatusTab);
+            setFilter("status", v === "all" ? null : v);
             setPage(1);
           }}
         />
@@ -192,12 +200,17 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
             className="input"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
+              setFilter("search", e.target.value);
               setPage(1);
             }}
             placeholder={t("searchPlaceholder")}
           />
         </div>
+        <ExportCsvLink
+          type="workspaces"
+          label={t("exportCsv")}
+          query={{ status: tab === "all" ? undefined : tab }}
+        />
       </div>
 
       <div className="table-wrap">

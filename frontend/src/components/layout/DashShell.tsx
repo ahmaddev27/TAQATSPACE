@@ -77,6 +77,7 @@ export function DashShell({
 
       <div className="dash-main">
         <TopNav
+          role={role}
           userName={userName}
           roleLabel={t(nav.roleLabelKey)}
           avatarInitial={avatarInitial}

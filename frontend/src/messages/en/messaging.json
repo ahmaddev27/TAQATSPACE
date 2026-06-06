@@ -63,6 +63,81 @@
       "sentToast": "Broadcast sent to your members.",
       "failed": "Could not send the broadcast.",
       "emptyError": "Write a message before sending."
+    },
+    "settings": {
+      "admin": {
+        "title": "Messaging settings",
+        "subtitle": "Configure Taqat's own email (SMTP) and SMS accounts. Workspaces inherit these unless they set up their own.",
+        "save": "Save settings",
+        "saving": "Saving…",
+        "saved": "Messaging settings saved.",
+        "saveFailed": "Could not save settings."
+      },
+      "owner": {
+        "tab": "Messaging",
+        "title": "Messaging",
+        "subtitle": "Choose how your workspace sends emails and text messages.",
+        "usePlatformLabel": "Use Taqat accounts",
+        "usePlatformHint": "Send your workspace's emails and SMS through Taqat's shared accounts. Turn this off to use your own.",
+        "platformNote": "Your workspace is using Taqat's shared email and SMS accounts. No setup needed.",
+        "ownAccountsNote": "Set up your own email (SMTP) and SMS accounts below. Any channel you leave empty falls back to Taqat's account.",
+        "save": "Save settings",
+        "saving": "Saving…",
+        "saved": "Messaging settings saved.",
+        "saveFailed": "Could not save settings."
+      },
+      "smtp": {
+        "heading": "Email (SMTP)",
+        "description": "The SMTP server used to send transactional emails.",
+        "host": "SMTP host",
+        "hostPlaceholder": "smtp.example.com",
+        "port": "Port",
+        "portPlaceholder": "587",
+        "username": "Username",
+        "password": "Password",
+        "passwordSetPlaceholder": "Set ••••••••",
+        "passwordKeepHint": "Leave blank to keep the current password.",
+        "passwordNewHint": "No password saved yet.",
+        "encryption": "Encryption",
+        "encryptionTls": "TLS",
+        "encryptionSsl": "SSL",
+        "encryptionNone": "None",
+        "fromAddress": "From address",
+        "fromAddressPlaceholder": "no-reply@example.com",
+        "fromName": "From name",
+        "fromNamePlaceholder": "Taqat",
+        "testButton": "Send test email",
+        "testPromptTitle": "Send test email",
+        "testPromptLabel": "Destination email",
+        "testPromptPlaceholder": "you@example.com"
+      },
+      "sms": {
+        "heading": "SMS",
+        "description": "The SMS gateway used to send text messages.",
+        "provider": "Provider",
+        "providerPlaceholder": "Select a provider",
+        "providerHotsms": "HotSMS",
+        "providerMtcsms": "MTC SMS",
+        "username": "Username",
+        "password": "Password",
+        "passwordSetPlaceholder": "Set ••••••••",
+        "credentialsKeepHint": "Leave blank to keep the current credentials.",
+        "credentialsNewHint": "No credentials saved yet.",
+        "sender": "Sender ID",
+        "senderPlaceholder": "Taqat",
+        "testButton": "Send test SMS",
+        "testPromptTitle": "Send test SMS",
+        "testPromptLabel": "Destination phone",
+        "testPromptPlaceholder": "+9665XXXXXXXX"
+      },
+      "test": {
+        "send": "Send",
+        "sending": "Sending…",
+        "cancel": "Cancel",
+        "missingDestination": "Enter a destination first.",
+        "sent": "Test message sent.",
+        "failed": "Could not send the test message."
+      }
     }
   }
 }

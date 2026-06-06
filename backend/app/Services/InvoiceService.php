@@ -102,7 +102,7 @@ class InvoiceService
             ->first();
 
         if ($subscription === null) {
-            throw new RuntimeException('This member has no active subscription in your workspace.');
+            throw new RuntimeException(__('messages.invoice_member_no_subscription'));
         }
 
         $invoice = Invoice::create([
@@ -128,7 +128,7 @@ class InvoiceService
     public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
         if ($invoice->status === InvoiceStatus::Paid) {
-            throw new RuntimeException('This invoice has already been paid.');
+            throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
         $invoice->forceFill([
@@ -159,7 +159,7 @@ class InvoiceService
         $cacheKey = "invoice:{$invoice->id}:reminder_sent";
 
         if (Cache::has($cacheKey)) {
-            throw new RuntimeException('A reminder was already sent for this invoice in the last 24 hours.');
+            throw new RuntimeException(__('messages.invoice_reminder_recently_sent'));
         }
 
         $invoice->loadMissing('subscription.member');
@@ -211,6 +211,23 @@ class InvoiceService
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();
+    }
+
+    /**
+     * Filtered invoices for an owner's workspace (no pagination), newest due
+     * first, with the member chain loaded — for memory-safe cursor CSV export.
+     * Reuses the same filter pipeline as the owner list so the export honours
+     * exactly the filters the owner sees.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Invoice>
+     */
+    public function exportQueryForWorkspace(Workspace $workspace, array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->forWorkspace($workspace->id)
+            ->with(['subscription.member:id,name,email,phone', 'subscription.seat:id,seat_number'])
+            ->orderByDesc('due_date');
     }
 
     /**

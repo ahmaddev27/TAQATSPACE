@@ -53,7 +53,7 @@ class AnnouncementController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace to publish to.', 404);
+            return ApiResponse::error(__('messages.no_workspace_to_publish'), 404);
         }
 
         $announcement = $this->announcements->create(
@@ -64,7 +64,7 @@ class AnnouncementController extends Controller
 
         return ApiResponse::success(
             new AnnouncementResource($announcement),
-            'Announcement created.',
+            __('messages.announcement_created'),
             201,
         );
     }
@@ -79,7 +79,7 @@ class AnnouncementController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('Announcement not found.', 404);
+            return ApiResponse::error(__('messages.announcement_not_found'), 404);
         }
 
         $updated = $this->announcements->update(
@@ -89,12 +89,12 @@ class AnnouncementController extends Controller
         );
 
         if ($updated === null) {
-            return ApiResponse::error('Announcement not found.', 404);
+            return ApiResponse::error(__('messages.announcement_not_found'), 404);
         }
 
         return ApiResponse::success(
             new AnnouncementResource($updated),
-            'Announcement updated.',
+            __('messages.announcement_updated'),
         );
     }
 
@@ -108,14 +108,14 @@ class AnnouncementController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('Announcement not found.', 404);
+            return ApiResponse::error(__('messages.announcement_not_found'), 404);
         }
 
         if (! $this->announcements->delete($workspace, $announcement)) {
-            return ApiResponse::error('Announcement not found.', 404);
+            return ApiResponse::error(__('messages.announcement_not_found'), 404);
         }
 
-        return ApiResponse::message('Announcement deleted.');
+        return ApiResponse::message(__('messages.announcement_deleted'));
     }
 
     /**
@@ -127,7 +127,7 @@ class AnnouncementController extends Controller
     public function publicIndex(Workspace $workspace): JsonResponse
     {
         if ($workspace->status !== WorkspaceStatus::Active) {
-            return ApiResponse::error('Workspace not found.', 404);
+            return ApiResponse::error(__('messages.workspace_not_found'), 404);
         }
 
         return ApiResponse::success([

@@ -25,15 +25,15 @@ class AuthController extends Controller
         $user = $this->auth->attempt($data['email'], $data['password']);
 
         if ($user === null) {
-            return ApiResponse::error('Invalid email or password.', 401);
+            return ApiResponse::error(__('messages.invalid_credentials'), 401);
         }
 
         if ($user->status === UserStatus::Suspended) {
-            return ApiResponse::error('Account suspended.', 403);
+            return ApiResponse::error(__('messages.account_suspended'), 403);
         }
 
         if ($user->status === UserStatus::PendingVerification) {
-            return ApiResponse::error('Account pending verification.', 403);
+            return ApiResponse::error(__('messages.account_pending'), 403);
         }
 
         return ApiResponse::success([

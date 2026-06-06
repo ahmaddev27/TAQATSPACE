@@ -20,6 +20,7 @@ import {
 } from "@/lib/actions/owner";
 import type { SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
+import { MessagingTab } from "./MessagingTab";
 
 export interface SettingsTabsProps {
   workspace: Workspace;
@@ -88,8 +89,6 @@ interface FormState {
   city: string;
   latitude: string;
   longitude: string;
-  totalSeats: string;
-  pricePerMonth: string;
   amenities: string[];
   hours: Record<string, DayHours>;
   seatTypes: SeatTypeRow[];
@@ -136,8 +135,6 @@ function buildInitial(ws: Workspace): FormState {
     city: ws.city ?? "",
     latitude: ws.latitude != null ? String(ws.latitude) : "",
     longitude: ws.longitude != null ? String(ws.longitude) : "",
-    totalSeats: ws.total_seats != null ? String(ws.total_seats) : "",
-    pricePerMonth: ws.price_per_month != null ? String(ws.price_per_month) : "",
     amenities: ws.amenities ?? [],
     hours: parseHours(ws.working_hours),
     seatTypes: parseSeatTypes(ws.seat_types),
@@ -147,6 +144,7 @@ function buildInitial(ws: Workspace): FormState {
 /** Tabbed workspace settings editor. One Save persists the whole form. */
 export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const t = useTranslations("owner");
+  const tm = useTranslations("messaging.settings.owner");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
@@ -188,8 +186,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
       city: form.city.trim(),
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
-      total_seats: Number(form.totalSeats) || undefined,
-      price_per_month: Number(form.pricePerMonth) || undefined,
       amenities: form.amenities,
       working_hours: form.hours,
     };
@@ -236,11 +232,11 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const tabs = [
     { id: "basic", label: t("settings.tabBasic") },
     { id: "location", label: t("settings.tabLocation") },
-    { id: "pricing", label: t("settings.tabPricing") },
     { id: "seatTypes", label: t("settings.tabSeatTypes") },
     { id: "amenities", label: t("settings.tabAmenities") },
     { id: "photos", label: t("settings.tabPhotos") },
     { id: "hours", label: t("settings.tabHours") },
+    { id: "messaging", label: tm("tab") },
   ];
 
   return (
@@ -317,30 +313,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 />
               </Field>
             </div>
-          </div>
-        )}
-
-        {tab === "pricing" && (
-          <div className="grid2">
-            <Field label={t("settings.totalSeats")} error={errors.total_seats?.[0]}>
-              <Input
-                className="tnum"
-                inputMode="numeric"
-                value={form.totalSeats}
-                onChange={(e) => set("totalSeats", e.target.value)}
-              />
-            </Field>
-            <Field
-              label={t("settings.pricePerMonth")}
-              error={errors.price_per_month?.[0]}
-            >
-              <Input
-                className="tnum"
-                inputMode="decimal"
-                value={form.pricePerMonth}
-                onChange={(e) => set("pricePerMonth", e.target.value)}
-              />
-            </Field>
           </div>
         )}
 
@@ -489,9 +461,13 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
             </div>
           </div>
         )}
+
+        {tab === "messaging" && (
+          <MessagingTab messaging={workspace.messaging} />
+        )}
       </div>
 
-      {tab !== "photos" && tab !== "seatTypes" && (
+      {tab !== "photos" && tab !== "seatTypes" && tab !== "messaging" && (
         <Button
           variant="primary"
           icon="check"

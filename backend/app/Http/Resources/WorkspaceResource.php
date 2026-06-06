@@ -6,9 +6,11 @@ namespace App\Http\Resources;
 
 use App\Models\SeatTypePrice;
 use App\Models\Workspace;
+use App\Services\MessagingSettingsService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @mixin Workspace
@@ -51,7 +53,35 @@ class WorkspaceResource extends JsonResource
                 'email' => $this->owner->email,
                 'phone' => $this->owner->phone,
             ]),
+
+            // Owner/Admin-only: masked messaging config (never the secrets).
+            $this->mergeWhen(
+                $this->canManage($request),
+                fn (): array => ['messaging' => $this->maskedMessaging()],
+            ),
         ];
+    }
+
+    /**
+     * Whether the current request may see this workspace's messaging config —
+     * its owner or an admin. Public discovery requests never qualify.
+     */
+    private function canManage(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user !== null
+            && Gate::forUser($user)->allows('manage-workspace', $this->resource);
+    }
+
+    /**
+     * The masked messaging block (use_platform + non-secret fields + has_* flags).
+     *
+     * @return array<string, mixed>
+     */
+    private function maskedMessaging(): array
+    {
+        return app(MessagingSettingsService::class)->maskedForWorkspace($this->resource);
     }
 
     /**

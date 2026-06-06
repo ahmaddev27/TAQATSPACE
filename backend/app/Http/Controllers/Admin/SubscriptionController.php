@@ -22,7 +22,7 @@ class SubscriptionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'workspace_id', 'member', 'per_page']);
+        $filters = $request->only(['status', 'workspace_id', 'member', 'date_from', 'date_to', 'per_page']);
 
         $paginator = $this->subscriptions->paginate($filters);
 

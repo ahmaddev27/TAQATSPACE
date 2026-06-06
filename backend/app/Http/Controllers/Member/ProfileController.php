@@ -25,8 +25,8 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($request->filled('new_password') && ! Hash::check((string) $request->input('current_password'), $user->password)) {
-            return ApiResponse::error('The current password is incorrect.', 422, [
-                'current_password' => ['The current password is incorrect.'],
+            return ApiResponse::error(__('messages.current_password_incorrect'), 422, [
+                'current_password' => [__('messages.current_password_incorrect')],
             ]);
         }
 
@@ -51,7 +51,7 @@ class ProfileController extends Controller
 
         return ApiResponse::success(
             new UserResource($user->refresh()),
-            'Profile updated successfully.',
+            __('messages.profile_updated'),
         );
     }
 }

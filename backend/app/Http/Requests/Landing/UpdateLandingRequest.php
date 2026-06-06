@@ -25,6 +25,10 @@ class UpdateLandingRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // --- Section order (admin-chosen order of the reorderable sections) ---
+            'sections_order' => ['sometimes', 'nullable', 'array'],
+            'sections_order.*' => ['string', 'max:50'],
+
             // --- Hero ---
             'hero' => ['sometimes', 'nullable', 'array'],
             ...$this->bilingual('hero.title'),

@@ -99,7 +99,7 @@ class SeatController extends Controller
 
         $this->seats->delete($seat);
 
-        return ApiResponse::message('Seat deleted.');
+        return ApiResponse::message(__('messages.seat_deleted'));
     }
 
     /**
@@ -110,7 +110,7 @@ class SeatController extends Controller
         $workspace = $request->user()?->workspace;
 
         if ($workspace === null) {
-            abort(404, 'No workspace found for this account.');
+            abort(404, __('messages.no_workspace_found_account'));
         }
 
         return $workspace;
