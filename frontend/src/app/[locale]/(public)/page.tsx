@@ -137,6 +137,7 @@ export default async function HomePage({
   const capsTitle = pick(loc(sections.capabilities?.title, locale), h.capsTitle1);
   const capsHighlight = pick(loc(sections.capabilities?.subtitle, locale), h.capsTitle2);
   const featuredTitle = pick(loc(sections.featured?.title, locale), h.featured);
+  const featuredSub = pick(loc(sections.featured?.subtitle, locale), h.featuredEyebrow);
   const tstmTitle = pick(loc(sections.testimonials?.title, locale), h.tstmTitle1);
 
   const showWhy = isEnabled(sections.why?.enabled);
@@ -299,7 +300,7 @@ export default async function HomePage({
         <section className="container section">
           <div className="page-head" style={{ alignItems: "flex-end" }}>
             <div>
-              <span className="eyebrow">{h.featuredEyebrow}</span>
+              <span className="eyebrow">{featuredSub}</span>
               <h2 className="ed-h2" style={{ marginTop: 8 }}>
                 {featuredTitle}
               </h2>
