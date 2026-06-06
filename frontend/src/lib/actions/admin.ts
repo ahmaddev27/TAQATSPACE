@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
+  BroadcastInput,
+  BroadcastResult,
   ContentKey,
   LandingContent,
   MessagingTestChannel,
@@ -233,5 +235,20 @@ export async function sendMessagingTest(
   return authedMutate("/admin/settings/messaging/test", {
     method: "POST",
     body: { channel, to },
+  });
+}
+
+/**
+ * Compose and broadcast an email and/or SMS to a platform audience
+ * (`POST /admin/messaging/broadcast`). The send is queued; the result reports
+ * how many recipients were queued/skipped per channel. A channel whose account
+ * is not configured is rejected as a 422 with a friendly message.
+ */
+export async function sendAdminBroadcast(
+  input: BroadcastInput,
+): Promise<ActionResult<BroadcastResult>> {
+  return authedMutate<BroadcastResult>("/admin/messaging/broadcast", {
+    method: "POST",
+    body: input,
   });
 }

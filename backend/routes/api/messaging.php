@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\BroadcastController as AdminBroadcastController;
 use App\Http\Controllers\Admin\MessagingSettingsController;
+use App\Http\Controllers\Owner\BroadcastController as OwnerBroadcastController;
 use App\Http\Controllers\Owner\MessagingController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +26,16 @@ Route::middleware(['auth:sanctum', 'role.admin'])
         Route::post('/test', [MessagingSettingsController::class, 'test']);
     });
 
+// Compose & broadcast (email and/or SMS) to a chosen audience — Super Admin
+// sends through the platform accounts.
+Route::middleware(['auth:sanctum', 'role.admin'])
+    ->post('/admin/messaging/broadcast', [AdminBroadcastController::class, 'store']);
+
 // Per-workspace messaging — Workspace Owner.
 Route::middleware(['auth:sanctum', 'role.owner'])
     ->put('/workspace/messaging', [MessagingController::class, 'update']);
+
+// Compose & broadcast to the owner's OWN workspace members — sent through the
+// workspace's own accounts (or the platform when `use_platform`).
+Route::middleware(['auth:sanctum', 'role.owner'])
+    ->post('/workspace/messaging/broadcast', [OwnerBroadcastController::class, 'store']);

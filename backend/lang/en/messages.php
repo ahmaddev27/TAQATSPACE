@@ -150,4 +150,12 @@ return [
     'test_sms_failed' => 'Test SMS failed: :error',
     'sms_not_configured' => 'SMS is not configured for the platform.',
 
+    // Broadcast (compose & send to an audience)
+    'broadcast_queued' => 'Your message has been queued for delivery.',
+    'broadcast_recipients_required' => 'Select at least one recipient.',
+    'broadcast_email_not_configured_platform' => 'Email is not configured for the platform. Configure SMTP before sending.',
+    'broadcast_sms_not_configured_platform' => 'SMS is not configured for the platform. Configure an SMS provider before sending.',
+    'broadcast_email_not_configured_workspace' => 'Email is not configured for your workspace. Configure SMTP or use the platform account before sending.',
+    'broadcast_sms_not_configured_workspace' => 'SMS is not configured for your workspace. Configure an SMS provider or use the platform account before sending.',
+
 ];

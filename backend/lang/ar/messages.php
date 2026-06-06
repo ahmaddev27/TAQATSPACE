@@ -150,4 +150,12 @@ return [
     'test_sms_failed' => 'فشل إرسال الرسالة النصية التجريبية: :error',
     'sms_not_configured' => 'الرسائل النصية غير مهيّأة للمنصة.',
 
+    // البث (إنشاء رسالة وإرسالها إلى جمهور)
+    'broadcast_queued' => 'تمت جدولة رسالتك للإرسال.',
+    'broadcast_recipients_required' => 'اختر مستلِمًا واحدًا على الأقل.',
+    'broadcast_email_not_configured_platform' => 'البريد الإلكتروني غير مهيّأ للمنصة. يرجى إعداد SMTP قبل الإرسال.',
+    'broadcast_sms_not_configured_platform' => 'الرسائل النصية غير مهيّأة للمنصة. يرجى إعداد مزوّد رسائل نصية قبل الإرسال.',
+    'broadcast_email_not_configured_workspace' => 'البريد الإلكتروني غير مهيّأ لمساحة عملك. يرجى إعداد SMTP أو استخدام حساب المنصة قبل الإرسال.',
+    'broadcast_sms_not_configured_workspace' => 'الرسائل النصية غير مهيّأة لمساحة عملك. يرجى إعداد مزوّد رسائل نصية أو استخدام حساب المنصة قبل الإرسال.',
+
 ];

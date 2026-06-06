@@ -5,6 +5,8 @@ import { serverFetch } from "@/lib/api";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ApiEnvelope,
+  BroadcastInput,
+  BroadcastResult,
   Member,
   Package,
   Seat,
@@ -343,6 +345,21 @@ export async function updateWorkspaceMessaging(
     revalidateOwner("");
   }
   return result;
+}
+
+/**
+ * Compose and broadcast an email and/or SMS to THIS workspace's members
+ * (`POST /workspace/messaging/broadcast`). Recipients are scoped to the owner's
+ * workspace server-side; the send is queued and the result reports the
+ * queued/skipped counts per channel.
+ */
+export async function sendOwnerBroadcast(
+  input: BroadcastInput,
+): Promise<ActionResult<BroadcastResult>> {
+  return authedMutate<BroadcastResult>("/workspace/messaging/broadcast", {
+    method: "POST",
+    body: input,
+  });
 }
 
 export async function uploadPhotos(

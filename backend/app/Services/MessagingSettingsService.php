@@ -423,17 +423,23 @@ class MessagingSettingsService
     // ---- "Is configured" checks (decrypted shape) ---------------------------
 
     /**
+     * Whether a decrypted SMTP config is usable for sending. Public so send
+     * paths (broadcasts) can pre-flight a channel before queueing work.
+     *
      * @param  array<string, mixed>  $smtp
      */
-    private function isSmtpConfigured(array $smtp): bool
+    public function isSmtpConfigured(array $smtp): bool
     {
         return ! empty($smtp['host']);
     }
 
     /**
+     * Whether a decrypted SMS config is usable for sending. Public so send paths
+     * (broadcasts) can pre-flight a channel before queueing work.
+     *
      * @param  array<string, mixed>  $sms
      */
-    private function isSmsConfigured(array $sms): bool
+    public function isSmsConfigured(array $sms): bool
     {
         return ! empty($sms['provider'])
             && (! empty($sms['username']) || ! empty($sms['password']) || ! empty($sms['api_key']));
