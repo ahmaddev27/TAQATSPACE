@@ -38,7 +38,7 @@ class SiteContentController extends Controller
 
         $saved = $this->content->update($key, $request->content());
 
-        return ApiResponse::success($saved, 'Content updated.');
+        return ApiResponse::success($saved, __('messages.content_updated'));
     }
 
     /**

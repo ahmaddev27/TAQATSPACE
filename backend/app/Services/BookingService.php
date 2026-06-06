@@ -40,7 +40,7 @@ class BookingService
         $workspace = Workspace::query()->findOrFail($data['workspace_id']);
 
         if ($workspace->status !== WorkspaceStatus::Active) {
-            abort(422, 'This workspace is not accepting booking requests.');
+            abort(422, __('messages.booking_not_accepting'));
         }
 
         $hasPending = BookingRequest::query()
@@ -49,7 +49,7 @@ class BookingService
             ->exists();
 
         if ($hasPending) {
-            abort(422, 'You already have a pending booking request.');
+            abort(422, __('messages.booking_already_pending'));
         }
 
         $hasActiveSubscription = Subscription::query()
@@ -59,7 +59,7 @@ class BookingService
             ->exists();
 
         if ($hasActiveSubscription) {
-            abort(422, 'You already have an active subscription to this workspace.');
+            abort(422, __('messages.booking_already_subscribed'));
         }
 
         return $workspace->bookingRequests()->create([
@@ -95,11 +95,11 @@ class BookingService
                     ->first();
 
                 if ($seat === null) {
-                    abort(422, 'The selected seat does not belong to this workspace.');
+                    abort(422, __('messages.seat_not_in_workspace'));
                 }
 
                 if ($seat->status !== SeatStatus::Available) {
-                    abort(409, 'The selected seat is no longer available. Please choose another seat.');
+                    abort(409, __('messages.seat_unavailable'));
                 }
             }
 
@@ -162,7 +162,7 @@ class BookingService
     public function cancelSubscription(Subscription $subscription): Subscription
     {
         if ($subscription->status === SubscriptionStatus::Cancelled) {
-            abort(409, 'This subscription is already cancelled.');
+            abort(409, __('messages.subscription_already_cancelled'));
         }
 
         return DB::transaction(function () use ($subscription): Subscription {
@@ -187,7 +187,7 @@ class BookingService
     private function assertPending(BookingRequest $booking): void
     {
         if ($booking->status !== BookingStatus::Pending) {
-            abort(409, 'This booking request has already been reviewed.');
+            abort(409, __('messages.booking_already_reviewed'));
         }
     }
 

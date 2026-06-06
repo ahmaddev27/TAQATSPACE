@@ -191,9 +191,9 @@ class MessagingSettingsService
 
             Mail::mailer($mailer)->to($to)->send(new TestMessageMail());
 
-            return ['ok' => true, 'message' => "Test email sent to {$to}."];
+            return ['ok' => true, 'message' => __('messages.test_email_sent', ['to' => $to])];
         } catch (Throwable $e) {
-            return ['ok' => false, 'message' => 'Test email failed: '.$e->getMessage()];
+            return ['ok' => false, 'message' => __('messages.test_email_failed', ['error' => $e->getMessage()])];
         }
     }
 
@@ -204,7 +204,7 @@ class MessagingSettingsService
     private function sendTestSms(array $sms, string $to): array
     {
         if (! $this->isSmsConfigured($sms)) {
-            return ['ok' => false, 'message' => 'SMS is not configured for the platform.'];
+            return ['ok' => false, 'message' => __('messages.sms_not_configured')];
         }
 
         $result = $this->sms->send(
@@ -216,8 +216,8 @@ class MessagingSettingsService
         return [
             'ok' => $result['ok'],
             'message' => $result['ok']
-                ? "Test SMS sent to {$to}."
-                : 'Test SMS failed: '.$this->stringifyResponse($result['response']),
+                ? __('messages.test_sms_sent', ['to' => $to])
+                : __('messages.test_sms_failed', ['error' => $this->stringifyResponse($result['response'])]),
         ];
     }
 

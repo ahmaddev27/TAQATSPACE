@@ -52,7 +52,7 @@ class SeatService
     public function create(Workspace $workspace, array $data): Seat
     {
         if ($workspace->seats()->count() >= $workspace->total_seats) {
-            abort(422, 'Seat capacity reached for this workspace.');
+            abort(422, __('messages.seat_capacity_reached'));
         }
 
         $exists = $workspace->seats()
@@ -60,7 +60,7 @@ class SeatService
             ->exists();
 
         if ($exists) {
-            abort(422, 'A seat with this number already exists in the workspace.');
+            abort(422, __('messages.seat_number_exists'));
         }
 
         return $workspace->seats()->create([
@@ -97,7 +97,7 @@ class SeatService
             ->exists();
 
         if (! $hasActiveSubscription) {
-            abort(422, 'Member does not have an active subscription to this workspace.');
+            abort(422, __('messages.seat_member_no_subscription'));
         }
 
         $alreadyAssigned = Seat::query()
@@ -107,7 +107,7 @@ class SeatService
             ->exists();
 
         if ($alreadyAssigned) {
-            abort(422, 'Member already holds a seat in this workspace.');
+            abort(422, __('messages.seat_member_already_holds'));
         }
 
         $seat->update([
@@ -140,7 +140,7 @@ class SeatService
     public function delete(Seat $seat): void
     {
         if ($seat->status !== SeatStatus::Available) {
-            abort(409, 'Only available seats can be deleted.');
+            abort(409, __('messages.seat_only_available_deletable'));
         }
 
         $referenced = Subscription::query()
@@ -148,7 +148,7 @@ class SeatService
             ->exists();
 
         if ($referenced) {
-            abort(409, 'Seat is referenced by a subscription and cannot be deleted.');
+            abort(409, __('messages.seat_referenced_by_subscription'));
         }
 
         DB::transaction(static fn () => $seat->delete());

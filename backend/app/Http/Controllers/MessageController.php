@@ -48,7 +48,7 @@ class MessageController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null || ! $this->messages->isActiveMember($workspace->id, (string) $member->id)) {
-            return ApiResponse::error('Member not found.', 404);
+            return ApiResponse::error(__('messages.member_not_found'), 404);
         }
 
         $thread = $this->messages->thread(
@@ -75,13 +75,13 @@ class MessageController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         $receiverId = (string) $request->validated()['receiver_id'];
 
         if (! $this->messages->isActiveMember($workspace->id, $receiverId)) {
-            return ApiResponse::error('Recipient is not an active member of your workspace.', 422);
+            return ApiResponse::error(__('messages.recipient_not_active_member'), 422);
         }
 
         $message = $this->messages->sendDirect(
@@ -91,7 +91,7 @@ class MessageController extends Controller
             (string) $request->validated()['content'],
         );
 
-        return ApiResponse::success(new MessageResource($message), 'Message sent.', 201);
+        return ApiResponse::success(new MessageResource($message), __('messages.message_sent'), 201);
     }
 
     /**
@@ -103,7 +103,7 @@ class MessageController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         $message = $this->messages->broadcast(
@@ -112,7 +112,7 @@ class MessageController extends Controller
             (string) $request->validated()['content'],
         );
 
-        return ApiResponse::success(new MessageResource($message), 'Broadcast sent.', 201);
+        return ApiResponse::success(new MessageResource($message), __('messages.broadcast_sent'), 201);
     }
 
     /**
@@ -139,7 +139,7 @@ class MessageController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         $updated = $this->messages->markThreadRead(
@@ -148,7 +148,7 @@ class MessageController extends Controller
             (string) $validated['with'],
         );
 
-        return ApiResponse::success(['marked_read' => $updated], 'Messages marked as read.');
+        return ApiResponse::success(['marked_read' => $updated], __('messages.messages_marked_read'));
     }
 
     private function markReadAsMember(Request $request): JsonResponse
@@ -156,7 +156,7 @@ class MessageController extends Controller
         $workspace = $this->messages->memberActiveWorkspace((string) $request->user()->id);
 
         if ($workspace === null) {
-            return ApiResponse::error('No active membership found.', 404);
+            return ApiResponse::error(__('messages.no_active_membership'), 404);
         }
 
         $updated = $this->messages->markThreadRead(
@@ -165,7 +165,7 @@ class MessageController extends Controller
             (string) $workspace->owner_id,
         );
 
-        return ApiResponse::success(['marked_read' => $updated], 'Messages marked as read.');
+        return ApiResponse::success(['marked_read' => $updated], __('messages.messages_marked_read'));
     }
 
     private function ownerWorkspace(Request $request): ?Workspace

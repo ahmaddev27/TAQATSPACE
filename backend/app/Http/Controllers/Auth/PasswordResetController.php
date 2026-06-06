@@ -23,7 +23,7 @@ class PasswordResetController extends Controller
         $this->service->sendResetLink($request->validated()['email']);
 
         // Neutral response — never reveal whether the email exists.
-        return ApiResponse::message('If that email exists, a reset link has been sent.');
+        return ApiResponse::message(__('messages.reset_link_sent'));
     }
 
     public function reset(ResetPasswordRequest $request): JsonResponse
@@ -33,9 +33,9 @@ class PasswordResetController extends Controller
         );
 
         if ($status === Password::PasswordReset) {
-            return ApiResponse::message('Password has been reset successfully.');
+            return ApiResponse::message(__('messages.password_reset_success'));
         }
 
-        return ApiResponse::error('Invalid or expired reset token.', 422);
+        return ApiResponse::error(__('messages.invalid_reset_token'), 422);
     }
 }

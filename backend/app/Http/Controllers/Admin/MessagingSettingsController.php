@@ -38,7 +38,7 @@ class MessagingSettingsController extends Controller
     {
         $saved = $this->messaging->updatePlatform($request->messagingData());
 
-        return ApiResponse::success($saved, 'Messaging settings updated.');
+        return ApiResponse::success($saved, __('messages.messaging_settings_updated'));
     }
 
     /**

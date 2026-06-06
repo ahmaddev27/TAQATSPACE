@@ -53,7 +53,7 @@ class WorkspaceController extends Controller
         $model = $this->workspaces->findActivePublic($workspace);
 
         if ($model === null) {
-            return ApiResponse::error('Workspace not found.', 404);
+            return ApiResponse::error(__('messages.workspace_not_found'), 404);
         }
 
         $model->setAttribute('seats_summary', $this->workspaces->seatsSummary($model->id));
@@ -78,7 +78,7 @@ class WorkspaceController extends Controller
 
         return ApiResponse::success(
             new WorkspaceResource($workspace),
-            'Workspace created and submitted for review.',
+            __('messages.workspace_created'),
             201,
         );
     }
@@ -91,16 +91,16 @@ class WorkspaceController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace to update.', 404);
+            return ApiResponse::error(__('messages.no_workspace_to_update'), 404);
         }
 
         if (Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error('This action is unauthorized.', 403);
+            return ApiResponse::error(__('messages.unauthorized_action'), 403);
         }
 
         $updated = $this->workspaces->updateSettings($workspace, $request->validated());
 
-        return ApiResponse::success(new WorkspaceResource($updated), 'Workspace updated.');
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.workspace_updated'));
     }
 
     /**
@@ -135,6 +135,6 @@ class WorkspaceController extends Controller
             WorkspaceStatus::from($validated['status']),
         );
 
-        return ApiResponse::success(new WorkspaceResource($updated), 'Workspace status updated.');
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.workspace_status_updated'));
     }
 }

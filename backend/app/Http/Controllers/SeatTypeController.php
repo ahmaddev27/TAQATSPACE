@@ -28,18 +28,18 @@ class SeatTypeController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace to update.', 404);
+            return ApiResponse::error(__('messages.no_workspace_to_update'), 404);
         }
 
         if (Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error('This action is unauthorized.', 403);
+            return ApiResponse::error(__('messages.unauthorized_action'), 403);
         }
 
         $this->pricing->sync($workspace, $request->validated('seat_types'));
 
         return ApiResponse::success(
             new WorkspaceResource($workspace->load('seatTypes')),
-            'Seat type pricing updated.',
+            __('messages.seat_type_pricing_updated'),
         );
     }
 }

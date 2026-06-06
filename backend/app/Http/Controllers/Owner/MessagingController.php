@@ -33,15 +33,15 @@ class MessagingController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace to update.', 404);
+            return ApiResponse::error(__('messages.no_workspace_to_update'), 404);
         }
 
         if (Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error('This action is unauthorized.', 403);
+            return ApiResponse::error(__('messages.unauthorized_action'), 403);
         }
 
         $saved = $this->messaging->updateWorkspace($workspace, $request->messagingData());
 
-        return ApiResponse::success($saved, 'Workspace messaging settings updated.');
+        return ApiResponse::success($saved, __('messages.workspace_messaging_updated'));
     }
 }

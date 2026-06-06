@@ -102,7 +102,7 @@ class InvoiceService
             ->first();
 
         if ($subscription === null) {
-            throw new RuntimeException('This member has no active subscription in your workspace.');
+            throw new RuntimeException(__('messages.invoice_member_no_subscription'));
         }
 
         $invoice = Invoice::create([
@@ -128,7 +128,7 @@ class InvoiceService
     public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
         if ($invoice->status === InvoiceStatus::Paid) {
-            throw new RuntimeException('This invoice has already been paid.');
+            throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
         $invoice->forceFill([
@@ -159,7 +159,7 @@ class InvoiceService
         $cacheKey = "invoice:{$invoice->id}:reminder_sent";
 
         if (Cache::has($cacheKey)) {
-            throw new RuntimeException('A reminder was already sent for this invoice in the last 24 hours.');
+            throw new RuntimeException(__('messages.invoice_reminder_recently_sent'));
         }
 
         $invoice->loadMissing('subscription.member');

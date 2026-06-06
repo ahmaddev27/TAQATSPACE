@@ -73,7 +73,7 @@ class WorkspaceService
     public function createForOwner(string $ownerId, array $data): Workspace
     {
         if ($this->workspaces->ownerHasWorkspace($ownerId)) {
-            throw new RuntimeException('You already have a registered workspace.');
+            throw new RuntimeException(__('messages.workspace_already_registered'));
         }
 
         /** @var array<int, array<string, mixed>> $seatTypes */
@@ -181,7 +181,7 @@ class WorkspaceService
         $existing = $workspace->photos ?? [];
 
         if (count($existing) + count($files) > self::MAX_PHOTOS) {
-            throw new RuntimeException('A workspace may have at most '.self::MAX_PHOTOS.' photos.');
+            throw new RuntimeException(__('messages.photos_max_reached', ['max' => self::MAX_PHOTOS]));
         }
 
         $directory = 'workspaces/'.$workspace->id;
@@ -207,7 +207,7 @@ class WorkspaceService
         $existing = $workspace->photos ?? [];
 
         if (! in_array($path, $existing, true)) {
-            throw new RuntimeException('Photo not found on this workspace.');
+            throw new RuntimeException(__('messages.photo_not_found'));
         }
 
         $disk = Storage::disk($this->photoDisk());

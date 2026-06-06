@@ -57,13 +57,13 @@ class MemberController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('Member not found.', 404);
+            return ApiResponse::error(__('messages.member_not_found'), 404);
         }
 
         $detail = $this->members->memberDetail($workspace, $user);
 
         if ($detail === null) {
-            return ApiResponse::error('Member not found.', 404);
+            return ApiResponse::error(__('messages.member_not_found'), 404);
         }
 
         return ApiResponse::success($detail);
@@ -80,7 +80,7 @@ class MemberController extends Controller
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::error('Member not found.', 404);
+            return ApiResponse::error(__('messages.member_not_found'), 404);
         }
 
         $subscription = $this->members->updateStatus(
@@ -90,12 +90,12 @@ class MemberController extends Controller
         );
 
         if ($subscription === null) {
-            return ApiResponse::error('Member not found.', 404);
+            return ApiResponse::error(__('messages.member_not_found'), 404);
         }
 
         return ApiResponse::success(
             new MemberResource($subscription),
-            'Member status updated.',
+            __('messages.member_status_updated'),
         );
     }
 

@@ -38,6 +38,6 @@ class UserController extends Controller
     {
         $updated = $this->users->changeStatus($user, $request->status());
 
-        return ApiResponse::success(new UserResource($updated), 'User status updated.');
+        return ApiResponse::success(new UserResource($updated), __('messages.user_status_updated'));
     }
 }

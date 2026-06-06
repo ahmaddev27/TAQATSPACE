@@ -50,7 +50,7 @@ class InvoiceController extends Controller
             return ApiResponse::error($e->getMessage(), 422);
         }
 
-        return ApiResponse::success(new InvoiceResource($updated), 'Invoice marked as paid.');
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
     }
 
     /**
@@ -60,7 +60,7 @@ class InvoiceController extends Controller
     {
         $updated = $this->invoices->markUnpaid($invoice);
 
-        return ApiResponse::success(new InvoiceResource($updated), 'Invoice reverted to pending.');
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_reverted_pending'));
     }
 
     /**
@@ -76,6 +76,6 @@ class InvoiceController extends Controller
             $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
         );
 
-        return ApiResponse::success(new InvoiceResource($updated), 'Receipt uploaded and invoice marked paid.');
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.receipt_uploaded'));
     }
 }

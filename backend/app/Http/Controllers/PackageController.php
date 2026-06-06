@@ -40,7 +40,7 @@ class PackageController extends Controller
 
         return ApiResponse::success(
             new PackageResource($package),
-            'Package created successfully.',
+            __('messages.package_created'),
             201,
         );
     }
@@ -53,7 +53,7 @@ class PackageController extends Controller
 
         return ApiResponse::success(
             new PackageResource($package),
-            'Package updated successfully.',
+            __('messages.package_updated'),
         );
     }
 
@@ -63,7 +63,7 @@ class PackageController extends Controller
 
         $this->packages->delete($package);
 
-        return ApiResponse::message('Package deleted successfully.');
+        return ApiResponse::message(__('messages.package_deleted'));
     }
 
     public function assign(AssignPackageRequest $request, InternetPackage $package): JsonResponse
@@ -77,7 +77,7 @@ class PackageController extends Controller
 
         return ApiResponse::success(
             new PackageResource($package),
-            'Package assigned to member.',
+            __('messages.package_assigned'),
         );
     }
 
@@ -89,7 +89,7 @@ class PackageController extends Controller
 
         return ApiResponse::success(
             new PackageResource($package),
-            'Package unassigned from member.',
+            __('messages.package_unassigned'),
         );
     }
 
@@ -102,7 +102,7 @@ class PackageController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            throw new NotFoundHttpException('No workspace found for this owner.');
+            throw new NotFoundHttpException(__('messages.no_workspace_found_owner'));
         }
 
         return $workspace;
@@ -115,7 +115,7 @@ class PackageController extends Controller
     private function authorizePackage(Request $request, InternetPackage $package): void
     {
         if ($package->workspace_id !== $this->ownerWorkspace($request)->id) {
-            throw new NotFoundHttpException('Package not found.');
+            throw new NotFoundHttpException(__('messages.package_not_found'));
         }
     }
 
@@ -131,7 +131,7 @@ class PackageController extends Controller
             ->exists();
 
         if (! $belongs) {
-            throw new NotFoundHttpException('Member is not part of this workspace.');
+            throw new NotFoundHttpException(__('messages.member_not_in_workspace'));
         }
     }
 }
