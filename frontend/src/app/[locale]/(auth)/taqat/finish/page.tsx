@@ -48,6 +48,12 @@ function TaqatFinish() {
 
         const result = (await res.json()) as ClientAuthResult;
         await refreshUser();
+        // Freshly-provisioned SSO accounts have not chosen a role yet — send them
+        // to onboarding before any dashboard.
+        if (result.user.needs_onboarding) {
+          router.replace("/onboarding");
+          return;
+        }
         router.replace(dashboardFor(result.role));
       } catch {
         setFailed(true);

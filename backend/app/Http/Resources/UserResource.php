@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'role' => $this->role->value,
             'status' => $this->status->value,
+            'needs_onboarding' => $this->needsOnboarding(),
             'specialty' => $this->specialty,
             'bio' => $this->bio,
             'avatar' => $this->avatarUrl(),
