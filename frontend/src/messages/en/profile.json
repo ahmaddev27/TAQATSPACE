@@ -2,6 +2,8 @@
   "profile": {
     "title": "Profile",
     "subtitle": "Update your personal details and password",
+    "tabInfo": "Personal information",
+    "tabPassword": "Password",
     "sectionInfo": "Personal information",
     "name": "Full name",
     "namePlaceholder": "Your full name",

@@ -18,6 +18,10 @@ export interface LandingHero {
   subtitle?: LocalizedText;
   ctaPrimary?: LocalizedText;
   ctaSecondary?: LocalizedText;
+  /** Stored media path of the admin-chosen hero image (round-tripped on save). */
+  image?: string;
+  /** Resolved display URL for `image`; added by the backend on read, never sent. */
+  imageUrl?: string;
 }
 
 export interface LandingStat {
@@ -37,6 +41,10 @@ export interface WhySection {
   title?: LocalizedText;
   highlight?: LocalizedText;
   subtitle?: LocalizedText;
+  /** Stored media path of the admin-chosen "why" image (round-tripped on save). */
+  image?: string;
+  /** Resolved display URL for `image`; added by the backend on read, never sent. */
+  imageUrl?: string;
 }
 
 export interface CapabilitiesSection {

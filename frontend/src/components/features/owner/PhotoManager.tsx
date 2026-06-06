@@ -4,6 +4,7 @@ import { useRef, useState, useTransition, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { useImageCropper } from "@/components/ui/useImageCropper";
 import { useToast } from "@/components/providers/ToastProvider";
 import { deletePhoto, uploadPhotos } from "@/lib/actions/owner";
 import { cn } from "@/lib/cn";
@@ -22,13 +23,24 @@ export function PhotoManager({ photos }: PhotoManagerProps) {
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  // Workspace photos are landscape → crop each picked image to 4:3 first.
+  const { cropFile, cropper } = useImageCropper({ aspect: 4 / 3, maxSize: 1600 });
 
-  const upload = (files: FileList | null) => {
+  const upload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    // Crop each picked image in turn; a skipped (cancelled) image is dropped.
+    const picked = Array.from(files).slice(0, MAX_FILES);
+    const cropped: File[] = [];
+    for (const file of picked) {
+      const result = await cropFile(file);
+      if (result) cropped.push(result);
+    }
+    if (inputRef.current) inputRef.current.value = "";
+    if (cropped.length === 0) return;
+
     const formData = new FormData();
-    Array.from(files)
-      .slice(0, MAX_FILES)
-      .forEach((file) => formData.append("photos[]", file));
+    cropped.forEach((file) => formData.append("photos[]", file));
 
     startTransition(async () => {
       const res = await uploadPhotos(formData);
@@ -37,7 +49,6 @@ export function PhotoManager({ photos }: PhotoManagerProps) {
       } else {
         toast({ tone: "err", title: t("settings.photoFailed"), body: res.message });
       }
-      if (inputRef.current) inputRef.current.value = "";
     });
   };
 
@@ -55,11 +66,12 @@ export function PhotoManager({ photos }: PhotoManagerProps) {
   const onDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setDragOver(false);
-    upload(e.dataTransfer.files);
+    void upload(e.dataTransfer.files);
   };
 
   return (
     <div className="stack" style={{ gap: 16 }}>
+      {cropper}
       <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
         {t("settings.photosHint")}
       </p>
@@ -85,7 +97,7 @@ export function PhotoManager({ photos }: PhotoManagerProps) {
           multiple
           hidden
           disabled={pending}
-          onChange={(e) => upload(e.target.files)}
+          onChange={(e) => void upload(e.target.files)}
         />
       </label>
 

@@ -140,6 +140,7 @@ return [
     // محتوى الإدارة / الصفحة الرئيسية / الإعدادات
     'content_updated' => 'تم تحديث المحتوى.',
     'landing_content_updated' => 'تم تحديث محتوى الصفحة الرئيسية.',
+    'landing_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
     'workspace_messaging_updated' => 'تم تحديث إعدادات مراسلة مساحة العمل.',

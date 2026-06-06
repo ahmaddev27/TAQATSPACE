@@ -19,6 +19,14 @@
       "rafah": "Rafah",
       "jabalia": "Jabalia",
       "deirelbalah": "Deir al-Balah"
+    },
+    "cropper": {
+      "title": "Crop image",
+      "zoom": "Zoom",
+      "rotate": "Rotate",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "repositionHint": "Drag to reposition · use the slider to zoom"
     }
   },
   "nav": {

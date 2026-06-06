@@ -278,6 +278,29 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .modal-body { padding: 22px; }
 .modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
 
+/* ---------- Image cropper ---------- */
+.cropper { display: flex; flex-direction: column; gap: 14px; }
+.cropper-frame {
+  position: relative; width: 100%; overflow: hidden; border-radius: var(--r-lg);
+  background: var(--surface-sunk, #0a0c10); border: 1px solid var(--border);
+  touch-action: none; cursor: grab; user-select: none;
+}
+.cropper-frame:active { cursor: grabbing; }
+.cropper-img {
+  position: absolute; top: 50%; inset-inline-start: 50%; transform-origin: center center;
+  max-width: none; pointer-events: none; -webkit-user-drag: none;
+}
+.cropper-grid { position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.25) 1px, transparent 1px);
+  background-size: 33.333% 33.333%; opacity: .6;
+}
+.cropper-hint { font-size: var(--fs-xs); text-align: center; margin: 0; }
+.cropper-controls { display: flex; align-items: center; gap: 14px; }
+.cropper-zoom { display: flex; align-items: center; gap: 10px; flex: 1; color: var(--text-2); }
+.cropper-zoom input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+
 .drawer-wrap { position: fixed; inset: 0; z-index: 100; }
 .drawer { position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: min(440px, 92vw); background: var(--surface); border-inline-start: 1px solid var(--border); box-shadow: var(--sh-md); display: flex; flex-direction: column; animation: slidein var(--t-slow); }
 @keyframes slidein { from { transform: translateX(var(--slidefrom, 100%)); } }

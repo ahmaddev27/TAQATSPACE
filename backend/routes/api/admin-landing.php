@@ -23,4 +23,5 @@ Route::middleware(['auth:sanctum', 'role.admin'])
     ->group(function (): void {
         Route::get('/', [AdminLandingController::class, 'show']);
         Route::put('/', [AdminLandingController::class, 'update']);
+        Route::post('/images', [AdminLandingController::class, 'uploadImage']);
     });
