@@ -77,9 +77,10 @@ class InvoicePdfService
                 'cairo' => [
                     'R' => 'Cairo-Regular.ttf',
                     'B' => 'Cairo-Bold.ttf',
-                    // mPDF's built-in autoArabic shaper handles letter joining;
-                    // skip OTL/GPOS (Cairo's MarkGlyphSets table is unsupported).
-                    'useOTL' => 0x00,
+                    // Cairo is a modern font with no legacy presentation-form
+                    // glyphs, so mPDF's autoArabic shaper cannot join it. Enable
+                    // OpenType layout (GSUB/GPOS) so Arabic letters connect.
+                    'useOTL' => 0xFF,
                     'useKashida' => 0,
                 ],
             ],

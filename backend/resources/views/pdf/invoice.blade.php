@@ -54,15 +54,15 @@
 
         .muted { color: #667085; }
 
-        /* English sub-line under an Arabic label: small, muted, uppercased. */
+        /* English sub-line under an Arabic label: small, muted, uppercased.
+           Placed on its own line with an explicit <br> (mPDF does not reliably
+           honour display:block on an inline span). */
         .en {
-            display: block;
             font-size: 8.5px;
             color: #98A2B3;
             letter-spacing: 0.6px;
             text-transform: uppercase;
             line-height: 1.4;
-            margin-top: 1px;
         }
 
         /* ---------- Header ---------- */
@@ -236,7 +236,7 @@
         <tr>
             <td class="party-cell">
                 <div class="party-card">
-                    <div class="party-label">المُصدِر <span class="en">From</span></div>
+                    <div class="party-label">المُصدِر<br><span class="en">From</span></div>
                     <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
                     @if ($workspace?->address)
                         <div class="party-line">{{ $workspace->address }}</div>
@@ -251,7 +251,7 @@
             </td>
             <td class="party-cell">
                 <div class="party-card">
-                    <div class="party-label">العميل <span class="en">Bill to</span></div>
+                    <div class="party-label">العميل<br><span class="en">Bill to</span></div>
                     <div class="party-name">{{ $member?->name ?? '—' }}</div>
                     @if ($member?->email)
                         <div class="party-line"><span class="num">{{ $member->email }}</span></div>
@@ -268,15 +268,15 @@
     <table class="meta">
         <tr>
             <td>
-                <div class="meta-label">رقم الفاتورة <span class="en">Invoice no.</span></div>
+                <div class="meta-label">رقم الفاتورة<br><span class="en">Invoice no.</span></div>
                 <div class="meta-value"><span class="num">{{ $invoice->invoice_number }}</span></div>
             </td>
             <td>
-                <div class="meta-label">تاريخ الإصدار <span class="en">Issue date</span></div>
+                <div class="meta-label">تاريخ الإصدار<br><span class="en">Issue date</span></div>
                 <div class="meta-value"><span class="num">{{ $invoice->created_at?->format('Y-m-d') ?? '—' }}</span></div>
             </td>
             <td>
-                <div class="meta-label">تاريخ الاستحقاق <span class="en">Due date</span></div>
+                <div class="meta-label">تاريخ الاستحقاق<br><span class="en">Due date</span></div>
                 <div class="meta-value"><span class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</span></div>
             </td>
         </tr>
@@ -286,9 +286,9 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width: 46%;">الوصف <span class="en">Description</span></th>
-                <th style="width: 30%;">الفترة <span class="en">Period</span></th>
-                <th style="width: 24%;">المبلغ <span class="en">Amount</span></th>
+                <th style="width: 46%;">الوصف<br><span class="en">Description</span></th>
+                <th style="width: 30%;">الفترة<br><span class="en">Period</span></th>
+                <th style="width: 24%;">المبلغ<br><span class="en">Amount</span></th>
             </tr>
         </thead>
         <tbody>
