@@ -11,6 +11,8 @@ import type {
   SeatType,
   SubscriptionStatus,
   Workspace,
+  WorkspaceMessagingConfig,
+  WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
@@ -264,6 +266,31 @@ export async function updateSeatTypes(
     method: "PUT",
     body: { seat_types: rows },
   });
+  if (result.ok) {
+    revalidateOwner("settings");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Messaging                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Set whether the workspace inherits Taqat's platform accounts and/or supply
+ * its own SMTP + SMS config (`PUT /workspace/messaging`).
+ *
+ * Secrets are write-only: a blank/omitted password or SMS credential preserves
+ * the stored value. The backend returns the refreshed masked messaging block.
+ */
+export async function updateWorkspaceMessaging(
+  input: WorkspaceMessagingUpdateInput,
+): Promise<ActionResult<WorkspaceMessagingConfig>> {
+  const result = await authedMutate<WorkspaceMessagingConfig>(
+    "/workspace/messaging",
+    { method: "PUT", body: input },
+  );
   if (result.ok) {
     revalidateOwner("settings");
     revalidateOwner("");

@@ -4,6 +4,7 @@ import type {
   InvoiceStatus,
   Paginated,
   PlanType,
+  PlatformMessagingConfig,
   SubscriptionStatus,
   User,
   UserRole,
@@ -267,6 +268,21 @@ export interface AdminReports {
 /** Platform-wide aggregated analytics for the super-admin reports page. */
 export async function getAdminReports(): Promise<AdminReports> {
   const res = await serverFetch<ApiEnvelope<AdminReports>>("/admin/reports");
+  return res.data;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Messaging settings (GET /admin/settings/messaging)                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The platform's masked SMTP + SMS configuration. Secrets are never returned;
+ * `has_password` / `has_credentials` flags signal whether one is stored.
+ */
+export async function getPlatformMessaging(): Promise<PlatformMessagingConfig> {
+  const res = await serverFetch<ApiEnvelope<PlatformMessagingConfig>>(
+    "/admin/settings/messaging",
+  );
   return res.data;
 }
 

@@ -52,6 +52,7 @@
     "sectionAccount": "حسابي",
     "sectionManagement": "الإدارة",
     "sectionSystem": "النظام",
+    "sectionSettings": "الإعدادات",
     "ownerRole": "صاحب مساحة",
     "freelancerRole": "عامل مستقل",
     "adminRole": "مشرف المنصة",
@@ -77,7 +78,8 @@
       "subscriptions": "الاشتراكات",
       "landing": "الصفحة الرئيسية",
       "finance": "المالية والعمولات",
-      "crm": "المحتوى (CRM)"
+      "crm": "المحتوى (CRM)",
+      "messaging": "المراسلة"
     },
     "sectionCrm": "إدارة المحتوى"
   },

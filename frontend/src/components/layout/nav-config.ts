@@ -102,6 +102,16 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "crm", href: "/admin/crm", icon: "settings" },
         ],
       },
+      {
+        titleKey: "sectionSettings",
+        items: [
+          {
+            key: "messaging",
+            href: "/admin/settings/messaging",
+            icon: "chat",
+          },
+        ],
+      },
     ],
   },
 };

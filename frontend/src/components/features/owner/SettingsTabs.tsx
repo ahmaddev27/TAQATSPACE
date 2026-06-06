@@ -20,6 +20,7 @@ import {
 } from "@/lib/actions/owner";
 import type { SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
+import { MessagingTab } from "./MessagingTab";
 
 export interface SettingsTabsProps {
   workspace: Workspace;
@@ -147,6 +148,7 @@ function buildInitial(ws: Workspace): FormState {
 /** Tabbed workspace settings editor. One Save persists the whole form. */
 export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const t = useTranslations("owner");
+  const tm = useTranslations("messaging.settings.owner");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
@@ -241,6 +243,7 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
     { id: "amenities", label: t("settings.tabAmenities") },
     { id: "photos", label: t("settings.tabPhotos") },
     { id: "hours", label: t("settings.tabHours") },
+    { id: "messaging", label: tm("tab") },
   ];
 
   return (
@@ -489,9 +492,13 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
             </div>
           </div>
         )}
+
+        {tab === "messaging" && (
+          <MessagingTab messaging={workspace.messaging} />
+        )}
       </div>
 
-      {tab !== "photos" && tab !== "seatTypes" && (
+      {tab !== "photos" && tab !== "seatTypes" && tab !== "messaging" && (
         <Button
           variant="primary"
           icon="check"

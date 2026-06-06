@@ -52,6 +52,7 @@
     "sectionAccount": "My account",
     "sectionManagement": "Management",
     "sectionSystem": "System",
+    "sectionSettings": "Settings",
     "ownerRole": "Space owner",
     "freelancerRole": "Freelancer",
     "adminRole": "Super admin",
@@ -77,7 +78,8 @@
       "subscriptions": "Subscriptions",
       "landing": "Landing page",
       "finance": "Finance",
-      "crm": "Content (CRM)"
+      "crm": "Content (CRM)",
+      "messaging": "Messaging"
     },
     "sectionCrm": "Content"
   },

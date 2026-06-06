@@ -28,6 +28,21 @@ export type {
 export { DEFAULT_SECTIONS_ORDER, sanitizeSectionsOrder } from "./landing";
 
 export type {
+  SmtpEncryption,
+  SmsProvider,
+  MaskedSmtpConfig,
+  MaskedSmsConfig,
+  PlatformMessagingConfig,
+  WorkspaceMessagingConfig,
+  SmtpUpdateInput,
+  SmsUpdateInput,
+  PlatformMessagingUpdateInput,
+  WorkspaceMessagingUpdateInput,
+  MessagingTestChannel,
+} from "./messaging";
+import type { WorkspaceMessagingConfig } from "./messaging";
+
+export type {
   ContentKey,
   SiteSocial,
   SiteContent,
@@ -161,6 +176,11 @@ export interface Workspace {
   recent_reviews?: RecentReview[];
   /** Present on the admin listing only. */
   owner?: WorkspaceOwnerSummary;
+  /**
+   * Masked messaging config. Present only for requests that may manage the
+   * workspace (its owner or an admin); absent on public discovery responses.
+   */
+  messaging?: WorkspaceMessagingConfig;
 }
 
 /* -------------------------------------------------------------------------- */
