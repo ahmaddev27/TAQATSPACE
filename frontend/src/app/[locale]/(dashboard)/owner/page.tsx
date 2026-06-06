@@ -62,7 +62,7 @@ export default async function OwnerDashboardPage({
           <OwnerInvoiceAlert />
         </Suspense>
 
-        <div className="grid-stats">
+        <div className="grid-stats grid-stats--5">
           <StatTile
             icon="grid"
             label={t("occupancy")}
