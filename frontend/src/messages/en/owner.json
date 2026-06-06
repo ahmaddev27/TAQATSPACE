@@ -117,6 +117,7 @@
       "assignedTo": "Assigned to",
       "unassign": "Unassign",
       "summary": "Seat summary",
+      "byType": "By seat type",
       "totalSeats": "Total seats",
       "assigned": "Seat assigned",
       "unassigned": "Seat freed",

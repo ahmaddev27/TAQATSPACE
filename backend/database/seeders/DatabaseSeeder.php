@@ -15,12 +15,12 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Message;
 use App\Models\Review;
-use App\Models\Seat;
 use App\Models\SeatTypePrice;
 use App\Models\SiteSetting;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\SeatService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -114,8 +114,11 @@ class DatabaseSeeder extends Seeder
                 'status' => $status,
             ]);
 
-            $this->seedSeats($workspace, $totalSeats);
+            // Seat types are the single source of truth for capacity: define
+            // the per-type pricing/capacity, then derive the physical seats from
+            // it so seeded data matches the runtime reconciliation behaviour.
             $this->seedSeatTypePrices($workspace);
+            app(SeatService::class)->syncSeatsToCapacity($workspace);
             InternetPackage::factory()->count(random_int(2, 3))->create([
                 'workspace_id' => $workspace->id,
             ]);
@@ -126,18 +129,6 @@ class DatabaseSeeder extends Seeder
         }
 
         return $active;
-    }
-
-    private function seedSeats(Workspace $workspace, int $count): void
-    {
-        for ($n = 1; $n <= $count; $n++) {
-            Seat::factory()->create([
-                'workspace_id' => $workspace->id,
-                'seat_number' => 'A'.$n,
-                'type' => $n % 5 === 0 ? SeatType::PrivateOffice : ($n % 2 === 0 ? SeatType::Fixed : SeatType::Flexible),
-                'status' => SeatStatus::Available,
-            ]);
-        }
     }
 
     /**
