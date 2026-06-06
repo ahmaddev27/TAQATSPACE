@@ -17,16 +17,19 @@ import {
   type SortState,
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { markInvoicePaid, markInvoiceUnpaid } from "@/lib/actions/admin";
 import type { AdminInvoice } from "@/lib/api/admin";
 import type { InvoiceStatus } from "@/lib/types";
 import { invoiceMoney } from "@/components/features/invoices/format";
 import { adminDate } from "./format";
+import { ExportCsvLink } from "./ExportCsvLink";
 import { ReceiptUploadModal } from "./ReceiptUploadModal";
 
 type StatusTab = "all" | InvoiceStatus;
 
 const TABS: StatusTab[] = ["all", "paid", "pending", "overdue", "cancelled"];
+const FILTER_KEYS = ["status", "search", "date_from", "date_to"] as const;
 const PAGE_SIZE = 10;
 
 export interface InvoicesTableProps {
@@ -40,8 +43,14 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
-  const [tab, setTab] = useState<StatusTab>("all");
-  const [query, setQuery] = useState("");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link below (the download then matches the on-screen view).
+  const { filters, setFilter } = useUrlFilters(FILTER_KEYS);
+  const tab: StatusTab = (filters.status as StatusTab) || "all";
+  const query = filters.search;
+  const dateFrom = filters.date_from;
+  const dateTo = filters.date_to;
+
   const [sort, setSort] = useState<SortState | null>({ key: "due", dir: "desc" });
   const [page, setPage] = useState(1);
 
@@ -60,6 +69,12 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
           (inv.workspace?.name ?? "").toLowerCase().includes(q),
       );
     }
+    if (dateFrom) {
+      rows = rows.filter((inv) => (inv.due_date ?? "") >= dateFrom);
+    }
+    if (dateTo) {
+      rows = rows.filter((inv) => (inv.due_date ?? "") <= dateTo);
+    }
     return sortRows(rows, sort, {
       invoice: (inv) => inv.invoice_number,
       member: (inv) => inv.member?.name ?? "",
@@ -69,7 +84,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
       status: (inv) => inv.status,
       paid: (inv) => inv.paid_at ?? "",
     });
-  }, [invoices, tab, query, sort]);
+  }, [invoices, tab, query, dateFrom, dateTo, sort]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const curPage = Math.min(page, pages);
@@ -229,23 +244,57 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
           items={tabs}
           value={tab}
           onChange={(v) => {
-            setTab(v as StatusTab);
+            setFilter("status", v === "all" ? null : v);
             setPage(1);
           }}
         />
         <div className="spacer" />
+        <div className="dt-tools">
+          <Input
+            className="ltr"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => {
+              setFilter("date_from", e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("dateFrom")}
+            title={t("dateFrom")}
+          />
+          <Input
+            className="ltr"
+            type="date"
+            value={dateTo}
+            onChange={(e) => {
+              setFilter("date_to", e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("dateTo")}
+            title={t("dateTo")}
+          />
+        </div>
         <div className="dt-search input-icon">
           <Icon name="search" />
           <input
             className="input"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
+              setFilter("search", e.target.value);
               setPage(1);
             }}
             placeholder={t("searchPlaceholder")}
           />
         </div>
+        <ExportCsvLink
+          type="invoices"
+          label={t("exportCsv")}
+          query={{
+            status: tab === "all" ? undefined : tab,
+            search: query || undefined,
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
+          }}
+        />
       </div>
 
       <div className="table-wrap">

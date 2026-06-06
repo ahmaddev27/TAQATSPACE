@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAllAdminUsers } from "@/lib/api/admin";
 import { UsersTable } from "@/components/features/admin/UsersTable";
-import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,6 @@ export default async function AdminUsersPage({
             {t("subtitle")}
           </p>
         </div>
-        <ExportCsvLink type="users" label={t("exportCsv")} />
       </div>
 
       <div style={{ marginTop: 16 }}>

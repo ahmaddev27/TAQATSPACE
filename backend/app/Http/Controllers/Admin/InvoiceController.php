@@ -27,7 +27,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'search', 'per_page']);
+        $filters = $request->only(['status', 'search', 'date_from', 'date_to', 'per_page']);
 
         $paginator = $this->invoices->paginate($filters);
 

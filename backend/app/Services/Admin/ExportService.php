@@ -75,7 +75,7 @@ class ExportService
     {
         return match ($type) {
             'invoices' => [
-                $this->invoices->exportQuery($this->only($filters, ['status', 'search'])),
+                $this->invoices->exportQuery($this->only($filters, ['status', 'search', 'date_from', 'date_to'])),
                 ['invoice_number', 'member_name', 'workspace_name', 'amount', 'status', 'due_date', 'paid_at'],
                 fn (Invoice $invoice): array => [
                     $invoice->invoice_number,
@@ -159,7 +159,7 @@ class ExportService
      */
     private function mapSubscriptionFilters(array $filters): array
     {
-        $mapped = $this->only($filters, ['status', 'workspace_id']);
+        $mapped = $this->only($filters, ['status', 'workspace_id', 'date_from', 'date_to']);
 
         if (! empty($filters['search'])) {
             $mapped['member'] = $filters['search'];

@@ -214,6 +214,23 @@ class InvoiceService
     }
 
     /**
+     * Filtered invoices for an owner's workspace (no pagination), newest due
+     * first, with the member chain loaded — for memory-safe cursor CSV export.
+     * Reuses the same filter pipeline as the owner list so the export honours
+     * exactly the filters the owner sees.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Invoice>
+     */
+    public function exportQueryForWorkspace(Workspace $workspace, array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->forWorkspace($workspace->id)
+            ->with(['subscription.member:id,name,email,phone', 'subscription.seat:id,seat_number'])
+            ->orderByDesc('due_date');
+    }
+
+    /**
      * Paginated invoices owned by a single member.
      *
      * @param  array<string, mixed>  $filters

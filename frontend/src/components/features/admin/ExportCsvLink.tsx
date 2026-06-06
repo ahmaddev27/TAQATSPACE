@@ -1,11 +1,22 @@
 import { Icon } from "@/components/ui/Icon";
 
 /** Datasets exposed by the admin CSV export route handler. */
-export type ExportType = "invoices" | "subscriptions" | "users" | "workspaces";
+export type ExportType =
+  | "invoices"
+  | "subscriptions"
+  | "users"
+  | "workspaces"
+  | "members";
 
 export interface ExportCsvLinkProps {
   type: ExportType;
   label: string;
+  /**
+   * Same-origin export route handler that proxies the bearer to the backend.
+   * Defaults to the admin exports handler; pass the owner handler for the
+   * workspace-scoped exports.
+   */
+  basePath?: string;
   /** Optional list filters carried through to the backend export. */
   query?: Record<string, string | undefined>;
   /** Visual variant: a toolbar button (default) or a full card row. */
@@ -26,18 +37,20 @@ function toQuery(query: ExportCsvLinkProps["query"]): string {
 }
 
 /**
- * A plain anchor that downloads a CSV from the same-origin export route
- * handler, which proxies the request to the backend with the admin bearer.
- * Using `<a download>` (not fetch) lets the browser stream the file directly.
+ * A plain anchor that downloads a CSV from a same-origin export route handler,
+ * which proxies the request to the backend with the caller's bearer. Using
+ * `<a download>` (not fetch) lets the browser stream the file directly. The
+ * active list filters are appended so the download matches the on-screen view.
  */
 export function ExportCsvLink({
   type,
   label,
+  basePath = "/api/admin/exports",
   query,
   variant = "button",
   className,
 }: ExportCsvLinkProps) {
-  const href = `/api/admin/exports/${type}${toQuery(query)}`;
+  const href = `${basePath}/${type}${toQuery(query)}`;
   const base =
     variant === "card"
       ? "card card-pad row"

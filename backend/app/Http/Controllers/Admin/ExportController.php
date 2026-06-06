@@ -29,7 +29,7 @@ class ExportController extends Controller
             throw new NotFoundHttpException("Unknown export type [{$type}].");
         }
 
-        $filters = $request->only(['status', 'search', 'role', 'workspace_id']);
+        $filters = $request->only(['status', 'search', 'role', 'workspace_id', 'date_from', 'date_to']);
 
         return $this->exports->stream($type, $filters);
     }

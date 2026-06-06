@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { StatusBadge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
 import { Tabs } from "@/components/ui/Tabs";
 import { Icon } from "@/components/ui/Icon";
 import {
@@ -12,10 +13,12 @@ import {
   type DataTableColumn,
   type SortState,
 } from "@/components/ui/DataTable";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import type { AdminSubscription } from "@/lib/api/admin";
 import type { SubscriptionStatus } from "@/lib/types";
 import { invoiceMoney } from "@/components/features/invoices/format";
 import { adminDate } from "./format";
+import { ExportCsvLink } from "./ExportCsvLink";
 
 type StatusTab = "all" | SubscriptionStatus;
 
@@ -27,6 +30,8 @@ const TABS: StatusTab[] = [
   "expired",
   "cancelled",
 ];
+// `member` is the backend list search param; `start_date` drives the range.
+const FILTER_KEYS = ["status", "member", "date_from", "date_to"] as const;
 const PAGE_SIZE = 10;
 
 export interface SubscriptionsTableProps {
@@ -39,8 +44,13 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
   const tc = useTranslations();
   const locale = useLocale();
 
-  const [tab, setTab] = useState<StatusTab>("all");
-  const [query, setQuery] = useState("");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link below (the download then matches the on-screen view).
+  const { filters, setFilter } = useUrlFilters(FILTER_KEYS);
+  const tab: StatusTab = (filters.status as StatusTab) || "all";
+  const query = filters.member;
+  const dateFrom = filters.date_from;
+  const dateTo = filters.date_to;
   const [sort, setSort] = useState<SortState | null>({ key: "start", dir: "desc" });
   const [page, setPage] = useState(1);
 
@@ -55,6 +65,12 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
           (s.workspace?.name ?? "").toLowerCase().includes(q),
       );
     }
+    if (dateFrom) {
+      rows = rows.filter((s) => (s.start_date ?? "") >= dateFrom);
+    }
+    if (dateTo) {
+      rows = rows.filter((s) => (s.start_date ?? "") <= dateTo);
+    }
     return sortRows(rows, sort, {
       member: (s) => s.member?.name ?? "",
       workspace: (s) => s.workspace?.name ?? "",
@@ -63,7 +79,7 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
       start: (s) => s.start_date ?? "",
       status: (s) => s.status,
     });
-  }, [subscriptions, tab, query, sort]);
+  }, [subscriptions, tab, query, dateFrom, dateTo, sort]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const curPage = Math.min(page, pages);
@@ -138,23 +154,57 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
           items={tabs}
           value={tab}
           onChange={(v) => {
-            setTab(v as StatusTab);
+            setFilter("status", v === "all" ? null : v);
             setPage(1);
           }}
         />
         <div className="spacer" />
+        <div className="dt-tools">
+          <Input
+            className="ltr"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => {
+              setFilter("date_from", e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("dateFrom")}
+            title={t("dateFrom")}
+          />
+          <Input
+            className="ltr"
+            type="date"
+            value={dateTo}
+            onChange={(e) => {
+              setFilter("date_to", e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("dateTo")}
+            title={t("dateTo")}
+          />
+        </div>
         <div className="dt-search input-icon">
           <Icon name="search" />
           <input
             className="input"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
+              setFilter("member", e.target.value);
               setPage(1);
             }}
             placeholder={t("searchPlaceholder")}
           />
         </div>
+        <ExportCsvLink
+          type="subscriptions"
+          label={t("exportCsv")}
+          query={{
+            status: tab === "all" ? undefined : tab,
+            search: query || undefined,
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
+          }}
+        />
       </div>
 
       <div className="table-wrap">

@@ -21,7 +21,8 @@
         "month": "Month",
         "anyMonth": "Any month",
         "clear": "Clear",
-        "count": "Total:"
+        "count": "Total:",
+        "export": "Export CSV"
       },
       "table": {
         "invoice": "Invoice",
