@@ -108,3 +108,10 @@
 .launcher-item:hover { background: var(--surface-sunk); color: var(--text); }
 .launcher-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
 @media (max-width: 560px) { .launcher-panel { width: calc(100vw - 44px); } }
+
+/* admin reports */
+.grid-2-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+@media (max-width: 900px) { .grid-2-cards { grid-template-columns: 1fr; } }
+.grid-export { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 900px) { .grid-export { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .grid-export { grid-template-columns: 1fr; } }

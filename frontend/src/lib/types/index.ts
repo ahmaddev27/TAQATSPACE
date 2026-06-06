@@ -23,7 +23,9 @@ export type {
   LandingSections,
   LandingTestimonial,
   LandingContent,
+  ReorderableSectionKey,
 } from "./landing";
+export { DEFAULT_SECTIONS_ORDER, sanitizeSectionsOrder } from "./landing";
 
 export type {
   ContentKey,

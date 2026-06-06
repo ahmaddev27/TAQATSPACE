@@ -26,6 +26,7 @@ class Invoice extends Model
         'status',
         'invoice_number',
         'invoice_pdf_path',
+        'receipt_path',
         'notes',
     ];
 

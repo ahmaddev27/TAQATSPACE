@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
@@ -11,7 +11,12 @@ import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { updateLanding } from "@/lib/actions/admin";
-import type { LandingContent, LocalizedText } from "@/lib/types";
+import type {
+  LandingContent,
+  LocalizedText,
+  ReorderableSectionKey,
+} from "@/lib/types";
+import { sanitizeSectionsOrder } from "@/lib/types";
 
 const MAX_STATS = 4;
 const MAX_TESTIMONIALS = 12;
@@ -93,6 +98,8 @@ interface FormState {
   capabilities: CapabilitiesState;
   testimonialsSection: TestimonialsSectionState;
   testimonials: TestimonialState[];
+  /** Render order of the reorderable sections (always all four, de-duped). */
+  sectionsOrder: ReorderableSectionKey[];
 }
 
 const emptyPair = (): TextPair => ({ ar: "", en: "" });
@@ -140,6 +147,7 @@ function buildInitial(c: LandingContent): FormState {
       name: m.name ?? "",
       role: toPair(m.role),
     })),
+    sectionsOrder: sanitizeSectionsOrder(c.sections_order),
   };
 }
 
@@ -222,7 +230,44 @@ function buildPayload(form: FormState): LandingContent {
     ...(stats.length ? { stats } : {}),
     sections: { featured, why, capabilities, testimonials: testimonialsSection },
     ...(testimonials.length ? { testimonials } : {}),
+    sections_order: form.sectionsOrder,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Live-preview projection                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** A reorderable section's title/subtitle pairs, pulled from the form state. */
+function sectionContent(
+  form: FormState,
+  key: ReorderableSectionKey,
+): { title: TextPair; subtitle: TextPair } {
+  switch (key) {
+    case "featured":
+      return { title: form.featured.title, subtitle: form.featured.subtitle };
+    case "why":
+      return { title: form.why.title, subtitle: form.why.subtitle };
+    case "capabilities":
+      return {
+        title: form.capabilities.title,
+        subtitle: form.capabilities.subtitle,
+      };
+    case "testimonials":
+      return {
+        title: form.testimonialsSection.title,
+        subtitle: emptyPair(),
+      };
+  }
+}
+
+/** One row in the mini live preview. */
+interface PreviewSection {
+  key: ReorderableSectionKey;
+  name: string;
+  title: string;
+  subtitle: string;
+  enabled: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -283,6 +328,8 @@ function BilingualField({
 
 export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
   const t = useTranslations("admin.landing");
+  const locale = useLocale();
+  const lang: "ar" | "en" = locale === "en" ? "en" : "ar";
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
@@ -351,6 +398,82 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
       testimonials: f.testimonials.filter((_, i) => i !== index),
     }));
 
+  // Move a section one slot up (-1) or down (+1) by swapping array entries.
+  const moveSection = (index: number, delta: number) =>
+    setForm((f) => {
+      const target = index + delta;
+      if (target < 0 || target >= f.sectionsOrder.length) return f;
+      const next = [...f.sectionsOrder];
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...f, sectionsOrder: next };
+    });
+
+  // Toggle a section's `enabled` flag from the Layout tab. The four reorderable
+  // sections live under different form keys; `testimonials` maps to
+  // `testimonialsSection`, the rest map 1:1.
+  const setSectionEnabled = (key: ReorderableSectionKey, enabled: boolean) =>
+    setForm((f) => {
+      switch (key) {
+        case "featured":
+          return { ...f, featured: { ...f.featured, enabled } };
+        case "why":
+          return { ...f, why: { ...f.why, enabled } };
+        case "capabilities":
+          return { ...f, capabilities: { ...f.capabilities, enabled } };
+        case "testimonials":
+          return {
+            ...f,
+            testimonialsSection: { ...f.testimonialsSection, enabled },
+          };
+      }
+    });
+
+  const isSectionEnabled = (key: ReorderableSectionKey): boolean => {
+    switch (key) {
+      case "featured":
+        return form.featured.enabled;
+      case "why":
+        return form.why.enabled;
+      case "capabilities":
+        return form.capabilities.enabled;
+      case "testimonials":
+        return form.testimonialsSection.enabled;
+    }
+  };
+
+  // Localised display name for each reorderable section (reuses the tab labels).
+  const sectionName = (key: ReorderableSectionKey): string => {
+    switch (key) {
+      case "featured":
+        return t("tabFeatured");
+      case "why":
+        return t("tabWhy");
+      case "capabilities":
+        return t("tabCapabilities");
+      case "testimonials":
+        return t("tabTestimonials");
+    }
+  };
+
+  // The Hero + ordered sections, projected to the active locale for the live
+  // preview. Recomputed only when the relevant form slices change so typing in
+  // an unrelated tab does not rebuild the whole list.
+  const previewSections = useMemo<PreviewSection[]>(
+    () =>
+      form.sectionsOrder.map((key) => {
+        const slice = sectionContent(form, key);
+        return {
+          key,
+          name: sectionName(key),
+          title: slice.title[lang],
+          subtitle: slice.subtitle[lang],
+          enabled: isSectionEnabled(key),
+        };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form, lang],
+  );
+
   const save = () => {
     const payload = buildPayload(form);
     startTransition(async () => {
@@ -372,10 +495,15 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
     { id: "why", label: t("tabWhy") },
     { id: "capabilities", label: t("tabCapabilities") },
     { id: "testimonials", label: t("tabTestimonials") },
+    { id: "layout", label: t("tabLayout") },
   ];
 
+  const heroTitle = form.hero.title[lang];
+  const heroSubtitle = form.hero.subtitle[lang];
+
   return (
-    <div className="stack" style={{ gap: 18 }}>
+    <div className="le-shell">
+      <div className="le-editor stack" style={{ gap: 18 }}>
       <Tabs items={tabs} value={tab} onChange={setTab} />
 
       <div className="card card-pad">
@@ -665,6 +793,49 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
             )}
           </div>
         )}
+
+        {tab === "layout" && (
+          <div className="stack" style={{ gap: 16 }}>
+            <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+              {t("layout.hint")}
+            </p>
+            <div className="stack" style={{ gap: 10 }}>
+              {form.sectionsOrder.map((key, i) => (
+                <div key={key} className="layout-row">
+                  <div className="layout-row-move">
+                    <Button
+                      variant="ghost"
+                      icon="arrowUp"
+                      onClick={() => moveSection(i, -1)}
+                      disabled={i === 0}
+                      aria-label={t("layout.moveUp")}
+                    />
+                    <Button
+                      variant="ghost"
+                      icon="arrowDown"
+                      onClick={() => moveSection(i, 1)}
+                      disabled={i === form.sectionsOrder.length - 1}
+                      aria-label={t("layout.moveDown")}
+                    />
+                  </div>
+                  <div className="layout-row-name">
+                    <span className="layout-row-index tnum">{i + 1}</span>
+                    <span>{sectionName(key)}</span>
+                  </div>
+                  <Checkbox
+                    checked={isSectionEnabled(key)}
+                    onChange={(e) => setSectionEnabled(key, e.target.checked)}
+                  >
+                    <span className="row" style={{ gap: 6 }}>
+                      <Icon name="eye" size={15} />
+                      {t("enabled")}
+                    </span>
+                  </Checkbox>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {Object.keys(errors).length > 0 && (
@@ -688,7 +859,87 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
       >
         {pending ? t("saving") : t("save")}
       </Button>
+      </div>
+
+      <LivePreview
+        dir={lang === "ar" ? "rtl" : "ltr"}
+        heroLabel={t("tabHero")}
+        heroTitle={heroTitle}
+        heroSubtitle={heroSubtitle}
+        previewLabel={t("preview.title")}
+        previewHint={t("preview.hint")}
+        disabledLabel={t("preview.disabled")}
+        sections={previewSections}
+      />
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Mini live preview — a lightweight schematic of the current form state.    */
+/* -------------------------------------------------------------------------- */
+
+interface LivePreviewProps {
+  dir: "rtl" | "ltr";
+  heroLabel: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  previewLabel: string;
+  previewHint: string;
+  disabledLabel: string;
+  sections: PreviewSection[];
+}
+
+/**
+ * A compact, schematic mirror of the public landing — Hero plus the four
+ * reorderable sections in their current order, each a small card showing the
+ * section name and the (localized) title/subtitle as typed. Disabled sections
+ * are dimmed and struck through. Pure presentational; updates as props change.
+ */
+function LivePreview({
+  dir,
+  heroLabel,
+  heroTitle,
+  heroSubtitle,
+  previewLabel,
+  previewHint,
+  disabledLabel,
+  sections,
+}: LivePreviewProps) {
+  return (
+    <aside className="le-preview" aria-label={previewLabel}>
+      <div className="le-preview-head">
+        <span className="le-preview-title">
+          <Icon name="eye" size={15} />
+          {previewLabel}
+        </span>
+        <span className="le-preview-hint">{previewHint}</span>
+      </div>
+
+      <div className="le-preview-canvas" dir={dir}>
+        <div className="le-pv-card le-pv-hero">
+          <span className="le-pv-tag">{heroLabel}</span>
+          <span className="le-pv-h">{heroTitle || "—"}</span>
+          {heroSubtitle && <span className="le-pv-sub">{heroSubtitle}</span>}
+        </div>
+
+        {sections.map((s) => (
+          <div
+            key={s.key}
+            className={`le-pv-card${s.enabled ? "" : " is-off"}`}
+          >
+            <div className="le-pv-row">
+              <span className="le-pv-tag">{s.name}</span>
+              {!s.enabled && (
+                <span className="le-pv-off">{disabledLabel}</span>
+              )}
+            </div>
+            <span className="le-pv-h">{s.title || "—"}</span>
+            {s.subtitle && <span className="le-pv-sub">{s.subtitle}</span>}
+          </div>
+        ))}
+      </div>
+    </aside>
   );
 }
 

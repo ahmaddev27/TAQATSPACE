@@ -713,6 +713,154 @@
                 }
             }
         },
+        "/admin/stats": {
+            "get": {
+                "operationId": "dashboard.stats",
+                "summary": "GET /api/admin/stats \u2014 platform-wide counters for the admin dashboard",
+                "tags": [
+                    "Dashboard"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "workspaces": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer"
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "suspended": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "pending",
+                                                        "suspended",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "users": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "freelancers": {
+                                                            "type": "integer"
+                                                        },
+                                                        "owners": {
+                                                            "type": "integer"
+                                                        },
+                                                        "admins": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "freelancers",
+                                                        "owners",
+                                                        "admins",
+                                                        "total",
+                                                        "pending"
+                                                    ]
+                                                },
+                                                "subscriptions": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "invoices": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "paid": {
+                                                            "type": "integer"
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "overdue": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "paid",
+                                                        "pending",
+                                                        "overdue",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "revenue": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "paid": {
+                                                            "type": "string"
+                                                        },
+                                                        "outstanding": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "paid",
+                                                        "outstanding"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "workspaces",
+                                                "users",
+                                                "subscriptions",
+                                                "invoices",
+                                                "revenue"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/member/dashboard": {
             "get": {
                 "operationId": "dashboard.summary",
@@ -1067,6 +1215,55 @@
                 }
             }
         },
+        "/admin/exports/{type}": {
+            "get": {
+                "operationId": "export.download",
+                "description": "{type} is whitelisted (invoices|subscriptions|users|workspaces); anything\nelse is a 404. The same filters the matching list endpoint accepts are\nforwarded to the export.",
+                "summary": "GET /api/admin/exports/{type} \u2014 stream a filtered CSV of the full set",
+                "tags": [
+                    "Export"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "health.index",
@@ -1155,6 +1352,221 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/admin/invoices": {
+            "get": {
+                "operationId": "admin.invoice.index",
+                "summary": "GET /api/admin/invoices \u2014 filtered, paginated tracking list",
+                "tags": [
+                    "Invoice"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {},
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{invoice}/mark-paid": {
+            "put": {
+                "operationId": "invoice.markPaid",
+                "summary": "PUT /api/admin/invoices/{invoice}/mark-paid \u2014 record a manual payment",
+                "tags": [
+                    "Invoice"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarkInvoicePaidRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoiceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Invoice marked as paid."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{invoice}/mark-unpaid": {
+            "put": {
+                "operationId": "invoice.markUnpaid",
+                "summary": "PUT /api/admin/invoices/{invoice}/mark-unpaid \u2014 revert to pending",
+                "tags": [
+                    "Invoice"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoiceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Invoice reverted to pending."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{invoice}/receipt": {
+            "post": {
+                "operationId": "invoice.uploadReceipt",
+                "summary": "POST /api/admin/invoices/{invoice}/receipt \u2014 upload a payment receipt",
+                "tags": [
+                    "Invoice"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadReceiptRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoiceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Receipt uploaded and invoice marked paid."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3605,6 +4017,172 @@
                 }
             }
         },
+        "/admin/reports": {
+            "get": {
+                "operationId": "reports.index",
+                "summary": "GET /api/admin/reports \u2014 operational + financial tracking aggregates",
+                "tags": [
+                    "Reports"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "revenue_by_month": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "paid": {
+                                                                "type": "string"
+                                                            },
+                                                            "outstanding": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "paid",
+                                                            "outstanding"
+                                                        ]
+                                                    }
+                                                },
+                                                "invoices_by_status": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "paid": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        },
+                                                        "pending": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        },
+                                                        "overdue": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "paid",
+                                                        "pending",
+                                                        "overdue"
+                                                    ]
+                                                },
+                                                "subscriptions_by_status": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "subscriptions_by_month": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "count"
+                                                        ]
+                                                    }
+                                                },
+                                                "top_workspaces": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "workspaces_by_status": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "users_by_role": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "revenue_by_month",
+                                                "invoices_by_status",
+                                                "subscriptions_by_status",
+                                                "subscriptions_by_month",
+                                                "top_workspaces",
+                                                "workspaces_by_status",
+                                                "users_by_role"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workspaces/{workspace}/reviews": {
             "get": {
                 "operationId": "review.index",
@@ -4389,6 +4967,40 @@
                 }
             }
         },
+        "/admin/subscriptions": {
+            "get": {
+                "operationId": "admin.subscription.index",
+                "summary": "GET /api/admin/subscriptions \u2014 read-only tracking list",
+                "tags": [
+                    "Subscription"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {},
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/member/subscriptions": {
             "get": {
                 "operationId": "subscription.index",
@@ -4712,6 +5324,105 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "operationId": "user.index",
+                "summary": "GET /api/admin/users \u2014 filtered, paginated user directory",
+                "tags": [
+                    "User"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {},
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/status": {
+            "put": {
+                "operationId": "user.updateStatus",
+                "summary": "PUT /api/admin/users/{user}/status \u2014 activate/suspend an account",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateUserStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "User status updated."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -5395,6 +6106,24 @@
                             "null"
                         ]
                     },
+                    "pdf_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "receipt_path": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "receipt_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "notes": {
                         "type": [
                             "string",
@@ -5403,6 +6132,43 @@
                     },
                     "created_at": {
                         "type": "string"
+                    },
+                    "member": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Flat member/workspace for the admin billing list (contract shape).\nPresent only when the subscription chain is eager-loaded.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "workspace": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
                     },
                     "subscription": {
                         "type": "object",
@@ -5521,8 +6287,13 @@
                     "paid_at",
                     "is_overdue",
                     "invoice_pdf_path",
+                    "pdf_url",
+                    "receipt_path",
+                    "receipt_url",
                     "notes",
-                    "created_at"
+                    "created_at",
+                    "member",
+                    "workspace"
                 ],
                 "title": "InvoiceResource"
             },
@@ -5542,6 +6313,20 @@
                     "password"
                 ],
                 "title": "LoginRequest"
+            },
+            "MarkInvoicePaidRequest": {
+                "type": "object",
+                "description": "Validates the optional payment timestamp when an admin marks an invoice paid.\nAuthorization is enforced by the route middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "paid_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "title": "MarkInvoicePaidRequest"
             },
             "MarkPaidRequest": {
                 "type": "object",
@@ -5827,30 +6612,7 @@
                     "members": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "string"
-                                },
-                                "name": {
-                                    "type": "string"
-                                },
-                                "avatar": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "assigned_at": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "id",
-                                "name",
-                                "avatar",
-                                "assigned_at"
-                            ]
+                            "type": "string"
                         }
                     },
                     "created_at": {
@@ -7226,6 +7988,19 @@
                 },
                 "title": "UpdateSiteContentRequest"
             },
+            "UpdateUserStatusRequest": {
+                "type": "object",
+                "description": "Validates an admin user-status transition. Authorization is enforced by the\nroute middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    }
+                },
+                "required": [
+                    "status"
+                ],
+                "title": "UpdateUserStatusRequest"
+            },
             "UpdateWorkspaceRequest": {
                 "type": "object",
                 "properties": {
@@ -7303,6 +8078,29 @@
                 },
                 "title": "UpdateWorkspaceRequest"
             },
+            "UploadReceiptRequest": {
+                "type": "object",
+                "description": "Validates a payment-receipt upload (pdf/jpg/png, max 5MB). Uploading a receipt\nis the admin's proof of payment, so the invoice is marked paid by the handler;\nan optional `paid_at` backdates that payment. Authorization is enforced by the\nroute middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "receipt": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 5120
+                    },
+                    "paid_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "receipt"
+                ],
+                "title": "UploadReceiptRequest"
+            },
             "UserResource": {
                 "type": "object",
                 "properties": {
@@ -7366,6 +8164,15 @@
                     "created_at"
                 ],
                 "title": "UserResource"
+            },
+            "UserStatus": {
+                "type": "string",
+                "enum": [
+                    "active",
+                    "suspended",
+                    "pending_verification"
+                ],
+                "title": "UserStatus"
             },
             "WorkspaceResource": {
                 "type": "object",
@@ -7439,37 +8246,7 @@
                     "seat_types": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "type": {
-                                    "type": "string"
-                                },
-                                "price_monthly": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "price_daily": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "capacity": {
-                                    "type": "integer"
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            },
-                            "required": [
-                                "type",
-                                "price_monthly",
-                                "price_daily",
-                                "capacity",
-                                "enabled"
-                            ]
+                            "type": "string"
                         }
                     },
                     "created_at": {

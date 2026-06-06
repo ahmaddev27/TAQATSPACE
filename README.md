@@ -9,8 +9,8 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 | | |
 |---|---|
 | **Overall** | 57 / 80 tasks (71%) — **Phases 1–3 complete** |
-| **Current phase** | Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ → next: Phase 4 (Admin, Reports, Launch) |
-| **Current milestone** | M01–M09 ✅ |
+| **Current phase** | Phase 1–3 ✅ · **Phase 4 in progress** (M10 dashboard ✅ · M11 reports/exports ✅ → M12 Launch) |
+| **Current milestone** | M01–M09 ✅ · M10 admin dashboard ✅ · M11 reports/exports ✅ |
 | **Current sprint** | S1–S5 done |
 | **Deployed** | 🟢 **Prod** [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) · 🟢 **Staging** [staging.taqat.space](https://staging.taqat.space) + api.staging.taqat.space |
 | **API docs** | 🟢 Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) (**66 endpoints**) + Postman collection — regenerated |
@@ -75,8 +75,8 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M07 | Invoicing System | P3 | S6 | ✅ | 100% |
 | M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 95% (realtime needs Pusher creds) |
 | M09 | Announcements, Packages & Reviews | P3 | S7 | ✅ | 100% |
-| M10 | Super Admin Dashboard | P4 | S8 | ☐ | 0% |
-| M11 | Reports, Exports & Analytics | P4 | S8 | ☐ | 0% |
+| M10 | Super Admin Dashboard | P4 | S8 | ✅ | 100% |
+| M11 | Reports, Exports & Analytics | P4 | S8 | ✅ | 100% |
 | M12 | Testing, Hardening & Production Launch | P4 | S9 | ☐ | 0% |
 
 ---
@@ -122,13 +122,15 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - **M09** ✅ T055/056 announcements · T057/058 reviews (done in P2)
 - _58 API endpoints; backend 3 parallel agents + frontend 3 parallel agents; build+tsc+lint green; live-smoke 200._
 
-## Phase 4 — Admin & Launch _(not started)_
-**M10** ☐ T059–T068 · **M11** ☐ T069–T070 · **M12** ☐ T071–T080
+## Phase 4 — Admin & Launch _(in progress)_
+**M10** ✅ Super-Admin dashboard + status/payment tracking (mark-paid, receipt upload) · **M11** ✅ reports (recharts) + CSV exports · **M12** ☐ testing/hardening/launch · _Admin CRM section + landing section reorder/preview also added._
 
 ---
 
 ## Changelog
 
+- **2026-06-06 (cont.)** — **Phase 4 M11 + admin CRM + landing reorder (on `feat/phase-2`).** **M11 Reports/exports done**: backend `GET /admin/reports` (revenue-by-month, status breakdowns, top workspaces) + `GET /admin/exports/{type}` streamed CSV (UTF-8 BOM); frontend `/admin/reports` (recharts) + CSV "Export" buttons via an auth-proxying route handler. **Admin "CRM" section**: renamed/grouped the content hub (`/admin/rm` → `/admin/crm`) into a dedicated CRM nav group (Landing + Site/FAQ/About/How-it-works editors). **Landing CMS: section reordering + live preview** (Layout tab with up/down + enable toggles; sticky preview pane; public landing renders by `sections_order`). Fixes: featured-section subtitle now renders as its eyebrow; deploy "broken pipe" (subshell-detach Node). OpenAPI grew to ~80 paths.
+- **2026-06-06** — **Phase 4 M10 started: Super-Admin dashboard + financial tracking (on `feat/phase-2`).** Business-model-aligned (no gateway, no plans — manual tracking): backend admin endpoints (stats, users list+status, subscriptions list, invoices list + mark-paid/unpaid + **receipt upload**, `receipt_path` migration, pdf/receipt URLs) — 8 routes, OpenAPI now 74 paths. Frontend: real admin dashboard (KPIs + tracked paid/outstanding revenue) + Workspaces / Users / Subscriptions / Invoices management pages (approve/suspend, mark paid w/ optional date, mark unpaid, upload receipt → also marks paid, download PDF / view receipt) + admin nav + i18n. Also fixed the deploy "broken pipe" (subshell-detach Node so SSH exits clean).
 - **2026-06-04 (cont. 2)** — **rm CMS public display + registration fix + business model.** The admin **"rm" CMS now drives the public pages** (footer + Contact show admin-managed email/phone/whatsapp/address/social; FAQ items; About lead+sections; home How-it-works steps) — merging over i18n. **Workspace-owner registration fixed end-to-end**: was broken (never sent email/password, never created a workspace); now creates the owner (pending_verification) AND the Workspace (pending) with all details + per-seat-type pricing in one transaction. **Business model noted for Phase 4:** billing is **admin-managed status/payment tracking + receipt upload** — NO payment gateway, NO self-serve plans; pricing/seats are per-workspace (owner-set). OpenAPI/Postman regenerated.
 - **2026-06-04 (cont.)** — **Pricing + content-control + UX wave (on `feat/phase-2`, awaiting merge to dev).** **Per-seat-type pricing — DONE end-to-end** (backend `seat_type_prices` + `PUT /workspace/seat-types`; owner "Seat types & pricing" tab; 3-type registration step; public SeatPricing + BookingPanel now data-driven; booking/subscription derive the type price). **Admin "rm" content CMS — backend + editor DONE, public display PENDING**: `site_settings`-backed `GET /content/{key}` + admin `GET/PUT /admin/content/{key}` for `site/faq/about/how_it_works`, plus the `/admin/rm` hub + bilingual editors — but FAQ/About/Contact/footer/home do **not yet read** the CMS (agent session dropped). Branded **route-transition loader** (TileLogo + animated bars). Fixes: admin Landing CMS showed raw i18n keys (admin.json namespace wrapping); auth-aware public header (Dashboard button when logged in). OpenAPI **66 paths** + Postman regenerated. **Still pending:** `rm` public-display integration; registration-scenario "real integration" after owner/freelancer signup.
 - **2026-06-04** — **Big feature + polish wave (on `feat/phase-2`, awaiting merge).** Maps → **MapLibre + OpenFreeMap** (no token/account) with an interactive lat/lng picker (registration + owner settings). **S3 images via presigned URLs** (no public bucket). **Admin Landing CMS** (bilingual content editor → public landing merges over i18n; fixed the admin i18n namespace wrapping). **Invoice PDFs → mPDF** (correct Arabic shaping/RTL, on-brand redesign). **"Sign in with Taqat" SSO** (OIDC Authorization Code + PKCE, one-time-code session bridge; secrets via server env). Robust **logout** + confirmation. **Per-seat-type pricing** backend (`seat_type_prices` table, owner `PUT /workspace/seat-types`, booking/subscription derive from the type price; frontend UI pending). Localized **metadata for all pages** + branded SVG favicon. Borderless cards/sections, dark-mode button contrast, mobile hero/Why, adaptive detail gallery, auth-aware public header, demo-account login panel. Deploy fixes (node 24, broken-pipe stdin detach, CI on PR-only). OpenAPI + Postman regenerated (landing, seat-types, SSO included). _See git log on `feat/phase-2`._
