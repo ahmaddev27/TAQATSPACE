@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { serverFetch } from "@/lib/api";
 import type { ApiEnvelope, User } from "@/lib/types";
 import { ProfileForm } from "@/components/features/profile/ProfileForm";
 import { ChangePasswordSection } from "@/components/features/profile/ChangePasswordSection";
+
+export const dynamic = "force-dynamic";
 
 /** First grapheme of a name (Arabic + Latin safe), uppercased. */
 function avatarInitial(name: string): string {
@@ -10,7 +12,14 @@ function avatarInitial(name: string): string {
   return first.toUpperCase();
 }
 
-export default async function FreelancerProfilePage() {
+export default async function AdminProfilePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   const [res, t] = await Promise.all([
     serverFetch<ApiEnvelope<{ user: User }>>("/auth/me"),
     getTranslations("profile"),
@@ -35,8 +44,7 @@ export default async function FreelancerProfilePage() {
           avatar: user.avatar,
         }}
         avatarInitial={avatarInitial(user.name)}
-        showFreelancerFields
-        revalidate={["/freelancer/profile", "/freelancer"]}
+        revalidate={["/admin/profile", "/admin"]}
       />
 
       <ChangePasswordSection />

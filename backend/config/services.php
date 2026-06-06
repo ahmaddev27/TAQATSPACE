@@ -51,6 +51,10 @@ return [
         'client_id' => env('TAQAT_SSO_CLIENT_ID', 'taqat-space'),
         'client_secret' => env('TAQAT_SSO_CLIENT_SECRET'),
         'redirect_uri' => env('TAQAT_SSO_REDIRECT_URI'),
+        // Where the IdP returns the browser after RP-initiated single logout.
+        // Must be pre-registered with the provider. Defaults (in the service)
+        // to the frontend login page when left unset.
+        'post_logout_redirect_uri' => env('TAQAT_SSO_POST_LOGOUT_REDIRECT_URI'),
     ],
 
 ];

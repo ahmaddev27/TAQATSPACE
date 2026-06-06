@@ -12,6 +12,7 @@ class AuthService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
+        private readonly TaqatSsoService $sso,
     ) {}
 
     /**
@@ -34,8 +35,21 @@ class AuthService
         return $user->createToken('auth_token')->plainTextToken;
     }
 
-    public function logout(User $user): void
+    /**
+     * Revoke the current access token. When that token was issued through a
+     * Taqat SSO sign-in, also return the IdP RP-initiated logout URL so the
+     * caller can end the upstream SSO session; null otherwise.
+     */
+    public function logout(User $user): ?string
     {
-        $user->currentAccessToken()?->delete();
+        $token = $user->currentAccessToken();
+
+        $ssoLogoutUrl = $token !== null
+            ? $this->sso->buildLogoutUrl($token->getKey())
+            : null;
+
+        $token?->delete();
+
+        return $ssoLogoutUrl;
     }
 }

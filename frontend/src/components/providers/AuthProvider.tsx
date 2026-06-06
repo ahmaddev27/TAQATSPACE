@@ -86,15 +86,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
+    let ssoLogoutUrl: string | null = null;
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = (await res.json().catch(() => null)) as
+        | { sso_logout_url?: string | null }
+        | null;
+      ssoLogoutUrl = body?.sso_logout_url ?? null;
     } catch {
       // Cookies are cleared server-side regardless; never block sign-out on a
       // network hiccup.
     }
     setUser(null);
-    // Land on login with a confirmation flag, then refresh so cached authed RSC
-    // payloads (dashboard shell) are discarded.
+
+    // RP-initiated single logout: hand off to the IdP's end-session endpoint,
+    // which then returns the browser to our post-logout redirect (the login page).
+    if (ssoLogoutUrl) {
+      window.location.href = ssoLogoutUrl;
+      return;
+    }
+
+    // Local-only sign-out: land on login with a confirmation flag, then refresh
+    // so cached authed RSC payloads (dashboard shell) are discarded.
     router.replace("/login?loggedout=1");
     router.refresh();
   }, [router]);

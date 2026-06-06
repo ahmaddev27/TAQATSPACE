@@ -117,6 +117,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             href: "/admin/settings/messaging/broadcast",
             icon: "send",
           },
+          { key: "profile", href: "/admin/profile", icon: "user" },
         ],
       },
     ],

@@ -9,7 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/providers/ToastProvider";
-import { changePasswordAction } from "@/lib/actions/freelancer";
+import { changePasswordAction } from "@/lib/actions/profile";
 
 type Translate = (key: string) => string;
 
@@ -29,8 +29,8 @@ type PasswordValues = z.infer<ReturnType<typeof passwordSchema>>;
 
 /** Separate "Change password" card with its own form + Server Action. */
 export function ChangePasswordSection() {
-  const t = useTranslations("freelancer.profile");
-  const tErr = useTranslations("freelancer.errors");
+  const t = useTranslations("profile");
+  const tErr = useTranslations("profile.errors");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 

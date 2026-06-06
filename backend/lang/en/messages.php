@@ -50,6 +50,7 @@ return [
 
     // Profile
     'profile_updated' => 'Profile updated successfully.',
+    'password_changed' => 'Password changed successfully.',
 
     // Workspace
     'workspace_not_found' => 'Workspace not found.',

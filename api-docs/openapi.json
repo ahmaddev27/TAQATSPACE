@@ -120,7 +120,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Announcement created."
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0625\u0639\u0644\u0627\u0646."
                                         }
                                     },
                                     "required": [
@@ -140,7 +140,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace to publish to."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u0644\u0646\u0634\u0631 \u0641\u064a\u0647\u0627."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -205,7 +205,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Announcement updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0625\u0639\u0644\u0627\u0646."
                                         }
                                     },
                                     "required": [
@@ -256,7 +256,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Announcement deleted."
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0625\u0639\u0644\u0627\u0646."
                                         }
                                     },
                                     "required": [
@@ -406,7 +406,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Account pending verification."
+                                                    "const": "\u0627\u0644\u062d\u0633\u0627\u0628 \u0642\u064a\u062f \u0627\u0644\u062a\u062d\u0642\u0642."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -422,7 +422,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Account suspended."
+                                                    "const": "\u0627\u0644\u062d\u0633\u0627\u0628 \u0645\u0648\u0642\u0648\u0641."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -447,7 +447,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Invalid email or password."
+                                            "const": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0623\u0648 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -474,8 +474,38 @@
                     "Auth"
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No content"
+                    "200": {
+                        "description": "RP-initiated single logout: when the session was opened via Taqat SSO,\nhand the frontend the IdP end-session URL so it can also sign the user\nout upstream. Null for password sessions \u2014 the SPA then logs out locally.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sso_logout_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "sso_logout_url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -556,7 +586,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Booking request submitted."
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0637\u0644\u0628 \u0627\u0644\u062d\u062c\u0632."
                                         }
                                     },
                                     "required": [
@@ -688,8 +718,8 @@
                                         "message": {
                                             "type": "string",
                                             "enum": [
-                                                "Booking approved.",
-                                                "Booking rejected."
+                                                "\u062a\u0645\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u0649 \u0627\u0644\u062d\u062c\u0632.",
+                                                "\u062a\u0645 \u0631\u0641\u0636 \u0627\u0644\u062d\u062c\u0632."
                                             ]
                                         }
                                     },
@@ -709,6 +739,240 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/messaging/broadcast": {
+            "post": {
+                "operationId": "admin.broadcast.store",
+                "summary": "POST /api/admin/messaging/broadcast",
+                "tags": [
+                    "Broadcast"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBroadcastRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "queued": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "integer"
+                                                        },
+                                                        "sms": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "email",
+                                                        "sms",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "skipped": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "integer"
+                                                        },
+                                                        "sms": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "email",
+                                                        "sms",
+                                                        "total"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "queued",
+                                                "skipped"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u062c\u062f\u0648\u0644\u0629 \u0631\u0633\u0627\u0644\u062a\u0643 \u0644\u0644\u0625\u0631\u0633\u0627\u0644."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/messaging/broadcast": {
+            "post": {
+                "operationId": "owner.broadcast.store",
+                "summary": "POST /api/workspace/messaging/broadcast",
+                "tags": [
+                    "Broadcast"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OwnerBroadcastRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "queued": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "integer"
+                                                        },
+                                                        "sms": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "email",
+                                                        "sms",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "skipped": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "integer"
+                                                        },
+                                                        "sms": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "email",
+                                                        "sms",
+                                                        "total"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "queued",
+                                                "skipped"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u062c\u062f\u0648\u0644\u0629 \u0631\u0633\u0627\u0644\u062a\u0643 \u0644\u0644\u0625\u0631\u0633\u0627\u0644."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -1185,7 +1449,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Verification link sent."
+                                                    "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u062a\u062d\u0642\u0642."
                                                 }
                                             },
                                             "required": [
@@ -1197,7 +1461,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Email already verified."
+                                                    "const": "\u062a\u0645 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0633\u0628\u0642\u064b\u0627."
                                                 }
                                             },
                                             "required": [
@@ -1217,9 +1481,58 @@
         },
         "/admin/exports/{type}": {
             "get": {
-                "operationId": "export.download",
+                "operationId": "admin.export.download",
                 "description": "{type} is whitelisted (invoices|subscriptions|users|workspaces); anything\nelse is a 404. The same filters the matching list endpoint accepts are\nforwarded to the export.",
                 "summary": "GET /api/admin/exports/{type} \u2014 stream a filtered CSV of the full set",
+                "tags": [
+                    "Export"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/exports/{type}": {
+            "get": {
+                "operationId": "owner.export.download",
+                "description": "{type} is whitelisted (invoices|members); anything else is a 404. The same\nfilters the matching owner list endpoint accepts are forwarded to the\nexport, so the download matches what the owner sees on screen.",
+                "summary": "GET /api/workspace/exports/{type} \u2014 stream a filtered CSV scoped to the\nauthenticated owner's OWN workspace",
                 "tags": [
                     "Export"
                 ],
@@ -1411,7 +1724,7 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/MarkInvoicePaidRequest"
                             }
@@ -1431,7 +1744,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Invoice marked as paid."
+                                            "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0643\u0645\u062f\u0641\u0648\u0639\u0629."
                                         }
                                     },
                                     "required": [
@@ -1486,7 +1799,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Invoice reverted to pending."
+                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0625\u0644\u0649 \u062d\u0627\u0644\u0629 \u0642\u064a\u062f \u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631."
                                         }
                                     },
                                     "required": [
@@ -1548,7 +1861,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Receipt uploaded and invoice marked paid."
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0648\u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0643\u0645\u062f\u0641\u0648\u0639\u0629."
                                         }
                                     },
                                     "required": [
@@ -1665,7 +1978,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -1713,7 +2026,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Invoice created."
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629."
                                         }
                                     },
                                     "required": [
@@ -1736,7 +2049,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -1848,7 +2161,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Invoice marked as paid."
+                                            "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0643\u0645\u062f\u0641\u0648\u0639\u0629."
                                         }
                                     },
                                     "required": [
@@ -1900,7 +2213,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Reminder sent."
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062a\u0630\u0643\u064a\u0631."
                                         }
                                     },
                                     "required": [
@@ -2201,7 +2514,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Landing content updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629."
                                         }
                                     },
                                     "required": [
@@ -2652,7 +2965,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Member status updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0627\u0644\u0639\u0636\u0648."
                                         }
                                     },
                                     "required": [
@@ -2783,7 +3096,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Message sent."
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629."
                                         }
                                     },
                                     "required": [
@@ -2806,7 +3119,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -2856,7 +3169,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Broadcast sent."
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0628\u062b."
                                         }
                                     },
                                     "required": [
@@ -2876,7 +3189,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -3012,7 +3325,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Messages marked as read."
+                                            "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0643\u0645\u0642\u0631\u0648\u0621\u0629."
                                         }
                                     },
                                     "required": [
@@ -3034,7 +3347,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "No active membership found."
+                                                    "const": "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0639\u0636\u0648\u064a\u0629 \u0646\u0634\u0637\u0629."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -3050,7 +3363,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "You have no workspace."
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -3189,7 +3502,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Workspace messaging settings updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0645\u0631\u0627\u0633\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644."
                                         }
                                     },
                                     "required": [
@@ -3209,7 +3522,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "This action is unauthorized."
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -3232,7 +3545,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace to update."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -3486,7 +3799,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Messaging settings updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0631\u0627\u0633\u0644\u0629."
                                         }
                                     },
                                     "required": [
@@ -3668,7 +3981,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Notifications marked as read."
+                                                    "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0643\u0645\u0642\u0631\u0648\u0621\u0629."
                                                 }
                                             },
                                             "required": [
@@ -3680,7 +3993,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "All notifications marked as read."
+                                                    "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u062c\u0645\u064a\u0639 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0643\u0645\u0642\u0631\u0648\u0621\u0629."
                                                 }
                                             },
                                             "required": [
@@ -3728,7 +4041,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Notification deleted."
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0625\u0634\u0639\u0627\u0631."
                                         }
                                     },
                                     "required": [
@@ -3747,7 +4060,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Notification not found."
+                                            "const": "\u0627\u0644\u0625\u0634\u0639\u0627\u0631 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -3763,6 +4076,79 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/complete-onboarding": {
+            "post": {
+                "operationId": "onboarding.complete",
+                "tags": [
+                    "Onboarding"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompleteOnboardingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "description": "Owners await admin approval; freelancers are active immediately.",
+                                                    "enum": [
+                                                        "pending",
+                                                        "dashboard"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "user",
+                                                "role",
+                                                "next"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062c\u0647\u064a\u0632 \u062d\u0633\u0627\u0628\u0643."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -3832,7 +4218,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Package created successfully."
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0628\u0627\u0642\u0629 \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -3892,7 +4278,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Package updated successfully."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0628\u0627\u0642\u0629 \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -3941,7 +4327,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Package deleted successfully."
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0628\u0627\u0642\u0629 \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -4001,7 +4387,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Package assigned to member."
+                                            "const": "\u062a\u0645 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u0628\u0627\u0642\u0629 \u0644\u0644\u0639\u0636\u0648."
                                         }
                                     },
                                     "required": [
@@ -4065,7 +4451,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Package unassigned from member."
+                                            "const": "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u0628\u0627\u0642\u0629 \u0645\u0646 \u0627\u0644\u0639\u0636\u0648."
                                         }
                                     },
                                     "required": [
@@ -4114,7 +4500,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "If that email exists, a reset link has been sent."
+                                            "const": "\u0625\u0630\u0627 \u0643\u0627\u0646 \u0647\u0630\u0627 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0648\u062c\u0648\u062f\u064b\u0627\u060c \u0641\u0642\u062f \u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u062a\u0639\u064a\u064a\u0646."
                                         }
                                     },
                                     "required": [
@@ -4159,7 +4545,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Password has been reset successfully."
+                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u064a\u064a\u0646 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -4202,7 +4588,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Photos uploaded."
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631."
                                         }
                                     },
                                     "required": [
@@ -4225,7 +4611,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "This action is unauthorized."
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -4248,7 +4634,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -4296,7 +4682,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Photo removed."
+                                            "const": "\u062a\u0645\u062a \u0625\u0632\u0627\u0644\u0629 \u0627\u0644\u0635\u0648\u0631\u0629."
                                         }
                                     },
                                     "required": [
@@ -4333,7 +4719,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "You have no workspace."
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -4358,7 +4744,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "This action is unauthorized."
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -4381,9 +4767,44 @@
                 }
             }
         },
-        "/member/profile": {
+        "/profile": {
+            "get": {
+                "operationId": "profile.show",
+                "summary": "Return the authenticated user's own profile",
+                "tags": [
+                    "Profile"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
             "put": {
                 "operationId": "profile.update",
+                "summary": "Update editable profile fields (+ optional avatar) for the current user.\nEmail is intentionally read-only here: changing it would require\nre-verification, which is out of scope for inline profile editing",
                 "tags": [
                     "Profile"
                 ],
@@ -4409,7 +4830,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Profile updated successfully."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -4425,6 +4846,62 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/profile/password": {
+            "put": {
+                "operationId": "profile.updatePassword",
+                "summary": "Change the current user's password after confirming the current one",
+                "tags": [
+                    "Profile"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u063a\u064a\u064a\u0631 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0628\u0646\u062c\u0627\u062d."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -4773,7 +5250,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Review submitted successfully."
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0628\u0646\u062c\u0627\u062d."
                                         }
                                     },
                                     "required": [
@@ -4793,7 +5270,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have already reviewed this workspace."
+                                            "const": "\u0644\u0642\u062f \u0642\u0645\u062a \u0628\u062a\u0642\u064a\u064a\u0645 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0647\u0630\u0647 \u0628\u0627\u0644\u0641\u0639\u0644."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -4816,7 +5293,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You can only review a workspace you are or were subscribed to."
+                                            "const": "\u064a\u0645\u0643\u0646\u0643 \u062a\u0642\u064a\u064a\u0645 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0623\u0646\u062a \u0645\u0634\u062a\u0631\u0643 \u0641\u064a\u0647\u0627 \u0623\u0648 \u0643\u0646\u062a \u0645\u0634\u062a\u0631\u0643\u064b\u0627 \u0641\u064a\u0647\u0627 \u0641\u0642\u0637."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -5063,7 +5540,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Seat deleted."
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0645\u0642\u0639\u062f."
                                         }
                                     },
                                     "required": [
@@ -5200,7 +5677,7 @@
         "/workspace/seat-types": {
             "put": {
                 "operationId": "seatType.update",
-                "description": "Upserts the per-seat-type pricing for the authenticated owner's workspace\nand returns the refreshed workspace (including all seat_types rows).",
+                "description": "Upserts the per-seat-type pricing for the authenticated owner's workspace,\nrecomputes the derived discovery columns, and returns the refreshed\nworkspace (including all seat_types rows).",
                 "summary": "PUT /api/workspace/seat-types \u2014 owner only, authorized via gate",
                 "tags": [
                     "SeatType"
@@ -5228,7 +5705,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Seat type pricing updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062a\u0633\u0639\u064a\u0631 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f."
                                         }
                                     },
                                     "required": [
@@ -5248,7 +5725,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "This action is unauthorized."
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -5271,7 +5748,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace to update."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -5426,7 +5903,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Content updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u062d\u062a\u0648\u0649."
                                         }
                                     },
                                     "required": [
@@ -5473,6 +5950,410 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/subscriptions": {
+            "get": {
+                "operationId": "owner.subscription.index",
+                "description": "Paginated, filterable subscriptions for the authenticated owner's\nworkspace ONLY \u2014 used to track status, renew, and handle expiries.",
+                "summary": "GET /api/workspace/subscriptions",
+                "tags": [
+                    "Subscription"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "active",
+                                "cancelled",
+                                "expired",
+                                "pending",
+                                "suspended",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "start_date",
+                                "end_date",
+                                "name",
+                                "status",
+                                "monthly_price"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "subscriptions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/OwnerSubscriptionResource"
+                                                            }
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "subscriptions",
+                                                        "meta"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "subscriptions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer",
+                                                                    "const": 15
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "subscriptions",
+                                                        "meta"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/subscriptions/{subscription}/renew": {
+            "put": {
+                "operationId": "subscription.renew",
+                "description": "Extend the subscription by one plan cycle, reactivate it, and raise the\nnext pending invoice for the new period.",
+                "summary": "PUT /api/workspace/subscriptions/{subscription}/renew",
+                "tags": [
+                    "Subscription"
+                ],
+                "parameters": [
+                    {
+                        "name": "subscription",
+                        "in": "path",
+                        "required": true,
+                        "description": "The subscription ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OwnerSubscriptionResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/subscriptions/{subscription}/cancel": {
+            "put": {
+                "operationId": "owner.subscription.cancel",
+                "description": "Cancel the subscription and free its seat (reuses the shared cancel path).",
+                "summary": "PUT /api/workspace/subscriptions/{subscription}/cancel",
+                "tags": [
+                    "Subscription"
+                ],
+                "parameters": [
+                    {
+                        "name": "subscription",
+                        "in": "path",
+                        "required": true,
+                        "description": "The subscription ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OwnerSubscriptionResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -5602,7 +6483,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Subscription cancelled."
+                                            "const": "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643."
                                         }
                                     },
                                     "required": [
@@ -5756,7 +6637,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "User not found."
+                                                    "const": "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -5772,7 +6653,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Invalid or expired exchange code."
+                                                    "const": "\u0631\u0645\u0632 \u0627\u0644\u062a\u0628\u0627\u062f\u0644 \u063a\u064a\u0631 \u0635\u0627\u0644\u062d \u0623\u0648 \u0645\u0646\u062a\u0647\u064a \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -5788,7 +6669,7 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "const": "Missing exchange code."
+                                                    "const": "\u0631\u0645\u0632 \u0627\u0644\u062a\u0628\u0627\u062f\u0644 \u0645\u0641\u0642\u0648\u062f."
                                                 },
                                                 "errors": {
                                                     "type": "null"
@@ -5841,6 +6722,57 @@
                 }
             }
         },
+        "/admin/users/{user}": {
+            "get": {
+                "operationId": "user.show",
+                "summary": "GET /api/admin/users/{user} \u2014 full profile with role-specific detail\n(a freelancer's subscriptions, an owner's workspace)",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserDetailResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/users/{user}/status": {
             "put": {
                 "operationId": "user.updateStatus",
@@ -5883,7 +6815,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "User status updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645."
                                         }
                                     },
                                     "required": [
@@ -6020,7 +6952,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Workspace not found."
+                                            "const": "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -6067,7 +6999,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Workspace created and submitted for review."
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u0629."
                                         }
                                     },
                                     "required": [
@@ -6138,7 +7070,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Workspace updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644."
                                         }
                                     },
                                     "required": [
@@ -6158,7 +7090,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "This action is unauthorized."
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -6181,7 +7113,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "You have no workspace to update."
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -6300,7 +7232,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Workspace status updated."
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644."
                                         }
                                     },
                                     "required": [
@@ -6326,6 +7258,87 @@
     },
     "components": {
         "schemas": {
+            "AdminBroadcastRequest": {
+                "type": "object",
+                "description": "Admin (platform) broadcast: the audience is the whole user base, segmentable\nby account role and/or status. Behind auth:sanctum + role.admin.",
+                "properties": {
+                    "audience": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "segment",
+                            "specific"
+                        ]
+                    },
+                    "subject": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Subject is only meaningful for email; required when email is chosen.",
+                        "maxLength": 255
+                    },
+                    "body": {
+                        "type": "string",
+                        "maxLength": 5000
+                    },
+                    "channels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "email",
+                                "sms"
+                            ]
+                        },
+                        "minItems": 1
+                    },
+                    "user_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "segment": {
+                        "type": "object",
+                        "properties": {
+                            "role": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "freelancer",
+                                    "workspace_owner",
+                                    "admin"
+                                ]
+                            },
+                            "status": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "active",
+                                    "suspended",
+                                    "pending_verification"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "audience",
+                    "body",
+                    "channels"
+                ],
+                "title": "AdminBroadcastRequest"
+            },
+            "AdminUserDetailResource": {
+                "type": "array",
+                "items": {},
+                "title": "AdminUserDetailResource"
+            },
             "AnnouncementResource": {
                 "type": "object",
                 "properties": {
@@ -6499,6 +7512,30 @@
                     "content"
                 ],
                 "title": "BroadcastMessageRequest"
+            },
+            "CompleteOnboardingRequest": {
+                "type": "object",
+                "description": "Role-selection + completion for a freshly-provisioned SSO account.\n\nAccount identity (name/email/password) already exists from the SSO provision,\nso only the role choice and its role-specific profile are accepted here.",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "freelancer",
+                            "workspace_owner"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 30
+                    }
+                },
+                "required": [
+                    "role"
+                ],
+                "title": "CompleteOnboardingRequest"
             },
             "ForgotPasswordRequest": {
                 "type": "object",
@@ -6795,7 +7832,7 @@
             },
             "MarkInvoicePaidRequest": {
                 "type": "object",
-                "description": "Validates the optional payment timestamp when an admin marks an invoice paid.\nAuthorization is enforced by the route middleware (auth:sanctum + role.admin).",
+                "description": "Validates the manual mark-paid action: an optional payment timestamp and an\noptional payment receipt attached in the same step (pdf/jpg/png, max 5MB \u2014\nthe same rules as a standalone receipt upload). Authorization is enforced by\nthe route middleware (auth:sanctum + role.admin).",
                 "properties": {
                     "paid_at": {
                         "type": [
@@ -6803,6 +7840,15 @@
                             "null"
                         ],
                         "format": "date-time"
+                    },
+                    "receipt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 5120
                     }
                 },
                 "title": "MarkInvoicePaidRequest"
@@ -7055,6 +8101,149 @@
                 ],
                 "title": "NotificationResource"
             },
+            "OwnerBroadcastRequest": {
+                "type": "object",
+                "description": "Owner (workspace) broadcast: the audience is the owner's OWN members,\nsegmentable by subscription status. Behind auth:sanctum + role.owner; the\ncontroller re-scopes every recipient to the owner's workspace.",
+                "properties": {
+                    "audience": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "segment",
+                            "specific"
+                        ]
+                    },
+                    "subject": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Subject is only meaningful for email; required when email is chosen.",
+                        "maxLength": 255
+                    },
+                    "body": {
+                        "type": "string",
+                        "maxLength": 5000
+                    },
+                    "channels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "email",
+                                "sms"
+                            ]
+                        },
+                        "minItems": 1
+                    },
+                    "user_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "segment": {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "enum": [
+                                    "active",
+                                    "cancelled",
+                                    "expired",
+                                    "pending",
+                                    "suspended"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "audience",
+                    "body",
+                    "channels"
+                ],
+                "title": "OwnerBroadcastRequest"
+            },
+            "OwnerSubscriptionResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "member": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            },
+                            "phone": {
+                                "type": "string"
+                            },
+                            "specialty": {
+                                "type": "string"
+                            },
+                            "avatar": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "email",
+                            "phone",
+                            "specialty",
+                            "avatar"
+                        ]
+                    },
+                    "plan_type": {
+                        "type": "string"
+                    },
+                    "monthly_price": {
+                        "type": "string"
+                    },
+                    "seat_number": {
+                        "type": "string"
+                    },
+                    "start_date": {
+                        "type": "string"
+                    },
+                    "end_date": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "cancelled_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "member",
+                    "plan_type",
+                    "monthly_price",
+                    "seat_number",
+                    "start_date",
+                    "end_date",
+                    "status",
+                    "cancelled_at",
+                    "created_at"
+                ],
+                "title": "OwnerSubscriptionResource"
+            },
             "PackageResource": {
                 "type": "object",
                 "properties": {
@@ -7303,11 +8492,18 @@
                             },
                             "name": {
                                 "type": "string"
+                            },
+                            "avatar_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
                             "id",
-                            "name"
+                            "name",
+                            "avatar_url"
                         ]
                     },
                     "created_at": {
@@ -7860,6 +9056,17 @@
                 "type": "object",
                 "description": "Validates the bilingual landing-page CMS payload. Every field is optional\n(partial overrides) so any subset of the schema is accepted; the frontend\nsupplies i18n defaults for anything omitted. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
                 "properties": {
+                    "sections_order": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "--- Section order (admin-chosen order of the reorderable sections) ---",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 50
+                        }
+                    },
                     "sections": {
                         "type": "object",
                         "description": "--- Sections ---",
@@ -8451,8 +9658,32 @@
                 },
                 "title": "UpdatePackageRequest"
             },
+            "UpdatePasswordRequest": {
+                "type": "object",
+                "description": "Validates a self-service password change. The current password is verified in\nthe controller (against the stored hash); here we only enforce presence and\nthe new-password policy (min length + confirmation).",
+                "properties": {
+                    "current_password": {
+                        "type": "string"
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "minLength": 8
+                    },
+                    "new_password_confirmation": {
+                        "type": "string",
+                        "minLength": 8
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "new_password",
+                    "new_password_confirmation"
+                ],
+                "title": "UpdatePasswordRequest"
+            },
             "UpdateProfileRequest": {
                 "type": "object",
+                "description": "Validates a partial profile update for the authenticated user. Every field is\noptional so the same endpoint serves admins (name/phone/avatar) and\nfreelancers (who additionally edit specialty/bio). Password changes go through\nthe dedicated UpdatePasswordRequest instead.",
                 "properties": {
                     "name": {
                         "type": "string",
@@ -8485,17 +9716,6 @@
                         "format": "binary",
                         "contentMediaType": "application/octet-stream",
                         "maxLength": 5120
-                    },
-                    "current_password": {
-                        "type": "string"
-                    },
-                    "new_password": {
-                        "type": "string",
-                        "minLength": 8
-                    },
-                    "new_password_confirmation": {
-                        "type": "string",
-                        "minLength": 8
                     }
                 },
                 "title": "UpdateProfileRequest"
@@ -8771,15 +9991,6 @@
                         "minimum": -180,
                         "maximum": 180
                     },
-                    "total_seats": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 1000
-                    },
-                    "price_per_month": {
-                        "type": "number",
-                        "minimum": 0
-                    },
                     "working_hours": {
                         "type": [
                             "array",
@@ -8849,6 +10060,9 @@
                     "status": {
                         "type": "string"
                     },
+                    "needs_onboarding": {
+                        "type": "boolean"
+                    },
                     "specialty": {
                         "type": [
                             "string",
@@ -8881,6 +10095,7 @@
                     "phone",
                     "role",
                     "status",
+                    "needs_onboarding",
                     "specialty",
                     "bio",
                     "avatar",
@@ -9090,6 +10305,25 @@
             },
             "AuthenticationException": {
                 "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
                 "content": {
                     "application/json": {
                         "schema": {

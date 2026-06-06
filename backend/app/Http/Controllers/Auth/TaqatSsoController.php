@@ -57,10 +57,15 @@ class TaqatSsoController extends Controller
         }
 
         try {
-            $claims = $this->sso->exchangeCode($code, $state);
-            $user = $this->sso->findOrProvisionUser($claims);
+            $exchanged = $this->sso->exchangeCode($code, $state);
+            $user = $this->sso->findOrProvisionUser($exchanged['claims']);
 
-            $token = $user->createToken('sso')->plainTextToken;
+            $newToken = $user->createToken('sso');
+            $token = $newToken->plainTextToken;
+
+            // Keep the id_token server-side, keyed to this token, so logout can
+            // perform RP-initiated single logout against the IdP.
+            $this->sso->rememberSession($newToken->accessToken->getKey(), $exchanged['id_token']);
 
             $exchangeCode = Str::random(48);
             Cache::put("sso:exchange:{$exchangeCode}", [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Seat;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,7 @@ class SeatResource extends JsonResource
             'assigned_member' => $this->whenLoaded('assignedMember', fn () => $this->assignedMember === null ? null : [
                 'id' => $this->assignedMember->id,
                 'name' => $this->assignedMember->name,
+                'avatar_url' => MediaUrl::resolve($this->assignedMember->avatar),
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

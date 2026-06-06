@@ -32,7 +32,7 @@ class SeatService
     public function seatMap(Workspace $workspace): array
     {
         $seats = $workspace->seats()
-            ->with('assignedMember:id,name')
+            ->with('assignedMember:id,name,avatar')
             ->orderBy('seat_number')
             ->get();
 

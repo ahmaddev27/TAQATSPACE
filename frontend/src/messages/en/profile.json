@@ -1,0 +1,47 @@
+{
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Update your personal details and password",
+    "sectionInfo": "Personal information",
+    "name": "Full name",
+    "namePlaceholder": "Your full name",
+    "email": "Email",
+    "emailHint": "Email cannot be changed",
+    "phone": "Phone",
+    "phonePlaceholder": "+970 599 123 456",
+    "specialty": "Specialty",
+    "specialtyPlaceholder": "Select your specialty",
+    "bio": "Bio",
+    "bioPlaceholder": "Write a short bio about yourself…",
+    "specialtyOptions": {
+      "software": "Software development",
+      "design": "Design",
+      "writing": "Content writing",
+      "marketing": "Marketing",
+      "other": "Other"
+    },
+    "avatarTitle": "Profile photo",
+    "avatarHint": "PNG, JPG or WebP · up to 5MB",
+    "changeAvatar": "Change photo",
+    "removeAvatar": "Remove",
+    "saveInfo": "Save changes",
+    "saveSuccess": "Changes saved successfully",
+    "saveError": "Could not save changes",
+    "passwordTitle": "Change password",
+    "passwordSubtitle": "Choose a strong password to protect your account",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "changePassword": "Update password",
+    "passwordSuccess": "Password updated successfully",
+    "passwordError": "Could not update password",
+    "errors": {
+      "required": "This field is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "passwordMatch": "Passwords do not match",
+      "fileSize": "File exceeds 5MB",
+      "fileType": "Unsupported file type (PNG, JPG or WebP only)",
+      "generic": "Something went wrong, please try again"
+    }
+  }
+}
