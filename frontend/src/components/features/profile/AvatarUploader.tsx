@@ -6,12 +6,12 @@ import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED = ["image/png", "image/jpeg", "image/jpg"];
+const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
 export interface AvatarUploaderProps {
   /** Current avatar URL from the backend (or null). */
   initialUrl: string | null;
-  /** First grapheme of the member name, shown when there is no image. */
+  /** First grapheme of the user's name, shown when there is no image. */
   fallbackInitial: string;
   /** Bubble the chosen File (or null when cleared) up to the form. */
   onChange: (file: File | null) => void;
@@ -27,8 +27,8 @@ export function AvatarUploader({
   fallbackInitial,
   onChange,
 }: AvatarUploaderProps) {
-  const t = useTranslations("freelancer.profile");
-  const tErr = useTranslations("freelancer.errors");
+  const t = useTranslations("profile");
+  const tErr = useTranslations("profile.errors");
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(initialUrl);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export function AvatarUploader({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg"
+        accept="image/png,image/jpeg,image/webp"
         onChange={handleFile}
         style={{ display: "none" }}
         aria-hidden="true"

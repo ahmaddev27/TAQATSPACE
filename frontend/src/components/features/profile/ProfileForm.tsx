@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/providers/ToastProvider";
 import { SPECIALTY_OPTIONS } from "@/lib/validations/auth";
-import { updateProfileAction } from "@/lib/actions/freelancer";
+import { updateProfileAction } from "@/lib/actions/profile";
 import { AvatarUploader } from "./AvatarUploader";
 
 type Translate = (key: string) => string;
@@ -38,12 +38,25 @@ export interface ProfileFormProps {
     avatar: string | null;
   };
   avatarInitial: string;
+  /** Show the freelancer-only specialty + bio fields. */
+  showFreelancerFields?: boolean;
+  /** Dashboard paths to revalidate after a successful save. */
+  revalidate?: string[];
 }
 
-/** Personal-info form (name/phone/specialty/bio) + circular avatar uploader. */
-export function ProfileForm({ defaults, avatarInitial }: ProfileFormProps) {
-  const t = useTranslations("freelancer.profile");
-  const tErr = useTranslations("freelancer.errors");
+/**
+ * Personal-info form (name/phone + optional specialty/bio) with a circular
+ * avatar uploader. Shared by admin and freelancer profile pages — the
+ * role-specific fields are toggled via `showFreelancerFields`.
+ */
+export function ProfileForm({
+  defaults,
+  avatarInitial,
+  showFreelancerFields = false,
+  revalidate = [],
+}: ProfileFormProps) {
+  const t = useTranslations("profile");
+  const tErr = useTranslations("profile.errors");
   const { toast } = useToast();
   const router = useRouter();
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -70,10 +83,11 @@ export function ProfileForm({ defaults, avatarInitial }: ProfileFormProps) {
         {
           name: values.name,
           phone: values.phone,
-          specialty: values.specialty,
-          bio: values.bio,
+          specialty: showFreelancerFields ? values.specialty : "",
+          bio: showFreelancerFields ? values.bio : "",
         },
         avatar,
+        revalidate,
       );
 
       if (result.ok) {
@@ -127,25 +141,32 @@ export function ProfileForm({ defaults, avatarInitial }: ProfileFormProps) {
             />
           </Field>
 
-          <Field label={t("specialty")} error={errors.specialty?.message}>
-            <Select defaultValue={defaults.specialty} {...register("specialty")}>
-              <option value="">{t("specialtyPlaceholder")}</option>
-              {SPECIALTY_OPTIONS.map((code) => (
-                <option key={code} value={code}>
-                  {t(`specialtyOptions.${code}`)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          {showFreelancerFields && (
+            <Field label={t("specialty")} error={errors.specialty?.message}>
+              <Select
+                defaultValue={defaults.specialty}
+                {...register("specialty")}
+              >
+                <option value="">{t("specialtyPlaceholder")}</option>
+                {SPECIALTY_OPTIONS.map((code) => (
+                  <option key={code} value={code}>
+                    {t(`specialtyOptions.${code}`)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
         </div>
 
-        <Field label={t("bio")} error={errors.bio?.message}>
-          <Textarea
-            placeholder={t("bioPlaceholder")}
-            rows={4}
-            {...register("bio")}
-          />
-        </Field>
+        {showFreelancerFields && (
+          <Field label={t("bio")} error={errors.bio?.message}>
+            <Textarea
+              placeholder={t("bioPlaceholder")}
+              rows={4}
+              {...register("bio")}
+            />
+          </Field>
+        )}
 
         <div className="between">
           <span />

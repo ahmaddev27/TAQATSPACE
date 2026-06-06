@@ -2,22 +2,24 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\Member;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates a partial profile update for the authenticated user. Every field is
+ * optional so the same endpoint serves admins (name/phone/avatar) and
+ * freelancers (who additionally edit specialty/bio). Password changes go through
+ * the dedicated UpdatePasswordRequest instead.
+ */
 class UpdateProfileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     /**
-     * Profile fields are all optional (partial update). A password change is
-     * gated behind `current_password`; when `new_password` is present, both the
-     * current password and a confirmation are required.
-     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -28,9 +30,6 @@ class UpdateProfileRequest extends FormRequest
             'specialty' => ['sometimes', 'nullable', 'string', 'max:120'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'avatar' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-
-            'current_password' => ['required_with:new_password', 'string'],
-            'new_password' => ['sometimes', 'string', 'min:8', 'confirmed'],
         ];
     }
 }
