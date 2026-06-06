@@ -105,5 +105,5 @@ jobs:
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "fuser -k ${{ env.NODE_PORT }}/tcp 2>/dev/null || true; sleep 2; \
              cd '${{ vars.STAGING_WEB_PATH }}' && \
-             nohup env PORT=${{ env.NODE_PORT }} HOSTNAME=127.0.0.1 NODE_ENV=production NEXT_PUBLIC_API_URL='${{ vars.STAGING_API_URL }}' node server.js > app.log 2>&1 < /dev/null & \
+             ( nohup env PORT=${{ env.NODE_PORT }} HOSTNAME=127.0.0.1 NODE_ENV=production NEXT_PUBLIC_API_URL='${{ vars.STAGING_API_URL }}' node server.js > app.log 2>&1 < /dev/null & ) && \
              sleep 5; curl -sf -m 10 -o /dev/null http://127.0.0.1:${{ env.NODE_PORT }}/en && echo frontend-ok"
