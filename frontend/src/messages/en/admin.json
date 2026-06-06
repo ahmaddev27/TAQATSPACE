@@ -287,6 +287,61 @@
         "users": "Users CSV",
         "workspaces": "Workspaces CSV"
       }
+    },
+    "rm": {
+      "title": "Content management",
+      "subtitle": "Control site content: contact details, FAQ, About, and How it works",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "remove": "Remove",
+      "labelAr": "Arabic",
+      "labelEn": "English",
+      "tabSite": "Site info",
+      "tabFaq": "FAQ",
+      "tabAbout": "About",
+      "tabHow": "How it works",
+      "tabLanding": "Landing",
+      "site": {
+        "hint": "Contact details shown in the footer and the Contact page",
+        "email": "Email",
+        "phone": "Phone",
+        "whatsapp": "WhatsApp",
+        "address": "Address",
+        "social": "Social links",
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "twitter": "Twitter / X",
+        "linkedin": "LinkedIn"
+      },
+      "faq": {
+        "hint": "Questions and answers shown on the FAQ page",
+        "add": "Add question",
+        "question": "Question",
+        "answer": "Answer",
+        "empty": "No questions yet"
+      },
+      "about": {
+        "hint": "About-page content",
+        "lead": "Lead",
+        "sections": "Sections",
+        "add": "Add section",
+        "heading": "Heading",
+        "body": "Body",
+        "empty": "No sections yet"
+      },
+      "how": {
+        "hint": "How-it-works steps shown on the landing",
+        "add": "Add step",
+        "title": "Title",
+        "description": "Description",
+        "empty": "No steps yet"
+      },
+      "landing": {
+        "hint": "Edit the landing page content (hero, stats, sections...)",
+        "open": "Open landing editor"
+      }
     }
   }
 }

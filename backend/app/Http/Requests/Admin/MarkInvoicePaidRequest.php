@@ -23,7 +23,7 @@ class MarkInvoicePaidRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'paid_at' => ['nullable', 'date', 'before_or_equal:now'],
+            'paid_at' => ['nullable', 'date', 'before_or_equal:tomorrow'],
         ];
     }
 }

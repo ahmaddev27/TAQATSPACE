@@ -28,7 +28,7 @@ class UploadReceiptRequest extends FormRequest
     {
         return [
             'receipt' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:'.self::MAX_KILOBYTES],
-            'paid_at' => ['nullable', 'date', 'before_or_equal:now'],
+            'paid_at' => ['nullable', 'date', 'before_or_equal:tomorrow'],
         ];
     }
 }
