@@ -2,9 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
-import type { LandingContent } from "@/lib/types";
+import type {
+  ContentKey,
+  LandingContent,
+  User,
+  UserStatus,
+  Workspace,
+  WorkspaceStatus,
+} from "@/lib/types";
 import type { ContentByKey } from "@/lib/api/content";
-import type { ContentKey } from "@/lib/types";
+import type { AdminInvoice } from "@/lib/api/admin";
 
 /**
  * Persist the public landing page content (`PUT /admin/landing`).
@@ -64,5 +71,111 @@ export async function updateContent<K extends ContentKey>(
     }
   }
 
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Workspace moderation (PUT /admin/workspaces/{id}/status)                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Approve, suspend, reactivate, or reject a workspace. The backend requires a
+ * `reason` for the `suspended`/`rejected` transitions and rejects `pending`, so
+ * callers pass a reason for those two and may omit it when approving.
+ */
+export async function updateWorkspaceStatus(
+  workspaceId: string,
+  status: WorkspaceStatus,
+  reason?: string,
+): Promise<ActionResult<Workspace>> {
+  const body: Record<string, unknown> = { status };
+  if (reason != null && reason !== "") body.reason = reason;
+
+  const result = await authedMutate<Workspace>(
+    `/admin/workspaces/${workspaceId}/status`,
+    { method: "PUT", body },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
+    revalidatePath("/[locale]/(dashboard)/admin", "page");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  User moderation (PUT /admin/users/{id}/status)                            */
+/* -------------------------------------------------------------------------- */
+
+/** Activate or suspend a user account. */
+export async function updateUserStatus(
+  userId: string,
+  status: UserStatus,
+): Promise<ActionResult<User>> {
+  const result = await authedMutate<User>(`/admin/users/${userId}/status`, {
+    method: "PUT",
+    body: { status },
+  });
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/users", "page");
+    revalidatePath("/[locale]/(dashboard)/admin", "page");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Invoice tracking (PUT mark-paid / mark-unpaid, POST receipt)               */
+/* -------------------------------------------------------------------------- */
+
+function revalidateInvoiceTracking(): void {
+  revalidatePath("/[locale]/(dashboard)/admin/invoices", "page");
+  revalidatePath("/[locale]/(dashboard)/admin", "page");
+}
+
+/** Record a manual payment. `paidAt` is an optional ISO date string. */
+export async function markInvoicePaid(
+  invoiceId: string,
+  paidAt?: string | null,
+): Promise<ActionResult<AdminInvoice>> {
+  const body = paidAt != null && paidAt !== "" ? { paid_at: paidAt } : undefined;
+
+  const result = await authedMutate<AdminInvoice>(
+    `/admin/invoices/${invoiceId}/mark-paid`,
+    { method: "PUT", body },
+  );
+  if (result.ok) revalidateInvoiceTracking();
+  return result;
+}
+
+/** Revert an invoice back to pending and clear its payment timestamp. */
+export async function markInvoiceUnpaid(
+  invoiceId: string,
+): Promise<ActionResult<AdminInvoice>> {
+  const result = await authedMutate<AdminInvoice>(
+    `/admin/invoices/${invoiceId}/mark-unpaid`,
+    { method: "PUT" },
+  );
+  if (result.ok) revalidateInvoiceTracking();
+  return result;
+}
+
+/**
+ * Upload a payment receipt (multipart). The backend stores the file and marks
+ * the invoice paid in the same action, so this doubles as a "mark paid with
+ * proof" flow. An optional paid date is forwarded when provided.
+ */
+export async function uploadInvoiceReceipt(
+  invoiceId: string,
+  file: File,
+  paidAt?: string | null,
+): Promise<ActionResult<AdminInvoice>> {
+  const formData = new FormData();
+  formData.append("receipt", file);
+  if (paidAt != null && paidAt !== "") formData.append("paid_at", paidAt);
+
+  const result = await authedMutate<AdminInvoice>(
+    `/admin/invoices/${invoiceId}/receipt`,
+    { method: "POST", formData },
+  );
+  if (result.ok) revalidateInvoiceTracking();
   return result;
 }

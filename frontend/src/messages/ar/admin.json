@@ -1,5 +1,175 @@
 {
   "admin": {
+    "dashboard": {
+      "title": "لوحة تحكم المنصة",
+      "subtitle": "نظرة عامة على المساحات والمستخدمين والاشتراكات والفواتير عبر المنصة.",
+      "workspaces": "المساحات",
+      "workspacesFoot": "{active} نشطة · {pending} قيد المراجعة · {suspended} موقوفة",
+      "users": "المستخدمون",
+      "usersFoot": "{owners} ملاك · {freelancers} مستقلون",
+      "subscriptions": "الاشتراكات",
+      "subscriptionsFoot": "{active} نشطة",
+      "invoices": "الفواتير",
+      "invoicesFoot": "{paid} مدفوعة · {pending} معلّقة · {overdue} متأخرة",
+      "revenueTitle": "تتبّع الإيرادات",
+      "revenueSubtitle": "أرقام محاسبية يديرها المشرف يدوياً — ليست مبالغ بوابة دفع.",
+      "revenuePaid": "المحصّل (متتبَّع)",
+      "revenuePaidFoot": "إجمالي الفواتير المدفوعة",
+      "revenueOutstanding": "المستحق (متتبَّع)",
+      "revenueOutstandingFoot": "الفواتير المعلّقة والمتأخرة",
+      "quickLinks": "روابط سريعة",
+      "qaWorkspaces": "إدارة المساحات",
+      "qaUsers": "إدارة المستخدمين",
+      "qaSubscriptions": "الاشتراكات",
+      "qaInvoices": "الفواتير"
+    },
+    "workspaces": {
+      "title": "إدارة المساحات",
+      "subtitle": "راجع المساحات ووافق عليها أو أوقفها أو أعد تفعيلها.",
+      "colName": "المساحة",
+      "colOwner": "المالك",
+      "colCity": "المدينة",
+      "colStatus": "الحالة",
+      "colCreated": "تاريخ الإنشاء",
+      "approve": "موافقة",
+      "suspend": "إيقاف",
+      "reactivate": "إعادة تفعيل",
+      "count": "العدد",
+      "searchPlaceholder": "ابحث بالاسم أو المدينة أو المالك…",
+      "emptyTitle": "لا توجد مساحات",
+      "emptyBody": "لا توجد مساحات مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "pending": "قيد المراجعة",
+        "active": "نشطة",
+        "suspended": "موقوفة",
+        "rejected": "مرفوضة"
+      },
+      "suspendModal": {
+        "title": "إيقاف المساحة",
+        "body": "أنت على وشك إيقاف \"{name}\". يرجى توضيح السبب.",
+        "reason": "السبب",
+        "reasonPlaceholder": "سبب الإيقاف…",
+        "cancel": "إلغاء",
+        "confirm": "تأكيد الإيقاف"
+      },
+      "toast": {
+        "statusUpdated": "تم تحديث حالة المساحة",
+        "statusFailed": "تعذّر تحديث حالة المساحة"
+      }
+    },
+    "users": {
+      "title": "إدارة المستخدمين",
+      "subtitle": "تصفّح حسابات المنصة وفعّلها أو أوقفها.",
+      "colName": "الاسم",
+      "colEmail": "البريد الإلكتروني",
+      "colRole": "الدور",
+      "colStatus": "الحالة",
+      "colJoined": "تاريخ الانضمام",
+      "activate": "تفعيل",
+      "suspend": "إيقاف",
+      "count": "العدد",
+      "filterRole": "الدور",
+      "filterStatus": "الحالة",
+      "allRoles": "كل الأدوار",
+      "allStatuses": "كل الحالات",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "emptyTitle": "لا يوجد مستخدمون",
+      "emptyBody": "لا يوجد مستخدمون مطابقون للمرشّحات الحالية.",
+      "role": {
+        "freelancer": "مستقل",
+        "workspace_owner": "صاحب مساحة",
+        "admin": "مشرف"
+      },
+      "statusOption": {
+        "active": "نشط",
+        "suspended": "موقوف",
+        "pending_verification": "قيد التحقق"
+      },
+      "toast": {
+        "activated": "تم تفعيل الحساب",
+        "suspended": "تم إيقاف الحساب",
+        "statusFailed": "تعذّر تحديث حالة الحساب"
+      }
+    },
+    "subscriptions": {
+      "title": "الاشتراكات",
+      "subtitle": "تتبّع الاشتراكات عبر المنصة (للعرض فقط).",
+      "colMember": "العضو",
+      "colWorkspace": "المساحة",
+      "colPlan": "الخطة",
+      "colPrice": "السعر الشهري",
+      "colStart": "تاريخ البدء",
+      "colEnd": "تاريخ الانتهاء",
+      "colStatus": "الحالة",
+      "count": "العدد",
+      "searchPlaceholder": "ابحث بالعضو أو المساحة…",
+      "emptyTitle": "لا توجد اشتراكات",
+      "emptyBody": "لا توجد اشتراكات مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "active": "نشطة",
+        "pending": "معلّقة",
+        "suspended": "موقوفة",
+        "expired": "منتهية",
+        "cancelled": "ملغاة"
+      }
+    },
+    "invoices": {
+      "title": "الفواتير",
+      "subtitle": "تتبّع الفواتير وسجّل المدفوعات يدوياً وارفع إيصالات الدفع.",
+      "colInvoice": "رقم الفاتورة",
+      "colMember": "العضو",
+      "colWorkspace": "المساحة",
+      "colAmount": "المبلغ",
+      "colDue": "تاريخ الاستحقاق",
+      "colStatus": "الحالة",
+      "colPaidAt": "تاريخ الدفع",
+      "markPaid": "تحديد كمدفوعة",
+      "markUnpaid": "تحديد كغير مدفوعة",
+      "uploadReceipt": "رفع إيصال",
+      "downloadPdf": "تنزيل PDF",
+      "viewReceipt": "عرض الإيصال",
+      "count": "العدد",
+      "searchPlaceholder": "ابحث برقم الفاتورة أو العضو أو المساحة…",
+      "emptyTitle": "لا توجد فواتير",
+      "emptyBody": "لا توجد فواتير مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "paid": "مدفوعة",
+        "pending": "معلّقة",
+        "overdue": "متأخرة",
+        "cancelled": "ملغاة"
+      },
+      "payModal": {
+        "title": "تحديد الفاتورة كمدفوعة",
+        "body": "تسجيل دفعة يدوية للفاتورة {invoice}.",
+        "paidAt": "تاريخ الدفع",
+        "optional": "(اختياري)",
+        "cancel": "إلغاء",
+        "confirm": "تأكيد الدفع"
+      },
+      "receiptModal": {
+        "title": "رفع إيصال الدفع",
+        "body": "ارفع إيصالاً للفاتورة {invoice}. سيؤدي رفع الإيصال إلى تحديد الفاتورة كمدفوعة.",
+        "file": "ملف الإيصال",
+        "fileRequired": "يرجى اختيار ملف الإيصال.",
+        "dropLabel": "اسحب الملف هنا أو انقر للاختيار",
+        "dropHint": "PDF أو PNG أو JPG · حتى 5 ميجابايت",
+        "remove": "إزالة",
+        "paidAt": "تاريخ الدفع",
+        "optional": "(اختياري)",
+        "cancel": "إلغاء",
+        "submit": "رفع وتحديد كمدفوعة"
+      },
+      "toast": {
+        "markedPaid": "تم تحديد الفاتورة كمدفوعة",
+        "markedUnpaid": "تم إرجاع الفاتورة إلى غير مدفوعة",
+        "markFailed": "تعذّر تحديث حالة الفاتورة",
+        "receiptUploaded": "تم رفع الإيصال وتحديد الفاتورة كمدفوعة",
+        "receiptFailed": "تعذّر رفع الإيصال"
+      }
+    },
     "landing": {
       "title": "الصفحة الرئيسية",
       "subtitle": "حرّر محتوى الصفحة الرئيسية العامة. أي حقل تتركه فارغاً سيُعرض بالقيمة الافتراضية.",

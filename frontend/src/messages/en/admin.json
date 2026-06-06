@@ -1,5 +1,175 @@
 {
   "admin": {
+    "dashboard": {
+      "title": "Platform dashboard",
+      "subtitle": "An overview of workspaces, users, subscriptions and invoices across the platform.",
+      "workspaces": "Workspaces",
+      "workspacesFoot": "{active} active · {pending} pending · {suspended} suspended",
+      "users": "Users",
+      "usersFoot": "{owners} owners · {freelancers} freelancers",
+      "subscriptions": "Subscriptions",
+      "subscriptionsFoot": "{active} active",
+      "invoices": "Invoices",
+      "invoicesFoot": "{paid} paid · {pending} pending · {overdue} overdue",
+      "revenueTitle": "Revenue tracking",
+      "revenueSubtitle": "Admin-managed manual figures — not payment-gateway money.",
+      "revenuePaid": "Collected (tracked)",
+      "revenuePaidFoot": "Total of paid invoices",
+      "revenueOutstanding": "Outstanding (tracked)",
+      "revenueOutstandingFoot": "Pending and overdue invoices",
+      "quickLinks": "Quick links",
+      "qaWorkspaces": "Manage workspaces",
+      "qaUsers": "Manage users",
+      "qaSubscriptions": "Subscriptions",
+      "qaInvoices": "Invoices"
+    },
+    "workspaces": {
+      "title": "Workspaces",
+      "subtitle": "Review workspaces and approve, suspend or reactivate them.",
+      "colName": "Workspace",
+      "colOwner": "Owner",
+      "colCity": "City",
+      "colStatus": "Status",
+      "colCreated": "Created",
+      "approve": "Approve",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "count": "Total",
+      "searchPlaceholder": "Search by name, city or owner…",
+      "emptyTitle": "No workspaces",
+      "emptyBody": "No workspaces match the current filters.",
+      "tabs": {
+        "all": "All",
+        "pending": "Pending",
+        "active": "Active",
+        "suspended": "Suspended",
+        "rejected": "Rejected"
+      },
+      "suspendModal": {
+        "title": "Suspend workspace",
+        "body": "You are about to suspend \"{name}\". Please provide a reason.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Reason for suspension…",
+        "cancel": "Cancel",
+        "confirm": "Confirm suspension"
+      },
+      "toast": {
+        "statusUpdated": "Workspace status updated",
+        "statusFailed": "Could not update the workspace status"
+      }
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Browse platform accounts and activate or suspend them.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colStatus": "Status",
+      "colJoined": "Joined",
+      "activate": "Activate",
+      "suspend": "Suspend",
+      "count": "Total",
+      "filterRole": "Role",
+      "filterStatus": "Status",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Search by name or email…",
+      "emptyTitle": "No users",
+      "emptyBody": "No users match the current filters.",
+      "role": {
+        "freelancer": "Freelancer",
+        "workspace_owner": "Workspace owner",
+        "admin": "Admin"
+      },
+      "statusOption": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "pending_verification": "Pending verification"
+      },
+      "toast": {
+        "activated": "Account activated",
+        "suspended": "Account suspended",
+        "statusFailed": "Could not update the account status"
+      }
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "subtitle": "Track subscriptions across the platform (read-only).",
+      "colMember": "Member",
+      "colWorkspace": "Workspace",
+      "colPlan": "Plan",
+      "colPrice": "Monthly price",
+      "colStart": "Start date",
+      "colEnd": "End date",
+      "colStatus": "Status",
+      "count": "Total",
+      "searchPlaceholder": "Search by member or workspace…",
+      "emptyTitle": "No subscriptions",
+      "emptyBody": "No subscriptions match the current filters.",
+      "tabs": {
+        "all": "All",
+        "active": "Active",
+        "pending": "Pending",
+        "suspended": "Suspended",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      }
+    },
+    "invoices": {
+      "title": "Invoices",
+      "subtitle": "Track invoices, record payments manually and upload payment receipts.",
+      "colInvoice": "Invoice #",
+      "colMember": "Member",
+      "colWorkspace": "Workspace",
+      "colAmount": "Amount",
+      "colDue": "Due",
+      "colStatus": "Status",
+      "colPaidAt": "Paid at",
+      "markPaid": "Mark paid",
+      "markUnpaid": "Mark unpaid",
+      "uploadReceipt": "Upload receipt",
+      "downloadPdf": "Download PDF",
+      "viewReceipt": "View receipt",
+      "count": "Total",
+      "searchPlaceholder": "Search by invoice #, member or workspace…",
+      "emptyTitle": "No invoices",
+      "emptyBody": "No invoices match the current filters.",
+      "tabs": {
+        "all": "All",
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      },
+      "payModal": {
+        "title": "Mark invoice as paid",
+        "body": "Record a manual payment for invoice {invoice}.",
+        "paidAt": "Paid date",
+        "optional": "(optional)",
+        "cancel": "Cancel",
+        "confirm": "Confirm payment"
+      },
+      "receiptModal": {
+        "title": "Upload payment receipt",
+        "body": "Upload a receipt for invoice {invoice}. Uploading a receipt marks the invoice as paid.",
+        "file": "Receipt file",
+        "fileRequired": "Please choose a receipt file.",
+        "dropLabel": "Drop a file here or click to choose",
+        "dropHint": "PDF, PNG or JPG · up to 5MB",
+        "remove": "Remove",
+        "paidAt": "Paid date",
+        "optional": "(optional)",
+        "cancel": "Cancel",
+        "submit": "Upload and mark paid"
+      },
+      "toast": {
+        "markedPaid": "Invoice marked as paid",
+        "markedUnpaid": "Invoice reverted to unpaid",
+        "markFailed": "Could not update the invoice status",
+        "receiptUploaded": "Receipt uploaded and invoice marked paid",
+        "receiptFailed": "Could not upload the receipt"
+      }
+    },
     "landing": {
       "title": "Landing page",
       "subtitle": "Edit the public landing page content. Anything left empty falls back to the built-in defaults.",
