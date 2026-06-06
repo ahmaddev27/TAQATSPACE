@@ -11,7 +11,7 @@ function avatarInitial(name: string): string {
   return first.toUpperCase();
 }
 
-export default async function AdminProfilePage({
+export default async function OwnerProfilePage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -34,7 +34,7 @@ export default async function AdminProfilePage({
           avatar: user.avatar,
         },
         avatarInitial: avatarInitial(user.name),
-        revalidate: ["/admin/profile", "/admin"],
+        revalidate: ["/owner/profile", "/owner"],
       }}
     />
   );

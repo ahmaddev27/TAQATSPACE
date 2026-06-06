@@ -20,6 +20,8 @@
     "error": "Something went wrong",
     "retry": "Retry",
     "logout": "Log out",
+    "account": "Account",
+    "profile": "Profile",
     "notifications": "Notifications",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",

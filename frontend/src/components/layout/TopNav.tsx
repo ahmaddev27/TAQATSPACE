@@ -4,11 +4,11 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { Avatar } from "@/components/ui/Avatar";
 import type { UserRole } from "@/lib/types/auth";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
+import { TopBarUserMenu } from "./TopBarUserMenu";
 
 export interface TopNavProps {
   role: UserRole;
@@ -95,22 +95,12 @@ export function TopNav({
 
       <NotificationBell />
 
-      <div className="topbar-user">
-        <Avatar initial={avatarInitial} round />
-        <div className="tb-user-meta">
-          <div className="tb-user-name">{userName}</div>
-          <div className="tb-user-role">{roleLabel}</div>
-        </div>
-        <button
-          type="button"
-          className="icon-btn"
-          onClick={onLogout}
-          aria-label={t("logout")}
-          title={t("logout")}
-        >
-          <Icon name="logout" />
-        </button>
-      </div>
+      <TopBarUserMenu
+        userName={userName}
+        roleLabel={roleLabel}
+        avatarInitial={avatarInitial}
+        onLogout={onLogout}
+      />
     </div>
   );
 }
