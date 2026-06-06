@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { UserRole } from "@/lib/types/auth";
 import { ROLE_NAV } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
+import { NavProgress } from "./NavProgress";
 
 export interface DashShellProps {
   role: UserRole;
@@ -65,6 +66,10 @@ export function DashShell({
           : `${NAV_WIDTH} 1fr`,
       }}
     >
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
+
       {mobileOpen && <div className="nav-backdrop" onClick={closeMobile} />}
 
       <Sidebar
