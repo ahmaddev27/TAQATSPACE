@@ -1215,6 +1215,55 @@
                 }
             }
         },
+        "/admin/exports/{type}": {
+            "get": {
+                "operationId": "export.download",
+                "description": "{type} is whitelisted (invoices|subscriptions|users|workspaces); anything\nelse is a 404. The same filters the matching list endpoint accepts are\nforwarded to the export.",
+                "summary": "GET /api/admin/exports/{type} \u2014 stream a filtered CSV of the full set",
+                "tags": [
+                    "Export"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundHttpException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "health.index",
@@ -3968,6 +4017,172 @@
                 }
             }
         },
+        "/admin/reports": {
+            "get": {
+                "operationId": "reports.index",
+                "summary": "GET /api/admin/reports \u2014 operational + financial tracking aggregates",
+                "tags": [
+                    "Reports"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "revenue_by_month": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "paid": {
+                                                                "type": "string"
+                                                            },
+                                                            "outstanding": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "paid",
+                                                            "outstanding"
+                                                        ]
+                                                    }
+                                                },
+                                                "invoices_by_status": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "paid": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        },
+                                                        "pending": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        },
+                                                        "overdue": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "paid",
+                                                        "pending",
+                                                        "overdue"
+                                                    ]
+                                                },
+                                                "subscriptions_by_status": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "subscriptions_by_month": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "count"
+                                                        ]
+                                                    }
+                                                },
+                                                "top_workspaces": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "workspaces_by_status": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "users_by_role": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "revenue_by_month",
+                                                "invoices_by_status",
+                                                "subscriptions_by_status",
+                                                "subscriptions_by_month",
+                                                "top_workspaces",
+                                                "workspaces_by_status",
+                                                "users_by_role"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workspaces/{workspace}/reviews": {
             "get": {
                 "operationId": "review.index",
@@ -6397,30 +6612,7 @@
                     "members": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "string"
-                                },
-                                "name": {
-                                    "type": "string"
-                                },
-                                "avatar": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "assigned_at": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "id",
-                                "name",
-                                "avatar",
-                                "assigned_at"
-                            ]
+                            "type": "string"
                         }
                     },
                     "created_at": {
@@ -8054,37 +8246,7 @@
                     "seat_types": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "type": {
-                                    "type": "string"
-                                },
-                                "price_monthly": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "price_daily": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "capacity": {
-                                    "type": "integer"
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            },
-                            "required": [
-                                "type",
-                                "price_monthly",
-                                "price_daily",
-                                "capacity",
-                                "enabled"
-                            ]
+                            "type": "string"
                         }
                     },
                     "created_at": {

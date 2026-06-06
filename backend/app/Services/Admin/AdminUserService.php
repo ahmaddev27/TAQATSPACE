@@ -41,6 +41,18 @@ class AdminUserService
     }
 
     /**
+     * Filtered query (no pagination), newest first, for memory-safe
+     * cursor-based CSV export of the full result set.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<User>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)->latest();
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      * @return Builder<User>
      */

@@ -31,6 +31,20 @@ class AdminSubscriptionService
     }
 
     /**
+     * Filtered query (no pagination) with member + workspace eager-loaded, for
+     * memory-safe cursor-based CSV export of the full result set.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Subscription>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->with(['member:id,name', 'workspace:id,name'])
+            ->latest();
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      * @return Builder<Subscription>
      */

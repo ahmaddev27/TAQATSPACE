@@ -98,6 +98,20 @@ class AdminInvoiceService
     }
 
     /**
+     * Filtered query (no pagination) with the member + workspace chain loaded,
+     * for memory-safe cursor-based CSV export of the full result set.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Invoice>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->with(self::RELATIONS)
+            ->orderByDesc('due_date');
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      * @return Builder<Invoice>
      */
