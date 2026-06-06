@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAllAdminInvoices } from "@/lib/api/admin";
 import { InvoicesTable } from "@/components/features/admin/InvoicesTable";
+import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function AdminInvoicesPage({
             {t("subtitle")}
           </p>
         </div>
+        <ExportCsvLink type="invoices" label={t("exportCsv")} />
       </div>
 
       <div style={{ marginTop: 16 }}>

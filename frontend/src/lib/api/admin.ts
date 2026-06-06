@@ -207,6 +207,70 @@ export async function getAllAdminInvoices(
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Reports (GET /admin/reports)                                               */
+/* -------------------------------------------------------------------------- */
+
+/** One month bucket of admin-tracked revenue (decimal strings, not gateway money). */
+export interface RevenueByMonth {
+  /** `YYYY-MM`. */
+  month: string;
+  /** Sum of paid invoices that month, decimal string e.g. "1500.00". */
+  paid: string;
+  /** Sum of pending + overdue invoices that month, decimal string. */
+  outstanding: string;
+}
+
+/** A count + summed amount pair for an invoice status bucket. */
+export interface InvoiceStatusBucket {
+  count: number;
+  /** Decimal string of the summed invoice amounts in this bucket. */
+  amount: string;
+}
+
+/** One month bucket of newly-created subscriptions. */
+export interface SubscriptionsByMonth {
+  /** `YYYY-MM`. */
+  month: string;
+  count: number;
+}
+
+/** A single row in the top-workspaces leaderboard. */
+export interface TopWorkspace {
+  workspace_id: string;
+  name: string;
+  /** Decimal string of paid revenue tracked against this workspace. */
+  paid_total: string;
+  active_subscriptions: number;
+}
+
+/** Aggregated analytics for the super-admin reports dashboard. */
+export interface AdminReports {
+  /** 12 continuous months, oldest first. */
+  revenue_by_month: RevenueByMonth[];
+  invoices_by_status: {
+    paid: InvoiceStatusBucket;
+    pending: InvoiceStatusBucket;
+    overdue: InvoiceStatusBucket;
+  };
+  /** Count per subscription status. */
+  subscriptions_by_status: Record<SubscriptionStatus, number>;
+  /** 12 continuous months of new-subscription counts, oldest first. */
+  subscriptions_by_month: SubscriptionsByMonth[];
+  /** Up to 10 workspaces ranked by tracked paid revenue. */
+  top_workspaces: TopWorkspace[];
+  /** Count per workspace status. */
+  workspaces_by_status: Record<WorkspaceStatus, number>;
+  /** Count per user role. */
+  users_by_role: Record<UserRole, number>;
+}
+
+/** Platform-wide aggregated analytics for the super-admin reports page. */
+export async function getAdminReports(): Promise<AdminReports> {
+  const res = await serverFetch<ApiEnvelope<AdminReports>>("/admin/reports");
+  return res.data;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 

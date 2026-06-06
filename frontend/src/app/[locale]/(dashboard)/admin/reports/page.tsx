@@ -1,20 +1,19 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { getAllAdminUsers } from "@/lib/api/admin";
-import { UsersTable } from "@/components/features/admin/UsersTable";
-import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
+import { getAdminReports } from "@/lib/api/admin";
+import { ReportsDashboard } from "@/components/features/admin/ReportsDashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage({
+export default async function AdminReportsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("admin.users");
+  const t = await getTranslations("admin.reports");
 
-  const users = await getAllAdminUsers();
+  const reports = await getAdminReports();
 
   return (
     <div className="page">
@@ -25,12 +24,9 @@ export default async function AdminUsersPage({
             {t("subtitle")}
           </p>
         </div>
-        <ExportCsvLink type="users" label={t("exportCsv")} />
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        <UsersTable users={users} />
-      </div>
+      <ReportsDashboard data={reports} />
     </div>
   );
 }
