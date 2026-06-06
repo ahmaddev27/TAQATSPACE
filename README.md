@@ -75,8 +75,8 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M07 | Invoicing System | P3 | S6 | ✅ | 100% |
 | M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 95% (realtime needs Pusher creds) |
 | M09 | Announcements, Packages & Reviews | P3 | S7 | ✅ | 100% |
-| M10 | Super Admin Dashboard | P4 | S8 | ☐ | 0% |
-| M11 | Reports, Exports & Analytics | P4 | S8 | ☐ | 0% |
+| M10 | Super Admin Dashboard | P4 | S8 | ✅ | 100% |
+| M11 | Reports, Exports & Analytics | P4 | S8 | ✅ | 100% |
 | M12 | Testing, Hardening & Production Launch | P4 | S9 | ☐ | 0% |
 
 ---
@@ -122,8 +122,8 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - **M09** ✅ T055/056 announcements · T057/058 reviews (done in P2)
 - _58 API endpoints; backend 3 parallel agents + frontend 3 parallel agents; build+tsc+lint green; live-smoke 200._
 
-## Phase 4 — Admin & Launch _(not started)_
-**M10** ☐ T059–T068 · **M11** ☐ T069–T070 · **M12** ☐ T071–T080
+## Phase 4 — Admin & Launch _(in progress)_
+**M10** ✅ Super-Admin dashboard + status/payment tracking (mark-paid, receipt upload) · **M11** ✅ reports (recharts) + CSV exports · **M12** ☐ testing/hardening/launch · _Admin CRM section + landing section reorder/preview also added._
 
 ---
 
