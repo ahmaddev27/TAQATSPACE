@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
+import { useImageCropper } from "@/components/ui/useImageCropper";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
@@ -33,6 +34,8 @@ export function AvatarUploader({
   const [preview, setPreview] = useState<string | null>(initialUrl);
   const [error, setError] = useState<string | null>(null);
   const objectUrl = useRef<string | null>(null);
+  // Avatars are circular → crop to a 1:1 square before previewing/uploading.
+  const { cropFile, cropper } = useImageCropper({ aspect: 1, maxSize: 512 });
 
   // Revoke the object URL on unmount / replacement to avoid a memory leak.
   useEffect(() => {
@@ -45,7 +48,7 @@ export function AvatarUploader({
     inputRef.current?.click();
   }
 
-  function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = ""; // allow re-selecting the same file
     if (!file) return;
@@ -60,11 +63,15 @@ export function AvatarUploader({
     }
 
     setError(null);
+    // Open the crop/adjust modal; only proceed once the user confirms a crop.
+    const cropped = await cropFile(file);
+    if (!cropped) return;
+
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(cropped);
     objectUrl.current = url;
     setPreview(url);
-    onChange(file);
+    onChange(cropped);
   }
 
   function clear() {
@@ -79,6 +86,7 @@ export function AvatarUploader({
 
   return (
     <div className="row" style={{ gap: 18, alignItems: "center" }}>
+      {cropper}
       <input
         ref={inputRef}
         type="file"

@@ -9,6 +9,7 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Tabs } from "@/components/ui/Tabs";
+import { useImageCropper } from "@/components/ui/useImageCropper";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { updateLanding, uploadLandingImage } from "@/lib/actions/admin";
@@ -391,9 +392,22 @@ function SectionImageField({
   labels,
 }: SectionImageFieldProps) {
   const hasImage = value.url.trim() !== "";
+  // Landing illustrations are landscape → crop to 16:9 before uploading.
+  // Clearing (file === null) bypasses the cropper and removes the override.
+  const { cropFile, cropper } = useImageCropper({ aspect: 16 / 9, maxSize: 1600 });
+
+  const handleSelect = async (file: File | null) => {
+    if (file === null) {
+      onSelect(null);
+      return;
+    }
+    const cropped = await cropFile(file);
+    if (cropped) onSelect(cropped);
+  };
 
   return (
     <div className="stack" style={{ gap: 8 }}>
+      {cropper}
       <span className="label">{labels.label}</span>
       <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
         {labels.hint}
@@ -427,7 +441,7 @@ function SectionImageField({
       )}
       <FileDropzone
         value={null}
-        onChange={onSelect}
+        onChange={handleSelect}
         accept="image/png,image/jpeg,image/jpg,image/webp"
         label={hasImage ? labels.replace : labels.upload}
         disabled={uploading}
