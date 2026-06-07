@@ -162,4 +162,16 @@ return [
     'broadcast_email_not_configured_workspace' => 'Email is not configured for your workspace. Configure SMTP or use the platform account before sending.',
     'broadcast_sms_not_configured_workspace' => 'SMS is not configured for your workspace. Configure an SMS provider or use the platform account before sending.',
 
+    // Workspace management — expenses
+    'expense_created' => 'Expense recorded.',
+    'expense_updated' => 'Expense updated.',
+    'expense_deleted' => 'Expense deleted.',
+    'expense_no_access' => 'You do not have access to this expense.',
+
+    // Workspace management — resources
+    'resource_created' => 'Resource added.',
+    'resource_updated' => 'Resource updated.',
+    'resource_deleted' => 'Resource deleted.',
+    'resource_no_access' => 'You do not have access to this resource.',
+
 ];
