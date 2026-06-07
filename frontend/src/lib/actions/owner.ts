@@ -22,7 +22,7 @@ import type {
   Resource,
   ResourceStatus,
   ResourceType,
-} from "@/lib/api/management";
+} from "@/lib/types/management";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */

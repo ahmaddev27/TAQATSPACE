@@ -35,7 +35,7 @@ import {
   type ResourceStatus,
   type ResourceSummary,
   type ResourceType,
-} from "@/lib/api/management";
+} from "@/lib/types/management";
 
 const STATUS_CLASS: Record<ResourceStatus, string> = {
   available: "badge-success",
