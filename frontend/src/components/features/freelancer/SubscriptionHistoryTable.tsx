@@ -37,7 +37,7 @@ export async function SubscriptionHistoryTable({
         <thead>
           <tr>
             <th>{t("colWorkspace")}</th>
-            <th>{t("colPlan")}</th>
+            <th>{t("colSeatType")}</th>
             <th>{t("colPeriod")}</th>
             <th>{t("colPrice")}</th>
             <th>{t("colStatus")}</th>
@@ -49,7 +49,9 @@ export async function SubscriptionHistoryTable({
               <td style={{ fontWeight: 600 }}>
                 {sub.workspace?.name ?? "—"}
               </td>
-              <td className="muted">{tCommon(`planType.${sub.plan_type}`)}</td>
+              <td className="muted">
+                {sub.seat ? tCommon(`seatType.${sub.seat.type}`) : "—"}
+              </td>
               <td className="cell-num ltr">
                 {formatDate(sub.start_date)} — {formatDate(sub.end_date)}
               </td>
