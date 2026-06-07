@@ -107,6 +107,69 @@
         "statusFailed": "تعذّر تحديث حالة الحساب"
       }
     },
+    "admins": {
+      "title": "المشرفون",
+      "subtitle": "أضف حسابات المشرفين وتحكّم بأدوارهم وصلاحياتهم.",
+      "addAdmin": "إضافة مشرف",
+      "createTitle": "مشرف جديد",
+      "editTitle": "تعديل المشرف",
+      "colName": "الاسم",
+      "colEmail": "البريد الإلكتروني",
+      "colRoles": "الدور",
+      "colStatus": "الحالة",
+      "colJoined": "تاريخ الانضمام",
+      "edit": "تعديل",
+      "deactivate": "إيقاف",
+      "deactivateTitle": "إيقاف المشرف",
+      "deactivateConfirm": "هل تريد إيقاف حساب المشرف {name}؟ سيفقد الوصول حتى إعادة تفعيله.",
+      "create": "إنشاء مشرف",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "count": "الإجمالي",
+      "filterStatus": "الحالة",
+      "allStatuses": "كل الحالات",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "permissionCount": "{count} صلاحية",
+      "emptyTitle": "لا يوجد مشرفون",
+      "emptyBody": "لا توجد حسابات مشرفين مطابقة للمرشّحات الحالية.",
+      "statusOption": {
+        "active": "نشط",
+        "suspended": "موقوف"
+      },
+      "role": {
+        "super_admin": "مشرف أعلى",
+        "admin": "مشرف"
+      },
+      "permission": {
+        "manage_admins": "إدارة المشرفين",
+        "manage_workspaces": "إدارة المساحات",
+        "manage_users": "إدارة المستخدمين",
+        "manage_billing": "إدارة الفوترة",
+        "manage_content": "إدارة المحتوى",
+        "manage_messaging": "إدارة المراسلة",
+        "view_reports": "عرض التقارير"
+      },
+      "form": {
+        "name": "الاسم الكامل",
+        "namePlaceholder": "مثال: لينا صالح",
+        "email": "البريد الإلكتروني",
+        "emailPlaceholder": "admin@taqat.space",
+        "password": "كلمة المرور",
+        "newPassword": "كلمة مرور جديدة",
+        "newPasswordHint": "اتركها فارغة للإبقاء على كلمة المرور الحالية.",
+        "passwordConfirm": "تأكيد كلمة المرور",
+        "role": "الدور",
+        "permissions": "الصلاحيات",
+        "selfHint": "لا يمكنك سحب صلاحية الإشراف الأعلى عن حسابك."
+      },
+      "toast": {
+        "created": "تم إنشاء المشرف",
+        "updated": "تم تحديث المشرف",
+        "deactivated": "تم إيقاف المشرف",
+        "saveFailed": "تعذّر حفظ المشرف",
+        "deactivateFailed": "تعذّر إيقاف المشرف"
+      }
+    },
     "userDetail": {
       "back": "العودة إلى المستخدمين",
       "joined": "تاريخ الانضمام",

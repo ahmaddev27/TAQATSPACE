@@ -8,6 +8,8 @@ export type {
   User,
   UserRole,
   UserStatus,
+  AdminRole,
+  AdminPermission,
   ApiEnvelope,
   ApiErrorBody,
 } from "./auth";

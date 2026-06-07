@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.freelancer' => \App\Http\Middleware\EnsureFreelancer::class,
             'role.owner' => \App\Http\Middleware\EnsureWorkspaceOwner::class,
             'role.admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'can.manage_admins' => \App\Http\Middleware\EnsureCanManageAdmins::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

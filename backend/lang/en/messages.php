@@ -143,6 +143,16 @@ return [
     'landing_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'messaging_settings_updated' => 'Messaging settings updated.',
+
+    // Admin management (super-admin only)
+    'admin_created' => 'Admin account created.',
+    'admin_updated' => 'Admin account updated.',
+    'admin_deactivated' => 'Admin account deactivated.',
+    'admin_not_found' => 'Admin account not found.',
+    'admin_last_super_admin' => 'You cannot remove the last active super admin.',
+    'admin_cannot_suspend_self' => 'You cannot suspend your own account.',
+    'admin_cannot_deactivate_self' => 'You cannot deactivate your own account.',
+    'admin_cannot_revoke_own_access' => 'You cannot revoke your own admin-management access.',
     'workspace_messaging_updated' => 'Workspace messaging settings updated.',
 
     // Messaging test

@@ -2,6 +2,19 @@ export type UserRole = "freelancer" | "workspace_owner" | "admin";
 
 export type UserStatus = "active" | "suspended" | "pending_verification";
 
+/** Spatie roles an admin account may hold (distinct from the `role` column). */
+export type AdminRole = "super_admin" | "admin";
+
+/** Named permissions that gate the major admin areas. */
+export type AdminPermission =
+  | "manage_admins"
+  | "manage_workspaces"
+  | "manage_users"
+  | "manage_billing"
+  | "manage_content"
+  | "manage_messaging"
+  | "view_reports";
+
 export interface User {
   id: string;
   name: string;
@@ -18,6 +31,10 @@ export interface User {
   can_change_password: boolean;
   email_verified_at: string | null;
   created_at: string;
+  /** Present for admin accounts only: holds the elevated super-admin role. */
+  is_super_admin?: boolean;
+  /** Present for admin accounts only: the account's effective permissions. */
+  permissions?: AdminPermission[];
 }
 
 /** Backend success envelope: { data, message? }. */
