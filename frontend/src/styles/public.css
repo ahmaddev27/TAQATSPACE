@@ -193,7 +193,7 @@
   .auth-wrap { grid-template-columns: 1fr; }
   .auth-art { display: none; }
   .detail-aside, .explore-map { position: static; }
-  .ed-stats { grid-template-columns: repeat(2,1fr); gap: 18px; }
+  .ed-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 14px; }
   .ed-collage { margin-top: 12px; }
   .ed-float-card { inset-inline-start: auto; inset-inline-end: 12px; }
   .why-grid { gap: 32px; }
