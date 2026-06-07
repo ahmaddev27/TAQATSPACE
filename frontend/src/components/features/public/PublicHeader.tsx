@@ -55,7 +55,7 @@ export function PublicHeader({ dict }: PublicHeaderProps) {
                   {nav.login}
                 </Button>
               </Link>
-              <Link href="/register/freelancer">
+              <Link href="/login">
                 <Button variant="primary" size="sm">
                   {nav.getStarted}
                 </Button>

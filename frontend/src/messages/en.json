@@ -60,9 +60,15 @@
     },
     "sso": {
       "button": "Sign in with Taqat",
+      "continue": "Continue with Taqat",
       "divider": "or",
       "signingIn": "Signing you in…",
-      "error": "Could not sign in with Taqat, please try again."
+      "error": "Could not sign in with Taqat, please try again.",
+      "launchTitle": "Sign in to TAQAT",
+      "launchSubtitle": "Login and registration are handled by the unified national system (Taqat). Continue to sign in or create your account.",
+      "launchNote": "You'll be securely redirected to the unified system to sign in.",
+      "loggedOut": "You have been signed out.",
+      "backHome": "Back to home"
     },
     "onboarding": {
       "eyebrow": "One last step",
