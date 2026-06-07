@@ -46,7 +46,7 @@ export function NoSubscriptionPanel({
           variant="primary"
           size="lg"
           icon="search"
-          onClick={() => router.push("/freelancer/explore")}
+          onClick={() => router.push("/explore")}
         >
           {t("exploreCta")}
         </Button>
