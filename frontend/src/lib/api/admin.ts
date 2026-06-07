@@ -1,5 +1,7 @@
 import { serverFetch } from "@/lib/api";
 import type {
+  AdminPermission,
+  AdminRole,
   ApiEnvelope,
   BookingStatus,
   InvoiceStatus,
@@ -224,6 +226,51 @@ export async function getAdminUserDetail(id: string): Promise<AdminUserDetail> {
     `/admin/users/${id}`,
   );
   return res.data;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Admin management (GET /admin/admins) — super-admin only                    */
+/* -------------------------------------------------------------------------- */
+
+/** A staff account as shown in the admin-management list (AdminResource). */
+export interface ManagedAdmin {
+  id: string;
+  name: string;
+  email: string;
+  status: UserStatus;
+  /** Spatie roles held by the account (e.g. `["super_admin"]`). */
+  roles: AdminRole[];
+  /** Whether the account holds the elevated super-admin role. */
+  is_super_admin: boolean;
+  /** Effective permission grant. */
+  permissions: AdminPermission[];
+  created_at: string | null;
+}
+
+export interface ManagedAdminFilters {
+  status?: UserStatus;
+  search?: string;
+  per_page?: number;
+  page?: number;
+}
+
+/** Filtered, paginated directory of admin accounts. */
+export async function getManagedAdmins(
+  filters: ManagedAdminFilters = {},
+): Promise<Paginated<ManagedAdmin>> {
+  const res = await serverFetch<ApiEnvelope<Paginated<ManagedAdmin>>>(
+    `/admin/admins${toQuery(filters)}`,
+  );
+  return res.data;
+}
+
+/** All admin accounts flattened across pages (for the client-side table). */
+export async function getAllManagedAdmins(
+  filters: Omit<ManagedAdminFilters, "page"> = {},
+): Promise<ManagedAdmin[]> {
+  return collectPages((page) =>
+    getManagedAdmins({ per_page: 200, ...filters, page }),
+  );
 }
 
 /* -------------------------------------------------------------------------- */

@@ -143,6 +143,16 @@ return [
     'landing_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
+
+    // إدارة المشرفين (للمشرف الأعلى فقط)
+    'admin_created' => 'تم إنشاء حساب المشرف.',
+    'admin_updated' => 'تم تحديث حساب المشرف.',
+    'admin_deactivated' => 'تم إيقاف حساب المشرف.',
+    'admin_not_found' => 'حساب المشرف غير موجود.',
+    'admin_last_super_admin' => 'لا يمكنك إزالة آخر مشرف أعلى نشط.',
+    'admin_cannot_suspend_self' => 'لا يمكنك إيقاف حسابك الخاص.',
+    'admin_cannot_deactivate_self' => 'لا يمكنك إلغاء تفعيل حسابك الخاص.',
+    'admin_cannot_revoke_own_access' => 'لا يمكنك سحب صلاحية إدارة المشرفين عن حسابك.',
     'workspace_messaging_updated' => 'تم تحديث إعدادات مراسلة مساحة العمل.',
 
     // اختبار المراسلة

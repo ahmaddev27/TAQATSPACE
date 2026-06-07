@@ -32,6 +32,28 @@ class UserResource extends JsonResource
             'avatar' => $this->avatarUrl(),
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
+            // Staff-only authorization context so the SPA can adapt the admin UI
+            // (e.g. hide the admin-management nav for a non-super-admin). Resolved
+            // only for admin accounts to keep the common path query-free.
+            ...$this->adminContext(),
+        ];
+    }
+
+    /**
+     * Spatie roles + effective permissions, emitted only for admin accounts.
+     * Non-admin users get an empty array (no extra queries).
+     *
+     * @return array<string, mixed>
+     */
+    private function adminContext(): array
+    {
+        if (! $this->isAdmin()) {
+            return [];
+        }
+
+        return [
+            'is_super_admin' => $this->isSuperAdmin(),
+            'permissions' => $this->getPermissionNames()->values()->all(),
         ];
     }
 

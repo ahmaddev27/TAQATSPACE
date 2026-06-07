@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -12,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { UserRole } from "@/lib/types/auth";
-import { ROLE_NAV } from "./nav-config";
+import { ROLE_NAV, filterNavByPermissions } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { NavProgress } from "./NavProgress";
@@ -52,13 +53,18 @@ export function DashShell({
   children,
 }: DashShellProps) {
   const t = useTranslations("nav");
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastPathRef = useRef(pathname);
 
-  const nav = ROLE_NAV[role];
+  // Hide permission-gated items (e.g. admin management) the user cannot access.
+  // The auth payload carries the admin account's effective permission grant.
+  const nav = useMemo(
+    () => filterNavByPermissions(ROLE_NAV[role], user?.permissions),
+    [role, user?.permissions],
+  );
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 

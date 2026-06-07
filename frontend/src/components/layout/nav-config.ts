@@ -1,5 +1,5 @@
 import type { IconName } from "@/components/ui/Icon";
-import type { UserRole } from "@/lib/types/auth";
+import type { AdminPermission, UserRole } from "@/lib/types/auth";
 
 export interface NavItem {
   /** Translation key under `nav.items.*`. */
@@ -9,6 +9,12 @@ export interface NavItem {
   icon: IconName;
   /** Optional notification count badge. */
   badge?: number;
+  /**
+   * When set, the item is shown only to users whose permission grant includes
+   * this permission (admin accounts carry `permissions` on the auth payload).
+   * Items without it are visible to everyone in the role.
+   */
+  permission?: AdminPermission;
 }
 
 export interface NavGroup {
@@ -21,6 +27,30 @@ export interface RoleNav {
   /** Translation key for the role label shown in the topbar user menu. */
   roleLabelKey: string;
   groups: NavGroup[];
+}
+
+/**
+ * Drop permission-gated items the current user may not access, then prune any
+ * group left empty. Items without a `permission` are always kept. `permissions`
+ * is the admin account's effective grant (absent for non-admin roles, which
+ * have no gated items anyway).
+ */
+export function filterNavByPermissions(
+  nav: RoleNav,
+  permissions: readonly AdminPermission[] | undefined,
+): RoleNav {
+  const granted = new Set(permissions ?? []);
+
+  const groups = nav.groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.permission || granted.has(item.permission),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { ...nav, groups };
 }
 
 /**
@@ -91,6 +121,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "workspaces", href: "/admin/workspaces", icon: "building" },
           { key: "users", href: "/admin/users", icon: "users" },
+          {
+            key: "admins",
+            href: "/admin/admins",
+            icon: "shield",
+            permission: "manage_admins",
+          },
           { key: "subscriptions", href: "/admin/subscriptions", icon: "card" },
           { key: "invoices", href: "/admin/invoices", icon: "receipt" },
           { key: "reports", href: "/admin/reports", icon: "chart" },

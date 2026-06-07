@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AdminRole;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
@@ -107,6 +108,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    /**
+     * Whether this account holds the elevated `super_admin` Spatie role (full
+     * control, including administering other admins). The `users.role` column
+     * stays `admin` for every staff account; the super/standard split is carried
+     * by Spatie roles, so this is the source of truth for the elevated tier.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(AdminRole::SuperAdmin->value);
     }
 
     public function isOwner(): bool
