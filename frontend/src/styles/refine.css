@@ -435,20 +435,19 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .ed-hero-in { gap: 24px; }
   .ed-title { font-size: clamp(2rem, 8.4vw, 2.7rem); line-height: 1.12; }
   .ed-lead { font-size: var(--fs-md); line-height: 1.7; }
-  .ed-stats { grid-template-columns: repeat(2, 1fr); gap: 16px 20px; padding-top: 20px; }
-  .ed-stat-n { font-size: 1.5rem; }
+  /* Stats stay on ONE row regardless of how many there are (auto-flow columns),
+     with a fluid number size so they fit narrow phones. */
+  .ed-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; padding-top: 20px; }
+  .ed-stat-n { font-size: clamp(1rem, 4.4vw, 1.5rem); }
+  .ed-stat-l { font-size: var(--fs-xs); }
 
   /* Collage: single column; the floating card flows below instead of
      overlapping, the badge tucks into the top corner. */
   .ed-collage { grid-template-columns: 1fr; gap: 12px; }
   .ed-img-main { grid-row: auto; }
-  .ed-float-card {
-    position: static;
-    width: auto;
-    inset: auto;
-    margin-top: 2px;
-    box-shadow: var(--sh-md), 0 0 0 1px rgba(246, 169, 27, 0.12);
-  }
+  /* The live "seats available now" card is hidden on small phones — it crowds
+     the hero and the seat grid is hard to read at this width. */
+  .ed-float-card { display: none; }
   .ed-float-badge { top: 8px; inset-inline-end: 8px; padding: 9px 13px; }
   .ed-badge-n { font-size: 1.3rem; }
 
