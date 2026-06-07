@@ -16,6 +16,12 @@
 .dt-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dt-toolbar .dt-search { flex: 1 1 220px; max-width: 320px; }
 .dt-toolbar .spacer { flex: 1; }
+/* Inline filter controls in a toolbar: keep selects/date inputs at a sane width
+   instead of inheriting .input/.select width:100% (which made them stretch full
+   width and stack vertically). */
+.filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.filter-row > .input,
+.filter-row > .select-wrap { width: auto; min-width: 140px; max-width: 190px; flex: 0 0 auto; }
 .dt-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dt-count { font-size: var(--fs-sm); color: var(--text-3); white-space: nowrap; }
 .dt-count strong { color: var(--text); font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; }

@@ -36,13 +36,17 @@ class ExpenseService
             ->withQueryString();
     }
 
+    /** Trailing month window for the monthly-spend chart. */
+    private const CHART_MONTHS = 12;
+
     /**
      * Aggregate spend insights for the owner's overview: the all-time total for
-     * the current filter, the current calendar-month total, and a per-category
-     * breakdown. Computed in SQL (no row hydration) to stay efficient.
+     * the current filter, the current calendar-month total, a per-category
+     * breakdown, and a trailing-12-month spend series. Computed in SQL (no row
+     * hydration) to stay efficient.
      *
      * @param  array{category?: string|null, from?: string|null, to?: string|null}  $filters
-     * @return array{total: string, this_month: string, by_category: array<string, string>}
+     * @return array{total: string, this_month: string, by_category: array<string, string>, by_month: array<int, array{month: string, total: string}>}
      */
     public function summaryForWorkspace(Workspace $workspace, array $filters): array
     {
@@ -57,12 +61,29 @@ class ExpenseService
             ->sum('amount');
 
         $byCategory = $this->categoryBreakdown($workspace, $filters);
+        $byMonth = $this->monthlyBreakdown($workspace, $filters);
 
         return [
             'total' => $total,
             'this_month' => $thisMonth,
             'by_category' => $byCategory,
+            'by_month' => $byMonth,
         ];
+    }
+
+    /**
+     * Workspace-scoped, filter-aware query for the CSV export. Reuses the SAME
+     * filtered builder as the list/summary so the download matches the on-screen
+     * view (DRY); ordered oldest spend first for a readable ledger export.
+     *
+     * @param  array{category?: string|null, from?: string|null, to?: string|null}  $filters
+     * @return Builder<Expense>
+     */
+    public function exportQueryForWorkspace(Workspace $workspace, array $filters): Builder
+    {
+        return $this->filteredQuery($workspace, $filters)
+            ->orderBy('spent_on')
+            ->orderBy('created_at');
     }
 
     /**
@@ -112,6 +133,37 @@ class ExpenseService
         }
 
         return $breakdown;
+    }
+
+    /**
+     * Trailing-12-month spend series for the chart, filter-aware and
+     * workspace-scoped. One grouped query (MySQL DATE_FORMAT month buckets, no
+     * loop over rows); missing months are zero-filled in PHP so the series is
+     * always contiguous and ascending.
+     *
+     * @param  array{category?: string|null, from?: string|null, to?: string|null}  $filters
+     * @return array<int, array{month: string, total: string}>
+     */
+    private function monthlyBreakdown(Workspace $workspace, array $filters): array
+    {
+        $start = Carbon::now()->startOfMonth()->subMonthsNoOverflow(self::CHART_MONTHS - 1);
+
+        $sums = $this->filteredQuery($workspace, $filters)
+            ->where('spent_on', '>=', $start->toDateString())
+            ->selectRaw("DATE_FORMAT(spent_on, '%Y-%m') as ym, SUM(amount) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        $series = [];
+        for ($i = 0; $i < self::CHART_MONTHS; $i++) {
+            $key = $start->copy()->addMonthsNoOverflow($i)->format('Y-m');
+            $series[] = [
+                'month' => $key,
+                'total' => (string) ($sums[$key] ?? '0'),
+            ];
+        }
+
+        return $series;
     }
 
     /**

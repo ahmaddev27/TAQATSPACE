@@ -4,7 +4,7 @@ import { API_BASE } from "@/lib/api";
 import { TOKEN_COOKIE } from "@/lib/auth";
 
 /** Owner export datasets the backend can stream as CSV (own workspace only). */
-const EXPORT_TYPES = ["invoices", "members"] as const;
+const EXPORT_TYPES = ["invoices", "members", "expenses"] as const;
 type ExportType = (typeof EXPORT_TYPES)[number];
 
 function isExportType(value: string): value is ExportType {

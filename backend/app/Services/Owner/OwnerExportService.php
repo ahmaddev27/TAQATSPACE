@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Owner;
 
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\Workspace;
+use App\Services\ExpenseService;
 use App\Services\InvoiceService;
 use App\Services\MemberService;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,11 +27,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class OwnerExportService
 {
     /** Whitelisted owner export types — anything else is a 404 at the controller. */
-    public const TYPES = ['invoices', 'members'];
+    public const TYPES = ['invoices', 'members', 'expenses'];
 
     public function __construct(
         private readonly InvoiceService $invoices,
         private readonly MemberService $members,
+        private readonly ExpenseService $expenses,
     ) {}
 
     /**
@@ -104,6 +107,20 @@ class OwnerExportService
                     $subscription->monthly_price,
                     $subscription->status->value,
                     $subscription->start_date?->toDateString(),
+                ],
+            ],
+            'expenses' => [
+                $this->expenses->exportQueryForWorkspace(
+                    $workspace,
+                    $this->only($filters, ['category', 'from', 'to']),
+                ),
+                ['spent_on', 'title', 'category', 'amount', 'notes'],
+                fn (Expense $expense): array => [
+                    $expense->spent_on?->toDateString(),
+                    $expense->title,
+                    $expense->category->value,
+                    $expense->amount,
+                    $expense->notes,
                 ],
             ],
         };

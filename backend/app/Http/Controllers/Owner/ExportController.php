@@ -36,7 +36,10 @@ class ExportController extends Controller
             throw new NotFoundHttpException('No workspace for the authenticated owner.');
         }
 
-        $filters = $request->only(['status', 'search', 'month', 'sort', 'direction']);
+        $filters = $request->only([
+            'status', 'search', 'month', 'sort', 'direction', // invoices + members
+            'category', 'from', 'to',                          // expenses
+        ]);
 
         return $this->exports->stream($type, $workspace, $filters);
     }

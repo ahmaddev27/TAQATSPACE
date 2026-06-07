@@ -220,7 +220,7 @@ export function ResourcesTable({ resources, summary }: ResourcesTableProps) {
 
       <div className="dt">
         <div className="dt-toolbar">
-          <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+          <div className="filter-row">
             <Select
               value={type}
               onChange={(e) => {
