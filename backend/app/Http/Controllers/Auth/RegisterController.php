@@ -30,6 +30,6 @@ class RegisterController extends Controller
             'token' => $result['token'],
             'token_type' => 'Bearer',
             'role' => $result['user']->role->value,
-        ], 'Registration successful. Please verify your email.', 201);
+        ], 'Registration successful.', 201);
     }
 }

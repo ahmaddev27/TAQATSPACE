@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AdminRole;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
-use App\Notifications\VerifyEmailNotification;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
@@ -109,6 +108,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === UserRole::Admin;
     }
 
+    /**
+     * Whether this account holds the elevated `super_admin` Spatie role (full
+     * control, including administering other admins). The `users.role` column
+     * stays `admin` for every staff account; the super/standard split is carried
+     * by Spatie roles, so this is the source of truth for the elevated tier.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(AdminRole::SuperAdmin->value);
+    }
+
     public function isOwner(): bool
     {
         return $this->role === UserRole::WorkspaceOwner;
@@ -134,11 +144,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ---- Notifications (SPA-aware, queued) ----
-
-    public function sendEmailVerificationNotification(): void
-    {
-        $this->notify(new VerifyEmailNotification);
-    }
 
     /**
      * @param  string  $token

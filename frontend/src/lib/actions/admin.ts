@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
+  AdminPermission,
+  AdminRole,
   Branding,
   BroadcastInput,
   BroadcastResult,
@@ -17,7 +19,7 @@ import type {
   WorkspaceStatus,
 } from "@/lib/types";
 import type { ContentByKey } from "@/lib/api/content";
-import type { AdminInvoice } from "@/lib/api/admin";
+import type { AdminInvoice, ManagedAdmin } from "@/lib/api/admin";
 
 /**
  * Persist the public landing page content (`PUT /admin/landing`).
@@ -187,6 +189,31 @@ export async function updateWorkspaceStatus(
   return result;
 }
 
+/**
+ * Publish or unpublish a workspace to public discovery
+ * (`PUT /admin/workspaces/{id}/publish|unpublish`). This is a gate separate
+ * from the account status: only published workspaces appear on the public
+ * landing/discovery. Revalidates the admin list, the admin home, and the public
+ * landing/explore pages so the change is reflected immediately.
+ */
+export async function setWorkspacePublished(
+  workspaceId: string,
+  published: boolean,
+): Promise<ActionResult<Workspace>> {
+  const action = published ? "publish" : "unpublish";
+  const result = await authedMutate<Workspace>(
+    `/admin/workspaces/${workspaceId}/${action}`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
+    revalidatePath("/[locale]/(dashboard)/admin", "page");
+    revalidatePath("/[locale]/(public)", "page");
+    revalidatePath("/[locale]/(public)/explore", "page");
+  }
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  User moderation (PUT /admin/users/{id}/status)                            */
 /* -------------------------------------------------------------------------- */
@@ -331,4 +358,68 @@ export async function sendAdminBroadcast(
     method: "POST",
     body: input,
   });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Admin management (super-admin only)                                        */
+/* -------------------------------------------------------------------------- */
+
+const ADMINS_PATH = "/[locale]/(dashboard)/admin/admins";
+
+/** Payload for creating a new admin account. */
+export interface CreateAdminInput {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  admin_role: AdminRole;
+  permissions: AdminPermission[];
+}
+
+/** Create a new admin account (`POST /admin/admins`). */
+export async function createAdmin(
+  input: CreateAdminInput,
+): Promise<ActionResult<ManagedAdmin>> {
+  const result = await authedMutate<ManagedAdmin>("/admin/admins", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidatePath(ADMINS_PATH, "page");
+  return result;
+}
+
+/**
+ * Patch for updating an admin account. Every field is optional; only the keys
+ * present are sent to the backend so a single attribute can be changed.
+ */
+export interface UpdateAdminInput {
+  status?: UserStatus;
+  admin_role?: AdminRole;
+  permissions?: AdminPermission[];
+  password?: string;
+  password_confirmation?: string;
+}
+
+/** Update an admin account (`PUT /admin/admins/{id}`). */
+export async function updateAdmin(
+  adminId: string,
+  input: UpdateAdminInput,
+): Promise<ActionResult<ManagedAdmin>> {
+  const result = await authedMutate<ManagedAdmin>(`/admin/admins/${adminId}`, {
+    method: "PUT",
+    body: input,
+  });
+  if (result.ok) revalidatePath(ADMINS_PATH, "page");
+  return result;
+}
+
+/** Deactivate (suspend) an admin account (`DELETE /admin/admins/{id}`). */
+export async function deactivateAdmin(
+  adminId: string,
+): Promise<ActionResult<ManagedAdmin>> {
+  const result = await authedMutate<ManagedAdmin>(`/admin/admins/${adminId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidatePath(ADMINS_PATH, "page");
+  return result;
 }

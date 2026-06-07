@@ -31,10 +31,15 @@
       "colOwner": "Owner",
       "colCity": "City",
       "colStatus": "Status",
+      "colPublished": "Publishing",
       "colCreated": "Created",
       "approve": "Approve",
       "suspend": "Suspend",
       "reactivate": "Reactivate",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publishedBadge": "Published",
+      "unpublishedBadge": "Not published",
       "count": "Total",
       "searchPlaceholder": "Search by name, city or owner…",
       "emptyTitle": "No workspaces",
@@ -54,9 +59,16 @@
         "cancel": "Cancel",
         "confirm": "Confirm suspension"
       },
+      "unpublishConfirm": {
+        "title": "Unpublish workspace",
+        "body": "\"{name}\" will be removed from the public landing and discovery. Its account stays active. Continue?"
+      },
       "toast": {
         "statusUpdated": "Workspace status updated",
-        "statusFailed": "Could not update the workspace status"
+        "statusFailed": "Could not update the workspace status",
+        "published": "Workspace published",
+        "unpublished": "Workspace unpublished",
+        "publishFailed": "Could not update the publishing state"
       }
     },
     "users": {
@@ -93,6 +105,69 @@
         "activated": "Account activated",
         "suspended": "Account suspended",
         "statusFailed": "Could not update the account status"
+      }
+    },
+    "admins": {
+      "title": "Admins",
+      "subtitle": "Add admin accounts and control their roles and permissions.",
+      "addAdmin": "Add admin",
+      "createTitle": "New admin",
+      "editTitle": "Edit admin",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRoles": "Role",
+      "colStatus": "Status",
+      "colJoined": "Joined",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "deactivateTitle": "Deactivate admin",
+      "deactivateConfirm": "Suspend {name}'s admin account? They will lose access until reactivated.",
+      "create": "Create admin",
+      "save": "Save changes",
+      "cancel": "Cancel",
+      "count": "Total",
+      "filterStatus": "Status",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Search by name or email…",
+      "permissionCount": "{count} permissions",
+      "emptyTitle": "No admins",
+      "emptyBody": "No admin accounts match the current filters.",
+      "statusOption": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "role": {
+        "super_admin": "Super admin",
+        "admin": "Admin"
+      },
+      "permission": {
+        "manage_admins": "Manage admins",
+        "manage_workspaces": "Manage workspaces",
+        "manage_users": "Manage users",
+        "manage_billing": "Manage billing",
+        "manage_content": "Manage content",
+        "manage_messaging": "Manage messaging",
+        "view_reports": "View reports"
+      },
+      "form": {
+        "name": "Full name",
+        "namePlaceholder": "e.g. Lina Saleh",
+        "email": "Email",
+        "emailPlaceholder": "admin@taqat.space",
+        "password": "Password",
+        "newPassword": "New password",
+        "newPasswordHint": "Leave blank to keep the current password.",
+        "passwordConfirm": "Confirm password",
+        "role": "Role",
+        "permissions": "Permissions",
+        "selfHint": "You cannot remove your own super-admin access."
+      },
+      "toast": {
+        "created": "Admin created",
+        "updated": "Admin updated",
+        "deactivated": "Admin deactivated",
+        "saveFailed": "Could not save the admin",
+        "deactivateFailed": "Could not deactivate the admin"
       }
     },
     "userDetail": {

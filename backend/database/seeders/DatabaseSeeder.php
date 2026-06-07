@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\AdminRole;
 use App\Enums\InvoiceStatus;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $this->seedRoles();
+            $this->call(AdminPermissionSeeder::class);
 
             $this->seedAdmin();
             $freelancers = $this->seedFreelancers(20);
@@ -66,7 +68,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'مشرف المنصّة',
             'email' => 'admin@taqat.space',
         ]);
-        $admin->assignRole(UserRole::Admin->value);
+        // Grant the seeded account the super_admin role so there is always one
+        // admin who can administer the others. The Spatie super_admin role —
+        // not the `users.role` column — carries the elevated privileges.
+        $admin->assignRole(AdminRole::SuperAdmin->value);
 
         return $admin;
     }

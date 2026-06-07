@@ -8,6 +8,8 @@ export type {
   User,
   UserRole,
   UserStatus,
+  AdminRole,
+  AdminPermission,
   ApiEnvelope,
   ApiErrorBody,
 } from "./auth";
@@ -170,6 +172,14 @@ export interface Workspace {
   photos: string[];
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
+  /**
+   * Public-publish gate, separate from `status`. Present only for requests that
+   * may manage the workspace (its owner or an admin); absent on public payloads.
+   * `is_published` is true once an admin has published it to public discovery;
+   * `published_at` is the ISO timestamp of that action (null when unpublished).
+   */
+  is_published?: boolean;
+  published_at?: string | null;
   avg_rating: number | null;
   /**
    * Per-seat-type pricing. All three types may be present; disabled ones are

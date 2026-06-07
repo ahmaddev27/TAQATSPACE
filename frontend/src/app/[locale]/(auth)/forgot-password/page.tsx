@@ -1,9 +1,14 @@
-import { ForgotPasswordForm } from "@/components/features/auth/ForgotPasswordForm";
+import { redirect } from "next/navigation";
 
-export default function ForgotPasswordPage() {
-  return (
-    <div className="auth-center">
-      <ForgotPasswordForm />
-    </div>
-  );
+/**
+ * Credentials are owned by the unified SSO system — there is no local password
+ * to recover. This legacy route now redirects to the SSO launch screen.
+ */
+export default async function ForgotPasswordPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/login`);
 }

@@ -210,6 +210,9 @@ return [
         'new_password_confirmation' => 'تأكيد كلمة المرور الجديدة',
         'phone' => 'رقم الهاتف',
         'role' => 'الدور',
+        'admin_role' => 'دور المشرف',
+        'permissions' => 'الصلاحيات',
+        'permissions.*' => 'الصلاحية',
         'specialty' => 'التخصص',
         'bio' => 'النبذة التعريفية',
         'avatar' => 'الصورة الشخصية',
@@ -269,6 +272,10 @@ return [
         'key' => 'المفتاح',
         'value' => 'القيمة',
         'enabled' => 'مُفعّل',
+
+        'category' => 'الفئة',
+        'spent_on' => 'تاريخ الصرف',
+        'quantity' => 'الكمية',
     ],
 
 ];

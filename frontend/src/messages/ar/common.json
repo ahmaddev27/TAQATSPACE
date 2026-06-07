@@ -66,6 +66,8 @@
     "items": {
       "dashboard": "لوحة التحكم",
       "members": "المشتركون",
+      "expenses": "المصاريف",
+      "resources": "الموارد",
       "seats": "المقاعد",
       "requests": "طلبات الحجز",
       "invoices": "الفواتير",
@@ -82,6 +84,7 @@
       "analytics": "إحصائيات المنصة",
       "workspaces": "إدارة المساحات",
       "users": "إدارة المستخدمين",
+      "admins": "المشرفون",
       "subscriptions": "الاشتراكات",
       "landing": "الصفحة الرئيسية",
       "finance": "المالية والعمولات",

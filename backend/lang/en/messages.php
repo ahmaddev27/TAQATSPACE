@@ -30,9 +30,7 @@ return [
     'account_pending' => 'Account pending verification.',
     'invalid_credentials' => 'Invalid email or password.',
     'current_password_incorrect' => 'The current password is incorrect.',
-    'email_already_verified' => 'Email already verified.',
-    'verification_link_sent' => 'Verification link sent.',
-    'invalid_verification_link' => 'Invalid verification link.',
+    'password_change_sso' => 'Your password is managed by Taqat single sign-on and cannot be changed here.',
 
     // Password reset
     'reset_link_sent' => 'If that email exists, a reset link has been sent.',
@@ -57,6 +55,8 @@ return [
     'workspace_created' => 'Workspace created and submitted for review.',
     'workspace_updated' => 'Workspace updated.',
     'workspace_status_updated' => 'Workspace status updated.',
+    'workspace_published' => 'Workspace published to public discovery.',
+    'workspace_unpublished' => 'Workspace removed from public discovery.',
     'workspace_already_registered' => 'You already have a registered workspace.',
 
     // Photos
@@ -145,6 +145,16 @@ return [
     'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'messaging_settings_updated' => 'Messaging settings updated.',
+
+    // Admin management (super-admin only)
+    'admin_created' => 'Admin account created.',
+    'admin_updated' => 'Admin account updated.',
+    'admin_deactivated' => 'Admin account deactivated.',
+    'admin_not_found' => 'Admin account not found.',
+    'admin_last_super_admin' => 'You cannot remove the last active super admin.',
+    'admin_cannot_suspend_self' => 'You cannot suspend your own account.',
+    'admin_cannot_deactivate_self' => 'You cannot deactivate your own account.',
+    'admin_cannot_revoke_own_access' => 'You cannot revoke your own admin-management access.',
     'workspace_messaging_updated' => 'Workspace messaging settings updated.',
 
     // Messaging test
@@ -161,5 +171,17 @@ return [
     'broadcast_sms_not_configured_platform' => 'SMS is not configured for the platform. Configure an SMS provider before sending.',
     'broadcast_email_not_configured_workspace' => 'Email is not configured for your workspace. Configure SMTP or use the platform account before sending.',
     'broadcast_sms_not_configured_workspace' => 'SMS is not configured for your workspace. Configure an SMS provider or use the platform account before sending.',
+
+    // Workspace management — expenses
+    'expense_created' => 'Expense recorded.',
+    'expense_updated' => 'Expense updated.',
+    'expense_deleted' => 'Expense deleted.',
+    'expense_no_access' => 'You do not have access to this expense.',
+
+    // Workspace management — resources
+    'resource_created' => 'Resource added.',
+    'resource_updated' => 'Resource updated.',
+    'resource_deleted' => 'Resource deleted.',
+    'resource_no_access' => 'You do not have access to this resource.',
 
 ];

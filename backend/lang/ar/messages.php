@@ -30,9 +30,7 @@ return [
     'account_pending' => 'الحساب قيد التحقق.',
     'invalid_credentials' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
     'current_password_incorrect' => 'كلمة المرور الحالية غير صحيحة.',
-    'email_already_verified' => 'تم التحقق من البريد الإلكتروني مسبقًا.',
-    'verification_link_sent' => 'تم إرسال رابط التحقق.',
-    'invalid_verification_link' => 'رابط التحقق غير صالح.',
+    'password_change_sso' => 'كلمة المرور تُدار عبر الدخول الموحّد من طاقات ولا يمكن تغييرها من هنا.',
 
     // إعادة تعيين كلمة المرور
     'reset_link_sent' => 'إذا كان هذا البريد الإلكتروني موجودًا، فقد تم إرسال رابط إعادة التعيين.',
@@ -57,6 +55,8 @@ return [
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
+    'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
+    'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',
     'workspace_already_registered' => 'لديك مساحة عمل مسجّلة بالفعل.',
 
     // الصور
@@ -145,6 +145,16 @@ return [
     'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
+
+    // إدارة المشرفين (للمشرف الأعلى فقط)
+    'admin_created' => 'تم إنشاء حساب المشرف.',
+    'admin_updated' => 'تم تحديث حساب المشرف.',
+    'admin_deactivated' => 'تم إيقاف حساب المشرف.',
+    'admin_not_found' => 'حساب المشرف غير موجود.',
+    'admin_last_super_admin' => 'لا يمكنك إزالة آخر مشرف أعلى نشط.',
+    'admin_cannot_suspend_self' => 'لا يمكنك إيقاف حسابك الخاص.',
+    'admin_cannot_deactivate_self' => 'لا يمكنك إلغاء تفعيل حسابك الخاص.',
+    'admin_cannot_revoke_own_access' => 'لا يمكنك سحب صلاحية إدارة المشرفين عن حسابك.',
     'workspace_messaging_updated' => 'تم تحديث إعدادات مراسلة مساحة العمل.',
 
     // اختبار المراسلة
@@ -161,5 +171,17 @@ return [
     'broadcast_sms_not_configured_platform' => 'الرسائل النصية غير مهيّأة للمنصة. يرجى إعداد مزوّد رسائل نصية قبل الإرسال.',
     'broadcast_email_not_configured_workspace' => 'البريد الإلكتروني غير مهيّأ لمساحة عملك. يرجى إعداد SMTP أو استخدام حساب المنصة قبل الإرسال.',
     'broadcast_sms_not_configured_workspace' => 'الرسائل النصية غير مهيّأة لمساحة عملك. يرجى إعداد مزوّد رسائل نصية أو استخدام حساب المنصة قبل الإرسال.',
+
+    // إدارة المساحة — المصاريف
+    'expense_created' => 'تم تسجيل المصروف.',
+    'expense_updated' => 'تم تحديث المصروف.',
+    'expense_deleted' => 'تم حذف المصروف.',
+    'expense_no_access' => 'ليس لديك صلاحية الوصول إلى هذا المصروف.',
+
+    // إدارة المساحة — الموارد
+    'resource_created' => 'تمت إضافة المورد.',
+    'resource_updated' => 'تم تحديث المورد.',
+    'resource_deleted' => 'تم حذف المورد.',
+    'resource_no_access' => 'ليس لديك صلاحية الوصول إلى هذا المورد.',
 
 ];

@@ -73,8 +73,6 @@ class RegistrationService
             $this->notifyAdmins($user);
         }
 
-        $user->sendEmailVerificationNotification();
-
         return [
             'user' => $user,
             'token' => $user->createToken('auth_token')->plainTextToken,

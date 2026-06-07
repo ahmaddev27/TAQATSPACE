@@ -34,7 +34,7 @@ export function QuickLinks({ hasSubscription }: { hasSubscription: boolean }) {
         variant="secondary"
         block
         icon="search"
-        onClick={() => router.push("/freelancer/explore")}
+        onClick={() => router.push("/explore")}
       >
         {t("exploreOther")}
       </Button>
