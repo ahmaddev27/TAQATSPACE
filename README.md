@@ -8,13 +8,13 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 
 | | |
 |---|---|
-| **Overall** | 57 / 80 tasks (71%) — **Phases 1–3 complete** |
-| **Current phase** | Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ → next: Phase 4 (Admin, Reports, Launch) |
-| **Current milestone** | M01–M09 ✅ |
-| **Current sprint** | S1–S5 done |
+| **Overall** | **Phases 1–4 ✅** (admin, reports/exports, city+gender analytics) **+ a large Platform-Expansion batch** · M12 hardening/launch + a dedicated Realtime phase remaining |
+| **Current phase** | **Phase 4 ✅** → **M12 testing/launch** · **Realtime (Firebase — FCM notifications + Firestore chat) = next dedicated phase** |
+| **Current milestone** | M01–M11 ✅ · plus the **Platform-Expansion** batch (SSO-only auth, branding, admin-management, messaging + broadcast, mini workspace-management, profile, analytics) — see "Platform Expansion" below |
+| **Current sprint** | S1–S8 done |
 | **Deployed** | 🟢 **Prod** [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) · 🟢 **Staging** [staging.taqat.space](https://staging.taqat.space) + api.staging.taqat.space |
-| **API docs** | 🟢 Live UI: [api.taqat.space/docs/api](https://api.taqat.space/docs/api) (Scramble/Stoplight, 58 endpoints) |
-| **Last updated** | 2026-06-03 |
+| **API docs** | 🟢 Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) (**~105 endpoints**) + Postman collection — regenerated |
+| **Last updated** | 2026-06-07 |
 
 **Legend:** ☐ Todo · 🔄 In Progress · ✅ Done · ⏸ Blocked · ⏭ Deferred
 
@@ -73,11 +73,51 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M05 | Workspace Owner Dashboard — Core | P2 | S3–S4 | ✅ | 100% |
 | M06 | Freelancer Dashboard — Core | P2 | S4–S5 | ✅ | 100% |
 | M07 | Invoicing System | P3 | S6 | ✅ | 100% |
-| M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 95% (realtime needs Pusher creds) |
+| M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 90% — in-app done; **live realtime → dedicated Firebase phase** |
 | M09 | Announcements, Packages & Reviews | P3 | S7 | ✅ | 100% |
-| M10 | Super Admin Dashboard | P4 | S8 | ☐ | 0% |
-| M11 | Reports, Exports & Analytics | P4 | S8 | ☐ | 0% |
-| M12 | Testing, Hardening & Production Launch | P4 | S9 | ☐ | 0% |
+| M10 | Super Admin Dashboard | P4 | S8 | ✅ | 100% |
+| M11 | Reports, Exports & Analytics | P4 | S8 | ✅ | 100% |
+| M12 | Testing, Hardening & Production Launch | P4 | S9 | 🔄 | bug-fixes + hardening ongoing |
+
+### Platform Expansion — beyond the original 80-task plan ✅
+
+Built on top of Phases 1–4 (each on its own branch + PR, all build-verified):
+
+- **Auth → SSO-only**: login/register open Taqat SSO directly; first-login onboarding (choose freelancer/owner + complete data); RP-initiated **single logout**; dedicated `/admin-login` for staff; email-verification + password-change retired for SSO users (admin keeps password).
+- **Messaging**: admin SMTP/SMS config + per-workspace (own accounts or platform, encrypted secrets); **broadcast** email/SMS to a user / all / a segment (admin + owner).
+- **Workspace publish-approval**: admin gates public visibility (`published_at`) separately from account status.
+- **Mini workspace-management**: owner **expenses** + **resources** CRUD modules.
+- **Dynamic site branding**: admin-controlled logo (dark/light), favicon, meta — applied everywhere via `generateMetadata` + a theme-aware `BrandLogo`.
+- **Admin-management**: super-admin manages admins with Spatie roles + permissions (nav-gated).
+- **Profile management**: centered tabbed profile (admin/owner/freelancer) from the top-bar; avatar via a **global image cropper** on every upload.
+- **Analytics**: city/governorate + gender stats (admin + owner) via recharts.
+- **Pricing → seat-types** as the single source; seats grouped by type with member avatars.
+- **Invoice PDF** Arabic shaping fixed (embedded Cairo); **full backend i18n** (ar/en) + per-request locale; **CSV exports honor table filters**; responsive sidebar/mobile fixes.
+
+➡️ **Next dedicated phase: Realtime** — Firebase (FCM push notifications + Firestore live chat).
+
+---
+
+## Roadmap — what's next (planned with the user)
+
+**Order:** Realtime → admin permission enforcement → comprehensive testing → hardening/launch.
+
+1. **Realtime milestone (next, 2026-06-08).** Firebase — **FCM** push notifications + **Firestore** live chat (chat stored in Firestore). Lowest ops on cPanel (no persistent WS server). Replaces the deferred in-app realtime.
+2. **Full admin permission enforcement.** The admin-management module defines + assigns Spatie permissions (`manage_admins`, `manage_workspaces`, `manage_users`, `manage_billing`, `manage_content`, `manage_messaging`, `view_reports`) but currently enforces them **only on the admin-management routes**. Gate **every** admin route/page/nav by its permission so a grant actually restricts access platform-wide.
+3. **Comprehensive testing (M12)** — _started; paused, resume next session._
+   - **Backend:** PHPUnit feature/integration tests per domain (auth/SSO/onboarding, admin + admin-management, owner workspaces/seats/subscriptions/expenses/resources/messaging, reports/analytics/exports, public discovery). Foundation ready: sqlite `:memory:` + factories.
+   - **Frontend:** Vitest component/unit tests (validations, flows).
+   - **E2E (Playwright):** critical journeys — login + `/admin-login`, SSO onboarding role-selection, single logout, owner CRUD, admin moderation, exports. (E2E will reproduce the Known Issues below.)
+4. **Hardening & launch (M12).** Rotate exposed secrets (the SSO client secret shared in chat + any old DB/AWS); error monitoring (Sentry); confirm SMS gateway endpoints (hotsms/mtcsms `// TODO`) before any real SMS; verify crons/queues (invoice generation, overdue, notification queue); finalize prod env (SSO, SMTP/SMS, S3, Firebase).
+
+## Known issues (open)
+
+- **Onboarding** — after choosing the account type, the "complete your data" form appears then disappears. Not visible in static code (forms, `common.gender` i18n keys, middleware, `(auth)` layout all check out) → a runtime/integration issue; to be reproduced + fixed via E2E.
+- **SSO single logout** — code complete (client-built URL via `NEXT_PUBLIC_SSO_LOGOUT_URL` + `NEXT_PUBLIC_SSO_CLIENT_ID`, plus a backend override `TAQAT_SSO_END_SESSION_URL`). It returned `null` due to **server config cache** — set the env + clear config (a temporary `GET /clear` helper was added on `chore/ops-clear-route`; **remove after use**) + register the post-logout redirect origin at the IdP.
+
+## Ops pending (user-owned)
+
+Merge the open branches → `dev` (triggers the GitHub Actions deploy), then: hit `api.staging.taqat.space/clear`, set `NEXT_PUBLIC_SSO_LOGOUT_URL` + `NEXT_PUBLIC_SSO_CLIENT_ID` for the frontend build, and register `https://staging.taqat.space` as an allowed post-logout redirect at the SSO. **Open branches:** `feat/analytics-city-gender` · `fix/ui-and-progress` · `feat/expenses-export-chart` · `fix/sso-logout-frontend` · `chore/ops-clear-route`.
 
 ---
 
@@ -122,13 +162,19 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 - **M09** ✅ T055/056 announcements · T057/058 reviews (done in P2)
 - _58 API endpoints; backend 3 parallel agents + frontend 3 parallel agents; build+tsc+lint green; live-smoke 200._
 
-## Phase 4 — Admin & Launch _(not started)_
-**M10** ☐ T059–T068 · **M11** ☐ T069–T070 · **M12** ☐ T071–T080
+## Phase 4 — Admin & Launch _(M10–M11 ✅ · M12 ongoing)_
+**M10** ✅ Super-Admin dashboard + status/payment tracking (mark-paid, receipt upload) · **M11** ✅ reports (recharts) + filter-aware CSV exports + **city/gender analytics** · **M12** 🔄 testing/hardening/launch · _plus the **Platform-Expansion** batch above._
 
 ---
 
 ## Changelog
 
+- **2026-06-07** — **Platform-Expansion batch (each on its own branch + PR, all build-verified).** **SSO-only auth** (login/register → Taqat SSO; first-login onboarding; **RP-initiated single logout** via `TAQAT_SSO_END_SESSION_URL`; `/admin-login` for staff; email-verify + password-change retired for SSO). **Messaging** config (admin + per-workspace, encrypted) + **broadcast** email/SMS (user/all/segment). **Workspace publish-approval** (`published_at` gate). **Mini workspace-management** (owner expenses + resources CRUD). **Dynamic site branding** (admin logo dark/light + favicon + meta, theme-aware). **Admin-management** (Spatie roles + permissions). **Profile** (tabbed, top-bar) + **global image cropper** on every upload. **City/gender analytics** (admin + owner). Plus: pricing→seat-types single source + seat avatars; invoice-PDF Arabic shaping (embedded Cairo); full backend i18n (ar/en) + per-request locale; CSV exports honor table filters; responsive sidebar + mobile fixes. OpenAPI ~105 paths. **Next dedicated phase: Realtime (Firebase — FCM + Firestore chat).**
+- **2026-06-06 (cont.)** — **Phase 4 M11 + admin CRM + landing reorder (on `feat/phase-2`).** **M11 Reports/exports done**: backend `GET /admin/reports` (revenue-by-month, status breakdowns, top workspaces) + `GET /admin/exports/{type}` streamed CSV (UTF-8 BOM); frontend `/admin/reports` (recharts) + CSV "Export" buttons via an auth-proxying route handler. **Admin "CRM" section**: renamed/grouped the content hub (`/admin/rm` → `/admin/crm`) into a dedicated CRM nav group (Landing + Site/FAQ/About/How-it-works editors). **Landing CMS: section reordering + live preview** (Layout tab with up/down + enable toggles; sticky preview pane; public landing renders by `sections_order`). Fixes: featured-section subtitle now renders as its eyebrow; deploy "broken pipe" (subshell-detach Node). OpenAPI grew to ~80 paths.
+- **2026-06-06** — **Phase 4 M10 started: Super-Admin dashboard + financial tracking (on `feat/phase-2`).** Business-model-aligned (no gateway, no plans — manual tracking): backend admin endpoints (stats, users list+status, subscriptions list, invoices list + mark-paid/unpaid + **receipt upload**, `receipt_path` migration, pdf/receipt URLs) — 8 routes, OpenAPI now 74 paths. Frontend: real admin dashboard (KPIs + tracked paid/outstanding revenue) + Workspaces / Users / Subscriptions / Invoices management pages (approve/suspend, mark paid w/ optional date, mark unpaid, upload receipt → also marks paid, download PDF / view receipt) + admin nav + i18n. Also fixed the deploy "broken pipe" (subshell-detach Node so SSH exits clean).
+- **2026-06-04 (cont. 2)** — **rm CMS public display + registration fix + business model.** The admin **"rm" CMS now drives the public pages** (footer + Contact show admin-managed email/phone/whatsapp/address/social; FAQ items; About lead+sections; home How-it-works steps) — merging over i18n. **Workspace-owner registration fixed end-to-end**: was broken (never sent email/password, never created a workspace); now creates the owner (pending_verification) AND the Workspace (pending) with all details + per-seat-type pricing in one transaction. **Business model noted for Phase 4:** billing is **admin-managed status/payment tracking + receipt upload** — NO payment gateway, NO self-serve plans; pricing/seats are per-workspace (owner-set). OpenAPI/Postman regenerated.
+- **2026-06-04 (cont.)** — **Pricing + content-control + UX wave (on `feat/phase-2`, awaiting merge to dev).** **Per-seat-type pricing — DONE end-to-end** (backend `seat_type_prices` + `PUT /workspace/seat-types`; owner "Seat types & pricing" tab; 3-type registration step; public SeatPricing + BookingPanel now data-driven; booking/subscription derive the type price). **Admin "rm" content CMS — backend + editor DONE, public display PENDING**: `site_settings`-backed `GET /content/{key}` + admin `GET/PUT /admin/content/{key}` for `site/faq/about/how_it_works`, plus the `/admin/rm` hub + bilingual editors — but FAQ/About/Contact/footer/home do **not yet read** the CMS (agent session dropped). Branded **route-transition loader** (TileLogo + animated bars). Fixes: admin Landing CMS showed raw i18n keys (admin.json namespace wrapping); auth-aware public header (Dashboard button when logged in). OpenAPI **66 paths** + Postman regenerated. **Still pending:** `rm` public-display integration; registration-scenario "real integration" after owner/freelancer signup.
+- **2026-06-04** — **Big feature + polish wave (on `feat/phase-2`, awaiting merge).** Maps → **MapLibre + OpenFreeMap** (no token/account) with an interactive lat/lng picker (registration + owner settings). **S3 images via presigned URLs** (no public bucket). **Admin Landing CMS** (bilingual content editor → public landing merges over i18n; fixed the admin i18n namespace wrapping). **Invoice PDFs → mPDF** (correct Arabic shaping/RTL, on-brand redesign). **"Sign in with Taqat" SSO** (OIDC Authorization Code + PKCE, one-time-code session bridge; secrets via server env). Robust **logout** + confirmation. **Per-seat-type pricing** backend (`seat_type_prices` table, owner `PUT /workspace/seat-types`, booking/subscription derive from the type price; frontend UI pending). Localized **metadata for all pages** + branded SVG favicon. Borderless cards/sections, dark-mode button contrast, mobile hero/Why, adaptive detail gallery, auth-aware public header, demo-account login panel. Deploy fixes (node 24, broken-pipe stdin detach, CI on PR-only). OpenAPI + Postman regenerated (landing, seat-types, SSO included). _See git log on `feat/phase-2`._
 - **2026-06-02** — Project kickoff. Plan approved (Laravel 13 · Next.js 15 · MySQL 8 · AWS S3 · Laragon native · Scramble docs). Toolchain verified (PHP 8.4.5, Composer 2.8.10, Laravel 13.12, Node 24.11, MySQL 8.4.3). Scaffolded backend + frontend. Backend: 11 enums, 10 UUID models, all migrations (users/spatie/morphs UUID-adapted + core + supporting tables), CORS, role middleware, health endpoints, ApiResponse, auth FormRequests + UserResource. README converted to live progress tracker.
 - **2026-06-02 (cont.)** — **Backend Phase 1 complete & verified.** `migrate:fresh --seed` green; Gaza dataset seeded (factories + GazaData + DatabaseSeeder). Auth smoke-tested live: register 201, login 200, me 200, logout 204, forgot-password 200, 401/422 correct, health endpoints OK. Fixed: `package:discover` (skipped by earlier `--no-scripts`) registering Spatie/Scramble providers; `User` SPA notification overrides (queued verify/reset, frontend URLs). API docs live (`/docs/api`, `openapi.json` 10 paths) + Postman generated via `composer api:docs`. **Note:** AWS S3 SDK (`aws-sdk-php`) un-installable locally (codeload.github.com throttled ~839 B/s) → storage abstracted, local disk in dev, S3 enabled on server.
 - **2026-06-02 (cont.)** — **Pushed to GitHub + CI/CD.** Initial commit pushed to `ahmaddev27/TAQATSPACE` (`main`). Created `dev` branch (staging). Added CI (PHPUnit + frontend lint/tsc/build on PRs/pushes) and **SSH deploy workflows**: merge→`main` deploys production (`taqat.space` + `api.taqat.space`), merge→`dev` deploys staging. Next.js `output:'standalone'` for Node hosting. Deploy keypair generated (gitignored). Full guide in [DEPLOYMENT.md](DEPLOYMENT.md). Workflows skip until secrets configured. _Pending user: SSH user/port, install public key on cPanel, set Secrets/Variables, verify Node.js support, create subdomains+docroots+.env._

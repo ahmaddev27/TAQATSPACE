@@ -11,11 +11,50 @@
 .dash-main { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 .dash-scroll { flex: 1; overflow-y: auto; background: var(--bg); }
 
-.topbar-user { display: flex; align-items: center; gap: 10px; padding-inline-start: 8px; }
-.tb-user-meta { line-height: 1.2; }
+.topbar-user { position: relative; padding-inline-start: 8px; }
+.tb-user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 8px; border: 1px solid transparent; border-radius: var(--r-md);
+  background: none; cursor: pointer; color: inherit;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.tb-user-chip:hover { background: var(--surface-sunk); }
+.tb-user-chip[aria-expanded="true"] { background: var(--surface-sunk); border-color: var(--border); }
+.tb-user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: start; }
 .tb-user-name { font-size: var(--fs-sm); font-weight: 600; }
 .tb-user-role { font-size: var(--fs-xs); color: var(--text-3); }
-@media (max-width: 720px) { .tb-user-meta { display: none; } .topbar .search { display: none; } }
+.tb-user-caret { color: var(--text-3); flex: none; transition: transform var(--t-fast); }
+.tb-user-chip[aria-expanded="true"] .tb-user-caret { transform: rotate(180deg); }
+
+.tb-user-menu {
+  position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 120;
+  width: 248px; max-width: calc(100vw - 32px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--sh-md);
+  padding: 6px; animation: pop var(--t-slow);
+}
+.tb-user-menu-head { display: flex; align-items: center; gap: 10px; padding: 8px 8px 10px; }
+.tb-user-menu-id { min-width: 0; }
+.tb-user-menu-name { font-size: var(--fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-user-menu-email { font-size: var(--fs-xs); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-user-menu-sep { height: 1px; background: var(--border); margin: 0 -6px 6px; }
+.tb-user-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 8px; border-radius: var(--r-md); border: none; background: none;
+  font-size: var(--fs-sm); color: var(--text); text-align: start; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.tb-user-menu-item:hover { background: var(--surface-sunk); }
+.tb-user-menu-item.danger { color: var(--danger); }
+.tb-user-menu-item.danger:hover { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+
+@media (max-width: 720px) { .tb-user-meta, .tb-user-caret { display: none; } .topbar .search { display: none; } }
+
+/* Centered, tabbed self-service profile screen (all roles) */
+.profile-screen {
+  display: flex; flex-direction: column; gap: 20px;
+  max-width: 720px; margin-inline: auto; padding: var(--s-6) 0;
+}
 
 /* layout columns */
 .dash-2col { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--s-4); align-items: start; }
@@ -73,21 +112,43 @@
 .thread-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .thread-item:hover, .thread-item.active { background: var(--surface-2); }
 
-/* ===== Mobile off-canvas nav ===== */
+/* ===== Mobile off-canvas nav =====
+   Below the breakpoint the sidebar becomes a drawer pinned to the INLINE-START
+   edge (right in RTL, left in LTR). It is hidden off-canvas by translating it
+   toward that same edge, then slid to 0 when `.mobile-open` is set. The hidden
+   transform is direction-specific because translateX is physical, not logical:
+   start = left in LTR (translate -100%), right in RTL (translate +100%). */
 .nav-backdrop { position: fixed; inset: 0; background: rgba(10,12,16,.5); z-index: 70; animation: fade var(--t-slow); }
 [data-theme="dark"] .nav-backdrop { background: rgba(0,0,0,.6); }
 @media (max-width: 860px) {
+  /* The fixed drawer is out of flow, so the shell collapses to a single column. */
   .dash { grid-template-columns: 1fr !important; }
-  .dash-nav { position: fixed; top: 0; bottom: 0; inset-inline-end: 0; z-index: 80; width: 264px !important;
-    transform: translateX(100%); transition: transform var(--t-slow); box-shadow: var(--sh-md); }
-  [dir="ltr"] .dash-nav { inset-inline-start: 0; inset-inline-end: auto; transform: translateX(-100%); }
+
+  .dash-nav {
+    position: fixed; top: 0; bottom: 0; inset-inline-start: 0; inset-inline-end: auto;
+    z-index: 80; width: 264px !important; max-width: 86vw;
+    transition: transform var(--t-slow); box-shadow: var(--sh-md);
+  }
+  [dir="ltr"] .dash-nav { transform: translateX(-100%); }
+  [dir="rtl"] .dash-nav { transform: translateX(100%); }
+  /* Open: slide flush to the inline-start edge (wins via later source order). */
   .dash-nav.mobile-open { transform: translateX(0); }
-  /* always show full labels in the mobile drawer even if desktop was collapsed */
+
+  /* Always show full labels in the mobile drawer even if desktop was collapsed. */
+  .dash-nav.is-collapsed .nav-section,
   .dash-nav .nav-section { display: block; }
-  .dash-nav .nav-item { justify-content: flex-start; padding: 9px 11px; }
+  .dash-nav .nav-item,
+  .dash-nav.is-collapsed .nav-item { justify-content: flex-start; padding: 9px 11px; }
+
   .page { padding: 18px; }
   .page-head { padding: 18px 18px 0 !important; }
   .topbar { padding: 0 14px; gap: 8px; }
+}
+
+/* Respect users who reduce motion: snap the drawer instead of sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .dash-nav { transition: none !important; }
+  .nav-backdrop { animation: none !important; }
 }
 @media (max-width: 480px) {
   .grid-stats { grid-template-columns: 1fr 1fr; }
@@ -108,3 +169,10 @@
 .launcher-item:hover { background: var(--surface-sunk); color: var(--text); }
 .launcher-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
 @media (max-width: 560px) { .launcher-panel { width: calc(100vw - 44px); } }
+
+/* admin reports */
+.grid-2-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+@media (max-width: 900px) { .grid-2-cards { grid-template-columns: 1fr; } }
+.grid-export { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 900px) { .grid-export { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .grid-export { grid-template-columns: 1fr; } }

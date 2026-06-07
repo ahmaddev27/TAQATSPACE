@@ -86,6 +86,37 @@ class InvoiceService
     }
 
     /**
+     * Raise the next pending invoice for a renewed subscription period, due on
+     * the new period-end date. Idempotent: returns the existing invoice when one
+     * already covers that due date (guards against a double renew click). The
+     * member is notified of the freshly created invoice, matching monthly billing.
+     */
+    public function createForRenewal(Subscription $subscription, Carbon $periodEnd): Invoice
+    {
+        $existing = Invoice::query()
+            ->where('subscription_id', $subscription->id)
+            ->whereDate('due_date', $periodEnd->toDateString())
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $invoice = Invoice::create([
+            'subscription_id' => $subscription->id,
+            'amount' => $subscription->monthly_price,
+            'due_date' => $periodEnd->toDateString(),
+            'status' => InvoiceStatus::Pending->value,
+            'invoice_number' => $this->nextInvoiceNumber(),
+        ]);
+
+        $subscription->loadMissing('member');
+        $subscription->member?->notify(new InvoiceCreatedNotification($invoice));
+
+        return $invoice;
+    }
+
+    /**
      * Manual invoice raised by an owner against a member's active subscription
      * inside the given workspace.
      *
@@ -102,7 +133,7 @@ class InvoiceService
             ->first();
 
         if ($subscription === null) {
-            throw new RuntimeException('This member has no active subscription in your workspace.');
+            throw new RuntimeException(__('messages.invoice_member_no_subscription'));
         }
 
         $invoice = Invoice::create([
@@ -128,7 +159,7 @@ class InvoiceService
     public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
         if ($invoice->status === InvoiceStatus::Paid) {
-            throw new RuntimeException('This invoice has already been paid.');
+            throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
         $invoice->forceFill([
@@ -159,7 +190,7 @@ class InvoiceService
         $cacheKey = "invoice:{$invoice->id}:reminder_sent";
 
         if (Cache::has($cacheKey)) {
-            throw new RuntimeException('A reminder was already sent for this invoice in the last 24 hours.');
+            throw new RuntimeException(__('messages.invoice_reminder_recently_sent'));
         }
 
         $invoice->loadMissing('subscription.member');
@@ -211,6 +242,23 @@ class InvoiceService
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();
+    }
+
+    /**
+     * Filtered invoices for an owner's workspace (no pagination), newest due
+     * first, with the member chain loaded — for memory-safe cursor CSV export.
+     * Reuses the same filter pipeline as the owner list so the export honours
+     * exactly the filters the owner sees.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Invoice>
+     */
+    public function exportQueryForWorkspace(Workspace $workspace, array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->forWorkspace($workspace->id)
+            ->with(['subscription.member:id,name,email,phone', 'subscription.seat:id,seat_number'])
+            ->orderByDesc('due_date');
     }
 
     /**

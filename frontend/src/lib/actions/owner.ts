@@ -5,12 +5,24 @@ import { serverFetch } from "@/lib/api";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ApiEnvelope,
+  BroadcastInput,
+  BroadcastResult,
   Member,
   Package,
   Seat,
+  SeatType,
   SubscriptionStatus,
   Workspace,
+  WorkspaceMessagingConfig,
+  WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
+import type {
+  Expense,
+  ExpenseCategory,
+  Resource,
+  ResourceStatus,
+  ResourceType,
+} from "@/lib/types/management";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */
@@ -67,6 +79,50 @@ export async function updateMemberStatus(
   );
   if (result.ok) {
     revalidateOwner("members");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Subscriptions                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Renew a subscription: the backend extends the period by one plan cycle,
+ * reactivates it, and raises the next pending invoice for the new term.
+ */
+export async function renewSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/renew`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("invoices");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/**
+ * Cancel a subscription and free its seat (the backend reuses the shared
+ * cancel path, so this mirrors suspending a member).
+ */
+export async function cancelSubscription(
+  subscriptionId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/subscriptions/${subscriptionId}/cancel`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidateOwner("subscriptions");
+    revalidateOwner("members");
+    revalidateOwner("seats");
     revalidateOwner("");
   }
   return result;
@@ -211,6 +267,11 @@ export async function unassignPackage(
 /*  Settings + photos                                                         */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Settings update payload. total_seats and price_per_month are intentionally
+ * absent: they are derived from the seat types (the single source of truth) and
+ * recomputed by the backend whenever seat types are saved.
+ */
 export interface WorkspaceSettingsInput {
   name?: string;
   description?: string | null;
@@ -219,8 +280,6 @@ export interface WorkspaceSettingsInput {
   phone?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  total_seats?: number;
-  price_per_month?: number;
   amenities?: string[];
   working_hours?: Record<string, unknown> | null;
 }
@@ -237,6 +296,77 @@ export async function updateSettings(
     revalidateOwner("");
   }
   return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Seat types & pricing                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** A single per-seat-type pricing row submitted to `PUT /workspace/seat-types`. */
+export interface SeatTypeInput {
+  type: SeatType;
+  price_monthly: number | null;
+  price_daily: number | null;
+  capacity: number;
+  enabled: boolean;
+}
+
+/**
+ * Upsert the owner's per-seat-type pricing. The backend returns the refreshed
+ * workspace (all rows), so the page can re-render from authoritative data.
+ */
+export async function updateSeatTypes(
+  rows: SeatTypeInput[],
+): Promise<ActionResult<Workspace>> {
+  const result = await authedMutate<Workspace>("/workspace/seat-types", {
+    method: "PUT",
+    body: { seat_types: rows },
+  });
+  if (result.ok) {
+    revalidateOwner("settings");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Messaging                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Set whether the workspace inherits Taqat's platform accounts and/or supply
+ * its own SMTP + SMS config (`PUT /workspace/messaging`).
+ *
+ * Secrets are write-only: a blank/omitted password or SMS credential preserves
+ * the stored value. The backend returns the refreshed masked messaging block.
+ */
+export async function updateWorkspaceMessaging(
+  input: WorkspaceMessagingUpdateInput,
+): Promise<ActionResult<WorkspaceMessagingConfig>> {
+  const result = await authedMutate<WorkspaceMessagingConfig>(
+    "/workspace/messaging",
+    { method: "PUT", body: input },
+  );
+  if (result.ok) {
+    revalidateOwner("settings");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/**
+ * Compose and broadcast an email and/or SMS to THIS workspace's members
+ * (`POST /workspace/messaging/broadcast`). Recipients are scoped to the owner's
+ * workspace server-side; the send is queued and the result reports the
+ * queued/skipped counts per channel.
+ */
+export async function sendOwnerBroadcast(
+  input: BroadcastInput,
+): Promise<ActionResult<BroadcastResult>> {
+  return authedMutate<BroadcastResult>("/workspace/messaging/broadcast", {
+    method: "POST",
+    body: input,
+  });
 }
 
 export async function uploadPhotos(
@@ -258,5 +388,95 @@ export async function deletePhoto(
     body: { path },
   });
   if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Management — Expenses                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface ExpenseInput {
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  spent_on: string;
+  notes?: string | null;
+}
+
+export async function createExpense(
+  input: ExpenseInput,
+): Promise<ActionResult<Expense>> {
+  const result = await authedMutate<Expense>("/workspace/expenses", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+export async function updateExpense(
+  expenseId: string,
+  input: Partial<ExpenseInput>,
+): Promise<ActionResult<Expense>> {
+  const result = await authedMutate<Expense>(
+    `/workspace/expenses/${expenseId}`,
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+export async function deleteExpense(
+  expenseId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/expenses/${expenseId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Management — Resources                                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface ResourceInput {
+  name: string;
+  type: ResourceType;
+  quantity: number;
+  status: ResourceStatus;
+  notes?: string | null;
+}
+
+export async function createResource(
+  input: ResourceInput,
+): Promise<ActionResult<Resource>> {
+  const result = await authedMutate<Resource>("/workspace/resources", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("resources");
+  return result;
+}
+
+export async function updateResource(
+  resourceId: string,
+  input: Partial<ResourceInput>,
+): Promise<ActionResult<Resource>> {
+  const result = await authedMutate<Resource>(
+    `/workspace/resources/${resourceId}`,
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("resources");
+  return result;
+}
+
+export async function deleteResource(
+  resourceId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/resources/${resourceId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("resources");
   return result;
 }

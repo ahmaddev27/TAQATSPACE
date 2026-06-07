@@ -83,33 +83,57 @@ export const FREELANCER_STEP_FIELDS: (keyof FreelancerRegisterValues)[][] = [
   ["id_document", "terms"],
 ];
 
+/** The three backend seat types, in display order. */
+export const SEAT_TYPE_CODES = ["flexible", "fixed", "private_office"] as const;
+export type SeatTypeCode = (typeof SEAT_TYPE_CODES)[number];
+
 export function workspaceRegisterSchema(t: Translate) {
-  const seat = z.object({
-    name: z.string().min(1, t("required")),
-    price: z.number({ message: t("required") }).min(0, t("required")),
-    unit: z.enum(["daily", "monthly"]),
+  // Numeric text fields stay strings (text inputs); coerced to numbers on submit.
+  // Empty is allowed (price/capacity are optional); non-empty must be a ≥0 number.
+  const numericText = z
+    .string()
+    .refine((v) => v.trim() === "" || Number(v) >= 0, t("required"));
+
+  const seatType = z.object({
+    type: z.enum(SEAT_TYPE_CODES),
+    enabled: z.boolean(),
+    price_monthly: numericText,
+    price_daily: numericText,
+    capacity: numericText,
   });
 
   return z
     .object({
-      // Step 0 — space info
+      // Step 0 — owner account
       name: z.string().min(2, t("required")),
+      email: z.string().email(t("email")),
+      phone: z.string().min(6, t("phone")),
+      password: z.string().min(8, t("passwordMin")),
+      password_confirmation: z.string().min(8, t("passwordMin")),
+      // Step 1 — space info
+      workspace_name: z.string().min(2, t("required")),
       description: z.string().min(1, t("required")),
       capacity: z.number({ message: t("required") }).min(1, t("required")),
       hours: z.string().min(1, t("required")),
-      // Step 1 — location
+      // Step 2 — location
       city: z.string().min(1, t("required")),
       area: z.string().min(1, t("required")),
       address: z.string().min(1, t("required")),
       lat: z.number(),
       lng: z.number(),
-      // Step 2 — seats + amenities
-      seats: z.array(seat).min(1, t("minSeat")),
+      // Step 3 — seat types + amenities
+      seat_types: z
+        .array(seatType)
+        .refine((rows) => rows.some((r) => r.enabled), { message: t("minSeat") }),
       amenities: z.array(z.string()).optional(),
-      // Step 3 — documents
+      // Step 4 — documents
       license_file: fileSchema(t),
       id_document: fileSchema(t),
       terms: z.literal(true, { message: t("terms") }),
+    })
+    .refine((d) => d.password === d.password_confirmation, {
+      message: t("passwordMatch"),
+      path: ["password_confirmation"],
     });
 }
 export type WorkspaceRegisterValues = z.infer<
@@ -117,11 +141,72 @@ export type WorkspaceRegisterValues = z.infer<
 >;
 
 export const WORKSPACE_STEP_FIELDS: (keyof WorkspaceRegisterValues)[][] = [
-  ["name", "description", "capacity", "hours"],
+  ["name", "email", "phone", "password", "password_confirmation"],
+  ["workspace_name", "description", "capacity", "hours"],
   ["city", "area", "address"],
-  ["seats", "amenities"],
+  ["seat_types", "amenities"],
   ["license_file", "id_document", "terms"],
 ];
+
+/* ---------------------------------------------------------------------------
+ * SSO onboarding — a freshly-provisioned SSO user picks a role and completes
+ * the role-specific data. Account identity (name/email/password) already exists,
+ * so these schemas omit it; documents are collected later, not at onboarding.
+ * ------------------------------------------------------------------------- */
+
+/** The selectable gender values; empty string means "prefer not to say". */
+export const GENDER_OPTIONS = ["male", "female"] as const;
+export type GenderCode = (typeof GENDER_OPTIONS)[number];
+
+/** Optional gender field: empty string (unspecified) or one of the codes. */
+const genderField = z.enum(["", ...GENDER_OPTIONS]);
+
+export function freelancerOnboardingSchema(t: Translate) {
+  return z.object({
+    phone: z.string().min(6, t("phone")),
+    gender: genderField,
+    specialty: z.string().min(1, t("required")),
+    bio: z.string().optional(),
+  });
+}
+export type FreelancerOnboardingValues = z.infer<
+  ReturnType<typeof freelancerOnboardingSchema>
+>;
+
+export function ownerOnboardingSchema(t: Translate) {
+  const numericText = z
+    .string()
+    .refine((v) => v.trim() === "" || Number(v) >= 0, t("required"));
+
+  const seatType = z.object({
+    type: z.enum(SEAT_TYPE_CODES),
+    enabled: z.boolean(),
+    price_monthly: numericText,
+    price_daily: numericText,
+    capacity: numericText,
+  });
+
+  return z.object({
+    phone: z.string().min(6, t("phone")),
+    gender: genderField,
+    workspace_name: z.string().min(2, t("required")),
+    description: z.string().min(1, t("required")),
+    capacity: z.number({ message: t("required") }).min(1, t("required")),
+    hours: z.string().min(1, t("required")),
+    city: z.string().min(1, t("required")),
+    area: z.string().min(1, t("required")),
+    address: z.string().min(1, t("required")),
+    lat: z.number(),
+    lng: z.number(),
+    seat_types: z
+      .array(seatType)
+      .refine((rows) => rows.some((r) => r.enabled), { message: t("minSeat") }),
+    amenities: z.array(z.string()).optional(),
+  });
+}
+export type OwnerOnboardingValues = z.infer<
+  ReturnType<typeof ownerOnboardingSchema>
+>;
 
 export const AMENITY_CODES = [
   "wifi",

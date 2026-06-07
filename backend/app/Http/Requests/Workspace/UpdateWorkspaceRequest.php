@@ -16,7 +16,9 @@ class UpdateWorkspaceRequest extends FormRequest
 
     /**
      * All fields optional (partial update). status/owner_id are intentionally
-     * absent and are never accepted on this endpoint.
+     * absent and are never accepted on this endpoint. total_seats and
+     * price_per_month are derived from the seat types (the single source of
+     * truth) and are likewise not accepted here.
      *
      * @return array<string, mixed>
      */
@@ -30,8 +32,6 @@ class UpdateWorkspaceRequest extends FormRequest
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
-            'total_seats' => ['sometimes', 'required', 'integer', 'min:1', 'max:1000'],
-            'price_per_month' => ['sometimes', 'required', 'numeric', 'min:0'],
             'amenities' => ['sometimes', 'nullable', 'array'],
             'amenities.*' => ['string', 'max:60'],
             'working_hours' => ['sometimes', 'nullable', 'array'],

@@ -4,6 +4,9 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { getPublicDict } from "@/components/features/public/i18n";
+import { getContent } from "@/lib/api/content";
+import { cmsText } from "@/lib/cms";
+import type { AboutContent } from "@/lib/types";
 
 export async function generateMetadata({
   params,
@@ -27,6 +30,13 @@ export default async function AboutPage({
   const dict = getPublicDict(locale);
   const a = dict.about;
 
+  // Admin-managed About content overrides the lead and adds extra sections.
+  const about: AboutContent = await getContent("about").catch(() => ({}));
+  const lead = cmsText(about.lead, locale, a.lead);
+  const aboutSections = (about.sections ?? [])
+    .map((s) => ({ heading: cmsText(s.heading, locale), body: cmsText(s.body, locale) }))
+    .filter((s) => s.heading || s.body);
+
   const values: Array<{ ico: IconName; title: string; body: string }> = [
     { ico: "shield", title: a.value1, body: a.value1d },
     { ico: "users", title: a.value2, body: a.value2d },
@@ -49,7 +59,7 @@ export default async function AboutPage({
               {a.title1} <span className="hl">{a.title2}</span>
             </h1>
             <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 16 }}>
-              {a.lead}
+              {lead}
             </p>
             <div className="ed-stats" style={{ gridTemplateColumns: "repeat(3,auto)" }}>
               {stats.map((s) => (
@@ -123,6 +133,27 @@ export default async function AboutPage({
         </div>
       </section>
 
+      {aboutSections.length > 0 && (
+        <section className="container section">
+          <div className="stack" style={{ gap: 28, maxWidth: 760, margin: "0 auto" }}>
+            {aboutSections.map((s, i) => (
+              <div key={i}>
+                {s.heading && (
+                  <h2 className="ed-h2" style={{ marginBottom: 10 }}>
+                    {s.heading}
+                  </h2>
+                )}
+                {s.body && (
+                  <p className="muted" style={{ lineHeight: 1.8, whiteSpace: "pre-line" }}>
+                    {s.body}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="container">
         <div className="cta-band">
           <div className="cta-bulb">
@@ -133,12 +164,12 @@ export default async function AboutPage({
           </h2>
           <p style={{ maxWidth: 480, opacity: 0.85 }}>{a.ctaBody}</p>
           <div className="row wrap" style={{ gap: 12, justifyContent: "center", marginTop: 8 }}>
-            <Link href="/register/freelancer">
+            <Link href="/login">
               <Button variant="accent" size="lg">
                 {dict.home.heroCta1}
               </Button>
             </Link>
-            <Link href="/register/workspace">
+            <Link href="/login">
               <Button variant="secondary" size="lg">
                 {dict.home.heroCta2}
               </Button>

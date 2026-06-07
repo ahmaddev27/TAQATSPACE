@@ -435,20 +435,19 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .ed-hero-in { gap: 24px; }
   .ed-title { font-size: clamp(2rem, 8.4vw, 2.7rem); line-height: 1.12; }
   .ed-lead { font-size: var(--fs-md); line-height: 1.7; }
-  .ed-stats { grid-template-columns: repeat(2, 1fr); gap: 16px 20px; padding-top: 20px; }
-  .ed-stat-n { font-size: 1.5rem; }
+  /* Stats stay on ONE row regardless of how many there are (auto-flow columns),
+     with a fluid number size so they fit narrow phones. */
+  .ed-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; padding-top: 20px; }
+  .ed-stat-n { font-size: clamp(1rem, 4.4vw, 1.5rem); }
+  .ed-stat-l { font-size: var(--fs-xs); }
 
   /* Collage: single column; the floating card flows below instead of
      overlapping, the badge tucks into the top corner. */
   .ed-collage { grid-template-columns: 1fr; gap: 12px; }
   .ed-img-main { grid-row: auto; }
-  .ed-float-card {
-    position: static;
-    width: auto;
-    inset: auto;
-    margin-top: 2px;
-    box-shadow: var(--sh-md), 0 0 0 1px rgba(246, 169, 27, 0.12);
-  }
+  /* The live "seats available now" card is hidden on small phones — it crowds
+     the hero and the seat grid is hard to read at this width. */
+  .ed-float-card { display: none; }
   .ed-float-badge { top: 8px; inset-inline-end: 8px; padding: 9px 13px; }
   .ed-badge-n { font-size: 1.3rem; }
 
@@ -459,4 +458,358 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   .why-blob { min-height: auto; padding: 18px 20px; }
   .check-list { gap: 11px; margin-top: 20px; }
   .check-row { font-size: var(--fs-md); }
+}
+
+/* ── Mapbox maps ─────────────────────────────────────────────────────── */
+.map-fallback {
+  width: 100%;
+  background: var(--surface-2);
+  border-radius: var(--r-lg);
+}
+/* The prototype .map-pin is absolutely positioned; inside a MapLibre marker the
+   library already anchors the element at the coordinate, so neutralise it. */
+.maplibregl-marker .map-pin {
+  position: static;
+  transform: none;
+  font-family: inherit;
+}
+.maplibregl-marker .map-pin.is-active { transform: scale(1.08); }
+.maplibregl-map { font: inherit; }
+
+/* ── Borderless layout — drop the section divider lines site-wide ─────── */
+.pub-header,
+.pub-footer,
+.pub-footer-bottom,
+.caps-band,
+.marquee {
+  border: 0;
+}
+
+/* ── Owner settings: amenity toggles + working-hours rows ─────────────── */
+.amenity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.amenity-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 13px;
+  text-align: start;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+}
+.amenity-toggle:hover { border-color: var(--border-strong); }
+.amenity-toggle.is-on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.amenity-toggle .check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  flex: none;
+  border: 1.5px solid var(--border-strong);
+  display: grid;
+  place-items: center;
+  transition: all var(--t-fast);
+}
+.amenity-toggle.is-on .check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.hours-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 190px) 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.hours-row.is-open { border-color: color-mix(in srgb, var(--primary) 32%, var(--border)); }
+.hours-day { font-weight: 600; }
+.hours-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.hours-times .input { width: auto; min-width: 116px; }
+.hours-closed { justify-self: end; }
+@media (max-width: 560px) {
+  .amenity-grid { grid-template-columns: 1fr 1fr; }
+  .hours-row { grid-template-columns: 1fr; gap: 8px; }
+  .hours-times,
+  .hours-closed { justify-content: flex-start; justify-self: start; }
+}
+
+/* ── Owner settings: per-seat-type pricing cards ─────────────────────── */
+.seat-type-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 13px 14px;
+  background: var(--surface);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.seat-type-card.is-on {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: var(--primary-soft);
+}
+.seat-type-head { display: flex; align-items: center; }
+.seat-type-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 560px) {
+  .seat-type-fields { grid-template-columns: 1fr; }
+}
+
+/* Adaptive gallery: 1 photo = full width, 2 = side-by-side, 3+ = main+side. */
+.gallery-1 { grid-template-columns: 1fr; }
+.gallery-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) {
+  .gallery-2 { grid-template-columns: 1fr; }
+}
+
+/* ── Branded route loader (logo + animated equalizer bars) ───────────── */
+.brand-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+.brand-loader-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.loader-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 34px;
+}
+.loader-bars span {
+  width: 7px;
+  border-radius: 3px;
+  transform-origin: bottom;
+  animation: loaderBar 1s ease-in-out infinite;
+}
+.loader-bars span:nth-child(1) { height: 38%; background: var(--blue-300); animation-delay: 0s; }
+.loader-bars span:nth-child(2) { height: 58%; background: var(--blue-400); animation-delay: 0.14s; }
+.loader-bars span:nth-child(3) { height: 80%; background: var(--accent); animation-delay: 0.28s; }
+.loader-bars span:nth-child(4) { height: 100%; background: var(--primary); animation-delay: 0.42s; }
+@keyframes loaderBar {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-bars span { animation: none; }
+}
+
+/* ── Top navigation progress bar (client route changes) ──────────────── */
+.nav-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 3px;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.nav-progress.is-active { opacity: 1; }
+.nav-progress-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  /* Grow from the inline-start edge. `transform-origin` takes only physical
+     keywords, so flip explicitly for RTL below. */
+  transform-origin: left center;
+  background: var(--primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 60%, transparent);
+  transition: transform 200ms cubic-bezier(.2, 0, 0, 1);
+}
+[dir="rtl"] .nav-progress-bar { transform-origin: right center; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress-bar { transition: none; }
+}
+
+/* ============================================================
+   LANDING EDITOR — two-column shell, layout-order rows, live preview
+   ============================================================ */
+.le-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+.le-editor { min-width: 0; }
+
+/* preview sticks alongside the editor on wide screens */
+.le-preview {
+  position: sticky;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  padding: 14px;
+  box-shadow: var(--sh-sm);
+}
+.le-preview-head { display: flex; flex-direction: column; gap: 3px; }
+.le-preview-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text);
+}
+.le-preview-hint { font-size: var(--fs-xs); color: var(--text-3); }
+
+.le-preview-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+}
+.le-pv-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: opacity var(--t-fast);
+}
+.le-pv-hero {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: var(--primary-soft);
+}
+.le-pv-card.is-off { opacity: 0.5; }
+.le-pv-card.is-off .le-pv-h,
+.le-pv-card.is-off .le-pv-sub { text-decoration: line-through; }
+.le-pv-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.le-pv-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.le-pv-off {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.le-pv-h {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.le-pv-sub {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* layout-order rows (the "Layout & order" tab) */
+.layout-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.layout-row-move { display: inline-flex; gap: 2px; }
+.layout-row-move .icon-btn,
+.layout-row-move .btn { width: 32px; height: 32px; padding: 0; }
+.layout-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  min-width: 0;
+}
+.layout-row-index {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+/* stack the preview below the editor on narrower screens */
+@media (max-width: 1024px) {
+  .le-shell { grid-template-columns: 1fr; }
+  .le-preview { position: static; }
+  .le-preview-canvas { max-height: none; }
+}
+@media (max-width: 480px) {
+  .layout-row { grid-template-columns: auto 1fr; row-gap: 8px; }
+  .layout-row > :last-child { grid-column: 1 / -1; }
+}
+
+/* ── Footer admin-managed contact block ──────────────────────────────── */
+.pf-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: var(--fs-sm);
+}
+.pf-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2px;
+  text-transform: capitalize;
 }

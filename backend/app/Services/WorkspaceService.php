@@ -31,6 +31,8 @@ class WorkspaceService
 
     public function __construct(
         private readonly WorkspaceRepository $workspaces,
+        private readonly SeatTypePricingService $seatTypePricing,
+        private readonly SeatService $seats,
     ) {}
 
     /**
@@ -72,25 +74,112 @@ class WorkspaceService
     public function createForOwner(string $ownerId, array $data): Workspace
     {
         if ($this->workspaces->ownerHasWorkspace($ownerId)) {
-            throw new RuntimeException('You already have a registered workspace.');
+            throw new RuntimeException(__('messages.workspace_already_registered'));
         }
+
+        /** @var array<int, array<string, mixed>> $seatTypes */
+        $seatTypes = $data['seat_types'] ?? [];
+        unset($data['seat_types']);
 
         $data['owner_id'] = $ownerId;
         $data['status'] = WorkspaceStatus::Pending->value;
 
-        return $this->workspaces->create($data);
+        return DB::transaction(function () use ($data, $seatTypes): Workspace {
+            $workspace = $this->workspaces->create($data);
+
+            if ($seatTypes !== []) {
+                $this->seatTypePricing->sync($workspace, $seatTypes);
+                $this->syncDerivedPricing($workspace);
+                $this->seats->syncSeatsToCapacity($workspace);
+            }
+
+            return $workspace;
+        });
     }
 
     /**
      * Update mutable profile fields. status/owner_id are never accepted here.
+     * total_seats/price_per_month are derived from seat types — never client-set.
      *
      * @param  array<string, mixed>  $data
      */
     public function updateSettings(Workspace $workspace, array $data): Workspace
     {
-        unset($data['status'], $data['owner_id']);
+        unset($data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month']);
 
         return $this->workspaces->update($workspace, $data);
+    }
+
+    /**
+     * Upsert the owner's per-seat-type pricing, then recompute the derived
+     * legacy columns so public discovery (price filter/sort) stays accurate.
+     * Seat types are the single source of truth for pricing & capacity.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    public function updateSeatTypes(Workspace $workspace, array $rows): Workspace
+    {
+        return DB::transaction(function () use ($workspace, $rows): Workspace {
+            $this->seatTypePricing->sync($workspace, $rows);
+            $updated = $this->syncDerivedPricing($workspace);
+            $this->seats->syncSeatsToCapacity($workspace);
+
+            return $updated;
+        });
+    }
+
+    /**
+     * Recompute the legacy discovery columns from the enabled seat types — the
+     * single source of truth. Kept (not dropped) so public price filter/sort and
+     * the seat-capacity ceiling keep working without a schema change:
+     *   - total_seats     = sum of capacity over enabled types.
+     *   - price_per_month = the lowest monthly price among enabled types
+     *                       (the public "starting from" figure). When no enabled
+     *                       type has a monthly price, fall back to the lowest
+     *                       daily price; if neither exists, keep the prior value.
+     */
+    public function syncDerivedPricing(Workspace $workspace): Workspace
+    {
+        $enabled = $workspace->seatTypes()
+            ->where('enabled', true)
+            ->get();
+
+        $totalSeats = (int) $enabled->sum('capacity');
+
+        $monthly = $enabled
+            ->pluck('price_monthly')
+            ->filter(static fn ($price): bool => $price !== null)
+            ->map(static fn ($price): float => (float) $price);
+
+        $startingPrice = $monthly->isNotEmpty()
+            ? (float) $monthly->min()
+            : $this->fallbackPrice($enabled, $workspace);
+
+        return $this->workspaces->update($workspace, [
+            'total_seats' => max(1, $totalSeats),
+            'price_per_month' => $startingPrice,
+        ]);
+    }
+
+    /**
+     * Fallback "starting from" price when no enabled type has a monthly price:
+     * the lowest daily price among enabled types, else the workspace's current
+     * value (so we never overwrite a meaningful price with zero).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\SeatTypePrice>  $enabled
+     */
+    private function fallbackPrice($enabled, Workspace $workspace): float
+    {
+        $daily = $enabled
+            ->pluck('price_daily')
+            ->filter(static fn ($price): bool => $price !== null)
+            ->map(static fn ($price): float => (float) $price);
+
+        if ($daily->isNotEmpty()) {
+            return (float) $daily->min();
+        }
+
+        return (float) ($workspace->price_per_month ?? 0);
     }
 
     /**
@@ -110,6 +199,33 @@ class WorkspaceService
 
             return $workspace;
         });
+    }
+
+    /**
+     * Admin publish gate. Marks the workspace as publicly published (sets
+     * `published_at`) so it appears on the public landing/discovery. Separate
+     * from the account `status`; idempotent (a stamp is set only when missing).
+     */
+    public function publish(Workspace $workspace): Workspace
+    {
+        if ($workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => now()]);
+    }
+
+    /**
+     * Admin unpublish. Clears `published_at`, hiding the workspace from public
+     * discovery again without touching its account `status`.
+     */
+    public function unpublish(Workspace $workspace): Workspace
+    {
+        if (! $workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => null]);
     }
 
     /**
@@ -168,7 +284,7 @@ class WorkspaceService
         $existing = $workspace->photos ?? [];
 
         if (count($existing) + count($files) > self::MAX_PHOTOS) {
-            throw new RuntimeException('A workspace may have at most '.self::MAX_PHOTOS.' photos.');
+            throw new RuntimeException(__('messages.photos_max_reached', ['max' => self::MAX_PHOTOS]));
         }
 
         $directory = 'workspaces/'.$workspace->id;
@@ -194,7 +310,7 @@ class WorkspaceService
         $existing = $workspace->photos ?? [];
 
         if (! in_array($path, $existing, true)) {
-            throw new RuntimeException('Photo not found on this workspace.');
+            throw new RuntimeException(__('messages.photo_not_found'));
         }
 
         $disk = Storage::disk($this->photoDisk());

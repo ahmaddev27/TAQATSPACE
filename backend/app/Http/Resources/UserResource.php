@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin User
@@ -24,27 +24,46 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            'gender' => $this->gender?->value,
             'role' => $this->role->value,
             'status' => $this->status->value,
+            'needs_onboarding' => $this->needsOnboarding(),
             'specialty' => $this->specialty,
             'bio' => $this->bio,
             'avatar' => $this->avatarUrl(),
+            // Only the local email/password account (the internal admin) may change
+            // its password; SSO-provisioned users have their credentials at the IdP.
+            'can_change_password' => $this->sso_sub === null,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
+            // Staff-only authorization context so the SPA can adapt the admin UI
+            // (e.g. hide the admin-management nav for a non-super-admin). Resolved
+            // only for admin accounts to keep the common path query-free.
+            ...$this->adminContext(),
         ];
     }
 
-    /** Resolve the stored avatar path to a public URL (local or S3). */
-    private function avatarUrl(): ?string
+    /**
+     * Spatie roles + effective permissions, emitted only for admin accounts.
+     * Non-admin users get an empty array (no extra queries).
+     *
+     * @return array<string, mixed>
+     */
+    private function adminContext(): array
     {
-        if (! $this->avatar) {
-            return null;
+        if (! $this->isAdmin()) {
+            return [];
         }
 
-        $disk = Storage::disk((string) config('filesystems.media', 'public'));
+        return [
+            'is_super_admin' => $this->isSuperAdmin(),
+            'permissions' => $this->getPermissionNames()->values()->all(),
+        ];
+    }
 
-        return $disk->exists($this->avatar)
-            ? $disk->url($this->avatar)
-            : $this->avatar;
+    /** Resolve the stored avatar path to a viewable URL (local or presigned S3). */
+    private function avatarUrl(): ?string
+    {
+        return MediaUrl::resolve($this->avatar);
     }
 }

@@ -1,0 +1,81 @@
+{
+  "broadcast": {
+    "admin": {
+      "title": "Broadcast a message",
+      "subtitle": "Send an email and/or SMS to all users, a segment, or specific users through the platform accounts.",
+      "segment": {
+        "role": "Role",
+        "status": "Account status"
+      },
+      "roles": {
+        "freelancer": "Freelancers",
+        "workspace_owner": "Space owners",
+        "admin": "Admins"
+      },
+      "statuses": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "pending_verification": "Pending verification"
+      }
+    },
+    "owner": {
+      "title": "Message your members",
+      "subtitle": "Send an email and/or SMS to your workspace members — everyone, a segment, or specific members.",
+      "segment": {
+        "status": "Subscription status"
+      },
+      "statuses": {
+        "active": "Active",
+        "pending": "Pending",
+        "expired": "Expired",
+        "suspended": "Suspended",
+        "cancelled": "Cancelled"
+      }
+    },
+    "channels": {
+      "heading": "Channels",
+      "description": "Choose at least one channel. The subject is used for email only.",
+      "email": "Email",
+      "sms": "SMS"
+    },
+    "audience": {
+      "heading": "Audience",
+      "description": "Who should receive this message?",
+      "all": "Everyone",
+      "segment": "Segment",
+      "specific": "Specific recipients",
+      "countHint": "Up to {count} recipient(s) match this audience."
+    },
+    "segment": {
+      "any": "Any"
+    },
+    "specific": {
+      "searchPlaceholder": "Search by name or email…",
+      "empty": "No matching recipients.",
+      "selectedCount": "{count} selected",
+      "selected": "Selected"
+    },
+    "message": {
+      "heading": "Message",
+      "description": "Write the message your audience will receive.",
+      "subject": "Subject",
+      "subjectPlaceholder": "Email subject line",
+      "body": "Message",
+      "bodyPlaceholder": "Write your message…",
+      "smsHint": "SMS uses the message body only (the subject is ignored for SMS)."
+    },
+    "submit": "Send broadcast",
+    "submitSending": "Sending…",
+    "errors": {
+      "channelRequired": "Select at least one channel.",
+      "subjectRequired": "A subject is required for email.",
+      "bodyRequired": "The message body is required.",
+      "recipientsRequired": "Select at least one recipient."
+    },
+    "result": {
+      "queuedTitle": "Your message has been queued.",
+      "failedTitle": "Could not send the broadcast",
+      "summary": "{queued} queued · {skipped} skipped (no contact)."
+    }
+  }
+}

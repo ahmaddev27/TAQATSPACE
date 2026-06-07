@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { listCities, listWorkspaces, type WorkspaceFilters } from "@/lib/api/workspaces";
 import type { Workspace } from "@/lib/types";
 import { getPublicDict, interpolate } from "@/components/features/public/i18n";
@@ -5,6 +6,21 @@ import { FilterBar } from "@/components/features/public/FilterBar";
 import { ExploreResults } from "@/components/features/public/ExploreResults";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "ar" ? "استكشف المساحات" : "Explore spaces",
+    description:
+      locale === "ar"
+        ? "تصفّح مساحات العمل المشتركة في غزة حسب المدينة والسعر والمرافق."
+        : "Browse coworking spaces across Gaza by city, price and amenities.",
+  };
+}
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 

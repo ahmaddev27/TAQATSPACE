@@ -6,10 +6,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { SeatLegend, type SeatLegendItem } from "@/components/ui/SeatLegend";
-import { SeatMap, type SeatMapSeat, type SeatMapState } from "@/components/ui/SeatMap";
+import { SeatMap, type SeatMapState } from "@/components/ui/SeatMap";
 import { useToast } from "@/components/providers/ToastProvider";
 import { assignSeat, unassignSeat } from "@/lib/actions/owner";
-import type { Member, Seat } from "@/lib/types";
+import type { Member, Seat, SeatType } from "@/lib/types";
 import { avatarInitial } from "./format";
 import { AssignSeatModal } from "./AssignSeatModal";
 
@@ -18,11 +18,48 @@ export interface SeatBoardProps {
   members: Member[];
 }
 
+/** Stable display order for the seat-type groups. */
+const SEAT_TYPE_ORDER: SeatType[] = ["flexible", "fixed", "private_office"];
+
+interface SeatTypeGroup {
+  type: SeatType;
+  seats: Seat[];
+  total: number;
+  occupied: number;
+  available: number;
+}
+
 function toState(status: Seat["status"]): SeatMapState {
   if (status === "occupied") return "occupied";
   if (status === "reserved") return "reserved";
   if (status === "maintenance") return "disabled";
   return "available";
+}
+
+/** Group seats by their type, preserving a stable type order. */
+function groupByType(seats: Seat[]): SeatTypeGroup[] {
+  const buckets = new Map<SeatType, Seat[]>();
+  for (const seat of seats) {
+    const bucket = buckets.get(seat.type);
+    if (bucket) bucket.push(seat);
+    else buckets.set(seat.type, [seat]);
+  }
+
+  const orderedTypes = [
+    ...SEAT_TYPE_ORDER.filter((type) => buckets.has(type)),
+    ...[...buckets.keys()].filter((type) => !SEAT_TYPE_ORDER.includes(type)),
+  ];
+
+  return orderedTypes.map((type) => {
+    const group = buckets.get(type) ?? [];
+    return {
+      type,
+      seats: group,
+      total: group.length,
+      occupied: group.filter((s) => s.status === "occupied").length,
+      available: group.filter((s) => s.status === "available").length,
+    };
+  });
 }
 
 /** Interactive seat map: assign available seats, unassign occupied ones. */
@@ -33,15 +70,10 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const mapSeats: SeatMapSeat[] = useMemo(
-    () =>
-      seats.map((s) => ({
-        id: s.id,
-        label: s.seat_number,
-        state: toState(s.status),
-      })),
-    [seats],
-  );
+  const typeGroups = useMemo(() => groupByType(seats), [seats]);
+
+  const typeName = (type: SeatType): string =>
+    t(`settings.seatTypeNames.${type}`);
 
   const stats = useMemo(() => {
     const available = seats.filter((s) => s.status === "available").length;
@@ -110,12 +142,37 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
           </div>
         </div>
 
-        <SeatMap
-          seats={mapSeats}
-          selected={selectedId}
-          onSelect={setSelectedId}
-          cols={8}
-        />
+        <div className="stack" style={{ gap: 22 }}>
+          {typeGroups.map((group) => (
+            <div key={group.type} className="stack" style={{ gap: 12 }}>
+              <div className="between">
+                <span className="floor-zone" style={{ margin: 0 }}>
+                  {typeName(group.type)}
+                </span>
+                <span className="tnum muted" style={{ fontSize: "var(--fs-sm)" }}>
+                  {group.available} {t("seats.free")} / {group.total}
+                </span>
+              </div>
+              <SeatMap
+                seats={group.seats.map((s) => ({
+                  id: s.id,
+                  label: s.seat_number,
+                  state: toState(s.status),
+                  member: s.assigned_member
+                    ? {
+                        name: s.assigned_member.name,
+                        initial: avatarInitial(s.assigned_member.name),
+                        avatarUrl: s.assigned_member.avatar_url,
+                      }
+                    : null,
+                }))}
+                selected={selectedId}
+                onSelect={setSelectedId}
+                cols={8}
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="divider" style={{ margin: "22px 0 16px" }} />
         <SeatLegend items={legendItems} />
@@ -150,6 +207,8 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
                 <div className="row" style={{ gap: 10 }}>
                   <Avatar
                     initial={avatarInitial(selectedSeat.assigned_member.name)}
+                    src={selectedSeat.assigned_member.avatar_url}
+                    alt={selectedSeat.assigned_member.name}
                     size="sm"
                     round
                   />
@@ -208,13 +267,37 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
             <SummaryRow label={t("seats.reserved")} value={stats.reserved} />
             <SummaryRow label={t("seats.totalSeats")} value={stats.total} />
           </div>
+
+          {typeGroups.length > 1 && (
+            <>
+              <div className="divider" style={{ margin: "4px 0" }} />
+              <div className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+                {t("seats.byType")}
+              </div>
+              <div className="stack" style={{ gap: 8 }}>
+                {typeGroups.map((group) => (
+                  <SummaryRow
+                    key={group.type}
+                    label={typeName(group.type)}
+                    value={`${group.occupied}/${group.total}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: number }) {
+function SummaryRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | string;
+}) {
   return (
     <div className="between">
       <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>

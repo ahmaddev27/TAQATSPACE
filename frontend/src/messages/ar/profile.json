@@ -1,0 +1,49 @@
+{
+  "profile": {
+    "title": "الملف الشخصي",
+    "subtitle": "حدّث معلوماتك الشخصية وكلمة المرور",
+    "tabInfo": "المعلومات الشخصية",
+    "tabPassword": "كلمة المرور",
+    "sectionInfo": "المعلومات الشخصية",
+    "name": "الاسم الكامل",
+    "namePlaceholder": "اسمك الكامل",
+    "email": "البريد الإلكتروني",
+    "emailHint": "لا يمكن تغيير البريد الإلكتروني",
+    "phone": "رقم الجوال",
+    "phonePlaceholder": "+970 599 123 456",
+    "specialty": "التخصص",
+    "specialtyPlaceholder": "اختر تخصصك",
+    "bio": "نبذة تعريفية",
+    "bioPlaceholder": "اكتب نبذة قصيرة عنك…",
+    "specialtyOptions": {
+      "software": "تطوير برمجيات",
+      "design": "تصميم",
+      "writing": "كتابة محتوى",
+      "marketing": "تسويق",
+      "other": "أخرى"
+    },
+    "avatarTitle": "الصورة الشخصية",
+    "avatarHint": "PNG أو JPG أو WebP · بحد أقصى 5 ميجابايت",
+    "changeAvatar": "تغيير الصورة",
+    "removeAvatar": "إزالة",
+    "saveInfo": "حفظ التغييرات",
+    "saveSuccess": "تم حفظ التغييرات بنجاح",
+    "saveError": "تعذّر حفظ التغييرات",
+    "passwordTitle": "تغيير كلمة المرور",
+    "passwordSubtitle": "اختر كلمة مرور قوية لحماية حسابك",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "changePassword": "تحديث كلمة المرور",
+    "passwordSuccess": "تم تحديث كلمة المرور بنجاح",
+    "passwordError": "تعذّر تحديث كلمة المرور",
+    "errors": {
+      "required": "هذا الحقل مطلوب",
+      "passwordMin": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+      "passwordMatch": "كلمتا المرور غير متطابقتين",
+      "fileSize": "حجم الملف يتجاوز 5 ميجابايت",
+      "fileType": "نوع الملف غير مدعوم (PNG أو JPG أو WebP فقط)",
+      "generic": "حدث خطأ ما، حاول مرة أخرى"
+    }
+  }
+}

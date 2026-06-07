@@ -1,0 +1,546 @@
+{
+  "admin": {
+    "dashboard": {
+      "title": "لوحة تحكم المنصة",
+      "subtitle": "نظرة عامة على المساحات والمستخدمين والاشتراكات والفواتير عبر المنصة.",
+      "workspaces": "المساحات",
+      "workspacesFoot": "{active} نشطة · {pending} قيد المراجعة · {suspended} موقوفة",
+      "users": "المستخدمون",
+      "usersFoot": "{owners} ملاك · {freelancers} مستقلون",
+      "subscriptions": "الاشتراكات",
+      "subscriptionsFoot": "{active} نشطة",
+      "invoices": "الفواتير",
+      "invoicesFoot": "{paid} مدفوعة · {pending} معلّقة · {overdue} متأخرة",
+      "revenueTitle": "تتبّع الإيرادات",
+      "revenueSubtitle": "أرقام محاسبية يديرها المشرف يدوياً — ليست مبالغ بوابة دفع.",
+      "revenuePaid": "المحصّل (متتبَّع)",
+      "revenuePaidFoot": "إجمالي الفواتير المدفوعة",
+      "revenueOutstanding": "المستحق (متتبَّع)",
+      "revenueOutstandingFoot": "الفواتير المعلّقة والمتأخرة",
+      "quickLinks": "روابط سريعة",
+      "qaWorkspaces": "إدارة المساحات",
+      "qaUsers": "إدارة المستخدمين",
+      "qaSubscriptions": "الاشتراكات",
+      "qaInvoices": "الفواتير"
+    },
+    "workspaces": {
+      "title": "إدارة المساحات",
+      "subtitle": "راجع المساحات ووافق عليها أو أوقفها أو أعد تفعيلها.",
+      "exportCsv": "تصدير CSV",
+      "colName": "المساحة",
+      "colOwner": "المالك",
+      "colCity": "المدينة",
+      "colStatus": "الحالة",
+      "colPublished": "النشر",
+      "colCreated": "تاريخ الإنشاء",
+      "approve": "موافقة",
+      "suspend": "إيقاف",
+      "reactivate": "إعادة تفعيل",
+      "publish": "نشر",
+      "unpublish": "إلغاء النشر",
+      "publishedBadge": "منشورة",
+      "unpublishedBadge": "غير منشورة",
+      "count": "العدد",
+      "searchPlaceholder": "ابحث بالاسم أو المدينة أو المالك…",
+      "emptyTitle": "لا توجد مساحات",
+      "emptyBody": "لا توجد مساحات مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "pending": "قيد المراجعة",
+        "active": "نشطة",
+        "suspended": "موقوفة",
+        "rejected": "مرفوضة"
+      },
+      "suspendModal": {
+        "title": "إيقاف المساحة",
+        "body": "أنت على وشك إيقاف \"{name}\". يرجى توضيح السبب.",
+        "reason": "السبب",
+        "reasonPlaceholder": "سبب الإيقاف…",
+        "cancel": "إلغاء",
+        "confirm": "تأكيد الإيقاف"
+      },
+      "unpublishConfirm": {
+        "title": "إلغاء نشر المساحة",
+        "body": "ستتم إزالة \"{name}\" من الصفحة الرئيسية والاستكشاف العام. سيبقى حسابها نشطًا. هل تريد المتابعة؟"
+      },
+      "toast": {
+        "statusUpdated": "تم تحديث حالة المساحة",
+        "statusFailed": "تعذّر تحديث حالة المساحة",
+        "published": "تم نشر المساحة",
+        "unpublished": "تم إلغاء نشر المساحة",
+        "publishFailed": "تعذّر تحديث حالة النشر"
+      }
+    },
+    "users": {
+      "title": "إدارة المستخدمين",
+      "subtitle": "تصفّح حسابات المنصة وفعّلها أو أوقفها.",
+      "exportCsv": "تصدير CSV",
+      "colName": "الاسم",
+      "colEmail": "البريد الإلكتروني",
+      "colRole": "الدور",
+      "colStatus": "الحالة",
+      "colJoined": "تاريخ الانضمام",
+      "activate": "تفعيل",
+      "suspend": "إيقاف",
+      "viewDetails": "عرض التفاصيل",
+      "count": "العدد",
+      "filterRole": "الدور",
+      "filterStatus": "الحالة",
+      "allRoles": "كل الأدوار",
+      "allStatuses": "كل الحالات",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "emptyTitle": "لا يوجد مستخدمون",
+      "emptyBody": "لا يوجد مستخدمون مطابقون للمرشّحات الحالية.",
+      "role": {
+        "freelancer": "مستقل",
+        "workspace_owner": "صاحب مساحة",
+        "admin": "مشرف"
+      },
+      "statusOption": {
+        "active": "نشط",
+        "suspended": "موقوف",
+        "pending_verification": "قيد التحقق"
+      },
+      "toast": {
+        "activated": "تم تفعيل الحساب",
+        "suspended": "تم إيقاف الحساب",
+        "statusFailed": "تعذّر تحديث حالة الحساب"
+      }
+    },
+    "admins": {
+      "title": "المشرفون",
+      "subtitle": "أضف حسابات المشرفين وتحكّم بأدوارهم وصلاحياتهم.",
+      "addAdmin": "إضافة مشرف",
+      "createTitle": "مشرف جديد",
+      "editTitle": "تعديل المشرف",
+      "colName": "الاسم",
+      "colEmail": "البريد الإلكتروني",
+      "colRoles": "الدور",
+      "colStatus": "الحالة",
+      "colJoined": "تاريخ الانضمام",
+      "edit": "تعديل",
+      "deactivate": "إيقاف",
+      "deactivateTitle": "إيقاف المشرف",
+      "deactivateConfirm": "هل تريد إيقاف حساب المشرف {name}؟ سيفقد الوصول حتى إعادة تفعيله.",
+      "create": "إنشاء مشرف",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "count": "الإجمالي",
+      "filterStatus": "الحالة",
+      "allStatuses": "كل الحالات",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "permissionCount": "{count} صلاحية",
+      "emptyTitle": "لا يوجد مشرفون",
+      "emptyBody": "لا توجد حسابات مشرفين مطابقة للمرشّحات الحالية.",
+      "statusOption": {
+        "active": "نشط",
+        "suspended": "موقوف"
+      },
+      "role": {
+        "super_admin": "مشرف أعلى",
+        "admin": "مشرف"
+      },
+      "permission": {
+        "manage_admins": "إدارة المشرفين",
+        "manage_workspaces": "إدارة المساحات",
+        "manage_users": "إدارة المستخدمين",
+        "manage_billing": "إدارة الفوترة",
+        "manage_content": "إدارة المحتوى",
+        "manage_messaging": "إدارة المراسلة",
+        "view_reports": "عرض التقارير"
+      },
+      "form": {
+        "name": "الاسم الكامل",
+        "namePlaceholder": "مثال: لينا صالح",
+        "email": "البريد الإلكتروني",
+        "emailPlaceholder": "admin@taqat.space",
+        "password": "كلمة المرور",
+        "newPassword": "كلمة مرور جديدة",
+        "newPasswordHint": "اتركها فارغة للإبقاء على كلمة المرور الحالية.",
+        "passwordConfirm": "تأكيد كلمة المرور",
+        "role": "الدور",
+        "permissions": "الصلاحيات",
+        "selfHint": "لا يمكنك سحب صلاحية الإشراف الأعلى عن حسابك."
+      },
+      "toast": {
+        "created": "تم إنشاء المشرف",
+        "updated": "تم تحديث المشرف",
+        "deactivated": "تم إيقاف المشرف",
+        "saveFailed": "تعذّر حفظ المشرف",
+        "deactivateFailed": "تعذّر إيقاف المشرف"
+      }
+    },
+    "userDetail": {
+      "back": "العودة إلى المستخدمين",
+      "joined": "تاريخ الانضمام",
+      "specialty": "التخصّص",
+      "role": {
+        "freelancer": "مستقل",
+        "workspace_owner": "صاحب مساحة",
+        "admin": "مشرف"
+      },
+      "plan": {
+        "monthly": "شهري",
+        "daily": "يومي",
+        "custom": "مخصّص"
+      },
+      "subscriptions": {
+        "title": "سجل الاشتراكات",
+        "active": "نشط",
+        "expired": "منتهٍ",
+        "activeCount": "{count} نشط",
+        "totalCount": "{count} إجمالاً",
+        "upcomingCount": "{count} قادم",
+        "expiredCount": "{count} منتهٍ",
+        "cancelledCount": "{count} ملغى",
+        "lifecycle": {
+          "active": "نشط",
+          "upcoming": "قادم",
+          "expired": "منتهٍ",
+          "cancelled": "ملغى",
+          "suspended": "موقوف"
+        },
+        "city": "المدينة",
+        "seat": "المقعد",
+        "plan": "الخطة",
+        "price": "السعر الشهري",
+        "start": "تاريخ البدء",
+        "end": "تاريخ الانتهاء",
+        "empty": "لا توجد اشتراكات لهذا العضو بعد."
+      },
+      "bookings": {
+        "title": "أحدث طلبات الحجز"
+      },
+      "workspaces": {
+        "title": "المساحات",
+        "city": "المدينة",
+        "seats": "المقاعد",
+        "price": "السعر الشهري",
+        "rating": "التقييم",
+        "created": "تاريخ الإنشاء",
+        "empty": "لا توجد مساحة لهذا المالك بعد.",
+        "seatsTotal": "إجمالي المقاعد",
+        "seatsOccupied": "مشغولة",
+        "seatsAvailable": "متاحة",
+        "seatTypes": {
+          "title": "أنواع المقاعد والتسعير",
+          "type": "النوع",
+          "monthly": "شهري",
+          "daily": "يومي",
+          "capacity": "السعة",
+          "enabled": "مُفعّل",
+          "on": "مُفعّل",
+          "off": "معطّل",
+          "types": {
+            "fixed": "ثابت",
+            "flexible": "مرن",
+            "private_office": "مكتب خاص"
+          }
+        }
+      },
+      "documents": {
+        "title": "مستندات التحقّق",
+        "license": "السجل التجاري",
+        "id": "وثيقة الهوية"
+      }
+    },
+    "subscriptions": {
+      "title": "الاشتراكات",
+      "subtitle": "تتبّع الاشتراكات عبر المنصة (للعرض فقط).",
+      "exportCsv": "تصدير CSV",
+      "colMember": "العضو",
+      "colWorkspace": "المساحة",
+      "colPlan": "الخطة",
+      "colPrice": "السعر الشهري",
+      "colStart": "تاريخ البدء",
+      "colEnd": "تاريخ الانتهاء",
+      "colStatus": "الحالة",
+      "count": "العدد",
+      "dateFrom": "تاريخ البدء من",
+      "dateTo": "تاريخ البدء إلى",
+      "searchPlaceholder": "ابحث بالعضو أو المساحة…",
+      "emptyTitle": "لا توجد اشتراكات",
+      "emptyBody": "لا توجد اشتراكات مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "active": "نشطة",
+        "pending": "معلّقة",
+        "suspended": "موقوفة",
+        "expired": "منتهية",
+        "cancelled": "ملغاة"
+      }
+    },
+    "invoices": {
+      "title": "الفواتير",
+      "subtitle": "تتبّع الفواتير وسجّل المدفوعات يدوياً وارفع إيصالات الدفع.",
+      "exportCsv": "تصدير CSV",
+      "colInvoice": "رقم الفاتورة",
+      "colMember": "العضو",
+      "colWorkspace": "المساحة",
+      "colAmount": "المبلغ",
+      "colDue": "تاريخ الاستحقاق",
+      "colStatus": "الحالة",
+      "colPaidAt": "تاريخ الدفع",
+      "markPaid": "تحديد كمدفوعة",
+      "markUnpaid": "تحديد كغير مدفوعة",
+      "uploadReceipt": "رفع إيصال",
+      "downloadPdf": "تنزيل PDF",
+      "viewReceipt": "عرض الإيصال",
+      "count": "العدد",
+      "dateFrom": "تاريخ الاستحقاق من",
+      "dateTo": "تاريخ الاستحقاق إلى",
+      "searchPlaceholder": "ابحث برقم الفاتورة أو العضو أو المساحة…",
+      "emptyTitle": "لا توجد فواتير",
+      "emptyBody": "لا توجد فواتير مطابقة للمرشّحات الحالية.",
+      "tabs": {
+        "all": "الكل",
+        "paid": "مدفوعة",
+        "pending": "معلّقة",
+        "overdue": "متأخرة",
+        "cancelled": "ملغاة"
+      },
+      "payModal": {
+        "title": "تحديد الفاتورة كمدفوعة",
+        "body": "تسجيل دفعة يدوية للفاتورة {invoice}.",
+        "paidAt": "تاريخ الدفع",
+        "optional": "(اختياري)",
+        "cancel": "إلغاء",
+        "confirm": "تأكيد الدفع"
+      },
+      "receiptModal": {
+        "title": "رفع إيصال الدفع",
+        "body": "ارفع إيصالاً للفاتورة {invoice}. سيؤدي رفع الإيصال إلى تحديد الفاتورة كمدفوعة.",
+        "file": "ملف الإيصال",
+        "fileRequired": "يرجى اختيار ملف الإيصال.",
+        "dropLabel": "اسحب الملف هنا أو انقر للاختيار",
+        "dropHint": "PDF أو PNG أو JPG · حتى 5 ميجابايت",
+        "remove": "إزالة",
+        "paidAt": "تاريخ الدفع",
+        "optional": "(اختياري)",
+        "cancel": "إلغاء",
+        "submit": "رفع وتحديد كمدفوعة"
+      },
+      "toast": {
+        "markedPaid": "تم تحديد الفاتورة كمدفوعة",
+        "markedUnpaid": "تم إرجاع الفاتورة إلى غير مدفوعة",
+        "markFailed": "تعذّر تحديث حالة الفاتورة",
+        "receiptUploaded": "تم رفع الإيصال وتحديد الفاتورة كمدفوعة",
+        "receiptFailed": "تعذّر رفع الإيصال"
+      }
+    },
+    "landing": {
+      "title": "الصفحة الرئيسية",
+      "subtitle": "حرّر محتوى الصفحة الرئيسية العامة. أي حقل تتركه فارغاً سيُعرض بالقيمة الافتراضية.",
+      "save": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ…",
+      "saved": "تم تحديث الصفحة الرئيسية",
+      "saveFailed": "تعذّر حفظ الصفحة الرئيسية",
+      "labelAr": "العربية",
+      "labelEn": "الإنجليزية",
+      "enabled": "إظهار هذا القسم",
+      "tabHero": "الواجهة",
+      "tabStats": "الإحصائيات",
+      "tabFeatured": "المساحات المختارة",
+      "tabWhy": "لماذا نحن",
+      "tabCapabilities": "المميزات",
+      "tabTestimonials": "آراء الأعضاء",
+      "tabLayout": "الترتيب والتخطيط",
+      "layout": {
+        "hint": "أعد ترتيب الأقسام وفعّل أو عطّل كل قسم. الترتيب هنا هو كيفية ظهورها في الصفحة العامة (الواجهة دائماً أولاً).",
+        "moveUp": "نقل لأعلى",
+        "moveDown": "نقل لأسفل"
+      },
+      "preview": {
+        "title": "معاينة مباشرة",
+        "hint": "تتحدّث أثناء الكتابة وإعادة الترتيب.",
+        "disabled": "مخفي"
+      },
+      "image": {
+        "labelMain": "الصورة الرئيسية",
+        "labelSecondary": "الصورة الثانية",
+        "hint": "المقاس الموصى به 1200×800 بكسل (JPG أو PNG أو WebP، بحد أقصى 4 ميجابايت). اتركه فارغًا لاستخدام الصورة الافتراضية.",
+        "upload": "أفلت صورة هنا أو اضغط للرفع",
+        "replace": "استبدال الصورة",
+        "remove": "إزالة الصورة",
+        "uploadFailed": "تعذّر رفع الصورة"
+      },
+      "hero": {
+        "heading": "قسم الواجهة",
+        "hint": "منطقة العنوان الرئيسي أعلى الصفحة.",
+        "fieldTitle": "العنوان",
+        "fieldHighlight": "الكلمة المميّزة",
+        "fieldSubtitle": "العنوان الفرعي",
+        "fieldCtaPrimary": "الزر الأساسي",
+        "fieldCtaSecondary": "الزر الثانوي"
+      },
+      "stats": {
+        "heading": "الإحصائيات",
+        "hint": "حتى 4 إحصائيات سريعة تظهر أسفل الواجهة.",
+        "value": "القيمة",
+        "label": "التسمية",
+        "add": "إضافة إحصائية",
+        "remove": "حذف",
+        "empty": "لا توجد إحصائيات بعد. ستُعرض الإحصائيات الافتراضية.",
+        "limit": "يمكنك إضافة حتى {max} إحصائيات."
+      },
+      "featured": {
+        "heading": "المساحات المختارة",
+        "hint": "اختر المساحات التي تظهر في قسم المساحات المختارة.",
+        "fieldTitle": "العنوان",
+        "fieldSubtitle": "العنوان الفرعي",
+        "pick": "المساحات المختارة",
+        "noWorkspaces": "لا توجد مساحات متاحة للاختيار."
+      },
+      "why": {
+        "heading": "قسم لماذا نحن",
+        "fieldTitle": "العنوان",
+        "fieldHighlight": "الكلمة المميّزة",
+        "fieldSubtitle": "العنوان الفرعي"
+      },
+      "capabilities": {
+        "heading": "قسم المميزات",
+        "fieldTitle": "العنوان",
+        "fieldSubtitle": "العنوان الفرعي"
+      },
+      "testimonials": {
+        "heading": "آراء الأعضاء",
+        "hint": "حتى 12 رأياً. اتركه فارغاً لاستخدام الآراء الافتراضية.",
+        "fieldTitle": "عنوان القسم",
+        "text": "الاقتباس",
+        "name": "الاسم",
+        "role": "الصفة",
+        "add": "إضافة رأي",
+        "remove": "حذف",
+        "empty": "لا توجد آراء بعد. ستُعرض الآراء الافتراضية.",
+        "limit": "يمكنك إضافة حتى {max} رأياً."
+      }
+    },
+    "reports": {
+      "title": "التقارير والتصدير",
+      "subtitle": "تحليلات المنصة وملفات CSV قابلة للتنزيل. الأرقام يتتبّعها المشرف يدوياً وليست مبالغ بوابة دفع.",
+      "revenueTitle": "الإيرادات حسب الشهر",
+      "revenueSubtitle": "المحصّل مقابل المستحق خلال آخر 12 شهراً (متتبَّع يدوياً).",
+      "revenuePaid": "المحصّل",
+      "revenueOutstanding": "المستحق",
+      "invoicesByStatus": "الفواتير حسب الحالة",
+      "subscriptionsByStatus": "الاشتراكات حسب الحالة",
+      "newSubscriptions": "الاشتراكات الجديدة شهرياً",
+      "topWorkspaces": "أبرز المساحات",
+      "colWorkspace": "المساحة",
+      "colPaidTotal": "إجمالي المدفوع",
+      "colActiveSubs": "اشتراكات نشطة",
+      "noData": "لا توجد بيانات بعد",
+      "invoiceStatus": {
+        "paid": "مدفوعة",
+        "pending": "معلّقة",
+        "overdue": "متأخرة"
+      },
+      "subscriptionStatus": {
+        "active": "نشطة",
+        "pending": "معلّقة",
+        "suspended": "موقوفة",
+        "expired": "منتهية",
+        "cancelled": "ملغاة"
+      },
+      "exports": {
+        "title": "تصدير البيانات",
+        "subtitle": "نزّل مجموعة البيانات الكاملة كملف CSV.",
+        "invoices": "الفواتير CSV",
+        "subscriptions": "الاشتراكات CSV",
+        "users": "المستخدمون CSV",
+        "workspaces": "المساحات CSV"
+      }
+    },
+    "analytics": {
+      "title": "الإحصائيات الديموغرافية والمدن",
+      "subtitle": "توزيع المساحات والأعضاء حسب المدينة والجنس.",
+      "byCityTitle": "حسب المدينة",
+      "byCitySubtitle": "عدد المساحات والأعضاء النشطين في كل مدينة.",
+      "byGenderTitle": "حسب الجنس",
+      "byGenderSubtitle": "مستخدمو المنصة حسب الجنس (يشمل غير المحدد).",
+      "workspaces": "المساحات",
+      "activeMembers": "الأعضاء النشطون",
+      "noData": "لا توجد بيانات بعد"
+    },
+    "rm": {
+      "title": "إدارة المحتوى",
+      "subtitle": "تحكّم بمحتوى الموقع: بيانات التواصل، الأسئلة الشائعة، عن المنصة، وكيف نعمل",
+      "save": "حفظ",
+      "saving": "جارٍ الحفظ...",
+      "saved": "تم الحفظ بنجاح",
+      "saveFailed": "فشل الحفظ",
+      "remove": "حذف",
+      "labelAr": "العربية",
+      "labelEn": "الإنجليزية",
+      "tabBranding": "الهوية",
+      "tabSite": "بيانات الموقع",
+      "tabFaq": "الأسئلة الشائعة",
+      "tabAbout": "عن المنصة",
+      "tabHow": "كيف نعمل",
+      "tabLanding": "الصفحة الرئيسية",
+      "branding": {
+        "hint": "هوية الموقع المستخدمة في كامل المنصة: الاسم، أيقونة المتصفح، واللوجو (لوجو منفصل للوضع الفاتح والداكن)",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ...",
+        "saved": "تم حفظ الهوية",
+        "saveFailed": "فشل الحفظ",
+        "uploadFailed": "فشل الرفع",
+        "siteName": "اسم الموقع",
+        "metaTitle": "عنوان تبويب المتصفح (SEO)",
+        "metaDescription": "وصف الميتا (SEO)",
+        "favicon": {
+          "label": "أيقونة الموقع (أيقونة تبويب المتصفح)",
+          "hint": "أيقونة مربعة، يُفضّل 512×512. صيغة SVG أو PNG أو ICO.",
+          "upload": "رفع الأيقونة"
+        },
+        "logo": {
+          "labelLight": "اللوجو — الوضع الفاتح",
+          "labelDark": "اللوجو — الوضع الداكن",
+          "hint": "لوجو عريض على شكل كلمة. يُفضّل SVG أو PNG شفّاف.",
+          "upload": "رفع اللوجو",
+          "replace": "استبدال الصورة",
+          "remove": "حذف"
+        }
+      },
+      "site": {
+        "hint": "بيانات التواصل التي تظهر في التذييل وصفحة اتصل بنا",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الهاتف",
+        "whatsapp": "واتساب",
+        "address": "العنوان",
+        "social": "روابط التواصل الاجتماعي",
+        "facebook": "فيسبوك",
+        "instagram": "إنستغرام",
+        "twitter": "تويتر / X",
+        "linkedin": "لينكدإن"
+      },
+      "faq": {
+        "hint": "أسئلة وأجوبة تظهر في صفحة الأسئلة الشائعة",
+        "add": "إضافة سؤال",
+        "question": "السؤال",
+        "answer": "الإجابة",
+        "empty": "لا توجد أسئلة بعد"
+      },
+      "about": {
+        "hint": "محتوى صفحة «عن المنصة»",
+        "lead": "المقدّمة",
+        "sections": "الأقسام",
+        "add": "إضافة قسم",
+        "heading": "العنوان",
+        "body": "النص",
+        "empty": "لا توجد أقسام بعد"
+      },
+      "how": {
+        "hint": "خطوات «كيف نعمل» التي تظهر في الصفحة الرئيسية",
+        "add": "إضافة خطوة",
+        "title": "العنوان",
+        "description": "الوصف",
+        "empty": "لا توجد خطوات بعد"
+      },
+      "landing": {
+        "hint": "حرّر محتوى الصفحة الرئيسية (الهيرو، الإحصائيات، الأقسام...)",
+        "open": "فتح محرّر الصفحة الرئيسية"
+      }
+    }
+  }
+}

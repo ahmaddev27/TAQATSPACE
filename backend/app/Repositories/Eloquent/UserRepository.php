@@ -26,4 +26,9 @@ class UserRepository implements UserRepositoryInterface
     {
         return User::query()->find($id);
     }
+
+    public function findBySsoSub(string $sub): ?User
+    {
+        return User::query()->where('sso_sub', $sub)->first();
+    }
 }

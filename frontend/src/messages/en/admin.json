@@ -1,0 +1,546 @@
+{
+  "admin": {
+    "dashboard": {
+      "title": "Platform dashboard",
+      "subtitle": "An overview of workspaces, users, subscriptions and invoices across the platform.",
+      "workspaces": "Workspaces",
+      "workspacesFoot": "{active} active · {pending} pending · {suspended} suspended",
+      "users": "Users",
+      "usersFoot": "{owners} owners · {freelancers} freelancers",
+      "subscriptions": "Subscriptions",
+      "subscriptionsFoot": "{active} active",
+      "invoices": "Invoices",
+      "invoicesFoot": "{paid} paid · {pending} pending · {overdue} overdue",
+      "revenueTitle": "Revenue tracking",
+      "revenueSubtitle": "Admin-managed manual figures — not payment-gateway money.",
+      "revenuePaid": "Collected (tracked)",
+      "revenuePaidFoot": "Total of paid invoices",
+      "revenueOutstanding": "Outstanding (tracked)",
+      "revenueOutstandingFoot": "Pending and overdue invoices",
+      "quickLinks": "Quick links",
+      "qaWorkspaces": "Manage workspaces",
+      "qaUsers": "Manage users",
+      "qaSubscriptions": "Subscriptions",
+      "qaInvoices": "Invoices"
+    },
+    "workspaces": {
+      "title": "Workspaces",
+      "subtitle": "Review workspaces and approve, suspend or reactivate them.",
+      "exportCsv": "Export CSV",
+      "colName": "Workspace",
+      "colOwner": "Owner",
+      "colCity": "City",
+      "colStatus": "Status",
+      "colPublished": "Publishing",
+      "colCreated": "Created",
+      "approve": "Approve",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publishedBadge": "Published",
+      "unpublishedBadge": "Not published",
+      "count": "Total",
+      "searchPlaceholder": "Search by name, city or owner…",
+      "emptyTitle": "No workspaces",
+      "emptyBody": "No workspaces match the current filters.",
+      "tabs": {
+        "all": "All",
+        "pending": "Pending",
+        "active": "Active",
+        "suspended": "Suspended",
+        "rejected": "Rejected"
+      },
+      "suspendModal": {
+        "title": "Suspend workspace",
+        "body": "You are about to suspend \"{name}\". Please provide a reason.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Reason for suspension…",
+        "cancel": "Cancel",
+        "confirm": "Confirm suspension"
+      },
+      "unpublishConfirm": {
+        "title": "Unpublish workspace",
+        "body": "\"{name}\" will be removed from the public landing and discovery. Its account stays active. Continue?"
+      },
+      "toast": {
+        "statusUpdated": "Workspace status updated",
+        "statusFailed": "Could not update the workspace status",
+        "published": "Workspace published",
+        "unpublished": "Workspace unpublished",
+        "publishFailed": "Could not update the publishing state"
+      }
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Browse platform accounts and activate or suspend them.",
+      "exportCsv": "Export CSV",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRole": "Role",
+      "colStatus": "Status",
+      "colJoined": "Joined",
+      "activate": "Activate",
+      "suspend": "Suspend",
+      "viewDetails": "View details",
+      "count": "Total",
+      "filterRole": "Role",
+      "filterStatus": "Status",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Search by name or email…",
+      "emptyTitle": "No users",
+      "emptyBody": "No users match the current filters.",
+      "role": {
+        "freelancer": "Freelancer",
+        "workspace_owner": "Workspace owner",
+        "admin": "Admin"
+      },
+      "statusOption": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "pending_verification": "Pending verification"
+      },
+      "toast": {
+        "activated": "Account activated",
+        "suspended": "Account suspended",
+        "statusFailed": "Could not update the account status"
+      }
+    },
+    "admins": {
+      "title": "Admins",
+      "subtitle": "Add admin accounts and control their roles and permissions.",
+      "addAdmin": "Add admin",
+      "createTitle": "New admin",
+      "editTitle": "Edit admin",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colRoles": "Role",
+      "colStatus": "Status",
+      "colJoined": "Joined",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "deactivateTitle": "Deactivate admin",
+      "deactivateConfirm": "Suspend {name}'s admin account? They will lose access until reactivated.",
+      "create": "Create admin",
+      "save": "Save changes",
+      "cancel": "Cancel",
+      "count": "Total",
+      "filterStatus": "Status",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Search by name or email…",
+      "permissionCount": "{count} permissions",
+      "emptyTitle": "No admins",
+      "emptyBody": "No admin accounts match the current filters.",
+      "statusOption": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "role": {
+        "super_admin": "Super admin",
+        "admin": "Admin"
+      },
+      "permission": {
+        "manage_admins": "Manage admins",
+        "manage_workspaces": "Manage workspaces",
+        "manage_users": "Manage users",
+        "manage_billing": "Manage billing",
+        "manage_content": "Manage content",
+        "manage_messaging": "Manage messaging",
+        "view_reports": "View reports"
+      },
+      "form": {
+        "name": "Full name",
+        "namePlaceholder": "e.g. Lina Saleh",
+        "email": "Email",
+        "emailPlaceholder": "admin@taqat.space",
+        "password": "Password",
+        "newPassword": "New password",
+        "newPasswordHint": "Leave blank to keep the current password.",
+        "passwordConfirm": "Confirm password",
+        "role": "Role",
+        "permissions": "Permissions",
+        "selfHint": "You cannot remove your own super-admin access."
+      },
+      "toast": {
+        "created": "Admin created",
+        "updated": "Admin updated",
+        "deactivated": "Admin deactivated",
+        "saveFailed": "Could not save the admin",
+        "deactivateFailed": "Could not deactivate the admin"
+      }
+    },
+    "userDetail": {
+      "back": "Back to users",
+      "joined": "Joined",
+      "specialty": "Specialty",
+      "role": {
+        "freelancer": "Freelancer",
+        "workspace_owner": "Workspace owner",
+        "admin": "Admin"
+      },
+      "plan": {
+        "monthly": "Monthly",
+        "daily": "Daily",
+        "custom": "Custom"
+      },
+      "subscriptions": {
+        "title": "Subscription history",
+        "active": "Active",
+        "expired": "Expired",
+        "activeCount": "{count} active",
+        "totalCount": "{count} total",
+        "upcomingCount": "{count} upcoming",
+        "expiredCount": "{count} expired",
+        "cancelledCount": "{count} cancelled",
+        "lifecycle": {
+          "active": "Active",
+          "upcoming": "Upcoming",
+          "expired": "Expired",
+          "cancelled": "Cancelled",
+          "suspended": "Suspended"
+        },
+        "city": "City",
+        "seat": "Seat",
+        "plan": "Plan",
+        "price": "Monthly price",
+        "start": "Start",
+        "end": "End",
+        "empty": "This member has no subscriptions yet."
+      },
+      "bookings": {
+        "title": "Recent booking requests"
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "city": "City",
+        "seats": "Seats",
+        "price": "Monthly price",
+        "rating": "Rating",
+        "created": "Created",
+        "empty": "This owner has no workspace yet.",
+        "seatsTotal": "Total seats",
+        "seatsOccupied": "Occupied",
+        "seatsAvailable": "Available",
+        "seatTypes": {
+          "title": "Seat types & pricing",
+          "type": "Type",
+          "monthly": "Monthly",
+          "daily": "Daily",
+          "capacity": "Capacity",
+          "enabled": "Enabled",
+          "on": "On",
+          "off": "Off",
+          "types": {
+            "fixed": "Fixed",
+            "flexible": "Flexible",
+            "private_office": "Private office"
+          }
+        }
+      },
+      "documents": {
+        "title": "Verification documents",
+        "license": "Commercial license",
+        "id": "ID document"
+      }
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "subtitle": "Track subscriptions across the platform (read-only).",
+      "exportCsv": "Export CSV",
+      "colMember": "Member",
+      "colWorkspace": "Workspace",
+      "colPlan": "Plan",
+      "colPrice": "Monthly price",
+      "colStart": "Start date",
+      "colEnd": "End date",
+      "colStatus": "Status",
+      "count": "Total",
+      "dateFrom": "Start date from",
+      "dateTo": "Start date to",
+      "searchPlaceholder": "Search by member or workspace…",
+      "emptyTitle": "No subscriptions",
+      "emptyBody": "No subscriptions match the current filters.",
+      "tabs": {
+        "all": "All",
+        "active": "Active",
+        "pending": "Pending",
+        "suspended": "Suspended",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      }
+    },
+    "invoices": {
+      "title": "Invoices",
+      "subtitle": "Track invoices, record payments manually and upload payment receipts.",
+      "exportCsv": "Export CSV",
+      "colInvoice": "Invoice #",
+      "colMember": "Member",
+      "colWorkspace": "Workspace",
+      "colAmount": "Amount",
+      "colDue": "Due",
+      "colStatus": "Status",
+      "colPaidAt": "Paid at",
+      "markPaid": "Mark paid",
+      "markUnpaid": "Mark unpaid",
+      "uploadReceipt": "Upload receipt",
+      "downloadPdf": "Download PDF",
+      "viewReceipt": "View receipt",
+      "count": "Total",
+      "dateFrom": "Due date from",
+      "dateTo": "Due date to",
+      "searchPlaceholder": "Search by invoice #, member or workspace…",
+      "emptyTitle": "No invoices",
+      "emptyBody": "No invoices match the current filters.",
+      "tabs": {
+        "all": "All",
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      },
+      "payModal": {
+        "title": "Mark invoice as paid",
+        "body": "Record a manual payment for invoice {invoice}.",
+        "paidAt": "Paid date",
+        "optional": "(optional)",
+        "cancel": "Cancel",
+        "confirm": "Confirm payment"
+      },
+      "receiptModal": {
+        "title": "Upload payment receipt",
+        "body": "Upload a receipt for invoice {invoice}. Uploading a receipt marks the invoice as paid.",
+        "file": "Receipt file",
+        "fileRequired": "Please choose a receipt file.",
+        "dropLabel": "Drop a file here or click to choose",
+        "dropHint": "PDF, PNG or JPG · up to 5MB",
+        "remove": "Remove",
+        "paidAt": "Paid date",
+        "optional": "(optional)",
+        "cancel": "Cancel",
+        "submit": "Upload and mark paid"
+      },
+      "toast": {
+        "markedPaid": "Invoice marked as paid",
+        "markedUnpaid": "Invoice reverted to unpaid",
+        "markFailed": "Could not update the invoice status",
+        "receiptUploaded": "Receipt uploaded and invoice marked paid",
+        "receiptFailed": "Could not upload the receipt"
+      }
+    },
+    "landing": {
+      "title": "Landing page",
+      "subtitle": "Edit the public landing page content. Anything left empty falls back to the built-in defaults.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Landing page updated",
+      "saveFailed": "Could not save the landing page",
+      "labelAr": "Arabic",
+      "labelEn": "English",
+      "enabled": "Show this section",
+      "tabHero": "Hero",
+      "tabStats": "Stats",
+      "tabFeatured": "Featured",
+      "tabWhy": "Why",
+      "tabCapabilities": "Capabilities",
+      "tabTestimonials": "Testimonials",
+      "tabLayout": "Layout & order",
+      "layout": {
+        "hint": "Reorder the sections and toggle each on or off. The order here is how they appear on the public page (Hero is always first).",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+      },
+      "preview": {
+        "title": "Live preview",
+        "hint": "Updates as you type and reorder.",
+        "disabled": "Hidden"
+      },
+      "image": {
+        "labelMain": "Main image",
+        "labelSecondary": "Second image",
+        "hint": "Recommended 1200×800px (JPG, PNG or WebP, max 4MB). Leave empty to use the default illustration.",
+        "upload": "Drop an image here or click to upload",
+        "replace": "Replace image",
+        "remove": "Remove image",
+        "uploadFailed": "Could not upload the image"
+      },
+      "hero": {
+        "heading": "Hero section",
+        "hint": "The headline area at the top of the page.",
+        "fieldTitle": "Title",
+        "fieldHighlight": "Highlighted word",
+        "fieldSubtitle": "Subtitle",
+        "fieldCtaPrimary": "Primary button",
+        "fieldCtaSecondary": "Secondary button"
+      },
+      "stats": {
+        "heading": "Stats",
+        "hint": "Up to 4 quick stats shown under the hero.",
+        "value": "Value",
+        "label": "Label",
+        "add": "Add stat",
+        "remove": "Remove",
+        "empty": "No stats yet. The default stats will be shown.",
+        "limit": "You can add up to {max} stats."
+      },
+      "featured": {
+        "heading": "Featured spaces",
+        "hint": "Pick which workspaces appear in the featured grid.",
+        "fieldTitle": "Title",
+        "fieldSubtitle": "Subtitle",
+        "pick": "Featured workspaces",
+        "noWorkspaces": "No workspaces available to feature."
+      },
+      "why": {
+        "heading": "Why section",
+        "fieldTitle": "Title",
+        "fieldHighlight": "Highlighted word",
+        "fieldSubtitle": "Subtitle"
+      },
+      "capabilities": {
+        "heading": "Capabilities section",
+        "fieldTitle": "Title",
+        "fieldSubtitle": "Subtitle"
+      },
+      "testimonials": {
+        "heading": "Testimonials",
+        "hint": "Up to 12 testimonials. Leave empty to use the defaults.",
+        "fieldTitle": "Section title",
+        "text": "Quote",
+        "name": "Name",
+        "role": "Role",
+        "add": "Add testimonial",
+        "remove": "Remove",
+        "empty": "No testimonials yet. The default testimonials will be shown.",
+        "limit": "You can add up to {max} testimonials."
+      }
+    },
+    "reports": {
+      "title": "Reports & exports",
+      "subtitle": "Platform analytics and downloadable CSV exports. Figures are admin-tracked, not payment-gateway money.",
+      "revenueTitle": "Revenue by month",
+      "revenueSubtitle": "Paid vs. outstanding over the last 12 months (admin-tracked).",
+      "revenuePaid": "Collected",
+      "revenueOutstanding": "Outstanding",
+      "invoicesByStatus": "Invoices by status",
+      "subscriptionsByStatus": "Subscriptions by status",
+      "newSubscriptions": "New subscriptions per month",
+      "topWorkspaces": "Top workspaces",
+      "colWorkspace": "Workspace",
+      "colPaidTotal": "Paid total",
+      "colActiveSubs": "Active subs",
+      "noData": "No data yet",
+      "invoiceStatus": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue"
+      },
+      "subscriptionStatus": {
+        "active": "Active",
+        "pending": "Pending",
+        "suspended": "Suspended",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      },
+      "exports": {
+        "title": "Data exports",
+        "subtitle": "Download the full dataset as a CSV file.",
+        "invoices": "Invoices CSV",
+        "subscriptions": "Subscriptions CSV",
+        "users": "Users CSV",
+        "workspaces": "Workspaces CSV"
+      }
+    },
+    "analytics": {
+      "title": "Demographics & cities",
+      "subtitle": "Distribution of workspaces and members by city and gender.",
+      "byCityTitle": "By city",
+      "byCitySubtitle": "Workspaces and active members in each city.",
+      "byGenderTitle": "By gender",
+      "byGenderSubtitle": "Platform users by gender (unspecified included).",
+      "workspaces": "Workspaces",
+      "activeMembers": "Active members",
+      "noData": "No data yet"
+    },
+    "rm": {
+      "title": "Content management",
+      "subtitle": "Control site content: contact details, FAQ, About, and How it works",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "remove": "Remove",
+      "labelAr": "Arabic",
+      "labelEn": "English",
+      "tabBranding": "Branding",
+      "tabSite": "Site info",
+      "tabFaq": "FAQ",
+      "tabAbout": "About",
+      "tabHow": "How it works",
+      "tabLanding": "Landing",
+      "branding": {
+        "hint": "Site identity used across the whole platform: name, browser tab, and the logo (a separate one for light and dark mode)",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Branding saved",
+        "saveFailed": "Save failed",
+        "uploadFailed": "Upload failed",
+        "siteName": "Site name",
+        "metaTitle": "Browser tab title (SEO)",
+        "metaDescription": "Meta description (SEO)",
+        "favicon": {
+          "label": "Favicon (browser tab icon)",
+          "hint": "Square icon, ideally 512×512. SVG, PNG or ICO.",
+          "upload": "Upload favicon"
+        },
+        "logo": {
+          "labelLight": "Logo — light mode",
+          "labelDark": "Logo — dark mode",
+          "hint": "Wide wordmark logo. SVG or transparent PNG works best.",
+          "upload": "Upload logo",
+          "replace": "Replace image",
+          "remove": "Remove"
+        }
+      },
+      "site": {
+        "hint": "Contact details shown in the footer and the Contact page",
+        "email": "Email",
+        "phone": "Phone",
+        "whatsapp": "WhatsApp",
+        "address": "Address",
+        "social": "Social links",
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "twitter": "Twitter / X",
+        "linkedin": "LinkedIn"
+      },
+      "faq": {
+        "hint": "Questions and answers shown on the FAQ page",
+        "add": "Add question",
+        "question": "Question",
+        "answer": "Answer",
+        "empty": "No questions yet"
+      },
+      "about": {
+        "hint": "About-page content",
+        "lead": "Lead",
+        "sections": "Sections",
+        "add": "Add section",
+        "heading": "Heading",
+        "body": "Body",
+        "empty": "No sections yet"
+      },
+      "how": {
+        "hint": "How-it-works steps shown on the landing",
+        "add": "Add step",
+        "title": "Title",
+        "description": "Description",
+        "empty": "No steps yet"
+      },
+      "landing": {
+        "hint": "Edit the landing page content (hero, stats, sections...)",
+        "open": "Open landing editor"
+      }
+    }
+  }
+}

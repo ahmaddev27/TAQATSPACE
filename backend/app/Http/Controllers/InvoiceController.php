@@ -32,7 +32,7 @@ class InvoiceController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         $filters = $request->only(['status', 'month', 'per_page']);
@@ -54,7 +54,7 @@ class InvoiceController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('You have no workspace.', 404);
+            return ApiResponse::error(__('messages.no_workspace'), 404);
         }
 
         try {
@@ -65,7 +65,7 @@ class InvoiceController extends Controller
 
         $invoice->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
-        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice created.', 201);
+        return ApiResponse::success(new InvoiceResource($invoice), __('messages.invoice_created'), 201);
     }
 
     /**
@@ -76,13 +76,13 @@ class InvoiceController extends Controller
         $workspace = $request->user()->workspace;
 
         if ($workspace === null) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         $detail = $this->invoices->findForWorkspace($workspace, $invoice->id);
 
         if ($detail === null) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         return ApiResponse::success(new InvoiceResource($detail));
@@ -94,7 +94,7 @@ class InvoiceController extends Controller
     public function pay(MarkPaidRequest $request, Invoice $invoice): JsonResponse
     {
         if (! $this->ownsInvoice($request, $invoice)) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         $paidAt = $request->validated()['paid_at'] ?? null;
@@ -110,7 +110,7 @@ class InvoiceController extends Controller
 
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
-        return ApiResponse::success(new InvoiceResource($updated), 'Invoice marked as paid.');
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
     }
 
     /**
@@ -119,7 +119,7 @@ class InvoiceController extends Controller
     public function remind(Request $request, Invoice $invoice): JsonResponse
     {
         if (! $this->ownsInvoice($request, $invoice)) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         try {
@@ -128,7 +128,7 @@ class InvoiceController extends Controller
             return ApiResponse::error($e->getMessage(), 429);
         }
 
-        return ApiResponse::message('Reminder sent.');
+        return ApiResponse::message(__('messages.reminder_sent'));
     }
 
     /**
@@ -137,7 +137,7 @@ class InvoiceController extends Controller
     public function downloadPdf(Request $request, Invoice $invoice): StreamedResponse|JsonResponse
     {
         if (! $this->invoices->userCanAccess($invoice, $request->user())) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         return $this->pdf->streamDownload($invoice);

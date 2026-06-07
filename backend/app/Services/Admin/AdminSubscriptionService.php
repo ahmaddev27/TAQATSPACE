@@ -1,0 +1,93 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Admin;
+
+use App\Enums\SubscriptionStatus;
+use App\Models\Subscription;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+
+/**
+ * Read-only super-admin subscription tracking. The admin observes status and
+ * billing terms across the platform; mutations live with the owner module.
+ */
+class AdminSubscriptionService
+{
+    /**
+     * Filtered, paginated subscriptions with member + workspace eager-loaded.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return LengthAwarePaginator<int, Subscription>
+     */
+    public function paginate(array $filters): LengthAwarePaginator
+    {
+        return $this->filteredQuery($filters)
+            ->with(['member:id,name,email', 'workspace:id,name,city'])
+            ->latest()
+            ->paginate($this->perPage($filters))
+            ->withQueryString();
+    }
+
+    /**
+     * Filtered query (no pagination) with member + workspace eager-loaded, for
+     * memory-safe cursor-based CSV export of the full result set.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Subscription>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)
+            ->with(['member:id,name', 'workspace:id,name'])
+            ->latest();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Subscription>
+     */
+    private function filteredQuery(array $filters): Builder
+    {
+        $query = Subscription::query();
+
+        if (! empty($filters['status']) && SubscriptionStatus::tryFrom((string) $filters['status']) !== null) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['workspace_id'])) {
+            $query->where('workspace_id', $filters['workspace_id']);
+        }
+
+        if (! empty($filters['member'])) {
+            $like = '%'.trim((string) $filters['member']).'%';
+
+            $query->whereHas('member', function (Builder $member) use ($like): void {
+                $member->where('name', 'like', $like)
+                    ->orWhere('email', 'like', $like);
+            });
+        }
+
+        // Inclusive start-date range; either bound may be supplied on its own.
+        if (! empty($filters['date_from'])) {
+            $query->whereDate('start_date', '>=', (string) $filters['date_from']);
+        }
+
+        if (! empty($filters['date_to'])) {
+            $query->whereDate('start_date', '<=', (string) $filters['date_to']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function perPage(array $filters): int
+    {
+        $perPage = (int) ($filters['per_page'] ?? 15);
+
+        return max(1, min($perPage, 100));
+    }
+}

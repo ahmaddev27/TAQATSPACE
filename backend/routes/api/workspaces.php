@@ -35,4 +35,6 @@ Route::middleware(['auth:sanctum', 'role.admin'])
     ->group(function (): void {
         Route::get('/', [WorkspaceController::class, 'adminIndex']);
         Route::put('/{workspace}/status', [WorkspaceController::class, 'adminUpdateStatus']);
+        Route::put('/{workspace}/publish', [WorkspaceController::class, 'adminPublish']);
+        Route::put('/{workspace}/unpublish', [WorkspaceController::class, 'adminUnpublish']);
     });

@@ -86,9 +86,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    // 1) Clear the local session (delete the Sanctum token + httpOnly cookies).
+    //    Also capture the backend-built SSO logout URL as a fallback.
+    let backendSsoLogoutUrl: string | null = null;
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = (await res.json().catch(() => null)) as
+        | { sso_logout_url?: string | null }
+        | null;
+      backendSsoLogoutUrl = body?.sso_logout_url ?? null;
+    } catch {
+      // Cookies are cleared server-side regardless; never block sign-out.
+    }
     setUser(null);
-    router.push("/login");
+
+    // 2) End the IdP session too (single logout). Build the end-session URL on
+    //    the CLIENT so it works independently of the backend response and adapts
+    //    to each environment: the endpoint + client_id come from NEXT_PUBLIC
+    //    envs, and post_logout_redirect_uri uses the current origin (so staging
+    //    and prod each return to their own site). Must be registered at the IdP.
+    const ssoEndpoint = process.env.NEXT_PUBLIC_SSO_LOGOUT_URL;
+    const ssoClientId = process.env.NEXT_PUBLIC_SSO_CLIENT_ID;
+    if (ssoEndpoint && ssoClientId) {
+      const params = new URLSearchParams({
+        post_logout_redirect_uri: window.location.origin,
+        client_id: ssoClientId,
+      });
+      window.location.assign(`${ssoEndpoint}?${params.toString()}`);
+      return;
+    }
+    if (backendSsoLogoutUrl) {
+      window.location.href = backendSsoLogoutUrl;
+      return;
+    }
+
+    // 3) Local-only fallback: land on login, then refresh so cached authed RSC
+    //    payloads (dashboard shell) are discarded.
+    router.replace("/login?loggedout=1");
+    router.refresh();
   }, [router]);
 
   const value = useMemo<AuthContextValue>(

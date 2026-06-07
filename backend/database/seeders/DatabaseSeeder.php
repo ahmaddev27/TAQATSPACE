@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\AdminRole;
 use App\Enums\InvoiceStatus;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
@@ -15,10 +16,12 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Message;
 use App\Models\Review;
-use App\Models\Seat;
+use App\Models\SeatTypePrice;
+use App\Models\SiteSetting;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\SeatService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -34,6 +37,7 @@ class DatabaseSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $this->seedRoles();
+            $this->call(AdminPermissionSeeder::class);
 
             $this->seedAdmin();
             $freelancers = $this->seedFreelancers(20);
@@ -45,6 +49,7 @@ class DatabaseSeeder extends Seeder
             $this->seedMessages($activeWorkspaces);
             $this->seedAnnouncements($activeWorkspaces);
             $this->seedReviews($subscriptions, $activeWorkspaces);
+            $this->seedSiteContent();
         });
 
         $this->command?->info('Seeded admin: admin@taqat.space (password: password)');
@@ -63,7 +68,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'مشرف المنصّة',
             'email' => 'admin@taqat.space',
         ]);
-        $admin->assignRole(UserRole::Admin->value);
+        // Grant the seeded account the super_admin role so there is always one
+        // admin who can administer the others. The Spatie super_admin role —
+        // not the `users.role` column — carries the elevated privileges.
+        $admin->assignRole(AdminRole::SuperAdmin->value);
 
         return $admin;
     }
@@ -111,7 +119,11 @@ class DatabaseSeeder extends Seeder
                 'status' => $status,
             ]);
 
-            $this->seedSeats($workspace, $totalSeats);
+            // Seat types are the single source of truth for capacity: define
+            // the per-type pricing/capacity, then derive the physical seats from
+            // it so seeded data matches the runtime reconciliation behaviour.
+            $this->seedSeatTypePrices($workspace);
+            app(SeatService::class)->syncSeatsToCapacity($workspace);
             InternetPackage::factory()->count(random_int(2, 3))->create([
                 'workspace_id' => $workspace->id,
             ]);
@@ -124,14 +136,49 @@ class DatabaseSeeder extends Seeder
         return $active;
     }
 
-    private function seedSeats(Workspace $workspace, int $count): void
+    /**
+     * One pricing row per seat type, derived from the workspace base price.
+     * Flexible is the cheapest (hot-desk), fixed sits at the base, and a private
+     * office carries a premium. Capacities split the workspace's total seats.
+     */
+    private function seedSeatTypePrices(Workspace $workspace): void
     {
-        for ($n = 1; $n <= $count; $n++) {
-            Seat::factory()->create([
+        $base = (float) $workspace->price_per_month;
+        $total = (int) $workspace->total_seats;
+
+        $flexibleCapacity = (int) round($total * 0.5);
+        $privateCapacity = (int) round($total * 0.2);
+        $fixedCapacity = max(0, $total - $flexibleCapacity - $privateCapacity);
+
+        $rows = [
+            [
+                'type' => SeatType::Flexible->value,
+                'price_monthly' => round($base * 0.5, 2),
+                'price_daily' => round($base / 22, 2),
+                'capacity' => $flexibleCapacity,
+            ],
+            [
+                'type' => SeatType::Fixed->value,
+                'price_monthly' => round($base, 2),
+                'price_daily' => round($base / 18, 2),
+                'capacity' => $fixedCapacity,
+            ],
+            [
+                'type' => SeatType::PrivateOffice->value,
+                'price_monthly' => round($base * 1.6, 2),
+                'price_daily' => round($base * 1.6 / 18, 2),
+                'capacity' => $privateCapacity,
+            ],
+        ];
+
+        foreach ($rows as $row) {
+            SeatTypePrice::query()->create([
                 'workspace_id' => $workspace->id,
-                'seat_number' => 'A'.$n,
-                'type' => $n % 5 === 0 ? SeatType::PrivateOffice : ($n % 2 === 0 ? SeatType::Fixed : SeatType::Flexible),
-                'status' => SeatStatus::Available,
+                'type' => $row['type'],
+                'price_monthly' => $row['price_monthly'],
+                'price_daily' => $row['price_daily'],
+                'capacity' => $row['capacity'],
+                'enabled' => true,
             ]);
         }
     }
@@ -337,5 +384,29 @@ class DatabaseSeeder extends Seeder
                 $workspace->update(['avg_rating' => round((float) $average, 2)]);
             }
         }
+    }
+
+    /**
+     * Placeholder contact details so the public footer renders something before
+     * a Super Admin fills in the real values. Other CMS keys (faq/about/
+     * how_it_works) rely on the frontend's i18n fallbacks until edited.
+     */
+    private function seedSiteContent(): void
+    {
+        SiteSetting::updateOrCreate(
+            ['key' => 'site'],
+            ['value' => [
+                'contact_email' => 'info@taqat.space',
+                'contact_phone' => '+970 59 000 0000',
+                'whatsapp' => '+970 59 000 0000',
+                'address' => ['ar' => 'غزة، فلسطين', 'en' => 'Gaza, Palestine'],
+                'social' => [
+                    'facebook' => null,
+                    'instagram' => null,
+                    'twitter' => null,
+                    'linkedin' => null,
+                ],
+            ]],
+        );
     }
 }

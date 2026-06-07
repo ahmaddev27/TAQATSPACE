@@ -1,12 +1,22 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { UserRole } from "@/lib/types/auth";
-import { ROLE_NAV } from "./nav-config";
+import { ROLE_NAV, filterNavByPermissions } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
+import { NavProgress } from "./NavProgress";
 
 export interface DashShellProps {
   role: UserRole;
@@ -18,12 +28,23 @@ export interface DashShellProps {
 
 const NAV_WIDTH = "var(--nav-w)";
 const COLLAPSED_WIDTH = "72px";
+
+/**
+ * Must match the `max-width` breakpoint that switches the sidebar to an
+ * off-canvas drawer in `styles/dash.css`. Kept in one place so the JS toggle
+ * and the CSS layout never disagree.
+ */
 const MOBILE_BREAKPOINT = 860;
 
 /**
  * Dashboard chrome: collapsible sidebar + sticky topbar + scrollable content.
- * Server layouts pass the authenticated user's role + name; interaction
- * (collapse, off-canvas, logout) is handled here on the client.
+ *
+ * Two independent states drive the sidebar:
+ *  - `collapsed`  → desktop icon-only rail (≥ breakpoint).
+ *  - `mobileOpen` → off-canvas drawer (< breakpoint), hidden by default.
+ *
+ * Server layouts pass the authenticated user's role + name; all interaction is
+ * handled here on the client.
  */
 export function DashShell({
   role,
@@ -32,29 +53,68 @@ export function DashShell({
   children,
 }: DashShellProps) {
   const t = useTranslations("nav");
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const lastPathRef = useRef(pathname);
 
-  const nav = ROLE_NAV[role];
+  // Hide permission-gated items (e.g. admin management) the user cannot access.
+  // The auth payload carries the admin account's effective permission grant.
+  const nav = useMemo(
+    () => filterNavByPermissions(ROLE_NAV[role], user?.permissions),
+    [role, user?.permissions],
+  );
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  // The single top-bar control: collapse the rail on desktop, open the drawer
+  // on mobile. Branching on the live viewport keeps one button serving both.
   const onMenu = useCallback(() => {
-    if (
+    const isMobile =
       typeof window !== "undefined" &&
-      window.innerWidth <= MOBILE_BREAKPOINT
-    ) {
-      setCollapsed(false);
+      window.innerWidth <= MOBILE_BREAKPOINT;
+
+    if (isMobile) {
       setMobileOpen((open) => !open);
     } else {
       setCollapsed((c) => !c);
     }
   }, []);
 
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
   const handleLogout = useCallback(() => {
     setMobileOpen(false);
     void logout();
   }, [logout]);
+
+  // Close the drawer on any route change — covers link clicks and programmatic
+  // navigation alike, so the drawer never lingers over the new page. Guarded by
+  // a ref so state is only touched when the path actually changes.
+  useEffect(() => {
+    if (lastPathRef.current !== pathname) {
+      lastPathRef.current = pathname;
+      setMobileOpen(false);
+    }
+  }, [pathname]);
+
+  // Escape closes the drawer; lock body scroll while it's open so the page
+  // behind doesn't scroll under the overlay.
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
 
   return (
     <div
@@ -65,7 +125,13 @@ export function DashShell({
           : `${NAV_WIDTH} 1fr`,
       }}
     >
-      {mobileOpen && <div className="nav-backdrop" onClick={closeMobile} />}
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
+
+      {mobileOpen && (
+        <div className="nav-backdrop" onClick={closeMobile} aria-hidden="true" />
+      )}
 
       <Sidebar
         nav={nav}
@@ -77,9 +143,11 @@ export function DashShell({
 
       <div className="dash-main">
         <TopNav
+          role={role}
           userName={userName}
           roleLabel={t(nav.roleLabelKey)}
           avatarInitial={avatarInitial}
+          mobileOpen={mobileOpen}
           onMenu={onMenu}
           onLogout={handleLogout}
         />

@@ -40,7 +40,7 @@ class InvoiceController extends Controller
     public function show(Request $request, Invoice $invoice): JsonResponse
     {
         if (! $this->invoices->userCanAccess($invoice, $request->user())) {
-            return ApiResponse::error('Invoice not found.', 404);
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
         $invoice->load(['subscription.workspace', 'subscription.seat']);

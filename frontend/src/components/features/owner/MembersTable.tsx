@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/DataTable";
 import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
+import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 import { updateMemberStatus } from "@/lib/actions/owner";
 import type { Member, SubscriptionStatus } from "@/lib/types";
 import { avatarInitial, money, shortDate } from "./format";
@@ -25,6 +27,7 @@ type StatusFilter = "all" | "active" | "suspended" | "pending";
 
 const PAGE_SIZE = 8;
 const FILTERS: StatusFilter[] = ["all", "active", "suspended"];
+const FILTER_KEYS = ["status", "search"] as const;
 
 export interface MembersTableProps {
   members: Member[];
@@ -38,8 +41,15 @@ export function MembersTable({ members }: MembersTableProps) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  // Filters live in the URL so they are shareable and readable by the CSV
+  // export link (the download then matches the on-screen view).
+  const { filters, setFilter: setUrlFilter, clearFilters } =
+    useUrlFilters(FILTER_KEYS);
+  const filter: StatusFilter = (filters.status as StatusFilter) || "all";
+  const query = filters.search;
+  const setFilter = (value: StatusFilter) =>
+    setUrlFilter("status", value === "all" ? null : value);
+  const setQuery = (value: string) => setUrlFilter("search", value);
   const [sort, setSort] = useState<SortState | null>({ key: "name", dir: "asc" });
   const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState<Member | null>(null);
@@ -93,8 +103,7 @@ export function MembersTable({ members }: MembersTableProps) {
     });
   }
   const clearAll = () => {
-    setFilter("all");
-    setQuery("");
+    clearFilters();
     setPage(1);
   };
 
@@ -229,6 +238,15 @@ export function MembersTable({ members }: MembersTableProps) {
             placeholder={t("members.searchPlaceholder")}
           />
         </div>
+        <ExportCsvLink
+          type="members"
+          label={t("members.export")}
+          basePath="/api/owner/exports"
+          query={{
+            status: filter === "all" ? undefined : filter,
+            search: query || undefined,
+          }}
+        />
       </div>
 
       {chips.length > 0 && (

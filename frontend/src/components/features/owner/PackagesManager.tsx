@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
 import { deletePackage } from "@/lib/actions/owner";
 import type { Member, Package } from "@/lib/types";
@@ -22,13 +23,21 @@ type Editing = { mode: "create" } | { mode: "edit"; pkg: Package } | null;
 export function PackagesManager({ packages, members }: PackagesManagerProps) {
   const t = useTranslations("owner");
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [, startTransition] = useTransition();
 
   const [editing, setEditing] = useState<Editing>(null);
   const [assignFor, setAssignFor] = useState<Package | null>(null);
 
-  const handleDelete = (pkg: Package) => {
-    if (!window.confirm(t("packages.deleteConfirm"))) return;
+  const handleDelete = async (pkg: Package) => {
+    const ok = await confirm({
+      title: t("packages.delete"),
+      message: t("packages.deleteConfirm"),
+      confirmLabel: t("packages.delete"),
+      tone: "danger",
+      icon: "trash",
+    });
+    if (!ok) return;
     startTransition(async () => {
       const res = await deletePackage(pkg.id);
       if (res.ok) {

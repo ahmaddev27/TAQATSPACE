@@ -35,6 +35,34 @@ class MemberService
      */
     public function paginateMembers(Workspace $workspace, array $filters): LengthAwarePaginator
     {
+        $perPage = (int) ($filters['per_page'] ?? 15);
+
+        return $this->rosterQuery($workspace, $filters)->paginate($perPage);
+    }
+
+    /**
+     * Filtered roster query (no pagination) for this workspace, for memory-safe
+     * cursor-based CSV export. Reuses the same filter/sort pipeline as the list
+     * so the export honours exactly the filters the owner sees.
+     *
+     * @param  array{status?: string|null, search?: string|null, sort?: string|null, direction?: string|null}  $filters
+     * @return Builder<Subscription>
+     */
+    public function exportQueryForWorkspace(Workspace $workspace, array $filters): Builder
+    {
+        return $this->rosterQuery($workspace, $filters);
+    }
+
+    /**
+     * Build the workspace member roster query (one row per subscription) with
+     * the status/search filters and sort applied. Shared by the paginated list
+     * and the CSV export so filter logic lives in one place.
+     *
+     * @param  array{status?: string|null, search?: string|null, sort?: string|null, direction?: string|null}  $filters
+     * @return Builder<Subscription>
+     */
+    private function rosterQuery(Workspace $workspace, array $filters): Builder
+    {
         $query = Subscription::query()
             ->with(['member', 'seat'])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
@@ -45,9 +73,7 @@ class MemberService
         $this->applySearch($query, $filters['search'] ?? null);
         $this->applySort($query, $filters['sort'] ?? null, $filters['direction'] ?? null);
 
-        $perPage = (int) ($filters['per_page'] ?? 15);
-
-        return $query->paginate($perPage);
+        return $query;
     }
 
     /**

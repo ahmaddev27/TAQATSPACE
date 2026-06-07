@@ -19,6 +19,14 @@
       "rafah": "Rafah",
       "jabalia": "Jabalia",
       "deirelbalah": "Deir al-Balah"
+    },
+    "cropper": {
+      "title": "Crop image",
+      "zoom": "Zoom",
+      "rotate": "Rotate",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "repositionHint": "Drag to reposition · use the slider to zoom"
     }
   },
   "nav": {
@@ -49,6 +57,35 @@
       "quote": "“From home to an office worthy of my ambition in minutes. TAQAT changed how I work.”",
       "quoteName": "Lian Abu Shawish",
       "quoteRole": "UI/UX Designer · Gaza"
+    },
+    "sso": {
+      "button": "Sign in with Taqat",
+      "continue": "Continue with Taqat",
+      "divider": "or",
+      "signingIn": "Signing you in…",
+      "error": "Could not sign in with Taqat, please try again.",
+      "launchTitle": "Sign in to TAQAT",
+      "launchSubtitle": "Login and registration are handled by the unified national system (Taqat). Continue to sign in or create your account.",
+      "launchNote": "You'll be securely redirected to the unified system to sign in.",
+      "loggedOut": "You have been signed out.",
+      "backHome": "Back to home"
+    },
+    "onboarding": {
+      "eyebrow": "One last step",
+      "title": "How will you use Taqat?",
+      "subtitle": "Choose your account type to finish setting up",
+      "choose": "Choose",
+      "freelancer": {
+        "title": "Freelancer",
+        "desc": "Discover workspaces, book a seat, and manage your subscriptions."
+      },
+      "owner": {
+        "title": "Workspace owner",
+        "desc": "Register your space and manage seats, members, and subscriptions."
+      },
+      "finish": "Finish and create account",
+      "submitOwner": "Submit for review",
+      "error": "Could not complete setup, please try again."
     },
     "forgot": {
       "title": "Forgot password",
@@ -109,11 +146,20 @@
       "eyebrow": "Become a partner",
       "title": "List your workspace",
       "steps": {
+        "account": "Owner account",
         "info": "Space info",
         "location": "Location",
         "seats": "Seats & pricing",
         "documents": "Documents"
       },
+      "ownerName": "Owner full name",
+      "ownerNamePlaceholder": "Ahmad Al-Farra",
+      "email": "Email",
+      "phone": "Phone",
+      "phoneHint": "Used to reach you about your application",
+      "phonePlaceholder": "+970 5xx xxx xxx",
+      "password": "Password",
+      "passwordConfirm": "Confirm password",
       "name": "Space name",
       "namePlaceholder": "Al-Manara Space",
       "description": "Short description",
@@ -128,14 +174,15 @@
       "addressPlaceholder": "Omar Al-Mukhtar St, building…",
       "mapLabel": "pin location on map",
       "mapStubNote": "Interactive map arrives in the next phase. A default location in central Gaza has been set.",
-      "seatsIntro": "Add the seat types and prices you offer.",
-      "seatName": "Seat type",
-      "seatPrice": "Price",
-      "seatUnit": "Unit",
-      "seatUnitDaily": "Daily",
-      "seatUnitMonthly": "Monthly",
-      "addSeat": "Add seat type",
-      "removeSeat": "Remove",
+      "seatsIntro": "Enable each seat type you offer and set its prices. Prices are optional; capacity is the number of seats of that type.",
+      "seatMonthlyPrice": "Monthly price",
+      "seatDailyPrice": "Daily price",
+      "seatCapacity": "Capacity",
+      "seatTypeNames": {
+        "flexible": "Flexible",
+        "fixed": "Fixed",
+        "private_office": "Private office"
+      },
       "amenities": "Available amenities",
       "amenityCodes": {
         "wifi": "Wi-Fi",
@@ -168,6 +215,29 @@
       "title": "Account created",
       "body": "Your account was created successfully! Check your email to verify your account.",
       "goLogin": "Go to login"
+    },
+    "accountState": {
+      "emailLabel": "Account",
+      "backHome": "Back to home",
+      "logout": "Log out",
+      "ownerPendingTitle": "Your account is awaiting admin approval",
+      "ownerPendingBody": "We're reviewing your workspace. You'll be notified once it's approved.",
+      "suspendedTitle": "Your account is suspended",
+      "suspendedBody": "Please contact support if you believe this is a mistake.",
+      "genericTitle": "Your account is not active yet",
+      "genericBody": "You don't have access to the dashboard yet. Please try again later."
+    },
+    "adminLogin": {
+      "title": "Staff sign in",
+      "subtitle": "Internal access for TAQAT administrators.",
+      "email": "Email",
+      "emailPlaceholder": "name@taqat.space",
+      "password": "Password",
+      "submit": "Sign in",
+      "invalidCredentials": "Invalid email or password",
+      "notStaff": "This entrance is for staff only. Please use the unified sign in.",
+      "genericError": "Unable to sign in, please try again.",
+      "backHome": "Back to home"
     }
   },
   "validation": {

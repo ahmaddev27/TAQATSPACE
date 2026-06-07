@@ -1,5 +1,5 @@
 import type { IconName } from "@/components/ui/Icon";
-import type { UserRole } from "@/lib/types/auth";
+import type { AdminPermission, UserRole } from "@/lib/types/auth";
 
 export interface NavItem {
   /** Translation key under `nav.items.*`. */
@@ -9,6 +9,12 @@ export interface NavItem {
   icon: IconName;
   /** Optional notification count badge. */
   badge?: number;
+  /**
+   * When set, the item is shown only to users whose permission grant includes
+   * this permission (admin accounts carry `permissions` on the auth payload).
+   * Items without it are visible to everyone in the role.
+   */
+  permission?: AdminPermission;
 }
 
 export interface NavGroup {
@@ -21,6 +27,30 @@ export interface RoleNav {
   /** Translation key for the role label shown in the topbar user menu. */
   roleLabelKey: string;
   groups: NavGroup[];
+}
+
+/**
+ * Drop permission-gated items the current user may not access, then prune any
+ * group left empty. Items without a `permission` are always kept. `permissions`
+ * is the admin account's effective grant (absent for non-admin roles, which
+ * have no gated items anyway).
+ */
+export function filterNavByPermissions(
+  nav: RoleNav,
+  permissions: readonly AdminPermission[] | undefined,
+): RoleNav {
+  const granted = new Set(permissions ?? []);
+
+  const groups = nav.groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.permission || granted.has(item.permission),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { ...nav, groups };
 }
 
 /**
@@ -39,6 +69,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionManage",
         items: [
           { key: "members", href: "/owner/members", icon: "users" },
+          { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
           { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "invoices", href: "/owner/invoices", icon: "receipt" },
@@ -46,9 +77,17 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         ],
       },
       {
+        titleKey: "sectionManagement",
+        items: [
+          { key: "expenses", href: "/owner/expenses", icon: "wallet" },
+          { key: "resources", href: "/owner/resources", icon: "layers" },
+        ],
+      },
+      {
         titleKey: "sectionEngage",
         items: [
           { key: "messages", href: "/owner/messages", icon: "chat" },
+          { key: "broadcast", href: "/owner/messaging", icon: "send" },
           { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
           { key: "reports", href: "/owner/reports", icon: "chart" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
@@ -62,7 +101,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       {
         items: [
           { key: "home", href: "/freelancer", icon: "home" },
-          { key: "explore", href: "/freelancer/explore", icon: "search" },
+          { key: "explore", href: "/explore", icon: "search" },
         ],
       },
       {
@@ -74,7 +113,6 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             icon: "card",
           },
           { key: "invoices", href: "/freelancer/invoices", icon: "receipt" },
-          { key: "profile", href: "/freelancer/profile", icon: "user" },
         ],
       },
     ],
@@ -90,6 +128,37 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "workspaces", href: "/admin/workspaces", icon: "building" },
           { key: "users", href: "/admin/users", icon: "users" },
+          {
+            key: "admins",
+            href: "/admin/admins",
+            icon: "shield",
+            permission: "manage_admins",
+          },
+          { key: "subscriptions", href: "/admin/subscriptions", icon: "card" },
+          { key: "invoices", href: "/admin/invoices", icon: "receipt" },
+          { key: "reports", href: "/admin/reports", icon: "chart" },
+        ],
+      },
+      {
+        titleKey: "sectionCrm",
+        items: [
+          { key: "landing", href: "/admin/landing", icon: "grid" },
+          { key: "crm", href: "/admin/crm", icon: "settings" },
+        ],
+      },
+      {
+        titleKey: "sectionSettings",
+        items: [
+          {
+            key: "messaging",
+            href: "/admin/settings/messaging",
+            icon: "chat",
+          },
+          {
+            key: "broadcast",
+            href: "/admin/settings/messaging/broadcast",
+            icon: "send",
+          },
         ],
       },
     ],

@@ -25,15 +25,15 @@ class AuthController extends Controller
         $user = $this->auth->attempt($data['email'], $data['password']);
 
         if ($user === null) {
-            return ApiResponse::error('Invalid email or password.', 401);
+            return ApiResponse::error(__('messages.invalid_credentials'), 401);
         }
 
         if ($user->status === UserStatus::Suspended) {
-            return ApiResponse::error('Account suspended.', 403);
+            return ApiResponse::error(__('messages.account_suspended'), 403);
         }
 
         if ($user->status === UserStatus::PendingVerification) {
-            return ApiResponse::error('Account pending verification.', 403);
+            return ApiResponse::error(__('messages.account_pending'), 403);
         }
 
         return ApiResponse::success([
@@ -53,8 +53,11 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $this->auth->logout($request->user());
+        $ssoLogoutUrl = $this->auth->logout($request->user());
 
-        return response()->json(null, 204);
+        // RP-initiated single logout: when the session was opened via Taqat SSO,
+        // hand the frontend the IdP end-session URL so it can also sign the user
+        // out upstream. Null for password sessions — the SPA then logs out locally.
+        return ApiResponse::success(['sso_logout_url' => $ssoLogoutUrl]);
     }
 }

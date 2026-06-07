@@ -30,7 +30,7 @@ class BookingRequestController extends Controller
 
         return ApiResponse::success(
             new BookingRequestResource($booking),
-            'Booking request submitted.',
+            __('messages.booking_submitted'),
             201,
         );
     }
@@ -43,7 +43,7 @@ class BookingRequestController extends Controller
         $workspace = $request->user()?->workspace;
 
         if ($workspace === null) {
-            abort(404, 'No workspace found for this account.');
+            abort(404, __('messages.no_workspace_found_account'));
         }
 
         $bookings = $workspace->bookingRequests()
@@ -73,7 +73,7 @@ class BookingRequestController extends Controller
 
         return ApiResponse::success(
             new BookingRequestResource($booking),
-            $data['action'] === 'approve' ? 'Booking approved.' : 'Booking rejected.',
+            $data['action'] === 'approve' ? __('messages.booking_approved') : __('messages.booking_rejected'),
         );
     }
 }

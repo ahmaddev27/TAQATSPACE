@@ -24,19 +24,19 @@ abstract class EnsureRole
         $user = $request->user();
 
         if ($user === null) {
-            return ApiResponse::message('Unauthenticated.', 401);
+            return ApiResponse::message(__('messages.unauthenticated'), 401);
         }
 
         if (! $user->isActive()) {
             $message = $user->status === UserStatus::Suspended
-                ? 'Account suspended.'
-                : 'Account pending verification.';
+                ? __('messages.account_suspended')
+                : __('messages.account_pending');
 
             return ApiResponse::message($message, 403);
         }
 
         if ($user->role !== $this->role()) {
-            return ApiResponse::message('Insufficient permissions.', 403);
+            return ApiResponse::message(__('messages.insufficient_permissions'), 403);
         }
 
         return $next($request);

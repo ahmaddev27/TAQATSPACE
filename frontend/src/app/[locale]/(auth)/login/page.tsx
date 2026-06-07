@@ -1,15 +1,18 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { TileLogo } from "@/components/layout/TileLogo";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoginForm } from "@/components/features/auth/LoginForm";
 
 export default async function LoginPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ loggedout?: string; sso_error?: string }>;
 }) {
   const { locale } = await params;
+  const { loggedout, sso_error } = await searchParams;
   const t = await getTranslations({ locale, namespace: "auth.login" });
 
   return (
@@ -23,7 +26,7 @@ export default async function LoginPage({
 
         <div>
           <div style={{ marginBottom: 24 }}>
-            <TileLogo size={46} />
+            <BrandLogo size={46} forceDark />
           </div>
           <p className="auth-quote">{t("quote")}</p>
           <div className="row" style={{ gap: 10, marginTop: 20 }}>
@@ -43,7 +46,7 @@ export default async function LoginPage({
       </aside>
 
       <div className="auth-form-side">
-        <LoginForm />
+        <LoginForm loggedOut={loggedout === "1"} ssoError={sso_error === "1"} />
       </div>
     </div>
   );

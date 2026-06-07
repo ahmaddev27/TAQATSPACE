@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\SeatTypePrice;
 use App\Models\Workspace;
+use App\Services\MessagingSettingsService;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @mixin Workspace
@@ -36,6 +39,7 @@ class WorkspaceResource extends JsonResource
             'working_hours' => $this->working_hours,
             'status' => $this->status->value,
             'avg_rating' => $this->avg_rating,
+            'seat_types' => $this->seatTypeRows(),
             'created_at' => $this->created_at?->toIso8601String(),
 
             // Detail-only bundle: present when the controller attaches it.
@@ -49,7 +53,62 @@ class WorkspaceResource extends JsonResource
                 'email' => $this->owner->email,
                 'phone' => $this->owner->phone,
             ]),
+
+            // Owner/Admin-only: publish state + masked messaging config (never
+            // the secrets). The public discovery payload never exposes these.
+            $this->mergeWhen(
+                $this->canManage($request),
+                fn (): array => [
+                    'is_published' => $this->isPublished(),
+                    'published_at' => $this->published_at?->toIso8601String(),
+                    'messaging' => $this->maskedMessaging(),
+                ],
+            ),
         ];
+    }
+
+    /**
+     * Whether the current request may see this workspace's messaging config —
+     * its owner or an admin. Public discovery requests never qualify.
+     */
+    private function canManage(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user !== null
+            && Gate::forUser($user)->allows('manage-workspace', $this->resource);
+    }
+
+    /**
+     * The masked messaging block (use_platform + non-secret fields + has_* flags).
+     *
+     * @return array<string, mixed>
+     */
+    private function maskedMessaging(): array
+    {
+        return app(MessagingSettingsService::class)->maskedForWorkspace($this->resource);
+    }
+
+    /**
+     * The workspace's per-seat-type pricing rows in the public contract shape.
+     * All rows are returned (including disabled ones); the public client hides
+     * disabled types itself.
+     *
+     * @return array<int, array{type: string, price_monthly: ?string, price_daily: ?string, capacity: int, enabled: bool}>
+     */
+    private function seatTypeRows(): array
+    {
+        $this->resource->loadMissing('seatTypes');
+
+        return $this->seatTypes
+            ->map(static fn (SeatTypePrice $row): array => [
+                'type' => $row->type->value,
+                'price_monthly' => $row->price_monthly,
+                'price_daily' => $row->price_daily,
+                'capacity' => $row->capacity,
+                'enabled' => $row->enabled,
+            ])
+            ->all();
     }
 
     /**
@@ -60,12 +119,8 @@ class WorkspaceResource extends JsonResource
      */
     private function photoUrls(): array
     {
-        $disk = Storage::disk((string) config('filesystems.media', 'public'));
-
         return array_map(
-            static fn (string $path): string => $disk->exists($path)
-                ? $disk->url($path)
-                : $path,
+            static fn (string $path): string => MediaUrl::resolve($path) ?? $path,
             $this->photos ?? [],
         );
     }

@@ -5,225 +5,341 @@
     $workspace = $subscription?->workspace;
     $seat = $subscription?->seat;
 
-    $isPaid = $invoice->status === \App\Enums\InvoiceStatus::Paid;
+    $status = $invoice->status;
+    $statusValue = $status->value;
+    $isPaid = $status === \App\Enums\InvoiceStatus::Paid;
 
-    $period = trim(
-        ($subscription?->start_date?->format('Y-m-d') ?? '—')
-        . '  →  '
-        . ($subscription?->end_date?->format('Y-m-d') ?? '—')
-    );
+    $statusLabels = [
+        'paid' => 'مدفوعة',
+        'overdue' => 'متأخرة',
+        'cancelled' => 'ملغاة',
+        'pending' => 'قيد الانتظار',
+    ];
+    $statusLabel = $statusLabels[$statusValue] ?? $statusLabels['pending'];
 
-    $money = static fn ($value): string => '₪ ' . number_format((float) $value, 2);
+    $startDate = $subscription?->start_date?->format('Y-m-d') ?? '—';
+    $endDate = $subscription?->end_date?->format('Y-m-d') ?? '—';
+    $period = $startDate . '  –  ' . $endDate;
+
+    $lineAmount = $subscription?->monthly_price ?? $invoice->amount;
+
+    // Cairo ships full Arabic + Latin coverage but lacks the ₪ glyph (U+20AA),
+    // so the shekel is written as the Arabic abbreviation "ش.ج" to avoid tofu.
+    $money = static fn ($value): string =>
+        '<span class="num">' . number_format((float) $value, 2) . '</span> ش.ج';
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
     <style>
-        * { font-family: 'DejaVu Sans', sans-serif; }
+        @page { margin: 16mm 15mm; }
+
         body {
+            font-family: 'cairo', sans-serif;
             direction: rtl;
-            text-align: right;
-            color: #1a1a1a;
+            color: #0E1726;
             font-size: 12px;
+            line-height: 1.75;
             margin: 0;
-            padding: 32px;
+            padding: 0;
         }
-        .num { direction: ltr; unicode-bidi: embed; }
-        .header {
-            border-bottom: 3px solid #16a34a;
-            padding-bottom: 16px;
-            margin-bottom: 24px;
+
+        /* LTR-embed runs of numbers / Latin so they read correctly inside RTL. */
+        .num {
+            direction: ltr;
+            unicode-bidi: embed;
+            font-size: 0.95em;
         }
-        .brand {
-            font-size: 26px;
+
+        .muted { color: #667085; }
+
+        /* English sub-line under an Arabic label: small, muted, uppercased.
+           Placed on its own line with an explicit <br> (mPDF does not reliably
+           honour display:block on an inline span). */
+        .en {
+            font-size: 8.5px;
+            color: #98A2B3;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            line-height: 1.4;
+        }
+
+        /* ---------- Header ---------- */
+        .header { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .header td { vertical-align: top; }
+
+        .wordmark {
+            font-size: 30px;
             font-weight: bold;
-            color: #16a34a;
+            letter-spacing: 1px;
+            color: #1F82C7;
+            line-height: 1.1;
         }
-        .brand-ar {
-            font-size: 14px;
-            color: #555;
-            margin-top: 2px;
+        .wordmark .dot { color: #F6A91B; }
+        .tagline {
+            font-size: 10.5px;
+            color: #667085;
+            margin-top: 6px;
+            line-height: 1.5;
         }
-        .meta-table, .billto-table, .items-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .meta-table td { padding: 3px 0; vertical-align: top; }
-        .meta-label { color: #666; }
-        .section-title {
-            font-size: 13px;
+
+        .doc-title {
+            font-size: 22px;
             font-weight: bold;
-            margin: 20px 0 8px;
-            color: #16a34a;
+            color: #0E1726;
+            line-height: 1.2;
         }
-        .billto {
-            background: #f6f8f6;
-            border: 1px solid #e2e8e2;
-            border-radius: 6px;
-            padding: 12px 14px;
-            margin-bottom: 8px;
+        .doc-number {
+            margin-top: 6px;
+            font-size: 11.5px;
+            color: #667085;
         }
-        .items-table th, .items-table td {
-            border: 1px solid #d9d9d9;
-            padding: 8px 10px;
-            text-align: right;
+
+        .rule {
+            height: 3px;
+            background: #1F82C7;
+            line-height: 0;
+            font-size: 0;
+            margin: 14px 0 26px;
         }
-        .items-table th {
-            background: #16a34a;
-            color: #ffffff;
-            font-weight: bold;
-        }
-        .total-box {
-            margin-top: 18px;
-            text-align: left;
-        }
-        .total-label {
-            font-size: 13px;
-            color: #666;
-        }
-        .total-amount {
-            font-size: 24px;
-            font-weight: bold;
-            color: #16a34a;
-        }
-        .status-pill {
+
+        /* ---------- Status badge ---------- */
+        .badge {
             display: inline-block;
-            padding: 3px 12px;
-            border-radius: 12px;
+            padding: 6px 18px;
+            border-radius: 16px;
             font-size: 11px;
             font-weight: bold;
+            line-height: 1;
         }
-        .status-paid { background: #dcfce7; color: #15803d; }
-        .status-pending { background: #fef9c3; color: #a16207; }
-        .status-overdue { background: #fee2e2; color: #b91c1c; }
-        .watermark {
-            position: absolute;
-            top: 320px;
-            right: 130px;
-            font-size: 96px;
+        .badge-paid { background: #E6F6EC; color: #1B8A4B; }
+        .badge-pending { background: #FEF3D6; color: #B5790B; }
+        .badge-overdue { background: #FDE7E7; color: #C0392B; }
+        .badge-cancelled { background: #EEF1F5; color: #667085; }
+
+        /* ---------- Party cards ---------- */
+        .parties { width: 100%; border-collapse: separate; border-spacing: 16px 0; margin: 0 -16px 28px; }
+        .party-cell { width: 50%; vertical-align: top; }
+        .party-card {
+            background: #F7FAFC;
+            border: 1px solid #E4E9F0;
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+        .party-label {
+            font-size: 11px;
             font-weight: bold;
-            color: #16a34a;
-            opacity: 0.12;
-            transform: rotate(-30deg);
+            color: #1F82C7;
+            margin-bottom: 10px;
         }
-        .footer {
-            margin-top: 40px;
-            padding-top: 14px;
-            border-top: 1px solid #e2e8e2;
+        .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.5; }
+        .party-line { color: #667085; font-size: 11px; line-height: 1.8; margin-top: 3px; }
+
+        /* ---------- Meta strip ---------- */
+        .meta {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #E4E9F0;
+            border-radius: 10px;
+            margin-bottom: 28px;
+        }
+        .meta td {
+            padding: 14px 18px;
+            width: 33.33%;
+            vertical-align: top;
+        }
+        .meta td + td { border-right: 1px solid #E4E9F0; }
+        .meta .meta-label { font-size: 10.5px; color: #667085; font-weight: bold; }
+        .meta .meta-value { font-size: 13px; font-weight: bold; color: #0E1726; margin-top: 5px; }
+
+        /* ---------- Line items ---------- */
+        .items { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .items thead th {
+            background: #1F82C7;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 11.5px;
+            padding: 13px 16px;
+            text-align: right;
+            line-height: 1.4;
+        }
+        .items thead th:last-child { text-align: left; }
+        .items thead th:first-child { border-top-right-radius: 8px; }
+        .items thead th:last-child { border-top-left-radius: 8px; }
+        .items tbody td {
+            border-bottom: 1px solid #E4E9F0;
+            padding: 16px;
+            text-align: right;
+            vertical-align: top;
+            line-height: 1.7;
+        }
+        .items tbody td:last-child { text-align: left; font-weight: bold; }
+        .items .desc-title { font-weight: bold; color: #0E1726; font-size: 12.5px; }
+        .items .desc-sub { color: #667085; font-size: 11px; margin-top: 4px; }
+
+        /* ---------- Totals ---------- */
+        .totals { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        .totals .spacer { width: 52%; }
+        .totals td { padding: 8px 16px; }
+        .totals .t-label { color: #667085; text-align: right; font-size: 12px; }
+        .totals .t-value { text-align: left; color: #0E1726; font-weight: bold; font-size: 12.5px; }
+        .totals .grand td { border-top: 2px solid #1F82C7; padding-top: 16px; }
+        .totals .grand .t-label { font-size: 14px; font-weight: bold; color: #0E1726; }
+        .totals .grand .t-value { font-size: 20px; font-weight: bold; color: #1F82C7; }
+
+        /* ---------- Footer ---------- */
+        .footer { margin-top: 40px; border-top: 1px solid #E4E9F0; padding-top: 16px; }
+        .footer-rule {
+            height: 3px;
+            width: 72px;
+            background: #F6A91B;
+            margin-bottom: 14px;
+            line-height: 0;
+            font-size: 0;
+        }
+        .footer-dates { width: 100%; border-collapse: collapse; }
+        .footer-dates td { color: #667085; font-size: 11px; line-height: 1.7; }
+        .footer-thanks {
+            margin-top: 16px;
             text-align: center;
-            color: #666;
-            font-size: 12px;
+            color: #667085;
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
 
-    @if ($isPaid)
-        <div class="watermark">PAID</div>
-    @endif
-
-    <div class="header">
-        <table style="width:100%;">
-            <tr>
-                <td style="text-align:right;">
-                    <div class="brand">TAQAT.space</div>
-                    <div class="brand-ar">طاقة لمساحات العمل المشتركة</div>
-                </td>
-                <td style="text-align:left;">
-                    <div class="section-title" style="margin:0;">فاتورة / INVOICE</div>
-                    <div class="num">{{ $invoice->invoice_number }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <table class="meta-table">
+    {{-- Header: brand wordmark vs. document title + status --}}
+    <table class="header">
         <tr>
-            <td style="width:50%;">
-                <table class="meta-table">
-                    <tr>
-                        <td class="meta-label">رقم الفاتورة / Invoice No.</td>
-                        <td class="num">{{ $invoice->invoice_number }}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">تاريخ الإصدار / Issue date</td>
-                        <td class="num">{{ $invoice->created_at?->format('Y-m-d') ?? '—' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">تاريخ الاستحقاق / Due date</td>
-                        <td class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</td>
-                    </tr>
-                </table>
+            <td style="text-align: right;">
+                <div class="wordmark">TAQAT<span class="dot">.</span></div>
+                <div class="tagline">طاقة لمساحات العمل المشتركة</div>
             </td>
-            <td style="width:50%; text-align:left; vertical-align:top;">
-                <span class="status-pill status-{{ $invoice->status->value }}">
-                    @switch($invoice->status->value)
-                        @case('paid') مدفوع / PAID @break
-                        @case('overdue') متأخر / OVERDUE @break
-                        @case('cancelled') ملغى / CANCELLED @break
-                        @default قيد الانتظار / PENDING
-                    @endswitch
-                </span>
-                @if ($isPaid && $invoice->paid_at)
-                    <div style="margin-top:6px; color:#15803d;">
-                        تاريخ الدفع / Paid: <span class="num">{{ $invoice->paid_at->format('Y-m-d') }}</span>
-                    </div>
-                @endif
+            <td style="text-align: left;">
+                <div class="doc-title">فاتورة</div>
+                <div class="doc-number">
+                    رقم <span class="num">{{ $invoice->invoice_number }}</span>
+                </div>
+                <div style="margin-top: 12px;">
+                    <span class="badge badge-{{ $statusValue }}">{{ $statusLabel }}</span>
+                </div>
             </td>
         </tr>
     </table>
 
-    <div class="section-title">إلى / Bill to</div>
-    <div class="billto">
-        <div><strong>{{ $member?->name ?? '—' }}</strong></div>
-        @if ($member?->email)
-            <div class="num" style="text-align:right;">{{ $member->email }}</div>
-        @endif
-        @if ($member?->phone)
-            <div class="num" style="text-align:right;">{{ $member->phone }}</div>
-        @endif
-    </div>
+    <div class="rule"></div>
 
-    <div class="section-title">مساحة العمل / Workspace</div>
-    <div class="billto">
-        <div><strong>{{ $workspace?->name ?? '—' }}</strong></div>
-        @if ($workspace?->address)
-            <div>{{ $workspace->address }}</div>
-        @endif
-        @if ($workspace?->city)
-            <div>{{ $workspace->city }}</div>
-        @endif
-    </div>
+    {{-- Issuer vs. recipient --}}
+    <table class="parties">
+        <tr>
+            <td class="party-cell">
+                <div class="party-card">
+                    <div class="party-label">المُصدِر<br><span class="en">From</span></div>
+                    <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
+                    @if ($workspace?->address)
+                        <div class="party-line">{{ $workspace->address }}</div>
+                    @endif
+                    @if ($workspace?->city)
+                        <div class="party-line">{{ $workspace->city }}</div>
+                    @endif
+                    @if ($workspace?->phone)
+                        <div class="party-line"><span class="num">{{ $workspace->phone }}</span></div>
+                    @endif
+                </div>
+            </td>
+            <td class="party-cell">
+                <div class="party-card">
+                    <div class="party-label">العميل<br><span class="en">Bill to</span></div>
+                    <div class="party-name">{{ $member?->name ?? '—' }}</div>
+                    @if ($member?->email)
+                        <div class="party-line"><span class="num">{{ $member->email }}</span></div>
+                    @endif
+                    @if ($member?->phone)
+                        <div class="party-line"><span class="num">{{ $member->phone }}</span></div>
+                    @endif
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <div class="section-title">التفاصيل / Details</div>
-    <table class="items-table">
+    {{-- Meta strip: number + key dates --}}
+    <table class="meta">
+        <tr>
+            <td>
+                <div class="meta-label">رقم الفاتورة<br><span class="en">Invoice no.</span></div>
+                <div class="meta-value"><span class="num">{{ $invoice->invoice_number }}</span></div>
+            </td>
+            <td>
+                <div class="meta-label">تاريخ الإصدار<br><span class="en">Issue date</span></div>
+                <div class="meta-value"><span class="num">{{ $invoice->created_at?->format('Y-m-d') ?? '—' }}</span></div>
+            </td>
+            <td>
+                <div class="meta-label">تاريخ الاستحقاق<br><span class="en">Due date</span></div>
+                <div class="meta-value"><span class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</span></div>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Line items --}}
+    <table class="items">
         <thead>
             <tr>
-                <th>الوصف / Description</th>
-                <th>الفترة / Period</th>
-                <th>المقعد / Seat</th>
-                <th>المبلغ / Amount</th>
+                <th style="width: 46%;">الوصف<br><span class="en">Description</span></th>
+                <th style="width: 30%;">الفترة<br><span class="en">Period</span></th>
+                <th style="width: 24%;">المبلغ<br><span class="en">Amount</span></th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>اشتراك شهري / Monthly subscription</td>
-                <td class="num" style="text-align:center;">{{ $period }}</td>
-                <td class="num" style="text-align:center;">{{ $seat?->seat_number ?? '—' }}</td>
-                <td class="num" style="text-align:left;">{{ $money($subscription?->monthly_price ?? $invoice->amount) }}</td>
+                <td>
+                    <div class="desc-title">اشتراك شهري</div>
+                    <div class="desc-sub">Monthly subscription</div>
+                    @if ($seat?->seat_number)
+                        <div class="desc-sub">المقعد: <span class="num">{{ $seat->seat_number }}</span></div>
+                    @endif
+                </td>
+                <td><span class="num">{{ $period }}</span></td>
+                <td>{!! $money($lineAmount) !!}</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="total-box">
-        <div class="total-label">الإجمالي / Total</div>
-        <div class="total-amount num">{{ $money($invoice->amount) }}</div>
-    </div>
+    {{-- Totals --}}
+    <table class="totals">
+        <tr>
+            <td class="spacer"></td>
+            <td class="t-label">المجموع الفرعي</td>
+            <td class="t-value">{!! $money($lineAmount) !!}</td>
+        </tr>
+        <tr class="grand">
+            <td class="spacer"></td>
+            <td class="t-label">الإجمالي المستحق</td>
+            <td class="t-value">{!! $money($invoice->amount) !!}</td>
+        </tr>
+    </table>
 
+    {{-- Footer --}}
     <div class="footer">
-        <div>شكراً لاشتراكك معنا</div>
-        <div>Thank you for your subscription.</div>
+        <div class="footer-rule"></div>
+        <table class="footer-dates">
+            <tr>
+                <td style="text-align: right;">
+                    تاريخ الإصدار: <span class="num">{{ $invoice->created_at?->format('Y-m-d') ?? '—' }}</span>
+                </td>
+                <td style="text-align: left;">
+                    @if ($isPaid && $invoice->paid_at)
+                        تاريخ الدفع: <span class="num">{{ $invoice->paid_at->format('Y-m-d') }}</span>
+                    @else
+                        تاريخ الاستحقاق: <span class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</span>
+                    @endif
+                </td>
+            </tr>
+        </table>
+        <div class="footer-thanks">
+            شكراً لاشتراكك معنا. نتمنى لك تجربة عمل موفّقة.
+        </div>
     </div>
 
 </body>

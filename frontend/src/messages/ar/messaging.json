@@ -63,6 +63,81 @@
       "sentToast": "تم إرسال الرسالة الجماعية لأعضائك.",
       "failed": "تعذّر إرسال الرسالة الجماعية.",
       "emptyError": "اكتب رسالة قبل الإرسال."
+    },
+    "settings": {
+      "admin": {
+        "title": "إعدادات المراسلة",
+        "subtitle": "اضبط حسابات البريد الإلكتروني (SMTP) والرسائل النصية الخاصة بطاقات. ترث المساحات هذه الحسابات ما لم تُعدّ حساباتها الخاصة.",
+        "save": "حفظ الإعدادات",
+        "saving": "جارٍ الحفظ…",
+        "saved": "تم حفظ إعدادات المراسلة.",
+        "saveFailed": "تعذّر حفظ الإعدادات."
+      },
+      "owner": {
+        "tab": "المراسلة",
+        "title": "المراسلة",
+        "subtitle": "اختر كيف ترسل مساحتك رسائل البريد الإلكتروني والرسائل النصية.",
+        "usePlatformLabel": "استخدام حسابات طاقات",
+        "usePlatformHint": "أرسل رسائل البريد والرسائل النصية لمساحتك عبر حسابات طاقات المشتركة. أوقف هذا الخيار لاستخدام حساباتك الخاصة.",
+        "platformNote": "تستخدم مساحتك حسابات البريد والرسائل النصية المشتركة من طاقات. لا حاجة لأي إعداد.",
+        "ownAccountsNote": "أعدّ حسابات البريد الإلكتروني (SMTP) والرسائل النصية الخاصة بك أدناه. أي قناة تتركها فارغة تعود تلقائيًا إلى حساب طاقات.",
+        "save": "حفظ الإعدادات",
+        "saving": "جارٍ الحفظ…",
+        "saved": "تم حفظ إعدادات المراسلة.",
+        "saveFailed": "تعذّر حفظ الإعدادات."
+      },
+      "smtp": {
+        "heading": "البريد الإلكتروني (SMTP)",
+        "description": "خادم SMTP المستخدم لإرسال رسائل البريد الإلكتروني.",
+        "host": "خادم SMTP",
+        "hostPlaceholder": "smtp.example.com",
+        "port": "المنفذ",
+        "portPlaceholder": "587",
+        "username": "اسم المستخدم",
+        "password": "كلمة المرور",
+        "passwordSetPlaceholder": "محفوظة ••••••••",
+        "passwordKeepHint": "اتركها فارغة للإبقاء على كلمة المرور الحالية.",
+        "passwordNewHint": "لا توجد كلمة مرور محفوظة بعد.",
+        "encryption": "التشفير",
+        "encryptionTls": "TLS",
+        "encryptionSsl": "SSL",
+        "encryptionNone": "بدون",
+        "fromAddress": "البريد المُرسِل",
+        "fromAddressPlaceholder": "no-reply@example.com",
+        "fromName": "اسم المُرسِل",
+        "fromNamePlaceholder": "طاقات",
+        "testButton": "إرسال بريد تجريبي",
+        "testPromptTitle": "إرسال بريد تجريبي",
+        "testPromptLabel": "البريد الإلكتروني المستلِم",
+        "testPromptPlaceholder": "you@example.com"
+      },
+      "sms": {
+        "heading": "الرسائل النصية",
+        "description": "بوابة الرسائل النصية المستخدمة لإرسال الرسائل القصيرة.",
+        "provider": "المزوّد",
+        "providerPlaceholder": "اختر مزوّدًا",
+        "providerHotsms": "HotSMS",
+        "providerMtcsms": "MTC SMS",
+        "username": "اسم المستخدم",
+        "password": "كلمة المرور",
+        "passwordSetPlaceholder": "محفوظة ••••••••",
+        "credentialsKeepHint": "اتركها فارغة للإبقاء على بيانات الاعتماد الحالية.",
+        "credentialsNewHint": "لا توجد بيانات اعتماد محفوظة بعد.",
+        "sender": "اسم المُرسِل",
+        "senderPlaceholder": "طاقات",
+        "testButton": "إرسال رسالة تجريبية",
+        "testPromptTitle": "إرسال رسالة نصية تجريبية",
+        "testPromptLabel": "رقم الهاتف المستلِم",
+        "testPromptPlaceholder": "+9665XXXXXXXX"
+      },
+      "test": {
+        "send": "إرسال",
+        "sending": "جارٍ الإرسال…",
+        "cancel": "إلغاء",
+        "missingDestination": "أدخل وجهة أولًا.",
+        "sent": "تم إرسال الرسالة التجريبية.",
+        "failed": "تعذّر إرسال الرسالة التجريبية."
+      }
     }
   }
 }

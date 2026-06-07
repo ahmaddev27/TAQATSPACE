@@ -8,6 +8,8 @@
     "add": "إضافة",
     "close": "إغلاق",
     "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "areYouSure": "هل أنت متأكد؟",
     "search": "بحث…",
     "viewAll": "عرض الكل",
     "results": "النتائج",
@@ -18,15 +20,45 @@
     "error": "حدث خطأ ما",
     "retry": "إعادة المحاولة",
     "logout": "تسجيل الخروج",
+    "account": "الحساب",
+    "profile": "الملف الشخصي",
     "notifications": "الإشعارات",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "navigation": "القائمة الرئيسية",
     "all": "الكل",
     "status": {
-      "active": "نشط", "expired": "منتهٍ", "pending": "قيد المراجعة", "approved": "مقبول",
-      "rejected": "مرفوض", "suspended": "موقوف", "cancelled": "ملغى", "paid": "مدفوعة",
-      "overdue": "متأخرة", "available": "متاح", "occupied": "مشغول", "reserved": "محجوز", "maintenance": "صيانة"
+      "active": "نشط",
+      "expired": "منتهٍ",
+      "pending": "قيد المراجعة",
+      "approved": "مقبول",
+      "rejected": "مرفوض",
+      "suspended": "موقوف",
+      "cancelled": "ملغى",
+      "paid": "مدفوعة",
+      "overdue": "متأخرة",
+      "available": "متاح",
+      "occupied": "مشغول",
+      "reserved": "محجوز",
+      "maintenance": "صيانة"
     },
-    "seatType": { "fixed": "مكتب ثابت", "flexible": "مرن", "private_office": "مكتب خاص" },
-    "planType": { "monthly": "شهري", "daily": "يومي", "custom": "مخصص" }
+    "seatType": {
+      "fixed": "مكتب ثابت",
+      "flexible": "مرن",
+      "private_office": "مكتب خاص"
+    },
+    "planType": {
+      "monthly": "شهري",
+      "daily": "يومي",
+      "custom": "مخصص"
+    },
+    "gender": {
+      "label": "الجنس",
+      "hint": "اختياري",
+      "unspecified": "أفضّل عدم التحديد",
+      "male": "ذكر",
+      "female": "أنثى"
+    }
   },
   "nav": {
     "sectionManage": "الإدارة",
@@ -34,12 +66,15 @@
     "sectionAccount": "حسابي",
     "sectionManagement": "الإدارة",
     "sectionSystem": "النظام",
+    "sectionSettings": "الإعدادات",
     "ownerRole": "صاحب مساحة",
     "freelancerRole": "عامل مستقل",
     "adminRole": "مشرف المنصة",
     "items": {
       "dashboard": "لوحة التحكم",
       "members": "المشتركون",
+      "expenses": "المصاريف",
+      "resources": "الموارد",
       "seats": "المقاعد",
       "requests": "طلبات الحجز",
       "invoices": "الفواتير",
@@ -56,8 +91,15 @@
       "analytics": "إحصائيات المنصة",
       "workspaces": "إدارة المساحات",
       "users": "إدارة المستخدمين",
-      "finance": "المالية والعمولات"
-    }
+      "admins": "المشرفون",
+      "subscriptions": "الاشتراكات",
+      "landing": "الصفحة الرئيسية",
+      "finance": "المالية والعمولات",
+      "crm": "المحتوى (CRM)",
+      "messaging": "المراسلة",
+      "broadcast": "بثّ رسالة"
+    },
+    "sectionCrm": "إدارة المحتوى"
   },
   "status": {
     "active": "نشط",

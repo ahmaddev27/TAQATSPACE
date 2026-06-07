@@ -59,7 +59,7 @@ class SubscriptionController extends Controller
 
         return ApiResponse::success(
             new SubscriptionResource($subscription),
-            'Subscription cancelled.',
+            __('messages.subscription_cancelled'),
         );
     }
 
@@ -69,7 +69,7 @@ class SubscriptionController extends Controller
     private function authorizeOwnership(Request $request, Subscription $subscription): void
     {
         if ($subscription->member_id !== $request->user()->id) {
-            abort(403, 'You do not have access to this subscription.');
+            abort(403, __('messages.subscription_no_access'));
         }
     }
 }

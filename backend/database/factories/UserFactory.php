@@ -33,6 +33,7 @@ class UserFactory extends Factory
             'status' => UserStatus::Active,
             'specialty' => GazaData::specialty(),
             'bio' => null,
+            'onboarding_completed_at' => now(),
             'remember_token' => Str::random(10),
         ];
     }

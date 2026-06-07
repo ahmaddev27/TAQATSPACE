@@ -35,4 +35,30 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Taqat SSO (OIDC Identity Provider)
+    |--------------------------------------------------------------------------
+    |
+    | "Sign in with Taqat" — Authorization Code + PKCE flow against the Taqat
+    | identity provider. The client_secret is a real secret: keep it only in
+    | the environment, never in source control. Endpoints are discovered from
+    | {issuer}/.well-known/openid-configuration at runtime.
+    |
+    */
+    'taqat_sso' => [
+        'issuer' => env('TAQAT_SSO_ISSUER'),
+        'client_id' => env('TAQAT_SSO_CLIENT_ID', 'taqat-space'),
+        'client_secret' => env('TAQAT_SSO_CLIENT_SECRET'),
+        'redirect_uri' => env('TAQAT_SSO_REDIRECT_URI'),
+        // Where the IdP returns the browser after RP-initiated single logout.
+        // Must be pre-registered with the provider. Defaults (in the service)
+        // to the frontend login page when left unset.
+        'post_logout_redirect_uri' => env('TAQAT_SSO_POST_LOGOUT_REDIRECT_URI'),
+        // Explicit IdP logout/end-session URL. Set this when the provider's
+        // discovery document does NOT advertise an end_session_endpoint (e.g.
+        // Laravel Passport), so single logout still works.
+        'end_session_endpoint' => env('TAQAT_SSO_END_SESSION_URL'),
+    ],
+
 ];

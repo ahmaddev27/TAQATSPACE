@@ -59,7 +59,7 @@ class NotificationController extends Controller
         if ($request->boolean('all')) {
             $user->unreadNotifications->markAsRead();
 
-            return ApiResponse::message('All notifications marked as read.');
+            return ApiResponse::message(__('messages.all_notifications_marked_read'));
         }
 
         $user->unreadNotifications()
@@ -67,7 +67,7 @@ class NotificationController extends Controller
             ->get()
             ->markAsRead();
 
-        return ApiResponse::message('Notifications marked as read.');
+        return ApiResponse::message(__('messages.notifications_marked_read'));
     }
 
     /**
@@ -78,11 +78,11 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->whereKey($id)->first();
 
         if ($notification === null) {
-            return ApiResponse::error('Notification not found.', 404);
+            return ApiResponse::error(__('messages.notification_not_found'), 404);
         }
 
         $notification->delete();
 
-        return ApiResponse::message('Notification deleted.');
+        return ApiResponse::message(__('messages.notification_deleted'));
     }
 }

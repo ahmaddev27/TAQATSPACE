@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Segmented } from "@/components/ui/Segmented";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
   deleteAnnouncement,
@@ -32,6 +33,7 @@ export function AnnouncementsManager({
 }: AnnouncementsManagerProps) {
   const t = useTranslations("announcements");
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
 
   const [editing, setEditing] = useState<Editing>(null);
@@ -47,8 +49,15 @@ export function AnnouncementsManager({
     [announcements, filter],
   );
 
-  const handleDelete = (item: Announcement) => {
-    if (!window.confirm(t("deleteConfirm"))) return;
+  const handleDelete = async (item: Announcement) => {
+    const ok = await confirm({
+      title: t("delete"),
+      message: t("deleteConfirm"),
+      confirmLabel: t("delete"),
+      tone: "danger",
+      icon: "trash",
+    });
+    if (!ok) return;
     setBusyId(item.id);
     startTransition(async () => {
       const res = await deleteAnnouncement(item.id);

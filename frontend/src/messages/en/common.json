@@ -8,6 +8,8 @@
     "add": "Add",
     "close": "Close",
     "confirm": "Confirm",
+    "cancel": "Cancel",
+    "areYouSure": "Are you sure?",
     "search": "Search…",
     "viewAll": "View all",
     "results": "Results",
@@ -18,15 +20,45 @@
     "error": "Something went wrong",
     "retry": "Retry",
     "logout": "Log out",
+    "account": "Account",
+    "profile": "Profile",
     "notifications": "Notifications",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "navigation": "Main navigation",
     "all": "All",
     "status": {
-      "active": "Active", "expired": "Expired", "pending": "Pending", "approved": "Approved",
-      "rejected": "Rejected", "suspended": "Suspended", "cancelled": "Cancelled", "paid": "Paid",
-      "overdue": "Overdue", "available": "Available", "occupied": "Occupied", "reserved": "Reserved", "maintenance": "Maintenance"
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended",
+      "cancelled": "Cancelled",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "available": "Available",
+      "occupied": "Occupied",
+      "reserved": "Reserved",
+      "maintenance": "Maintenance"
     },
-    "seatType": { "fixed": "Fixed desk", "flexible": "Flexible", "private_office": "Private office" },
-    "planType": { "monthly": "Monthly", "daily": "Daily", "custom": "Custom" }
+    "seatType": {
+      "fixed": "Fixed desk",
+      "flexible": "Flexible",
+      "private_office": "Private office"
+    },
+    "planType": {
+      "monthly": "Monthly",
+      "daily": "Daily",
+      "custom": "Custom"
+    },
+    "gender": {
+      "label": "Gender",
+      "hint": "Optional",
+      "unspecified": "Prefer not to say",
+      "male": "Male",
+      "female": "Female"
+    }
   },
   "nav": {
     "sectionManage": "Manage",
@@ -34,12 +66,15 @@
     "sectionAccount": "My account",
     "sectionManagement": "Management",
     "sectionSystem": "System",
+    "sectionSettings": "Settings",
     "ownerRole": "Space owner",
     "freelancerRole": "Freelancer",
     "adminRole": "Super admin",
     "items": {
       "dashboard": "Dashboard",
       "members": "Members",
+      "expenses": "Expenses",
+      "resources": "Resources",
       "seats": "Seats",
       "requests": "Booking requests",
       "invoices": "Invoices",
@@ -56,8 +91,15 @@
       "analytics": "Analytics",
       "workspaces": "Workspaces",
       "users": "Users",
-      "finance": "Finance"
-    }
+      "admins": "Admins",
+      "subscriptions": "Subscriptions",
+      "landing": "Landing page",
+      "finance": "Finance",
+      "crm": "Content (CRM)",
+      "messaging": "Messaging",
+      "broadcast": "Broadcast"
+    },
+    "sectionCrm": "Content"
   },
   "status": {
     "active": "Active",

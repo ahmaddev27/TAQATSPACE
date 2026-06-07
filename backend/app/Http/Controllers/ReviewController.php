@@ -28,13 +28,13 @@ class ReviewController extends Controller
 
         if (! $this->reviews->memberCanReview($member, $workspaceId)) {
             return ApiResponse::error(
-                'You can only review a workspace you are or were subscribed to.',
+                __('messages.review_only_subscribed'),
                 403,
             );
         }
 
         if ($this->reviews->alreadyReviewed($member, $workspaceId)) {
-            return ApiResponse::error('You have already reviewed this workspace.', 409);
+            return ApiResponse::error(__('messages.review_already_reviewed'), 409);
         }
 
         $review = $this->reviews->create($member, $workspaceId, [
@@ -44,7 +44,7 @@ class ReviewController extends Controller
 
         return ApiResponse::success(
             new ReviewResource($review),
-            'Review submitted successfully.',
+            __('messages.review_submitted'),
             201,
         );
     }

@@ -8,9 +8,60 @@ export type {
   User,
   UserRole,
   UserStatus,
+  Gender,
+  AdminRole,
+  AdminPermission,
   ApiEnvelope,
   ApiErrorBody,
 } from "./auth";
+
+export type {
+  LocalizedText,
+  LandingHero,
+  LandingStat,
+  FeaturedSection,
+  WhySection,
+  CapabilitiesSection,
+  TestimonialsSection,
+  LandingSections,
+  LandingTestimonial,
+  LandingContent,
+  ReorderableSectionKey,
+} from "./landing";
+export { DEFAULT_SECTIONS_ORDER, sanitizeSectionsOrder } from "./landing";
+
+export type {
+  SmtpEncryption,
+  SmsProvider,
+  MaskedSmtpConfig,
+  MaskedSmsConfig,
+  PlatformMessagingConfig,
+  WorkspaceMessagingConfig,
+  SmtpUpdateInput,
+  SmsUpdateInput,
+  PlatformMessagingUpdateInput,
+  WorkspaceMessagingUpdateInput,
+  MessagingTestChannel,
+  BroadcastChannel,
+  BroadcastAudience,
+  BroadcastInput,
+  BroadcastChannelCounts,
+  BroadcastResult,
+} from "./messaging";
+import type { WorkspaceMessagingConfig } from "./messaging";
+
+export type {
+  ContentKey,
+  SiteSocial,
+  SiteContent,
+  FaqItem,
+  FaqContent,
+  AboutSection,
+  AboutContent,
+  HowItWorksStep,
+  HowItWorksContent,
+  Branding,
+} from "./content";
 
 /* -------------------------------------------------------------------------- */
 /*  Enums (string-backed, mirror App\Enums\*)                                  */
@@ -85,6 +136,20 @@ export interface SeatsSummary {
   maintenance: number;
 }
 
+/**
+ * Per-seat-type pricing row, mirroring `WorkspaceResource::seat_types`.
+ *
+ * Money fields arrive as decimal strings (e.g. `"120.00"`) or `null` when unset.
+ * The public side only renders `enabled` rows; the owner side edits all three.
+ */
+export interface SeatTypePrice {
+  type: SeatType;
+  price_monthly: string | null;
+  price_daily: string | null;
+  capacity: number;
+  enabled: boolean;
+}
+
 export interface RecentReview {
   rating: number;
   comment: string | null;
@@ -108,13 +173,31 @@ export interface Workspace {
   photos: string[];
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
+  /**
+   * Public-publish gate, separate from `status`. Present only for requests that
+   * may manage the workspace (its owner or an admin); absent on public payloads.
+   * `is_published` is true once an admin has published it to public discovery;
+   * `published_at` is the ISO timestamp of that action (null when unpublished).
+   */
+  is_published?: boolean;
+  published_at?: string | null;
   avg_rating: number | null;
+  /**
+   * Per-seat-type pricing. All three types may be present; disabled ones are
+   * included (hide them on the public side). Absent on legacy rows.
+   */
+  seat_types?: SeatTypePrice[];
   created_at: string | null;
   /** Present on the public detail endpoint only. */
   seats_summary?: SeatsSummary;
   recent_reviews?: RecentReview[];
   /** Present on the admin listing only. */
   owner?: WorkspaceOwnerSummary;
+  /**
+   * Masked messaging config. Present only for requests that may manage the
+   * workspace (its owner or an admin); absent on public discovery responses.
+   */
+  messaging?: WorkspaceMessagingConfig;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -124,6 +207,7 @@ export interface Workspace {
 export interface SeatAssignedMember {
   id: string;
   name: string;
+  avatar_url: string | null;
 }
 
 export interface Seat {
@@ -320,6 +404,24 @@ export interface RevenueChartPoint {
   amount: number;
 }
 
+/**
+ * A gender distribution bucket. `label` is a stable token
+ * (`male` | `female` | `unspecified`) the UI localises; `value` is the count.
+ */
+export interface GenderDatum {
+  label: "male" | "female" | "unspecified";
+  value: number;
+}
+
+/**
+ * A subscription-status distribution bucket. `label` is the raw status token
+ * the UI localises; `value` is the count.
+ */
+export interface StatusDatum {
+  label: SubscriptionStatus;
+  value: number;
+}
+
 /** Owner dashboard aggregate (`GET /workspace/dashboard`). */
 export interface OwnerStats {
   occupancy_pct: number;
@@ -330,6 +432,10 @@ export interface OwnerStats {
   revenue_this_month: number;
   revenue_last_month: number;
   revenue_chart: RevenueChartPoint[];
+  /** This workspace's active members bucketed by gender (zero-filled). */
+  members_by_gender: GenderDatum[];
+  /** This workspace's members bucketed by subscription status (zero-filled). */
+  members_by_status: StatusDatum[];
 }
 
 export interface MemberSummarySubscription {

@@ -19,6 +19,14 @@
 .logo img { height: 34px; width: auto; display: block; }
 .logo-word { font-family: var(--font-lt); font-weight: 700; font-size: 1.15rem; letter-spacing: .12em; color: var(--text); }
 
+/* Admin-set brand logo: render both variants, toggle by theme via CSS so the
+   right one shows with no JS and no hydration flash. A single (non-paired)
+   logo uses `.brand-logo-img` with no variant class and always shows. */
+.brand-logo { align-items: center; }
+.brand-logo-img.is-dark { display: none; }
+[data-theme="dark"] .brand-logo-img.is-light { display: none; }
+[data-theme="dark"] .brand-logo-img.is-dark { display: block; }
+
 /* ---------- Buttons ---------- */
 .btn {
   --btn-h: 40px;
@@ -210,7 +218,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 /* ---------- Side nav (dashboard) ---------- */
 .dash { display: grid; min-height: 100%; }
 .dash-nav {
-  width: var(--nav-w); background: var(--surface); border-inline-start: none;
+  /* Fill the grid track (DashShell sets it to --nav-w expanded, 72px collapsed)
+     instead of a fixed width — a fixed --nav-w overflowed the 72px collapsed
+     track and the rail's icons spilled over the page content. */
+  width: 100%; background: var(--surface); border-inline-start: none;
   border-inline-end: 1px solid var(--border); display: flex; flex-direction: column;
   padding: 14px; gap: 4px; flex: none;
 }
@@ -253,6 +264,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .seat.is-selected { background: var(--seat-selected); border-color: var(--seat-selected-bd); color: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent); }
 .seat.is-disabled { background: var(--seat-disabled); border-color: var(--seat-disabled-bd); color: var(--text-disabled); cursor: not-allowed; border-style: dashed; }
 [data-theme="dark"] .seat.is-reserved { color: var(--amber-400); }
+.seat.is-occupied { padding: 4px; }
+.seat-occupant { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; min-width: 0; }
+.seat-occupant .avatar { width: 26px; height: 26px; font-size: var(--fs-xs); border: 1.5px solid var(--surface); box-shadow: var(--sh-sm); }
+.seat-occupant-name {
+  max-width: 100%; font-size: 10px; font-weight: 600; line-height: 1.1; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-sans); font-variant-numeric: normal;
+}
+.seat .seat-tag {
+  position: absolute; top: 3px; inset-inline-start: 4px; font-size: 9px; font-weight: 700;
+  line-height: 1; color: var(--text-3); opacity: .85; pointer-events: none;
+}
 .seat-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--fs-sm); color: var(--text-2); }
 .seat-legend .lg { display: inline-flex; align-items: center; gap: 7px; }
 .seat-legend .sw { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid; }
@@ -266,6 +288,29 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .modal-head { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .modal-body { padding: 22px; }
 .modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ---------- Image cropper ---------- */
+.cropper { display: flex; flex-direction: column; gap: 14px; }
+.cropper-frame {
+  position: relative; width: 100%; overflow: hidden; border-radius: var(--r-lg);
+  background: var(--surface-sunk, #0a0c10); border: 1px solid var(--border);
+  touch-action: none; cursor: grab; user-select: none;
+}
+.cropper-frame:active { cursor: grabbing; }
+.cropper-img {
+  position: absolute; top: 50%; inset-inline-start: 50%; transform-origin: center center;
+  max-width: none; pointer-events: none; -webkit-user-drag: none;
+}
+.cropper-grid { position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.25) 1px, transparent 1px);
+  background-size: 33.333% 33.333%; opacity: .6;
+}
+.cropper-hint { font-size: var(--fs-xs); text-align: center; margin: 0; }
+.cropper-controls { display: flex; align-items: center; gap: 14px; }
+.cropper-zoom { display: flex; align-items: center; gap: 10px; flex: 1; color: var(--text-2); }
+.cropper-zoom input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
 
 .drawer-wrap { position: fixed; inset: 0; z-index: 100; }
 .drawer { position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: min(440px, 92vw); background: var(--surface); border-inline-start: 1px solid var(--border); box-shadow: var(--sh-md); display: flex; flex-direction: column; animation: slidein var(--t-slow); }
@@ -312,6 +357,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 
 .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
 @media (max-width: 900px) { .grid-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* 5-card variant (owner dashboard): all cards in one row on desktop, balanced wrapping below */
+.grid-stats--5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1280px) { .grid-stats--5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) { .grid-stats--5 { grid-template-columns: repeat(2, 1fr); } }
 
 /* icon dir mirroring */
 [dir="rtl"] .dir-ico { transform: scaleX(-1); }

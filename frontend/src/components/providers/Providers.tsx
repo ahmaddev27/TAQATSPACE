@@ -3,12 +3,15 @@
 import type { ReactNode } from "react";
 import { AuthProvider } from "./AuthProvider";
 import { ToastProvider } from "./ToastProvider";
+import { ConfirmProvider } from "@/components/ui/ConfirmDialog";
 
-/** Client-side provider tree (Auth + Toast). */
+/** Client-side provider tree (Auth + Toast + Confirm dialog). */
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
-      <AuthProvider>{children}</AuthProvider>
+      <ConfirmProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }
