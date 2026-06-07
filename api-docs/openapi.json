@@ -206,6 +206,74 @@
                 }
             }
         },
+        "/admin/analytics": {
+            "get": {
+                "operationId": "analytics.index",
+                "summary": "GET /api/admin/analytics \u2014 demographic (gender) and geographic (city)\ndistributions across the platform",
+                "tags": [
+                    "Analytics"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "by_city": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "workspaces": {
+                                                                "type": "integer"
+                                                            },
+                                                            "active_members": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "workspaces",
+                                                            "active_members"
+                                                        ]
+                                                    }
+                                                },
+                                                "by_gender": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "by_city",
+                                                "by_gender"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workspace/announcements": {
             "get": {
                 "operationId": "announcement.index",
@@ -1679,6 +1747,14 @@
                                                                     "amount"
                                                                 ]
                                                             }
+                                                        },
+                                                        "members_by_gender": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "members_by_status": {
+                                                            "type": "array",
+                                                            "items": {}
                                                         }
                                                     },
                                                     "required": [
@@ -1689,7 +1765,9 @@
                                                         "overdue_invoices",
                                                         "revenue_this_month",
                                                         "revenue_last_month",
-                                                        "revenue_chart"
+                                                        "revenue_chart",
+                                                        "members_by_gender",
+                                                        "members_by_status"
                                                     ]
                                                 },
                                                 {
@@ -1733,6 +1811,14 @@
                                                                     "amount"
                                                                 ]
                                                             }
+                                                        },
+                                                        "members_by_gender": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "members_by_status": {
+                                                            "type": "array",
+                                                            "items": {}
                                                         }
                                                     },
                                                     "required": [
@@ -1743,7 +1829,9 @@
                                                         "overdue_invoices",
                                                         "revenue_this_month",
                                                         "revenue_last_month",
-                                                        "revenue_chart"
+                                                        "revenue_chart",
+                                                        "members_by_gender",
+                                                        "members_by_status"
                                                     ]
                                                 }
                                             ]
@@ -9029,6 +9117,17 @@
                             "null"
                         ],
                         "maxLength": 30
+                    },
+                    "gender": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Optional for every role; null means \"unspecified\".",
+                        "enum": [
+                            "male",
+                            "female"
+                        ]
                     }
                 },
                 "required": [
@@ -9429,6 +9528,9 @@
                             "phone": {
                                 "type": "string"
                             },
+                            "gender": {
+                                "type": "string"
+                            },
                             "specialty": {
                                 "type": "string"
                             },
@@ -9441,6 +9543,7 @@
                             "name",
                             "email",
                             "phone",
+                            "gender",
                             "specialty",
                             "avatar"
                         ]
@@ -11615,6 +11718,16 @@
                         ],
                         "maxLength": 30
                     },
+                    "gender": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "male",
+                            "female"
+                        ]
+                    },
                     "specialty": {
                         "type": [
                             "string",
@@ -12047,6 +12160,9 @@
                             "null"
                         ]
                     },
+                    "gender": {
+                        "type": "string"
+                    },
                     "role": {
                         "type": "string"
                     },
@@ -12122,6 +12238,7 @@
                     "name",
                     "email",
                     "phone",
+                    "gender",
                     "role",
                     "status",
                     "needs_onboarding",
