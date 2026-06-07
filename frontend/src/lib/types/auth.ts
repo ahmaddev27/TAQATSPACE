@@ -2,6 +2,9 @@ export type UserRole = "freelancer" | "workspace_owner" | "admin";
 
 export type UserStatus = "active" | "suspended" | "pending_verification";
 
+/** Self-reported gender; null on the user means "unspecified". */
+export type Gender = "male" | "female";
+
 /** Spatie roles an admin account may hold (distinct from the `role` column). */
 export type AdminRole = "super_admin" | "admin";
 
@@ -20,6 +23,8 @@ export interface User {
   name: string;
   email: string;
   phone: string | null;
+  /** Self-reported gender; null means "unspecified". */
+  gender: Gender | null;
   role: UserRole;
   status: UserStatus;
   /** True for a freshly-provisioned SSO account that must still pick a role. */

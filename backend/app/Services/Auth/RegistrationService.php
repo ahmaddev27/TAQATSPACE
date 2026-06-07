@@ -98,6 +98,7 @@ class RegistrationService
             $attributes = [
                 'role' => $role->value,
                 'phone' => $data['phone'] ?? $user->phone,
+                'gender' => $data['gender'] ?? $user->gender,
                 'onboarding_completed_at' => now(),
                 'status' => $role === UserRole::WorkspaceOwner
                     ? UserStatus::PendingVerification->value

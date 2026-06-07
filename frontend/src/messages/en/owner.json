@@ -26,6 +26,20 @@
       "noWorkspaceBody": "Finish setting up your space to start receiving members and bookings.",
       "createWorkspace": "Create space"
     },
+    "analytics": {
+      "title": "Member analytics",
+      "subtitle": "Your members by gender and subscription status.",
+      "byGenderTitle": "Members by gender",
+      "byStatusTitle": "Members by status",
+      "noData": "No members yet"
+    },
+    "memberStatus": {
+      "active": "Active",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
     "members": {
       "title": "Members",
       "subtitle": "Manage your space members and subscriptions",

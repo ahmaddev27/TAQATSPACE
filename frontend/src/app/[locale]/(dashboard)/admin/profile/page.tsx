@@ -30,6 +30,7 @@ export default async function AdminProfilePage({
           name: user.name,
           email: user.email,
           phone: user.phone ?? "",
+          gender: user.gender ?? "",
           specialty: user.specialty ?? "",
           bio: user.bio ?? "",
           avatar: user.avatar,

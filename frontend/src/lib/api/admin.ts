@@ -443,6 +443,38 @@ export async function getAdminReports(): Promise<AdminReports> {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Analytics (GET /admin/analytics) — city + gender distributions             */
+/* -------------------------------------------------------------------------- */
+
+/** One workspace-city row: workspaces and active members in that city. */
+export interface CityDistribution {
+  /** The raw stored city value (free-text, already localised at capture time). */
+  label: string;
+  workspaces: number;
+  active_members: number;
+}
+
+/** One gender bucket; `label` is a stable token the UI localises. */
+export interface GenderDistribution {
+  label: "male" | "female" | "unspecified";
+  value: number;
+}
+
+/** Demographic + geographic distributions for the super-admin analytics. */
+export interface AdminAnalytics {
+  /** Workspaces + active members per city, ordered by workspace count desc. */
+  by_city: CityDistribution[];
+  /** Platform users bucketed male / female / unspecified (zero-filled). */
+  by_gender: GenderDistribution[];
+}
+
+/** City + gender distributions across the platform. */
+export async function getAdminAnalytics(): Promise<AdminAnalytics> {
+  const res = await serverFetch<ApiEnvelope<AdminAnalytics>>("/admin/analytics");
+  return res.data;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Messaging settings (GET /admin/settings/messaging)                         */
 /* -------------------------------------------------------------------------- */
 

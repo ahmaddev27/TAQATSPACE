@@ -33,6 +33,7 @@ class MemberResource extends JsonResource
                 'name' => $member?->name,
                 'email' => $member?->email,
                 'phone' => $member?->phone,
+                'gender' => $member?->gender?->value,
                 'specialty' => $member?->specialty,
                 'avatar' => $member?->avatar,
             ],

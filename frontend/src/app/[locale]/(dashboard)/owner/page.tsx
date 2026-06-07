@@ -7,6 +7,7 @@ import { LineChart, type LineChartPoint } from "@/components/ui/LineChart";
 import { Icon } from "@/components/ui/Icon";
 import { money } from "@/components/features/owner/format";
 import { OwnerInvoiceAlert } from "@/components/features/invoices/OwnerInvoiceAlert";
+import { MemberAnalytics } from "@/components/features/owner/MemberAnalytics";
 import type { IconName } from "@/components/ui/Icon";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function OwnerDashboardPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("owner.dashboard");
+  const ta = await getTranslations("owner.analytics");
 
   const stats = await getOwnerStats();
 
@@ -170,6 +172,17 @@ export default async function OwnerDashboardPage({
             </div>
           </div>
         </div>
+
+        <div>
+          <h3 className="h3">{ta("title")}</h3>
+          <p className="muted-3" style={{ fontSize: "var(--fs-sm)", marginTop: 2 }}>
+            {ta("subtitle")}
+          </p>
+        </div>
+        <MemberAnalytics
+          byGender={stats.members_by_gender}
+          byStatus={stats.members_by_status}
+        />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Enums\Gender;
 use App\Enums\InvoiceStatus;
 use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
@@ -14,6 +15,7 @@ use App\Models\Seat;
 use App\Models\Subscription;
 use App\Models\Workspace;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class OwnerDashboardService
@@ -65,7 +67,75 @@ class OwnerDashboardService
             'revenue_this_month' => $this->revenueForMonth($workspace, $now),
             'revenue_last_month' => $this->revenueForMonth($workspace, $now->copy()->subMonthNoOverflow()),
             'revenue_chart' => $this->revenueChart($workspace, $now),
+            'members_by_gender' => $this->membersByGender($workspace),
+            'members_by_status' => $this->membersByStatus($workspace),
         ];
+    }
+
+    /**
+     * This workspace's active members bucketed by gender (male / female /
+     * unspecified), zero-filled. One grouped query over active subscriptions
+     * joined to their member; null gender collapses to "unspecified".
+     *
+     * @return array<int, array{label: string, value: int}>
+     */
+    private function membersByGender(Workspace $workspace): array
+    {
+        $counts = Subscription::query()
+            ->join('users', 'users.id', '=', 'subscriptions.member_id')
+            ->where('subscriptions.workspace_id', $workspace->id)
+            ->where('subscriptions.status', SubscriptionStatus::Active->value)
+            ->selectRaw('users.gender as bucket, COUNT(*) as aggregate')
+            ->groupBy('users.gender')
+            ->pluck('aggregate', 'bucket')
+            ->mapWithKeys(fn (int|string $count, int|string|null $gender): array => [
+                ($gender === null || $gender === '') ? 'unspecified' : (string) $gender => (int) $count,
+            ]);
+
+        return $this->genderBuckets($counts);
+    }
+
+    /**
+     * This workspace's members bucketed by subscription status, zero-filled
+     * across every status. One grouped query.
+     *
+     * @return array<int, array{label: string, value: int}>
+     */
+    private function membersByStatus(Workspace $workspace): array
+    {
+        $counts = Subscription::query()
+            ->where('workspace_id', $workspace->id)
+            ->selectRaw('status as bucket, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'bucket');
+
+        return array_map(
+            static fn (SubscriptionStatus $status): array => [
+                'label' => $status->value,
+                'value' => (int) $counts->get($status->value, 0),
+            ],
+            SubscriptionStatus::cases(),
+        );
+    }
+
+    /**
+     * Shape gender counts into the contiguous, zero-filled `[{label, value}]`
+     * series (male, female, unspecified).
+     *
+     * @param  Collection<string, int>  $counts
+     * @return array<int, array{label: string, value: int}>
+     */
+    private function genderBuckets(Collection $counts): array
+    {
+        $buckets = [Gender::Male->value, Gender::Female->value, 'unspecified'];
+
+        return array_map(
+            static fn (string $bucket): array => [
+                'label' => $bucket,
+                'value' => (int) $counts->get($bucket, 0),
+            ],
+            $buckets,
+        );
     }
 
     private function totalSeats(Workspace $workspace): int
@@ -182,6 +252,14 @@ class OwnerDashboardService
             'revenue_this_month' => 0.0,
             'revenue_last_month' => 0.0,
             'revenue_chart' => $chart,
+            'members_by_gender' => $this->genderBuckets(new Collection()),
+            'members_by_status' => array_map(
+                static fn (SubscriptionStatus $status): array => [
+                    'label' => $status->value,
+                    'value' => 0,
+                ],
+                SubscriptionStatus::cases(),
+            ),
         ];
     }
 }

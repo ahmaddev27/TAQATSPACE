@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\Gender;
 use App\Enums\SeatType;
 use App\Enums\UserRole;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -40,6 +41,8 @@ class CompleteOnboardingRequest extends FormRequest
         $rules = [
             'role' => ['required', Rule::in(UserRole::registerable())],
             'phone' => ['nullable', 'string', 'max:30'],
+            // Optional for every role; null means "unspecified".
+            'gender' => ['nullable', Rule::in(Gender::values())],
         ];
 
         if ($this->input('role') === UserRole::Freelancer->value) {

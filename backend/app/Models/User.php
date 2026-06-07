@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AdminRole;
+use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'gender',
         'role',
         'status',
         'sso_sub',
@@ -55,6 +57,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
+            'gender' => Gender::class,
             'role' => UserRole::class,
             'status' => UserStatus::class,
             'documents' => 'array',
