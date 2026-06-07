@@ -33,7 +33,7 @@ import {
   type Expense,
   type ExpenseCategory,
   type ExpenseSummary,
-} from "@/lib/api/management";
+} from "@/lib/types/management";
 import { money, shortDate } from "./format";
 
 const CATEGORY_CLASS: Record<ExpenseCategory, string> = {
