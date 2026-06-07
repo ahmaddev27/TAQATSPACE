@@ -215,6 +215,29 @@
       "title": "Account created",
       "body": "Your account was created successfully! Check your email to verify your account.",
       "goLogin": "Go to login"
+    },
+    "accountState": {
+      "emailLabel": "Account",
+      "backHome": "Back to home",
+      "logout": "Log out",
+      "ownerPendingTitle": "Your account is awaiting admin approval",
+      "ownerPendingBody": "We're reviewing your workspace. You'll be notified once it's approved.",
+      "suspendedTitle": "Your account is suspended",
+      "suspendedBody": "Please contact support if you believe this is a mistake.",
+      "genericTitle": "Your account is not active yet",
+      "genericBody": "You don't have access to the dashboard yet. Please try again later."
+    },
+    "adminLogin": {
+      "title": "Staff sign in",
+      "subtitle": "Internal access for TAQAT administrators.",
+      "email": "Email",
+      "emailPlaceholder": "name@taqat.space",
+      "password": "Password",
+      "submit": "Sign in",
+      "invalidCredentials": "Invalid email or password",
+      "notStaff": "This entrance is for staff only. Please use the unified sign in.",
+      "genericError": "Unable to sign in, please try again.",
+      "backHome": "Back to home"
     }
   },
   "validation": {
