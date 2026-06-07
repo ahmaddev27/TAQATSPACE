@@ -98,6 +98,29 @@ Built on top of Phases 1–4 (each on its own branch + PR, all build-verified):
 
 ---
 
+## Roadmap — what's next (planned with the user)
+
+**Order:** Realtime → admin permission enforcement → comprehensive testing → hardening/launch.
+
+1. **Realtime milestone (next, 2026-06-08).** Firebase — **FCM** push notifications + **Firestore** live chat (chat stored in Firestore). Lowest ops on cPanel (no persistent WS server). Replaces the deferred in-app realtime.
+2. **Full admin permission enforcement.** The admin-management module defines + assigns Spatie permissions (`manage_admins`, `manage_workspaces`, `manage_users`, `manage_billing`, `manage_content`, `manage_messaging`, `view_reports`) but currently enforces them **only on the admin-management routes**. Gate **every** admin route/page/nav by its permission so a grant actually restricts access platform-wide.
+3. **Comprehensive testing (M12)** — _started; paused, resume next session._
+   - **Backend:** PHPUnit feature/integration tests per domain (auth/SSO/onboarding, admin + admin-management, owner workspaces/seats/subscriptions/expenses/resources/messaging, reports/analytics/exports, public discovery). Foundation ready: sqlite `:memory:` + factories.
+   - **Frontend:** Vitest component/unit tests (validations, flows).
+   - **E2E (Playwright):** critical journeys — login + `/admin-login`, SSO onboarding role-selection, single logout, owner CRUD, admin moderation, exports. (E2E will reproduce the Known Issues below.)
+4. **Hardening & launch (M12).** Rotate exposed secrets (the SSO client secret shared in chat + any old DB/AWS); error monitoring (Sentry); confirm SMS gateway endpoints (hotsms/mtcsms `// TODO`) before any real SMS; verify crons/queues (invoice generation, overdue, notification queue); finalize prod env (SSO, SMTP/SMS, S3, Firebase).
+
+## Known issues (open)
+
+- **Onboarding** — after choosing the account type, the "complete your data" form appears then disappears. Not visible in static code (forms, `common.gender` i18n keys, middleware, `(auth)` layout all check out) → a runtime/integration issue; to be reproduced + fixed via E2E.
+- **SSO single logout** — code complete (client-built URL via `NEXT_PUBLIC_SSO_LOGOUT_URL` + `NEXT_PUBLIC_SSO_CLIENT_ID`, plus a backend override `TAQAT_SSO_END_SESSION_URL`). It returned `null` due to **server config cache** — set the env + clear config (a temporary `GET /clear` helper was added on `chore/ops-clear-route`; **remove after use**) + register the post-logout redirect origin at the IdP.
+
+## Ops pending (user-owned)
+
+Merge the open branches → `dev` (triggers the GitHub Actions deploy), then: hit `api.staging.taqat.space/clear`, set `NEXT_PUBLIC_SSO_LOGOUT_URL` + `NEXT_PUBLIC_SSO_CLIENT_ID` for the frontend build, and register `https://staging.taqat.space` as an allowed post-logout redirect at the SSO. **Open branches:** `feat/analytics-city-gender` · `fix/ui-and-progress` · `feat/expenses-export-chart` · `fix/sso-logout-frontend` · `chore/ops-clear-route`.
+
+---
+
 ## Phase 1 — Foundation & Infrastructure
 
 ### M01 — Project Setup & Dev Environment (S1)
