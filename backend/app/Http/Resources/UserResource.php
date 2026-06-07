@@ -30,6 +30,9 @@ class UserResource extends JsonResource
             'specialty' => $this->specialty,
             'bio' => $this->bio,
             'avatar' => $this->avatarUrl(),
+            // Only the local email/password account (the internal admin) may change
+            // its password; SSO-provisioned users have their credentials at the IdP.
+            'can_change_password' => $this->sso_sub === null,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

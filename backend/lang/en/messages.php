@@ -30,9 +30,7 @@ return [
     'account_pending' => 'Account pending verification.',
     'invalid_credentials' => 'Invalid email or password.',
     'current_password_incorrect' => 'The current password is incorrect.',
-    'email_already_verified' => 'Email already verified.',
-    'verification_link_sent' => 'Verification link sent.',
-    'invalid_verification_link' => 'Invalid verification link.',
+    'password_change_sso' => 'Your password is managed by Taqat single sign-on and cannot be changed here.',
 
     // Password reset
     'reset_link_sent' => 'If that email exists, a reset link has been sent.',

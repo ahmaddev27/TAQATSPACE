@@ -71,6 +71,12 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        // Credentials for SSO-provisioned accounts live at the IdP, not here.
+        // Defense in depth: reject the request even if the UI exposed the form.
+        if ($user->sso_sub !== null) {
+            return ApiResponse::error(__('messages.password_change_sso'), 403);
+        }
+
         if (! Hash::check((string) $request->input('current_password'), $user->password)) {
             return ApiResponse::error(__('messages.current_password_incorrect'), 422, [
                 'current_password' => [__('messages.current_password_incorrect')],

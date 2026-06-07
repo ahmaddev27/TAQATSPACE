@@ -14,6 +14,7 @@ export default async function FreelancerProfilePage() {
 
   return (
     <ProfileScreen
+      canChangePassword={user.can_change_password}
       form={{
         defaults: {
           name: user.name,
