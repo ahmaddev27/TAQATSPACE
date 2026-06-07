@@ -202,6 +202,33 @@ class WorkspaceService
     }
 
     /**
+     * Admin publish gate. Marks the workspace as publicly published (sets
+     * `published_at`) so it appears on the public landing/discovery. Separate
+     * from the account `status`; idempotent (a stamp is set only when missing).
+     */
+    public function publish(Workspace $workspace): Workspace
+    {
+        if ($workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => now()]);
+    }
+
+    /**
+     * Admin unpublish. Clears `published_at`, hiding the workspace from public
+     * discovery again without touching its account `status`.
+     */
+    public function unpublish(Workspace $workspace): Workspace
+    {
+        if (! $workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => null]);
+    }
+
+    /**
      * Seat occupancy snapshot computed inline (seats owned by another module).
      *
      * @return array{total: int, available: int, occupied: int, maintenance: int}

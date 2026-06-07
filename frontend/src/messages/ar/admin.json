@@ -31,10 +31,15 @@
       "colOwner": "المالك",
       "colCity": "المدينة",
       "colStatus": "الحالة",
+      "colPublished": "النشر",
       "colCreated": "تاريخ الإنشاء",
       "approve": "موافقة",
       "suspend": "إيقاف",
       "reactivate": "إعادة تفعيل",
+      "publish": "نشر",
+      "unpublish": "إلغاء النشر",
+      "publishedBadge": "منشورة",
+      "unpublishedBadge": "غير منشورة",
       "count": "العدد",
       "searchPlaceholder": "ابحث بالاسم أو المدينة أو المالك…",
       "emptyTitle": "لا توجد مساحات",
@@ -54,9 +59,16 @@
         "cancel": "إلغاء",
         "confirm": "تأكيد الإيقاف"
       },
+      "unpublishConfirm": {
+        "title": "إلغاء نشر المساحة",
+        "body": "ستتم إزالة \"{name}\" من الصفحة الرئيسية والاستكشاف العام. سيبقى حسابها نشطًا. هل تريد المتابعة؟"
+      },
       "toast": {
         "statusUpdated": "تم تحديث حالة المساحة",
-        "statusFailed": "تعذّر تحديث حالة المساحة"
+        "statusFailed": "تعذّر تحديث حالة المساحة",
+        "published": "تم نشر المساحة",
+        "unpublished": "تم إلغاء نشر المساحة",
+        "publishFailed": "تعذّر تحديث حالة النشر"
       }
     },
     "users": {

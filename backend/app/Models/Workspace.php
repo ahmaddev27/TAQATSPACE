@@ -35,6 +35,7 @@ class Workspace extends Model
         'working_hours',
         'messaging',
         'status',
+        'published_at',
         'avg_rating',
     ];
 
@@ -49,6 +50,7 @@ class Workspace extends Model
             'working_hours' => 'array',
             'messaging' => 'array',
             'status' => WorkspaceStatus::class,
+            'published_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'total_seats' => 'integer',
@@ -105,16 +107,51 @@ class Workspace extends Model
         return $this->hasMany(Announcement::class);
     }
 
+    /**
+     * Whether this workspace has been published to public discovery by an admin.
+     * Independent of the account `status`: a workspace can be account-active yet
+     * unpublished (and therefore hidden from the public landing/discovery).
+     */
+    public function isPublished(): bool
+    {
+        return $this->published_at !== null;
+    }
+
     // ---- Query scopes (T024) ----
 
     /**
-     * Only publicly visible (approved) workspaces.
+     * Account-approved workspaces. NOTE: account-active does not imply publicly
+     * visible — public discovery must additionally require {@see scopePublished}.
+     * Use {@see scopePublic} for the combined public-visibility gate.
      *
      * @param  Builder<Workspace>  $query
      */
     public function scopeActive(Builder $query): void
     {
         $query->where('status', WorkspaceStatus::Active->value);
+    }
+
+    /**
+     * Workspaces an admin has published to public discovery (a non-null
+     * `published_at`). Separate from the account `status` gate.
+     *
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopePublished(Builder $query): void
+    {
+        $query->whereNotNull('published_at');
+    }
+
+    /**
+     * The single public-visibility gate: account-active AND admin-published.
+     * Every public discovery path (index/search, cities, single fetch, landing
+     * featured) must go through this so the rule stays DRY.
+     *
+     * @param  Builder<Workspace>  $query
+     */
+    public function scopePublic(Builder $query): void
+    {
+        $query->active()->published();
     }
 
     /**

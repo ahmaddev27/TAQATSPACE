@@ -31,10 +31,15 @@
       "colOwner": "Owner",
       "colCity": "City",
       "colStatus": "Status",
+      "colPublished": "Publishing",
       "colCreated": "Created",
       "approve": "Approve",
       "suspend": "Suspend",
       "reactivate": "Reactivate",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publishedBadge": "Published",
+      "unpublishedBadge": "Not published",
       "count": "Total",
       "searchPlaceholder": "Search by name, city or owner…",
       "emptyTitle": "No workspaces",
@@ -54,9 +59,16 @@
         "cancel": "Cancel",
         "confirm": "Confirm suspension"
       },
+      "unpublishConfirm": {
+        "title": "Unpublish workspace",
+        "body": "\"{name}\" will be removed from the public landing and discovery. Its account stays active. Continue?"
+      },
       "toast": {
         "statusUpdated": "Workspace status updated",
-        "statusFailed": "Could not update the workspace status"
+        "statusFailed": "Could not update the workspace status",
+        "published": "Workspace published",
+        "unpublished": "Workspace unpublished",
+        "publishFailed": "Could not update the publishing state"
       }
     },
     "users": {
