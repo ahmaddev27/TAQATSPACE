@@ -14,6 +14,8 @@ export interface User {
   specialty: string | null;
   bio: string | null;
   avatar: string | null;
+  /** True only for the local email/password admin; false for SSO accounts. */
+  can_change_password: boolean;
   email_verified_at: string | null;
   created_at: string;
 }

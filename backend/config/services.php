@@ -55,6 +55,10 @@ return [
         // Must be pre-registered with the provider. Defaults (in the service)
         // to the frontend login page when left unset.
         'post_logout_redirect_uri' => env('TAQAT_SSO_POST_LOGOUT_REDIRECT_URI'),
+        // Explicit IdP logout/end-session URL. Set this when the provider's
+        // discovery document does NOT advertise an end_session_endpoint (e.g.
+        // Laravel Passport), so single logout still works.
+        'end_session_endpoint' => env('TAQAT_SSO_END_SESSION_URL'),
     ],
 
 ];
