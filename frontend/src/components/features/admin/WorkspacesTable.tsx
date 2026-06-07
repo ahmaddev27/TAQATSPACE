@@ -3,12 +3,13 @@
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
+import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Icon } from "@/components/ui/Icon";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import {
   DataTable,
   Pager,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
-import { updateWorkspaceStatus } from "@/lib/actions/admin";
+import { setWorkspacePublished, updateWorkspaceStatus } from "@/lib/actions/admin";
 import type { Workspace, WorkspaceStatus } from "@/lib/types";
 import { adminDate } from "./format";
 import { ExportCsvLink } from "./ExportCsvLink";
@@ -40,6 +41,7 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
   const t = useTranslations("admin.workspaces");
   const locale = useLocale();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
 
   // Filters live in the URL so they are shareable and readable by the CSV
@@ -102,6 +104,38 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
     runStatus(suspendTarget, "suspended", reason.trim());
   };
 
+  const runPublish = (workspace: Workspace, published: boolean) => {
+    startTransition(async () => {
+      const res = await setWorkspacePublished(workspace.id, published);
+      if (res.ok) {
+        toast({
+          tone: "ok",
+          title: t(published ? "toast.published" : "toast.unpublished"),
+        });
+      } else {
+        toast({ tone: "err", title: t("toast.publishFailed"), body: res.message });
+      }
+    });
+  };
+
+  // Publishing is non-destructive (one click); unpublishing hides a live
+  // workspace from the public site, so it goes through the styled confirm.
+  const togglePublish = async (workspace: Workspace) => {
+    if (workspace.is_published) {
+      const ok = await confirm({
+        title: t("unpublishConfirm.title"),
+        message: t("unpublishConfirm.body", { name: workspace.name }),
+        confirmLabel: t("unpublish"),
+        tone: "danger",
+        icon: "alert",
+      });
+      if (!ok) return;
+      runPublish(workspace, false);
+    } else {
+      runPublish(workspace, true);
+    }
+  };
+
   const columns: DataTableColumn<Workspace>[] = [
     {
       id: "name",
@@ -135,6 +169,20 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
       header: t("colStatus"),
       sortable: true,
       cell: (w) => <StatusBadge status={w.status} locale={locale} />,
+    },
+    {
+      id: "published",
+      header: t("colPublished"),
+      cell: (w) =>
+        w.is_published ? (
+          <Badge tone="success" dot>
+            {t("publishedBadge")}
+          </Badge>
+        ) : (
+          <Badge tone="neutral" dot>
+            {t("unpublishedBadge")}
+          </Badge>
+        ),
     },
     {
       id: "created",
@@ -175,6 +223,15 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
               {t("suspend")}
             </Button>
           )}
+          <Button
+            variant={w.is_published ? "ghost" : "secondary"}
+            size="sm"
+            icon={w.is_published ? "eyeOff" : "eye"}
+            loading={pending}
+            onClick={() => togglePublish(w)}
+          >
+            {w.is_published ? t("unpublish") : t("publish")}
+          </Button>
         </div>
       ),
     },

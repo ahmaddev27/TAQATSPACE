@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import { StatusBadge } from "@/components/ui/Badge";
+import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -243,11 +243,27 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
     <div className="stack" style={{ gap: 18 }}>
       <div className="between wrap" style={{ gap: 12 }}>
         <Tabs items={tabs} value={tab} onChange={setTab} />
-        <div className="row" style={{ gap: 8 }}>
-          <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>
-            {t("settings.status")}:
-          </span>
-          <StatusBadge status={workspace.status} locale={locale} />
+        <div className="row wrap" style={{ gap: 14 }}>
+          <div className="row" style={{ gap: 8 }}>
+            <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+              {t("settings.status")}:
+            </span>
+            <StatusBadge status={workspace.status} locale={locale} />
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <span className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+              {t("settings.publishStatus")}:
+            </span>
+            {workspace.is_published ? (
+              <Badge tone="success" dot>
+                {t("settings.published")}
+              </Badge>
+            ) : (
+              <Badge tone="warning" dot>
+                {t("settings.pendingPublish")}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 

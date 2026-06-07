@@ -57,6 +57,8 @@ return [
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
+    'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
+    'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',
     'workspace_already_registered' => 'لديك مساحة عمل مسجّلة بالفعل.',
 
     // الصور

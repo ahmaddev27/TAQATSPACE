@@ -245,6 +245,9 @@
       "photoDeleted": "تم حذف الصورة",
       "photoFailed": "تعذّرت معالجة الصورة",
       "status": "حالة المساحة",
+      "publishStatus": "الظهور العام",
+      "published": "منشورة",
+      "pendingPublish": "بانتظار نشر الإدارة",
       "days": {
         "saturday": "السبت",
         "sunday": "الأحد",

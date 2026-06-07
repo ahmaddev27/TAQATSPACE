@@ -137,4 +137,26 @@ class WorkspaceController extends Controller
 
         return ApiResponse::success(new WorkspaceResource($updated), __('messages.workspace_status_updated'));
     }
+
+    /**
+     * PUT /api/admin/workspaces/{workspace}/publish — admin publishes the
+     * workspace to public discovery (separate from the account-status gate).
+     */
+    public function adminPublish(Workspace $workspace): JsonResponse
+    {
+        $updated = $this->workspaces->publish($workspace);
+
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.workspace_published'));
+    }
+
+    /**
+     * PUT /api/admin/workspaces/{workspace}/unpublish — admin removes the
+     * workspace from public discovery without changing its account status.
+     */
+    public function adminUnpublish(Workspace $workspace): JsonResponse
+    {
+        $updated = $this->workspaces->unpublish($workspace);
+
+        return ApiResponse::success(new WorkspaceResource($updated), __('messages.workspace_unpublished'));
+    }
 }

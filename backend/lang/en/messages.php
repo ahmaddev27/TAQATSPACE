@@ -57,6 +57,8 @@ return [
     'workspace_created' => 'Workspace created and submitted for review.',
     'workspace_updated' => 'Workspace updated.',
     'workspace_status_updated' => 'Workspace status updated.',
+    'workspace_published' => 'Workspace published to public discovery.',
+    'workspace_unpublished' => 'Workspace removed from public discovery.',
     'workspace_already_registered' => 'You already have a registered workspace.',
 
     // Photos

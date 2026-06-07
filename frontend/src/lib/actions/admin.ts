@@ -132,6 +132,31 @@ export async function updateWorkspaceStatus(
   return result;
 }
 
+/**
+ * Publish or unpublish a workspace to public discovery
+ * (`PUT /admin/workspaces/{id}/publish|unpublish`). This is a gate separate
+ * from the account status: only published workspaces appear on the public
+ * landing/discovery. Revalidates the admin list, the admin home, and the public
+ * landing/explore pages so the change is reflected immediately.
+ */
+export async function setWorkspacePublished(
+  workspaceId: string,
+  published: boolean,
+): Promise<ActionResult<Workspace>> {
+  const action = published ? "publish" : "unpublish";
+  const result = await authedMutate<Workspace>(
+    `/admin/workspaces/${workspaceId}/${action}`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
+    revalidatePath("/[locale]/(dashboard)/admin", "page");
+    revalidatePath("/[locale]/(public)", "page");
+    revalidatePath("/[locale]/(public)/explore", "page");
+  }
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  User moderation (PUT /admin/users/{id}/status)                            */
 /* -------------------------------------------------------------------------- */

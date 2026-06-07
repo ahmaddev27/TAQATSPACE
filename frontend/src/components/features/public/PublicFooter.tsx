@@ -26,7 +26,7 @@ export function PublicFooter({ dict, site = {}, locale = "ar" }: PublicFooterPro
     {
       heading: f.members,
       links: [
-        { href: "/register/freelancer", label: f.regFree },
+        { href: "/login", label: f.regFree },
         { href: "/faq", label: f.faq },
         { href: "/contact", label: f.contact },
       ],
@@ -34,7 +34,7 @@ export function PublicFooter({ dict, site = {}, locale = "ar" }: PublicFooterPro
     {
       heading: f.owners,
       links: [
-        { href: "/register/workspace", label: f.listSpace },
+        { href: "/login", label: f.listSpace },
         { href: "/login", label: f.login },
         { href: "/contact", label: f.contact },
       ],
