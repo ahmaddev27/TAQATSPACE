@@ -137,10 +137,12 @@ return [
     'review_only_subscribed' => 'You can only review a workspace you are or were subscribed to.',
     'review_already_reviewed' => 'You have already reviewed this workspace.',
 
-    // Admin content / landing / settings
+    // Admin content / landing / branding / settings
     'content_updated' => 'Content updated.',
     'landing_content_updated' => 'Landing content updated.',
     'landing_image_uploaded' => 'Image uploaded.',
+    'branding_updated' => 'Branding updated.',
+    'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'messaging_settings_updated' => 'Messaging settings updated.',
     'workspace_messaging_updated' => 'Workspace messaging settings updated.',

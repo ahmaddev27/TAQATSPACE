@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { TileLogo } from "./TileLogo";
+import { BrandLogo } from "./BrandLogo";
 import type { RoleNav } from "./nav-config";
 
 export interface SidebarProps {
@@ -56,7 +56,7 @@ export function Sidebar({
               T
             </span>
           ) : (
-            <TileLogo size={26} />
+            <BrandLogo size={26} />
           )}
         </Link>
       </div>

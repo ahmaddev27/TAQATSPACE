@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { TileLogo } from "@/components/layout/TileLogo";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { dashboardFor } from "@/lib/auth";
 import type { PublicDict } from "./i18n";
@@ -30,7 +30,7 @@ export function PublicHeader({ dict }: PublicHeaderProps) {
     <header className="pub-header">
       <div className="container pub-header-in">
         <Link href="/" className="logo" aria-label="TAQAT">
-          <TileLogo size={26} />
+          <BrandLogo size={26} />
         </Link>
         <nav className="pub-nav">
           {links.map((l) => (

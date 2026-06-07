@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAdminContent } from "@/lib/api/content";
+import { getAdminBranding } from "@/lib/api/branding";
 import { ContentManager } from "@/components/features/admin/ContentManager";
 import type {
   AboutContent,
+  Branding,
   FaqContent,
   HowItWorksContent,
   SiteContent,
@@ -29,11 +31,12 @@ export default async function AdminContentPage({
   const t = await getTranslations("admin.rm");
 
   // Each blob loads independently; a single CMS failure must not break the hub.
-  const [site, faq, about, howItWorks] = await Promise.all([
+  const [site, faq, about, howItWorks, branding] = await Promise.all([
     loadContent<SiteContent>("site"),
     loadContent<FaqContent>("faq"),
     loadContent<AboutContent>("about"),
     loadContent<HowItWorksContent>("how_it_works"),
+    getAdminBranding().catch(() => ({}) as Branding),
   ]);
 
   return (
@@ -53,6 +56,7 @@ export default async function AdminContentPage({
           faq={faq}
           about={about}
           howItWorks={howItWorks}
+          branding={branding}
         />
       </div>
     </div>

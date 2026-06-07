@@ -386,11 +386,36 @@
       "remove": "Remove",
       "labelAr": "Arabic",
       "labelEn": "English",
+      "tabBranding": "Branding",
       "tabSite": "Site info",
       "tabFaq": "FAQ",
       "tabAbout": "About",
       "tabHow": "How it works",
       "tabLanding": "Landing",
+      "branding": {
+        "hint": "Site identity used across the whole platform: name, browser tab, and the logo (a separate one for light and dark mode)",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Branding saved",
+        "saveFailed": "Save failed",
+        "uploadFailed": "Upload failed",
+        "siteName": "Site name",
+        "metaTitle": "Browser tab title (SEO)",
+        "metaDescription": "Meta description (SEO)",
+        "favicon": {
+          "label": "Favicon (browser tab icon)",
+          "hint": "Square icon, ideally 512×512. SVG, PNG or ICO.",
+          "upload": "Upload favicon"
+        },
+        "logo": {
+          "labelLight": "Logo — light mode",
+          "labelDark": "Logo — dark mode",
+          "hint": "Wide wordmark logo. SVG or transparent PNG works best.",
+          "upload": "Upload logo",
+          "replace": "Replace image",
+          "remove": "Remove"
+        }
+      },
       "site": {
         "hint": "Contact details shown in the footer and the Contact page",
         "email": "Email",

@@ -19,6 +19,14 @@
 .logo img { height: 34px; width: auto; display: block; }
 .logo-word { font-family: var(--font-lt); font-weight: 700; font-size: 1.15rem; letter-spacing: .12em; color: var(--text); }
 
+/* Admin-set brand logo: render both variants, toggle by theme via CSS so the
+   right one shows with no JS and no hydration flash. A single (non-paired)
+   logo uses `.brand-logo-img` with no variant class and always shows. */
+.brand-logo { align-items: center; }
+.brand-logo-img.is-dark { display: none; }
+[data-theme="dark"] .brand-logo-img.is-light { display: none; }
+[data-theme="dark"] .brand-logo-img.is-dark { display: block; }
+
 /* ---------- Buttons ---------- */
 .btn {
   --btn-h: 40px;

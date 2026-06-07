@@ -137,10 +137,12 @@ return [
     'review_only_subscribed' => 'يمكنك تقييم مساحة عمل أنت مشترك فيها أو كنت مشتركًا فيها فقط.',
     'review_already_reviewed' => 'لقد قمت بتقييم مساحة العمل هذه بالفعل.',
 
-    // محتوى الإدارة / الصفحة الرئيسية / الإعدادات
+    // محتوى الإدارة / الصفحة الرئيسية / الهوية / الإعدادات
     'content_updated' => 'تم تحديث المحتوى.',
     'landing_content_updated' => 'تم تحديث محتوى الصفحة الرئيسية.',
     'landing_image_uploaded' => 'تم رفع الصورة.',
+    'branding_updated' => 'تم تحديث الهوية.',
+    'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
     'workspace_messaging_updated' => 'تم تحديث إعدادات مراسلة مساحة العمل.',
