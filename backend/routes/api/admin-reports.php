@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\ReportsController;
 use Illuminate\Support\Facades\Route;
@@ -19,5 +20,6 @@ Route::middleware(['auth:sanctum', 'role.admin'])
     ->prefix('admin')
     ->group(function (): void {
         Route::get('/reports', [ReportsController::class, 'index']);
+        Route::get('/analytics', [AnalyticsController::class, 'index']);
         Route::get('/exports/{type}', [ExportController::class, 'download']);
     });

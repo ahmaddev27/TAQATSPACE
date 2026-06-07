@@ -51,6 +51,13 @@
       "monthly": "Monthly",
       "daily": "Daily",
       "custom": "Custom"
+    },
+    "gender": {
+      "label": "Gender",
+      "hint": "Optional",
+      "unspecified": "Prefer not to say",
+      "male": "Male",
+      "female": "Female"
     }
   },
   "nav": {

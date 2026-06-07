@@ -451,6 +451,17 @@
         "workspaces": "Workspaces CSV"
       }
     },
+    "analytics": {
+      "title": "Demographics & cities",
+      "subtitle": "Distribution of workspaces and members by city and gender.",
+      "byCityTitle": "By city",
+      "byCitySubtitle": "Workspaces and active members in each city.",
+      "byGenderTitle": "By gender",
+      "byGenderSubtitle": "Platform users by gender (unspecified included).",
+      "workspaces": "Workspaces",
+      "activeMembers": "Active members",
+      "noData": "No data yet"
+    },
     "rm": {
       "title": "Content management",
       "subtitle": "Control site content: contact details, FAQ, About, and How it works",

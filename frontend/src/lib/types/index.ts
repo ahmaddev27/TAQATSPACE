@@ -8,6 +8,7 @@ export type {
   User,
   UserRole,
   UserStatus,
+  Gender,
   AdminRole,
   AdminPermission,
   ApiEnvelope,
@@ -403,6 +404,24 @@ export interface RevenueChartPoint {
   amount: number;
 }
 
+/**
+ * A gender distribution bucket. `label` is a stable token
+ * (`male` | `female` | `unspecified`) the UI localises; `value` is the count.
+ */
+export interface GenderDatum {
+  label: "male" | "female" | "unspecified";
+  value: number;
+}
+
+/**
+ * A subscription-status distribution bucket. `label` is the raw status token
+ * the UI localises; `value` is the count.
+ */
+export interface StatusDatum {
+  label: SubscriptionStatus;
+  value: number;
+}
+
 /** Owner dashboard aggregate (`GET /workspace/dashboard`). */
 export interface OwnerStats {
   occupancy_pct: number;
@@ -413,6 +432,10 @@ export interface OwnerStats {
   revenue_this_month: number;
   revenue_last_month: number;
   revenue_chart: RevenueChartPoint[];
+  /** This workspace's active members bucketed by gender (zero-filled). */
+  members_by_gender: GenderDatum[];
+  /** This workspace's members bucketed by subscription status (zero-filled). */
+  members_by_status: StatusDatum[];
 }
 
 export interface MemberSummarySubscription {

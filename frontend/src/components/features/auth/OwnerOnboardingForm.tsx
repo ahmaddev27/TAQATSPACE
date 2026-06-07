@@ -17,6 +17,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import {
   ownerOnboardingSchema,
   AMENITY_CODES,
+  GENDER_OPTIONS,
   SEAT_TYPE_CODES,
   type OwnerOnboardingValues,
 } from "@/lib/validations/auth";
@@ -51,7 +52,7 @@ const AMENITY_ICONS: Record<string, IconName> = {
 
 /** Field groups per step — scopes RHF `trigger()` and back-navigation on errors. */
 const STEP_FIELDS: (keyof OwnerOnboardingValues)[][] = [
-  ["phone", "workspace_name", "description", "capacity", "hours"],
+  ["phone", "gender", "workspace_name", "description", "capacity", "hours"],
   ["city", "area", "address"],
   ["seat_types", "amenities"],
 ];
@@ -78,6 +79,7 @@ export function OwnerOnboardingForm({
   const tf = useTranslations("auth.registerFreelancer");
   const tv = useTranslations("validation");
   const tCommon = useTranslations("common");
+  const tg = useTranslations("common.gender");
 
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -97,6 +99,7 @@ export function OwnerOnboardingForm({
     mode: "onTouched",
     defaultValues: {
       phone: "",
+      gender: "",
       workspace_name: "",
       description: "",
       capacity: 1,
@@ -143,6 +146,8 @@ export function OwnerOnboardingForm({
     const payload = {
       role: "workspace_owner" as const,
       phone: values.phone,
+      // Empty select = "prefer not to say" → null (unspecified) for the API.
+      gender: values.gender === "" ? null : values.gender,
       workspace_name: values.workspace_name,
       description: values.description,
       capacity: values.capacity,
@@ -223,6 +228,16 @@ export function OwnerOnboardingForm({
                 placeholder={tw("phonePlaceholder")}
                 {...register("phone")}
               />
+            </Field>
+            <Field label={tg("label")} hint={tg("hint")} error={errors.gender?.message}>
+              <Select defaultValue="" {...register("gender")}>
+                <option value="">{tg("unspecified")}</option>
+                {GENDER_OPTIONS.map((code) => (
+                  <option key={code} value={code}>
+                    {tg(code)}
+                  </option>
+                ))}
+              </Select>
             </Field>
             <Field label={tw("name")} error={errors.workspace_name?.message}>
               <Input placeholder={tw("namePlaceholder")} {...register("workspace_name")} />

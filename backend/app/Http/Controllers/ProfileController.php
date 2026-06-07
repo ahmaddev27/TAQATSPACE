@@ -44,7 +44,7 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $attributes = $request->safe()->only(['name', 'phone', 'specialty', 'bio']);
+        $attributes = $request->safe()->only(['name', 'phone', 'gender', 'specialty', 'bio']);
 
         if ($request->hasFile('avatar')) {
             $attributes['avatar'] = $this->files->upload(

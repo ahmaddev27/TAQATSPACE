@@ -12,7 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/providers/ToastProvider";
-import { SPECIALTY_OPTIONS } from "@/lib/validations/auth";
+import { GENDER_OPTIONS, SPECIALTY_OPTIONS } from "@/lib/validations/auth";
 import { updateProfileAction } from "@/lib/actions/profile";
 import { AvatarUploader } from "./AvatarUploader";
 
@@ -22,6 +22,7 @@ function profileSchema(t: Translate) {
   return z.object({
     name: z.string().min(2, t("required")),
     phone: z.string(),
+    gender: z.enum(["", ...GENDER_OPTIONS]),
     specialty: z.string(),
     bio: z.string(),
   });
@@ -33,6 +34,8 @@ export interface ProfileFormProps {
     name: string;
     email: string;
     phone: string;
+    /** `""` (unspecified) or `"male"` / `"female"`. */
+    gender: string;
     specialty: string;
     bio: string;
     avatar: string | null;
@@ -57,6 +60,7 @@ export function ProfileForm({
 }: ProfileFormProps) {
   const t = useTranslations("profile");
   const tErr = useTranslations("profile.errors");
+  const tg = useTranslations("common.gender");
   const { toast } = useToast();
   const router = useRouter();
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -72,6 +76,7 @@ export function ProfileForm({
     defaultValues: {
       name: defaults.name,
       phone: defaults.phone,
+      gender: defaults.gender as "" | (typeof GENDER_OPTIONS)[number],
       specialty: defaults.specialty,
       bio: defaults.bio,
     },
@@ -83,6 +88,7 @@ export function ProfileForm({
         {
           name: values.name,
           phone: values.phone,
+          gender: values.gender,
           specialty: showFreelancerFields ? values.specialty : "",
           bio: showFreelancerFields ? values.bio : "",
         },
@@ -139,6 +145,17 @@ export function ProfileForm({
               placeholder={t("phonePlaceholder")}
               {...register("phone")}
             />
+          </Field>
+
+          <Field label={tg("label")} error={errors.gender?.message}>
+            <Select defaultValue={defaults.gender} {...register("gender")}>
+              <option value="">{tg("unspecified")}</option>
+              {GENDER_OPTIONS.map((code) => (
+                <option key={code} value={code}>
+                  {tg(code)}
+                </option>
+              ))}
+            </Select>
           </Field>
 
           {showFreelancerFields && (

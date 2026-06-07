@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import {
   freelancerOnboardingSchema,
+  GENDER_OPTIONS,
   SPECIALTY_OPTIONS,
   type FreelancerOnboardingValues,
 } from "@/lib/validations/auth";
@@ -32,6 +33,7 @@ export function FreelancerOnboardingForm({
   const tf = useTranslations("auth.registerFreelancer");
   const tv = useTranslations("validation");
   const tCommon = useTranslations("common");
+  const tg = useTranslations("common.gender");
 
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -43,7 +45,7 @@ export function FreelancerOnboardingForm({
   } = useForm<FreelancerOnboardingValues>({
     resolver: zodResolver(freelancerOnboardingSchema(tv)),
     mode: "onTouched",
-    defaultValues: { phone: "", specialty: "", bio: "" },
+    defaultValues: { phone: "", gender: "", specialty: "", bio: "" },
   });
 
   async function onSubmit(values: FreelancerOnboardingValues) {
@@ -53,7 +55,12 @@ export function FreelancerOnboardingForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ role: "freelancer", ...values }),
+        body: JSON.stringify({
+          role: "freelancer",
+          ...values,
+          // Empty select = "prefer not to say" → null (unspecified) for the API.
+          gender: values.gender === "" ? null : values.gender,
+        }),
       });
 
       const body = (await res.json().catch(() => ({}))) as Partial<OnboardingResult> & {
@@ -95,6 +102,17 @@ export function FreelancerOnboardingForm({
               placeholder={tf("phonePlaceholder")}
               {...register("phone")}
             />
+          </Field>
+
+          <Field label={tg("label")} hint={tg("hint")} error={errors.gender?.message}>
+            <Select defaultValue="" {...register("gender")}>
+              <option value="">{tg("unspecified")}</option>
+              {GENDER_OPTIONS.map((code) => (
+                <option key={code} value={code}>
+                  {tg(code)}
+                </option>
+              ))}
+            </Select>
           </Field>
 
           <Field label={tf("specialty")} error={errors.specialty?.message}>
