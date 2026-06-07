@@ -59,6 +59,7 @@ export type {
   AboutContent,
   HowItWorksStep,
   HowItWorksContent,
+  Branding,
 } from "./content";
 
 /* -------------------------------------------------------------------------- */

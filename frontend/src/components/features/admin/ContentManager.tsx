@@ -10,8 +10,10 @@ import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { updateContent } from "@/lib/actions/admin";
+import { BrandingEditor } from "./BrandingEditor";
 import type {
   AboutContent,
+  Branding,
   ContentKey,
   FaqContent,
   HowItWorksContent,
@@ -28,6 +30,7 @@ export interface ContentManagerProps {
   faq: FaqContent;
   about: AboutContent;
   howItWorks: HowItWorksContent;
+  branding: Branding;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -280,6 +283,7 @@ export function ContentManager({
   faq,
   about,
   howItWorks,
+  branding,
 }: ContentManagerProps) {
   const t = useTranslations("admin.rm");
   const { toast } = useToast();
@@ -366,6 +370,7 @@ export function ContentManager({
     setSteps((s) => s.filter((_, i) => i !== index));
 
   const tabs = [
+    { id: "branding", label: t("tabBranding") },
     { id: "site", label: t("tabSite") },
     { id: "faq", label: t("tabFaq") },
     { id: "about", label: t("tabAbout") },
@@ -378,6 +383,9 @@ export function ContentManager({
   return (
     <div className="stack" style={{ gap: 18 }}>
       <Tabs items={tabs} value={tab} onChange={setTab} />
+
+      {/* BRANDING ----------------------------------------------------------- */}
+      {tab === "branding" && <BrandingEditor initial={branding} />}
 
       {/* SITE INFO ---------------------------------------------------------- */}
       {tab === "site" && (

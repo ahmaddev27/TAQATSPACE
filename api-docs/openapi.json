@@ -10,6 +10,202 @@
         }
     ],
     "paths": {
+        "/admin/admins": {
+            "get": {
+                "operationId": "adminManagement.index",
+                "summary": "GET /api/admin/admins \u2014 filtered, paginated admin directory",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {},
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "adminManagement.store",
+                "summary": "POST /api/admin/admins \u2014 create a new admin account",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/admins/{user}": {
+            "put": {
+                "operationId": "adminManagement.update",
+                "summary": "PUT /api/admin/admins/{user} \u2014 update an admin's status, role, permissions\nand/or password. The acting super-admin is passed for self-lockout guards",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "adminManagement.destroy",
+                "summary": "DELETE /api/admin/admins/{user} \u2014 deactivate (suspend) an admin account",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u064a\u0642\u0627\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workspace/announcements": {
             "get": {
                 "operationId": "announcement.index",
@@ -743,6 +939,187 @@
                 }
             }
         },
+        "/branding": {
+            "get": {
+                "operationId": "branding.show",
+                "summary": "GET /api/branding \u2014 public site branding (site name, meta, and the\nresolved favicon / logo URLs) so the app can render it. Returns {} when\nnothing is set, so the app falls back to its built-in branding",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/branding": {
+            "get": {
+                "operationId": "admin.branding.show",
+                "summary": "GET /api/admin/branding \u2014 current branding (or {} when unset), with each\nimage path resolved to a sibling display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "branding.update",
+                "summary": "PUT /api/admin/branding \u2014 upsert the branding (site name, meta, and the\nfavicon / light / dark logo paths)",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateBrandingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0647\u0648\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/branding/images": {
+            "post": {
+                "operationId": "branding.uploadImage",
+                "summary": "POST /api/admin/branding/images \u2014 store a branding asset (favicon or a\nlogo) and return its canonical path plus a resolved display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadBrandingImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/admin/messaging/broadcast": {
             "post": {
                 "operationId": "admin.broadcast.store",
@@ -1378,96 +1755,6 @@
                                     "required": [
                                         "data",
                                         "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/auth/verify-email/{id}/{hash}": {
-            "get": {
-                "operationId": "verification.verify",
-                "summary": "Signed link from the verification email. Marks the email verified and,\nfor freelancers, activates the account, then redirects to the SPA",
-                "tags": [
-                    "EmailVerification"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "hash",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    }
-                }
-            }
-        },
-        "/auth/email/resend": {
-            "post": {
-                "operationId": "emailVerification.resend",
-                "tags": [
-                    "EmailVerification"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string",
-                                                    "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u062a\u062d\u0642\u0642."
-                                                }
-                                            },
-                                            "required": [
-                                                "message"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string",
-                                                    "const": "\u062a\u0645 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0633\u0628\u0642\u064b\u0627."
-                                                }
-                                            },
-                                            "required": [
-                                                "message"
-                                            ]
-                                        }
                                     ]
                                 }
                             }
@@ -5468,11 +5755,11 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -5527,7 +5814,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Registration successful. Please verify your email."
+                                            "const": "Registration successful."
                                         }
                                     },
                                     "required": [
@@ -8500,6 +8787,52 @@
                 ],
                 "title": "AdminBroadcastRequest"
             },
+            "AdminResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_super_admin": {
+                        "type": "boolean"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "status",
+                    "roles",
+                    "is_super_admin",
+                    "permissions",
+                    "created_at"
+                ],
+                "title": "AdminResource"
+            },
             "AdminUserDetailResource": {
                 "type": "array",
                 "items": {},
@@ -9773,6 +10106,57 @@
                 ],
                 "title": "SeatResource"
             },
+            "StoreAdminRequest": {
+                "type": "object",
+                "description": "Validates creating a new admin account. Authorization is enforced by the\nroute middleware (auth:sanctum + can.manage_admins).",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "admin_role": {
+                        "type": "string",
+                        "enum": [
+                            "super_admin",
+                            "admin"
+                        ]
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "manage_admins",
+                                "manage_workspaces",
+                                "manage_users",
+                                "manage_billing",
+                                "manage_content",
+                                "manage_messaging",
+                                "view_reports"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "admin_role",
+                    "password_confirmation"
+                ],
+                "title": "StoreAdminRequest"
+            },
             "StoreAnnouncementRequest": {
                 "type": "object",
                 "properties": {
@@ -10360,6 +10744,50 @@
                 ],
                 "title": "TestMessagingRequest"
             },
+            "UpdateAdminRequest": {
+                "type": "object",
+                "description": "Validates updating an existing admin account: status, role, permissions, and\nan optional password reset. Every field is optional so callers can patch a\nsingle attribute. Self-lockout protection is enforced in the service.",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    },
+                    "admin_role": {
+                        "type": "string",
+                        "enum": [
+                            "super_admin",
+                            "admin"
+                        ]
+                    },
+                    "password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "password_confirmation": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "manage_admins",
+                                "manage_workspaces",
+                                "manage_users",
+                                "manage_billing",
+                                "manage_content",
+                                "manage_messaging",
+                                "view_reports"
+                            ]
+                        }
+                    }
+                },
+                "title": "UpdateAdminRequest"
+            },
             "UpdateAnnouncementRequest": {
                 "type": "object",
                 "properties": {
@@ -10396,6 +10824,55 @@
                     }
                 },
                 "title": "UpdateAnnouncementRequest"
+            },
+            "UpdateBrandingRequest": {
+                "type": "object",
+                "description": "Validates a site-branding payload: the site name, the SEO meta (title +\ndescription) and the three brand image PATHS (favicon, light/dark logos).\n\nEvery field is optional \u2014 the app falls back to its built-in branding for\nanything the admin leaves unset. Image fields carry the canonical media-disk\npath returned by the branding image-upload endpoint (a string), not the file\nitself. Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "site_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 120
+                    },
+                    "meta_title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 160
+                    },
+                    "meta_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 320
+                    },
+                    "favicon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_light": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_dark": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    }
+                },
+                "title": "UpdateBrandingRequest"
             },
             "UpdateExpenseRequest": {
                 "type": "object",
@@ -11496,6 +11973,23 @@
                 },
                 "title": "UpdateWorkspaceRequest"
             },
+            "UploadBrandingImageRequest": {
+                "type": "object",
+                "description": "Validates a single branding-asset upload (favicon or a light/dark logo).\n\nAccepts the raster formats used elsewhere plus SVG (logos/favicons are often\nvector). Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "SVG is not an image() per GD, so validate by extension/mime only.",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadBrandingImageRequest"
+            },
             "UploadLandingImageRequest": {
                 "type": "object",
                 "description": "Validates a single landing-section image upload. Authorization is handled by\nthe route middleware (auth:sanctum + role.admin).",
@@ -11580,11 +12074,47 @@
                             "null"
                         ]
                     },
+                    "can_change_password": {
+                        "type": "boolean",
+                        "description": "Only the local email/password account (the internal admin) may change\nits password; SSO-provisioned users have their credentials at the IdP."
+                    },
                     "email_verified_at": {
                         "type": "string"
                     },
                     "created_at": {
                         "type": "string"
+                    },
+                    "": {
+                        "description": "Staff-only authorization context so the SPA can adapt the admin UI\n(e.g. hide the admin-management nav for a non-super-admin). Resolved\nonly for admin accounts to keep the common path query-free.",
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "is_super_admin": {
+                                        "type": "boolean"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "is_super_admin",
+                                    "permissions"
+                                ]
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 0,
+                                "maxItems": 0,
+                                "additionalItems": false
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -11598,8 +12128,10 @@
                     "specialty",
                     "bio",
                     "avatar",
+                    "can_change_password",
                     "email_verified_at",
-                    "created_at"
+                    "created_at",
+                    null
                 ],
                 "title": "UserResource"
             },
@@ -11789,25 +12321,6 @@
                     }
                 }
             },
-            "ModelNotFoundException": {
-                "description": "Not found",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
             "AuthenticationException": {
                 "description": "Unauthenticated",
                 "content": {
@@ -11829,6 +12342,25 @@
             },
             "AuthorizationException": {
                 "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
                 "content": {
                     "application/json": {
                         "schema": {
