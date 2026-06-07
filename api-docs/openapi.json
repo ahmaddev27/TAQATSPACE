@@ -743,6 +743,187 @@
                 }
             }
         },
+        "/branding": {
+            "get": {
+                "operationId": "branding.show",
+                "summary": "GET /api/branding \u2014 public site branding (site name, meta, and the\nresolved favicon / logo URLs) so the app can render it. Returns {} when\nnothing is set, so the app falls back to its built-in branding",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/branding": {
+            "get": {
+                "operationId": "admin.branding.show",
+                "summary": "GET /api/admin/branding \u2014 current branding (or {} when unset), with each\nimage path resolved to a sibling display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "branding.update",
+                "summary": "PUT /api/admin/branding \u2014 upsert the branding (site name, meta, and the\nfavicon / light / dark logo paths)",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateBrandingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0647\u0648\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/branding/images": {
+            "post": {
+                "operationId": "branding.uploadImage",
+                "summary": "POST /api/admin/branding/images \u2014 store a branding asset (favicon or a\nlogo) and return its canonical path plus a resolved display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadBrandingImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/admin/messaging/broadcast": {
             "post": {
                 "operationId": "admin.broadcast.store",
@@ -2509,12 +2690,74 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {}
+                                            "type": "object",
+                                            "additionalProperties": {}
                                         },
                                         "message": {
                                             "type": "string",
                                             "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/landing/images": {
+            "post": {
+                "operationId": "landing.uploadImage",
+                "summary": "POST /api/admin/landing/images \u2014 store a section image and return its\ncanonical path (for round-tripping into the content) plus a display URL",
+                "tags": [
+                    "Landing"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadLandingImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
                                         }
                                     },
                                     "required": [
@@ -9052,6 +9295,55 @@
                 },
                 "title": "UpdateAnnouncementRequest"
             },
+            "UpdateBrandingRequest": {
+                "type": "object",
+                "description": "Validates a site-branding payload: the site name, the SEO meta (title +\ndescription) and the three brand image PATHS (favicon, light/dark logos).\n\nEvery field is optional \u2014 the app falls back to its built-in branding for\nanything the admin leaves unset. Image fields carry the canonical media-disk\npath returned by the branding image-upload endpoint (a string), not the file\nitself. Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "site_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 120
+                    },
+                    "meta_title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 160
+                    },
+                    "meta_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 320
+                    },
+                    "favicon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_light": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_dark": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    }
+                },
+                "title": "UpdateBrandingRequest"
+            },
             "UpdateLandingRequest": {
                 "type": "object",
                 "description": "Validates the bilingual landing-page CMS payload. Every field is optional\n(partial overrides) so any subset of the schema is accepted; the frontend\nsupplies i18n defaults for anything omitted. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
@@ -9065,6 +9357,136 @@
                         "items": {
                             "type": "string",
                             "maxLength": 50
+                        }
+                    },
+                    "hero": {
+                        "type": "object",
+                        "description": "--- Hero ---",
+                        "properties": {
+                            "image": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Section image: stored media PATH (uploaded via POST .../images).\nThe resolved display URL (`imageUrl`) is added by the service on\nread and accepted here so a round-tripped payload still validates.",
+                                "maxLength": 1000
+                            },
+                            "imageUrl": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 2000
+                            },
+                            "imageSecondary": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "imageSecondaryUrl": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 2000
+                            },
+                            "title": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "highlight": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "subtitle": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                }
+                            },
+                            "ctaPrimary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "ctaSecondary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
                         }
                     },
                     "sections": {
@@ -9145,6 +9567,34 @@
                                             "boolean",
                                             "null"
                                         ]
+                                    },
+                                    "image": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "imageUrl": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    },
+                                    "imageSecondary": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "imageSecondaryUrl": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
                                     },
                                     "title": {
                                         "type": "object",
@@ -9287,107 +9737,6 @@
                                                 "maxLength": 500
                                             }
                                         }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "hero": {
-                        "type": "object",
-                        "description": "--- Hero ---",
-                        "properties": {
-                            "title": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "highlight": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "subtitle": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 1000
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 1000
-                                    }
-                                }
-                            },
-                            "ctaPrimary": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "ctaSecondary": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
                                     }
                                 }
                             }
@@ -10012,6 +10361,39 @@
                     }
                 },
                 "title": "UpdateWorkspaceRequest"
+            },
+            "UploadBrandingImageRequest": {
+                "type": "object",
+                "description": "Validates a single branding-asset upload (favicon or a light/dark logo).\n\nAccepts the raster formats used elsewhere plus SVG (logos/favicons are often\nvector). Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "SVG is not an image() per GD, so validate by extension/mime only.",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadBrandingImageRequest"
+            },
+            "UploadLandingImageRequest": {
+                "type": "object",
+                "description": "Validates a single landing-section image upload. Authorization is handled by\nthe route middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadLandingImageRequest"
             },
             "UploadReceiptRequest": {
                 "type": "object",
