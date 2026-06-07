@@ -107,6 +107,18 @@ class Workspace extends Model
         return $this->hasMany(Announcement::class);
     }
 
+    /** @return HasMany<Expense, $this> */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+    /** @return HasMany<Resource, $this> */
+    public function resources(): HasMany
+    {
+        return $this->hasMany(Resource::class);
+    }
+
     /**
      * Whether this workspace has been published to public discovery by an admin.
      * Independent of the account `status`: a workspace can be account-active yet

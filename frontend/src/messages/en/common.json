@@ -66,6 +66,8 @@
     "items": {
       "dashboard": "Dashboard",
       "members": "Members",
+      "expenses": "Expenses",
+      "resources": "Resources",
       "seats": "Seats",
       "requests": "Booking requests",
       "invoices": "Invoices",

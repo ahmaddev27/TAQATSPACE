@@ -66,6 +66,8 @@
     "items": {
       "dashboard": "لوحة التحكم",
       "members": "المشتركون",
+      "expenses": "المصاريف",
+      "resources": "الموارد",
       "seats": "المقاعد",
       "requests": "طلبات الحجز",
       "invoices": "الفواتير",

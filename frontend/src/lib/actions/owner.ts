@@ -16,6 +16,13 @@ import type {
   WorkspaceMessagingConfig,
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
+import type {
+  Expense,
+  ExpenseCategory,
+  Resource,
+  ResourceStatus,
+  ResourceType,
+} from "@/lib/api/management";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */
@@ -381,5 +388,95 @@ export async function deletePhoto(
     body: { path },
   });
   if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Management — Expenses                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface ExpenseInput {
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  spent_on: string;
+  notes?: string | null;
+}
+
+export async function createExpense(
+  input: ExpenseInput,
+): Promise<ActionResult<Expense>> {
+  const result = await authedMutate<Expense>("/workspace/expenses", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+export async function updateExpense(
+  expenseId: string,
+  input: Partial<ExpenseInput>,
+): Promise<ActionResult<Expense>> {
+  const result = await authedMutate<Expense>(
+    `/workspace/expenses/${expenseId}`,
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+export async function deleteExpense(
+  expenseId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/expenses/${expenseId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Management — Resources                                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface ResourceInput {
+  name: string;
+  type: ResourceType;
+  quantity: number;
+  status: ResourceStatus;
+  notes?: string | null;
+}
+
+export async function createResource(
+  input: ResourceInput,
+): Promise<ActionResult<Resource>> {
+  const result = await authedMutate<Resource>("/workspace/resources", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("resources");
+  return result;
+}
+
+export async function updateResource(
+  resourceId: string,
+  input: Partial<ResourceInput>,
+): Promise<ActionResult<Resource>> {
+  const result = await authedMutate<Resource>(
+    `/workspace/resources/${resourceId}`,
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("resources");
+  return result;
+}
+
+export async function deleteResource(
+  resourceId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/resources/${resourceId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("resources");
   return result;
 }
