@@ -41,6 +41,8 @@ class UpdateLandingRequest extends FormRequest
             // read and accepted here so a round-tripped payload still validates.
             'hero.image' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'hero.imageUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'hero.imageSecondary' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'hero.imageSecondaryUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
 
             // --- Stats (max 4) ---
             'stats' => ['sometimes', 'nullable', 'array', 'max:4'],
@@ -64,6 +66,8 @@ class UpdateLandingRequest extends FormRequest
             ...$this->bilingual('sections.why.subtitle', 1000),
             'sections.why.image' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'sections.why.imageUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'sections.why.imageSecondary' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'sections.why.imageSecondaryUrl' => ['sometimes', 'nullable', 'string', 'max:2000'],
 
             'sections.capabilities' => ['sometimes', 'nullable', 'array'],
             'sections.capabilities.enabled' => ['nullable', 'boolean'],

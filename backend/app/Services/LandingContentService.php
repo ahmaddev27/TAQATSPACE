@@ -27,14 +27,17 @@ class LandingContentService
 
     /**
      * Dot-paths of the section image fields, in the stored content shape. The
-     * resolved URL is written to a sibling key with an `Url` suffix on the
-     * final segment (e.g. `hero.image` -> `hero.imageUrl`).
+     * resolved URL is written to a sibling key by appending `Url` to the path
+     * (e.g. `hero.image` -> `hero.imageUrl`, `hero.imageSecondary` ->
+     * `hero.imageSecondaryUrl`).
      *
      * @var list<string>
      */
     private const IMAGE_PATHS = [
         'hero.image',
+        'hero.imageSecondary',
         'sections.why.image',
+        'sections.why.imageSecondary',
     ];
 
     /**
@@ -140,6 +143,6 @@ class LandingContentService
     /** Sibling display-URL key for an image path (`hero.image` -> `hero.imageUrl`). */
     private function urlPath(string $imagePath): string
     {
-        return preg_replace('/\.image$/', '.imageUrl', $imagePath) ?? $imagePath;
+        return $imagePath.'Url';
     }
 }

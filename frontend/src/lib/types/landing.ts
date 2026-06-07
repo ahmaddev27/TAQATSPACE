@@ -22,6 +22,10 @@ export interface LandingHero {
   image?: string;
   /** Resolved display URL for `image`; added by the backend on read, never sent. */
   imageUrl?: string;
+  /** Stored media path of the secondary hero (lounge) image. */
+  imageSecondary?: string;
+  /** Resolved display URL for `imageSecondary`; added by the backend, never sent. */
+  imageSecondaryUrl?: string;
 }
 
 export interface LandingStat {
@@ -45,6 +49,10 @@ export interface WhySection {
   image?: string;
   /** Resolved display URL for `image`; added by the backend on read, never sent. */
   imageUrl?: string;
+  /** Stored media path of the secondary "why" collage image. */
+  imageSecondary?: string;
+  /** Resolved display URL for `imageSecondary`; added by the backend, never sent. */
+  imageSecondaryUrl?: string;
 }
 
 export interface CapabilitiesSection {

@@ -57,8 +57,12 @@ interface ImageState {
   url: string;
 }
 
-/** The sections whose imagery the admin can override. */
-type ImageSectionKey = "hero" | "why";
+/**
+ * The image slots the admin can override. Each section renders two collage
+ * images (a main one and a second one), so every slot is addressed
+ * independently for upload/clear and pending state.
+ */
+type ImageSlotKey = "hero" | "heroSecondary" | "why" | "whySecondary";
 
 interface HeroState {
   title: TextPair;
@@ -67,6 +71,7 @@ interface HeroState {
   ctaPrimary: TextPair;
   ctaSecondary: TextPair;
   image: ImageState;
+  imageSecondary: ImageState;
 }
 
 interface StatState {
@@ -87,6 +92,7 @@ interface WhyState {
   highlight: TextPair;
   subtitle: TextPair;
   image: ImageState;
+  imageSecondary: ImageState;
 }
 
 interface CapabilitiesState {
@@ -140,6 +146,7 @@ function buildInitial(c: LandingContent): FormState {
       ctaPrimary: toPair(c.hero?.ctaPrimary),
       ctaSecondary: toPair(c.hero?.ctaSecondary),
       image: toImage(c.hero?.image, c.hero?.imageUrl),
+      imageSecondary: toImage(c.hero?.imageSecondary, c.hero?.imageSecondaryUrl),
     },
     stats: (c.stats ?? []).slice(0, MAX_STATS).map((s) => ({
       value: s.value ?? "",
@@ -157,6 +164,10 @@ function buildInitial(c: LandingContent): FormState {
       highlight: toPair(c.sections?.why?.highlight),
       subtitle: toPair(c.sections?.why?.subtitle),
       image: toImage(c.sections?.why?.image, c.sections?.why?.imageUrl),
+      imageSecondary: toImage(
+        c.sections?.why?.imageSecondary,
+        c.sections?.why?.imageSecondaryUrl,
+      ),
     },
     capabilities: {
       enabled: c.sections?.capabilities?.enabled ?? true,
@@ -211,6 +222,7 @@ function buildPayload(form: FormState): LandingContent {
     ctaPrimary: pairToText(form.hero.ctaPrimary),
     ctaSecondary: pairToText(form.hero.ctaSecondary),
     image: imagePath(form.hero.image),
+    imageSecondary: imagePath(form.hero.imageSecondary),
   });
 
   const stats = form.stats
@@ -235,6 +247,7 @@ function buildPayload(form: FormState): LandingContent {
     highlight: pairToText(form.why.highlight),
     subtitle: pairToText(form.why.subtitle),
     image: imagePath(form.why.image),
+    imageSecondary: imagePath(form.why.imageSecondary),
   };
 
   const capabilities = {
@@ -464,48 +477,64 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
   const [tab, setTab] = useState("hero");
   const [form, setForm] = useState<FormState>(() => buildInitial(initial));
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  // Which section's image is currently uploading (so its dropzone can show a
+  // Which image slot is currently uploading (so its dropzone can show a
   // pending state). `null` when no upload is in flight.
-  const [uploading, setUploading] = useState<ImageSectionKey | null>(null);
+  const [uploading, setUploading] = useState<ImageSlotKey | null>(null);
 
   // Localised labels for the Arabic/English sub-inputs, passed to each
   // module-level `BilingualField` so no component is created during render.
   const labels: BilingualLabels = { ar: t("labelAr"), en: t("labelEn") };
 
-  // Localised labels for the per-section image control (shared by hero + why).
-  const imageLabels: SectionImageLabels = {
-    label: t("image.label"),
+  // Localised labels for the per-section image controls. Each section shows two
+  // collage images; only the title differs (main vs second), the rest is shared.
+  const imageShared = {
     hint: t("image.hint"),
     upload: t("image.upload"),
     replace: t("image.replace"),
     remove: t("image.remove"),
   };
+  const imageLabelsMain: SectionImageLabels = {
+    label: t("image.labelMain"),
+    ...imageShared,
+  };
+  const imageLabelsSecondary: SectionImageLabels = {
+    label: t("image.labelSecondary"),
+    ...imageShared,
+  };
 
   const setHero = (key: keyof HeroState, pair: TextPair) =>
     setForm((f) => ({ ...f, hero: { ...f.hero, [key]: pair } }));
 
-  // Write an image (uploaded or cleared) into the right section's form slice.
-  const setSectionImage = (key: ImageSectionKey, image: ImageState) =>
-    setForm((f) =>
-      key === "hero"
-        ? { ...f, hero: { ...f.hero, image } }
-        : { ...f, why: { ...f.why, image } },
-    );
+  // Write an image (uploaded or cleared) into the right section/slot of the
+  // form. Each section owns a main `image` and a second `imageSecondary`.
+  const setSlotImage = (slot: ImageSlotKey, image: ImageState) =>
+    setForm((f) => {
+      switch (slot) {
+        case "hero":
+          return { ...f, hero: { ...f.hero, image } };
+        case "heroSecondary":
+          return { ...f, hero: { ...f.hero, imageSecondary: image } };
+        case "why":
+          return { ...f, why: { ...f.why, image } };
+        case "whySecondary":
+          return { ...f, why: { ...f.why, imageSecondary: image } };
+      }
+    });
 
   // Upload a dropped file to the media disk, then store the returned path (for
-  // saving) and url (for preview) on the section. A failed upload is toasted
+  // saving) and url (for preview) on the slot. A failed upload is toasted
   // and leaves the current image untouched.
-  const uploadImage = (key: ImageSectionKey, file: File | null) => {
+  const uploadImage = (slot: ImageSlotKey, file: File | null) => {
     if (file === null) {
-      setSectionImage(key, emptyImage());
+      setSlotImage(slot, emptyImage());
       return;
     }
-    setUploading(key);
+    setUploading(slot);
     startTransition(async () => {
       const res = await uploadLandingImage(file);
       setUploading(null);
       if (res.ok) {
-        setSectionImage(key, { path: res.data.path, url: res.data.url });
+        setSlotImage(slot, { path: res.data.path, url: res.data.url });
       } else {
         toast({ tone: "err", title: t("image.uploadFailed"), body: res.message });
       }
@@ -712,10 +741,16 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
               onChange={(p) => setHero("ctaSecondary", p)}
             />
             <SectionImageField
-              labels={imageLabels}
+              labels={imageLabelsMain}
               value={form.hero.image}
               uploading={uploading === "hero"}
               onSelect={(file) => uploadImage("hero", file)}
+            />
+            <SectionImageField
+              labels={imageLabelsSecondary}
+              value={form.hero.imageSecondary}
+              uploading={uploading === "heroSecondary"}
+              onSelect={(file) => uploadImage("heroSecondary", file)}
             />
           </div>
         )}
@@ -853,10 +888,16 @@ export function LandingEditor({ initial, workspaces }: LandingEditorProps) {
               multiline
             />
             <SectionImageField
-              labels={imageLabels}
+              labels={imageLabelsMain}
               value={form.why.image}
               uploading={uploading === "why"}
               onSelect={(file) => uploadImage("why", file)}
+            />
+            <SectionImageField
+              labels={imageLabelsSecondary}
+              value={form.why.imageSecondary}
+              uploading={uploading === "whySecondary"}
+              onSelect={(file) => uploadImage("whySecondary", file)}
             />
           </div>
         )}
