@@ -191,5 +191,6 @@ return [
     // Chat (Firebase / Firestore realtime)
     'chat_not_configured' => 'Realtime chat is not available right now.',
     'chat_token_failed' => 'Could not start a chat session. Please try again later.',
+    'chat_attachment_not_found' => 'Attachment not found.',
 
 ];
