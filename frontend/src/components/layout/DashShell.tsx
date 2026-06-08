@@ -12,6 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { PushRegistrar } from "@/components/providers/PushRegistrar";
 import type { UserRole } from "@/lib/types/auth";
 import { ROLE_NAV, filterNavByPermissions } from "./nav-config";
 import { Sidebar } from "./Sidebar";
@@ -128,6 +129,9 @@ export function DashShell({
       <Suspense fallback={null}>
         <NavProgress />
       </Suspense>
+
+      {/* FCM web-push lifecycle (no-op until Firebase env is configured). */}
+      <PushRegistrar />
 
       {mobileOpen && (
         <div className="nav-backdrop" onClick={closeMobile} aria-hidden="true" />
