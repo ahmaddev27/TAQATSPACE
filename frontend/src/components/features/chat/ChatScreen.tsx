@@ -18,6 +18,7 @@ import {
   type ChatParticipant,
 } from "@/lib/firebase/chat";
 import type { ChatContact } from "@/lib/api/chat";
+import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
 import { ChatComposer } from "./ChatComposer";
 import { relativeTime } from "./time";
@@ -203,7 +204,10 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     t("unknownContact");
 
   const handleSend = useCallback(
-    async (text: string): Promise<boolean> => {
+    async (
+      text: string,
+      attachment: ChatAttachmentMeta | null,
+    ): Promise<boolean> => {
       if (!activeContactId || !activeConvId) return false;
       const contactName = activeName;
       const workspaceId = contactById.get(activeContactId)?.workspace_id ?? null;
@@ -217,6 +221,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
         text,
         self,
         workspaceId,
+        attachment,
       );
       if (!ok) {
         toast({ tone: "err", title: t("sendFailed") });

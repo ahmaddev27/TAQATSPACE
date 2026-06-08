@@ -45,6 +45,15 @@ export interface ChatConversation {
   updatedAt: number | null;
 }
 
+/** A file attached to a message. The file lives on S3; only this metadata is
+ *  stored in Firestore. A viewable URL is resolved on demand from `path`. */
+export interface ChatAttachment {
+  path: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 /** A single chat message, as surfaced to the UI. */
 export interface ChatMessage {
   id: string;
@@ -52,6 +61,8 @@ export interface ChatMessage {
   text: string;
   /** Epoch millis; null while the serverTimestamp is still resolving. */
   createdAt: number | null;
+  /** Optional file attachment (image/document), or null. */
+  attachment: ChatAttachment | null;
 }
 
 /** The minimal identity needed to author a message / name a conversation. */
@@ -146,11 +157,23 @@ function mapConversation(
 
 function mapMessage(snap: QueryDocumentSnapshot<DocumentData>): ChatMessage {
   const data = snap.data();
+  const raw = data.attachment;
+  const attachment: ChatAttachment | null =
+    raw && typeof raw === "object" && typeof raw.path === "string"
+      ? {
+          path: raw.path,
+          name: typeof raw.name === "string" ? raw.name : "",
+          type: typeof raw.type === "string" ? raw.type : "",
+          size: typeof raw.size === "number" ? raw.size : 0,
+        }
+      : null;
+
   return {
     id: snap.id,
     senderId: typeof data.senderId === "string" ? data.senderId : "",
     text: typeof data.text === "string" ? data.text : "",
     createdAt: toMillis(data.createdAt),
+    attachment,
   };
 }
 
@@ -254,15 +277,27 @@ export async function sendMessage(
   text: string,
   sender: ChatParticipant,
   workspaceId: string | null = null,
+  attachment: ChatAttachment | null = null,
 ): Promise<boolean> {
   const trimmed = text.trim();
-  if (!isFirebaseConfigured() || !convId || trimmed === "") return false;
+  // A message needs either text or an attachment.
+  if (!isFirebaseConfigured() || !convId || (trimmed === "" && !attachment)) {
+    return false;
+  }
 
   try {
     const db = await getFirestoreDb();
     if (!db) return false;
 
-    await writeMessage(db, convId, participants, trimmed, sender, workspaceId);
+    await writeMessage(
+      db,
+      convId,
+      participants,
+      trimmed,
+      sender,
+      workspaceId,
+      attachment,
+    );
     return true;
   } catch {
     return false;
@@ -287,6 +322,7 @@ async function writeMessage(
   text: string,
   sender: ChatParticipant,
   workspaceId: string | null = null,
+  attachment: ChatAttachment | null = null,
 ): Promise<void> {
   const { collection, doc, serverTimestamp, setDoc } = await import(
     "firebase/firestore"
@@ -299,6 +335,9 @@ async function writeMessage(
     participants.map((p) => [p.id, p.name]),
   );
 
+  // Conversation preview: the text, or the attachment name for an image/file.
+  const preview = text || attachment?.name || "";
+
   // 1) Upsert the conversation + its denormalised preview (creates it on the
   //    first message), so the parent exists before the message rule's get().
   await setDoc(
@@ -307,17 +346,18 @@ async function writeMessage(
       participants: participants.map((p) => p.id),
       participantNames,
       workspaceId,
-      lastMessage: text,
+      lastMessage: preview,
       lastSenderId: sender.id,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
 
-  // 2) Append the message.
+  // 2) Append the message (with its attachment metadata when present).
   await setDoc(messageRef, {
     senderId: sender.id,
     text,
     createdAt: serverTimestamp(),
+    ...(attachment ? { attachment } : {}),
   });
 }

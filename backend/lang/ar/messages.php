@@ -191,5 +191,6 @@ return [
     // المحادثة (Firebase / Firestore الفورية)
     'chat_not_configured' => 'المحادثة الفورية غير متاحة حاليًا.',
     'chat_token_failed' => 'تعذّر بدء جلسة المحادثة. يرجى المحاولة لاحقًا.',
+    'chat_attachment_not_found' => 'المرفق غير موجود.',
 
 ];

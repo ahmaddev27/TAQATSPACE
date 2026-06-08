@@ -19,4 +19,8 @@ Route::middleware('auth:sanctum')
     ->group(function (): void {
         Route::post('/token', [ChatController::class, 'token']);
         Route::get('/contacts', [ChatController::class, 'contacts']);
+
+        // Attachments: upload to S3, then resolve a fresh signed URL on demand.
+        Route::post('/attachments', [ChatController::class, 'uploadAttachment']);
+        Route::get('/attachments/url', [ChatController::class, 'attachmentUrl']);
     });
