@@ -76,7 +76,7 @@ class ChatController extends Controller
     ): JsonResponse {
         $meta = $attachments->store($request->file('file'), (string) $request->user()->id);
 
-        return ApiResponse::success($meta, 201);
+        return ApiResponse::success($meta, null, 201);
     }
 
     /**
