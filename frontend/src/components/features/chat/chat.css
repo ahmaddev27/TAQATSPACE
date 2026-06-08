@@ -344,6 +344,78 @@
   pointer-events: none;
 }
 
+/* ---- Thread header action (attachments toggle) ---- */
+.chat-head-btn {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  cursor: pointer;
+}
+.chat-head-btn:hover,
+.chat-head-btn.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.chat-head-badge {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-num);
+}
+
+/* ---- Attachments gallery (the full file history of a conversation) ---- */
+.chat-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  padding: 16px;
+}
+.chat-tile {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.chat-tile.is-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.chat-tile.is-file {
+  gap: 8px;
+  padding: 12px;
+  color: var(--text-2);
+  text-align: center;
+}
+.chat-tile-name {
+  max-width: 100%;
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-tile[aria-disabled="true"] {
+  pointer-events: none;
+}
+
 /* ---- Unavailable / loading states ---- */
 .chat-unavailable {
   display: grid;

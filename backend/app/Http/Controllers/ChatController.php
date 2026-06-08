@@ -90,8 +90,9 @@ class ChatController extends Controller
     ): JsonResponse {
         $path = (string) $request->query('path', '');
 
-        // Only resolve keys under the chat attachments prefix.
-        if (! str_starts_with($path, ChatAttachmentService::DIRECTORY.'/')) {
+        // Only resolve keys under the chat attachments prefix, and never let a
+        // crafted "../" escape it.
+        if (! str_starts_with($path, ChatAttachmentService::DIRECTORY.'/') || str_contains($path, '..')) {
             return ApiResponse::error(__('messages.chat_attachment_not_found'), 404);
         }
 

@@ -317,7 +317,10 @@ class WorkspaceService
         $paths = [];
 
         foreach ($files as $file) {
-            $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
+            // Extension from the file's real content, never the client name, so a
+            // polyglot can't be stored under an executable extension.
+            $extension = $file->guessExtension() ?: 'jpg';
+            $filename = Str::uuid()->toString().'.'.$extension;
             $paths[] = $file->storeAs($directory, $filename, ['disk' => $this->photoDisk()]);
         }
 

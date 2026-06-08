@@ -24,7 +24,7 @@ class FileUploadService
     ): string {
         $disk ??= (string) config('filesystems.default');
 
-        $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
+        $filename = Str::uuid()->toString().'.'.self::safeExtension($file);
 
         // Modern S3 buckets enforce bucket-owner ownership (ACLs disabled), so a
         // per-object ACL request fails. Access is governed by the bucket policy
@@ -35,5 +35,25 @@ class FileUploadService
         }
 
         return $file->storeAs($directory, $filename, $options);
+    }
+
+    /**
+     * A safe storage extension derived from the file's actual content (MIME),
+     * never the client-supplied name — so a content-valid polyglot uploaded as
+     * "evil.php" is stored as its true type (e.g. .png) and can't be executed on
+     * a web-served disk. Falls back to a sanitised client extension for content
+     * types the guesser can't map (e.g. some Office formats), then "bin".
+     */
+    private static function safeExtension(UploadedFile $file): string
+    {
+        $extension = $file->guessExtension();
+
+        if ($extension === null || $extension === '') {
+            $extension = strtolower(
+                (string) preg_replace('/[^a-z0-9]/i', '', (string) $file->getClientOriginalExtension()),
+            );
+        }
+
+        return $extension !== '' ? $extension : 'bin';
     }
 }
