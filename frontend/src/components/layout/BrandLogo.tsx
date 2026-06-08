@@ -52,7 +52,7 @@ export function BrandLogo({ size = 26, alt, forceDark }: BrandLogoProps) {
         src={darkSrc}
         alt={label}
         className="brand-logo-img"
-        style={{ height: size, width: "auto", display: "block" }}
+        style={{ height: size, width: "auto" }}
       />
     );
   }
@@ -64,7 +64,7 @@ export function BrandLogo({ size = 26, alt, forceDark }: BrandLogoProps) {
         src={lightSrc}
         alt={label}
         className={single ? "brand-logo-img" : "brand-logo-img is-light"}
-        style={{ height: size, width: "auto", display: "block" }}
+        style={{ height: size, width: "auto" }}
       />
       {!single && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -72,7 +72,7 @@ export function BrandLogo({ size = 26, alt, forceDark }: BrandLogoProps) {
           src={darkSrc}
           alt={label}
           className="brand-logo-img is-dark"
-          style={{ height: size, width: "auto", display: "block" }}
+          style={{ height: size, width: "auto" }}
         />
       )}
     </span>

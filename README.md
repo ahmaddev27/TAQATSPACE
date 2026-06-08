@@ -167,6 +167,70 @@ Merge the open branches → `dev` (triggers the GitHub Actions deploy), then: hi
 
 ---
 
+## System features by role
+
+What each kind of user sees and can do (✅ = built & working).
+
+### 🌐 Public (no account)
+- Browse the **landing/home**, **About**, **FAQ**, **Contact** (all admin-editable via the CMS).
+- **Explore workspaces** — map (MapLibre / OpenFreeMap) + filters (city/governorate, price, rating, amenities) + search.
+- **Workspace detail** — photo gallery, seat types & **pricing**, amenities, working hours, **reviews**, zoomable location map.
+- **Register** as Freelancer or Workspace Owner · **Log in** (email/password, **Sign in with Taqat** SSO, dedicated **admin login**).
+
+### 👤 Freelancer
+- **Dashboard** — active subscription, seat, and booking status.
+- **Explore + book** a seat at any active workspace (booking request → owner approves).
+- **Subscription** view · **Invoices** (list + **download Arabic PDF**) + overdue alerts.
+- **Reviews** — rate/comment on workspaces they are (or were) subscribed to.
+- **Realtime chat** 💬 — message any **active workspace owner**, their own owner(s), and the **admin**; **file attachments** (images/docs on S3) + **per-conversation attachments gallery**; searchable contacts.
+- **Notifications** — in-app center (bell) + **web push** (booking approved/rejected, invoice created/paid/overdue/reminder, new announcement, seat assigned).
+- **Profile** — avatar (with cropper), name, phone, gender, specialty, bio.
+
+### 🏢 Workspace Owner
+- **Dashboard** — KPIs (members, seats, occupancy, revenue) + **analytics** (members by city/governorate + gender).
+- **Workspace settings** — profile, amenities, working hours, **photos**, interactive **location** picker, **seat types & per-type pricing**.
+- **Members** (subscribers) · **Seat map** + **assignment** · **Subscriptions** list.
+- **Booking requests** — approve/reject (approval creates the subscription + assigns a seat).
+- **Invoices** (list) · **Internet packages** · **Expenses** tracking · **Resources/amenities** management.
+- **Communicate** — direct messages to members · **broadcast** (email/SMS: specific member / all / segment, with recipient filter) · **announcements**.
+- **Realtime chat** 💬 with their members + attachments + gallery.
+- **Notifications** — incl. **workspace approved/rejected/suspended**, **new review**, new booking.
+- **Reports / Exports** — filter-aware **CSV exports** of members/invoices/subscriptions.
+- **Profile** management.
+
+### 🛡️ Super Admin
+- **Dashboard** — platform KPIs, **tracked revenue** (paid / outstanding — no gateway), **analytics** (by city/governorate + gender).
+- **Workspaces moderation** — approve / suspend / reject (notifies the owner).
+- **Users** — list, **suspend/reactivate**, per-user details (freelancer subscription history; owner seat-types/pricing/available seats).
+- **Subscriptions + Invoices** — mark paid/unpaid, **attach payment receipt** in the same step, download PDF / view receipt.
+- **Reports** (recharts) + **CSV exports** (filter-aware).
+- **Admin management & permissions** — add admin accounts, assign **roles/permissions**; super-admin bypass; **enforced across the whole admin dashboard** (nav + pages gated).
+- **Content / CRM hub** — **landing CMS** (text + all images), section **reorder + live preview**; Site/FAQ/About/How-it-works editors (drive the public pages).
+- **Branding** — logo (dark/light), favicon, site meta — applied everywhere.
+- **Messaging config** — platform + per-workspace **SMTP/SMS** settings · **broadcast** (email/SMS: specific/all/segment).
+- **Realtime chat** 💬 — message **any** owner/freelancer (searchable, **filter by user type**) + attachments + gallery.
+- **Profile** management · **dedicated admin login**.
+
+> **Billing model (binding):** admin-managed **manual** status/payment tracking + receipt upload — **no payment gateway, no self-serve plans**. Pricing/seats are per-workspace (owner-set).
+
+> **Access control:** the API is role-gated (Sanctum + role middleware + admin permissions). Realtime **chat is participant-gated by Firestore security rules** — a user can only read/write a conversation whose `participants` include their own id (uid is minted server-side), so no one can reach a conversation they are not part of. Uploaded files are validated (mime + size), stored under UUID names with a **content-derived extension** (no executable-extension polyglots), and sensitive docs (owner ID/license) are private.
+
+---
+
+## What's left
+
+| Item | Status |
+|------|--------|
+| **Comprehensive tests** — backend PHPUnit (auth/SSO/onboarding, admin+permissions, owner CRUD, invoicing/exports, realtime endpoints) + frontend Vitest + Playwright E2E | ☐ planned |
+| **Realtime activation on staging** — merge `feat/realtime-firebase` → dev (deploys chat + attachments + upload-limit/security fixes) | 🔄 user action |
+| **Notification coverage gaps** — subscription-expiry reminder (scheduled job) + account suspend/reactivate | ☐ |
+| **Ops verification** — confirm server **cron** (`schedule:run`) + **queue worker** running (overdue/monthly invoice jobs + queued notifications) | ☐ user/server |
+| **Upload-security recommendations** — drop/sanitize SVG in branding; store receipts on a private disk | ⏭ optional |
+| **Launch hardening (M12)** — rotate exposed secrets (DB/AWS/SSO/Firebase), Sentry, confirm SMS gateway endpoints, finalize prod env | ☐ |
+| **Known bug** — onboarding "complete your data" form appears then disappears (reproduce via E2E, then fix) | ☐ |
+
+---
+
 ## Changelog
 
 - **2026-06-07** — **Platform-Expansion batch (each on its own branch + PR, all build-verified).** **SSO-only auth** (login/register → Taqat SSO; first-login onboarding; **RP-initiated single logout** via `TAQAT_SSO_END_SESSION_URL`; `/admin-login` for staff; email-verify + password-change retired for SSO). **Messaging** config (admin + per-workspace, encrypted) + **broadcast** email/SMS (user/all/segment). **Workspace publish-approval** (`published_at` gate). **Mini workspace-management** (owner expenses + resources CRUD). **Dynamic site branding** (admin logo dark/light + favicon + meta, theme-aware). **Admin-management** (Spatie roles + permissions). **Profile** (tabbed, top-bar) + **global image cropper** on every upload. **City/gender analytics** (admin + owner). Plus: pricing→seat-types single source + seat avatars; invoice-PDF Arabic shaping (embedded Cairo); full backend i18n (ar/en) + per-request locale; CSV exports honor table filters; responsive sidebar + mobile fixes. OpenAPI ~105 paths. **Next dedicated phase: Realtime (Firebase — FCM + Firestore chat).**
