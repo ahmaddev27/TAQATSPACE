@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAdminAnalytics, getAdminReports } from "@/lib/api/admin";
 import { ReportsDashboard } from "@/components/features/admin/ReportsDashboard";
 import { AnalyticsDashboard } from "@/components/features/admin/AnalyticsDashboard";
@@ -12,6 +13,7 @@ export default async function AdminReportsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "view_reports");
   const t = await getTranslations("admin.reports");
   const ta = await getTranslations("admin.analytics");
 

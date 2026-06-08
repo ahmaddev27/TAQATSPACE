@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { ApiError } from "@/lib/api";
 import { getAdminUserDetail, type AdminUserDetail } from "@/lib/api/admin";
 import { UserDetail } from "@/components/features/admin/UserDetail";
@@ -22,6 +23,7 @@ export default async function AdminUserDetailPage({
 }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_users");
   const t = await getTranslations("admin.userDetail");
 
   const user = await loadUser(id);

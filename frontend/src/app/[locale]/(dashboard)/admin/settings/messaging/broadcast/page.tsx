@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAllAdminUsers } from "@/lib/api/admin";
 import { AdminBroadcastForm } from "@/components/features/admin/AdminBroadcastForm";
 import type { RecipientOption } from "@/components/features/messaging/BroadcastComposer";
@@ -12,6 +13,7 @@ export default async function AdminBroadcastPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_messaging");
   const t = await getTranslations("broadcast.admin");
 
   // The "specific" picker reuses the existing admin users directory. A read

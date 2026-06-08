@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAllAdminSubscriptions } from "@/lib/api/admin";
 import { SubscriptionsTable } from "@/components/features/admin/SubscriptionsTable";
 
@@ -11,6 +12,7 @@ export default async function AdminSubscriptionsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_billing");
   const t = await getTranslations("admin.subscriptions");
 
   const subscriptions = await getAllAdminSubscriptions();

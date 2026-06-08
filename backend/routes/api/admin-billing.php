@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 | mark-paid / mark-unpaid and payment-receipt upload. No payment gateway.
 */
 
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_billing'])
     ->prefix('admin')
     ->group(function (): void {
         // Subscriptions — read-only tracking.

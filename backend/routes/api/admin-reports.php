@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 | gateway — figures are admin-tracked bookkeeping.
 */
 
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:view_reports'])
     ->prefix('admin')
     ->group(function (): void {
         Route::get('/reports', [ReportsController::class, 'index']);

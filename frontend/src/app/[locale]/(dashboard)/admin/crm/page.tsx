@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAdminContent } from "@/lib/api/content";
 import { getAdminBranding } from "@/lib/api/branding";
 import { ContentManager } from "@/components/features/admin/ContentManager";
@@ -28,6 +29,7 @@ export default async function AdminContentPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_content");
   const t = await getTranslations("admin.rm");
 
   // Each blob loads independently; a single CMS failure must not break the hub.

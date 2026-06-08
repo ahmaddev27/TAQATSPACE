@@ -34,11 +34,14 @@ class AdminPermissionSeeder extends Seeder
         $superAdmin = Role::findOrCreate(AdminRole::SuperAdmin->value, 'web');
         $admin = Role::findOrCreate(AdminRole::Admin->value, 'web');
 
-        // super_admin holds every permission; admin holds the curated default
-        // subset (everything except manage_admins). syncPermissions makes both
-        // grants declarative — re-running prunes anything no longer listed.
+        // super_admin holds every permission via its role. The standard `admin`
+        // role intentionally grants NOTHING: each admin's effective access is its
+        // own DIRECT (per-account) permission set, assigned by the management
+        // module (defaulting to AdminPermission::defaultsForAdmin()). If the role
+        // itself granted permissions, every admin would inherit them and a
+        // "limited" admin could never actually be narrowed.
         $superAdmin->syncPermissions($permissions->all());
-        $admin->syncPermissions(AdminPermission::defaultsForAdmin());
+        $admin->syncPermissions([]);
 
         $this->ensureSuperAdminExists();
 

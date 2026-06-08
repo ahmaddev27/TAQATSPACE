@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/landing', [LandingController::class, 'show']);
 
 // Admin manage.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_content'])
     ->prefix('admin/landing')
     ->group(function (): void {
         Route::get('/', [AdminLandingController::class, 'show']);

@@ -160,24 +160,59 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       {
         titleKey: "sectionManagement",
         items: [
-          { key: "workspaces", href: "/admin/workspaces", icon: "building" },
-          { key: "users", href: "/admin/users", icon: "users" },
+          {
+            key: "workspaces",
+            href: "/admin/workspaces",
+            icon: "building",
+            permission: "manage_workspaces",
+          },
+          {
+            key: "users",
+            href: "/admin/users",
+            icon: "users",
+            permission: "manage_users",
+          },
           {
             key: "admins",
             href: "/admin/admins",
             icon: "shield",
             permission: "manage_admins",
           },
-          { key: "subscriptions", href: "/admin/subscriptions", icon: "card" },
-          { key: "invoices", href: "/admin/invoices", icon: "receipt" },
-          { key: "reports", href: "/admin/reports", icon: "chart" },
+          {
+            key: "subscriptions",
+            href: "/admin/subscriptions",
+            icon: "card",
+            permission: "manage_billing",
+          },
+          {
+            key: "invoices",
+            href: "/admin/invoices",
+            icon: "receipt",
+            permission: "manage_billing",
+          },
+          {
+            key: "reports",
+            href: "/admin/reports",
+            icon: "chart",
+            permission: "view_reports",
+          },
         ],
       },
       {
         titleKey: "sectionCrm",
         items: [
-          { key: "landing", href: "/admin/landing", icon: "grid" },
-          { key: "crm", href: "/admin/crm", icon: "settings" },
+          {
+            key: "landing",
+            href: "/admin/landing",
+            icon: "grid",
+            permission: "manage_content",
+          },
+          {
+            key: "crm",
+            href: "/admin/crm",
+            icon: "settings",
+            permission: "manage_content",
+          },
         ],
       },
       {
@@ -193,11 +228,13 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             key: "messaging",
             href: "/admin/settings/messaging",
             icon: "chat",
+            permission: "manage_messaging",
           },
           {
             key: "broadcast",
             href: "/admin/settings/messaging/broadcast",
             icon: "send",
+            permission: "manage_messaging",
           },
         ],
       },
