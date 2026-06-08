@@ -3,6 +3,9 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { ImageCropModal } from "./ImageCropModal";
 
+/** Image MIME types the canvas cropper can't handle — bypass it for these. */
+const PASSTHROUGH_TYPES = /^image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)$/;
+
 export interface UseImageCropperOptions {
   /** Output aspect ratio (width / height) for the crop frame. */
   aspect: number;
@@ -43,8 +46,11 @@ export function useImageCropper({
   } | null>(null);
 
   const cropFile = useCallback((file: File): Promise<File | null> => {
-    // Only image files go through the cropper; pass anything else straight back.
-    if (!file.type.startsWith("image/")) {
+    // Pass straight through (no cropper) for: non-image files, and the image
+    // formats a <canvas> cropper can't render/crop — SVG (vector, no intrinsic
+    // pixel size → blank canvas) and ICO (inconsistent <img> support). Cropping
+    // a vector/icon makes no sense anyway, so upload them as-is.
+    if (!file.type.startsWith("image/") || PASSTHROUGH_TYPES.test(file.type)) {
       return Promise.resolve(file);
     }
     return new Promise<File | null>((resolve) => {
