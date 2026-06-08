@@ -184,4 +184,12 @@ return [
     'resource_deleted' => 'Resource deleted.',
     'resource_no_access' => 'You do not have access to this resource.',
 
+    // Push notifications — device tokens
+    'device_token_registered' => 'Device registered for notifications.',
+    'device_token_removed' => 'Device unregistered from notifications.',
+
+    // Chat (Firebase / Firestore realtime)
+    'chat_not_configured' => 'Realtime chat is not available right now.',
+    'chat_token_failed' => 'Could not start a chat session. Please try again later.',
+
 ];

@@ -1,0 +1,69 @@
+rules_version = '2';
+
+// TAQAT — Firestore security rules for the realtime chat (wave 2).
+//
+// Auth model: the SPA signs in with a Firebase **custom token** minted by the
+// Laravel backend (POST /api/chat/token). The token's `uid` is our application
+// user id, so `request.auth.uid` here equals that user's id. A conversation and
+// its messages are readable/writable only by a user whose uid is one of the
+// conversation's `participants`.
+//
+// Data model:
+//   conversations/{convId}
+//     { participants: [uidA, uidB], participantNames: { uid: name },
+//       workspaceId, lastMessage, lastSenderId, updatedAt }
+//   conversations/{convId}/messages/{msgId}
+//     { senderId, text, createdAt }
+//
+// Deploy (from the repo root, with the Firebase CLI authenticated to the
+// project that backs NEXT_PUBLIC_FIREBASE_PROJECT_ID):
+//
+//   firebase deploy --only firestore:rules --project <your-project-id>
+//
+// firebase.json should point `firestore.rules` at this file, e.g.:
+//   { "firestore": { "rules": "firebase/firestore.rules" } }
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // True when the caller is signed in and is a participant of the conversation
+    // document `conv` (a `data`/`resource.data` map with a `participants` list).
+    function isParticipant(conv) {
+      return request.auth != null
+        && conv.participants is list
+        && request.auth.uid in conv.participants;
+    }
+
+    match /conversations/{convId} {
+      // Reads require existing membership.
+      allow read: if isParticipant(resource.data);
+
+      // On create, the author must include themselves in `participants`.
+      allow create: if isParticipant(request.resource.data);
+
+      // On update, the caller must be a participant both before and after, so a
+      // user can never write themselves out of (or a stranger into) a thread.
+      allow update: if isParticipant(resource.data)
+        && isParticipant(request.resource.data);
+
+      // Conversations are append-only history; deletion is not permitted.
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        // Membership is checked against the PARENT conversation document.
+        function parentConversation() {
+          return get(/databases/$(database)/documents/conversations/$(convId)).data;
+        }
+
+        allow read: if isParticipant(parentConversation());
+
+        // Only a participant may post, and only as themselves (no spoofing the
+        // `senderId`). Messages are immutable once written.
+        allow create: if isParticipant(parentConversation())
+          && request.resource.data.senderId == request.auth.uid;
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}

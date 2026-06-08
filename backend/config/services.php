@@ -61,4 +61,30 @@ return [
         'end_session_endpoint' => env('TAQAT_SSO_END_SESSION_URL'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Firebase (FCM push + Firestore custom tokens)
+    |--------------------------------------------------------------------------
+    |
+    | Service-account credentials for the realtime milestone. Every field is
+    | OPTIONAL: when the service account is absent the FirebaseService reports
+    | "not configured" and all push/token operations become safe no-ops — the
+    | app runs normally without Firebase wired up.
+    |
+    | Provide the three service-account fields directly, OR point
+    | FIREBASE_CREDENTIALS at a service-account JSON file (its values fill any
+    | field left blank). The private key is a real secret: keep it in the
+    | environment only, never in source control. In .env the multi-line key is
+    | stored on one line with literal "\n" sequences (wrap it in double quotes).
+    |
+    */
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'client_email' => env('FIREBASE_CLIENT_EMAIL'),
+        'private_key' => env('FIREBASE_PRIVATE_KEY'),
+        // Optional absolute/relative path to a service-account JSON file. Used
+        // to fill any of the three fields above that are left unset.
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];
