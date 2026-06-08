@@ -270,8 +270,15 @@ export async function sendMessage(
 }
 
 /**
- * The actual Firestore write: a single batch that adds the message and upserts
- * the parent conversation, so the list preview and the thread stay consistent.
+ * The actual Firestore write. The parent conversation is upserted FIRST, then
+ * the message is appended — two sequential writes rather than one batch.
+ *
+ * Why not a batch: the message-create security rule checks membership via
+ * `get(parentConversation)`, and Firestore evaluates a batched write against the
+ * pre-batch committed state. A conversation created in the same batch as its
+ * first message isn't visible to that `get()` yet, so the write is denied
+ * ("Missing or insufficient permissions"). Committing the conversation first
+ * makes the parent exist before the message rule runs.
  */
 async function writeMessage(
   db: Firestore,
@@ -281,12 +288,9 @@ async function writeMessage(
   sender: ChatParticipant,
   workspaceId: string | null = null,
 ): Promise<void> {
-  const {
-    collection,
-    doc,
-    serverTimestamp,
-    writeBatch,
-  } = await import("firebase/firestore");
+  const { collection, doc, serverTimestamp, setDoc } = await import(
+    "firebase/firestore"
+  );
 
   const conversationRef = doc(db, "conversations", convId);
   const messageRef = doc(collection(conversationRef, "messages"));
@@ -295,15 +299,9 @@ async function writeMessage(
     participants.map((p) => [p.id, p.name]),
   );
 
-  const batch = writeBatch(db);
-
-  batch.set(messageRef, {
-    senderId: sender.id,
-    text,
-    createdAt: serverTimestamp(),
-  });
-
-  batch.set(
+  // 1) Upsert the conversation + its denormalised preview (creates it on the
+  //    first message), so the parent exists before the message rule's get().
+  await setDoc(
     conversationRef,
     {
       participants: participants.map((p) => p.id),
@@ -316,5 +314,10 @@ async function writeMessage(
     { merge: true },
   );
 
-  await batch.commit();
+  // 2) Append the message.
+  await setDoc(messageRef, {
+    senderId: sender.id,
+    text,
+    createdAt: serverTimestamp(),
+  });
 }

@@ -52,6 +52,8 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   // Free-text filter over the left-pane list (contacts + live conversations).
   const [query, setQuery] = useState("");
+  // Optional by-type filter (e.g. admin filtering owners vs freelancers). null = all.
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   // Id of the conversation whose first snapshot has arrived; used to derive the
   // thread loading state without a synchronous setState inside the effect.
   const [loadedConvId, setLoadedConvId] = useState<string | null>(null);
@@ -140,26 +142,54 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     [self.id, contactById, t],
   );
 
-  // ---- Client-side search over the left pane (live conversations + contacts).
-  //      Matches the other participant's display name, case-insensitively. ----
+  // ---- The distinct contact roles present, for the optional by-type filter.
+  //      The filter only surfaces when the list spans more than one role
+  //      (i.e. admins and freelancers, not single-role owners). ----
+  const availableRoles = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of contacts) if (c.role) set.add(c.role);
+    return [...set];
+  }, [contacts]);
+
+  const roleLabel = useCallback(
+    (role: string): string =>
+      role === "workspace_owner"
+        ? t("roleOwner")
+        : role === "freelancer"
+          ? t("roleFreelancer")
+          : role === "admin"
+            ? t("roleAdmin")
+            : role,
+    [t],
+  );
+
+  // ---- Client-side search + by-type filter over the left pane (live
+  //      conversations + contacts). Search matches the display name; the role
+  //      filter matches the contact's role (resolved via `contactById` for
+  //      conversations). ----
   const normalizedQuery = query.trim().toLowerCase();
+  const matchesQuery = useCallback(
+    (name: string) =>
+      normalizedQuery === "" || name.toLowerCase().includes(normalizedQuery),
+    [normalizedQuery],
+  );
   const visibleConversations = useMemo(
     () =>
-      normalizedQuery === ""
-        ? conversations
-        : conversations.filter((conv) =>
-            otherParticipant(conv).name.toLowerCase().includes(normalizedQuery),
-          ),
-    [conversations, normalizedQuery, otherParticipant],
+      conversations.filter((conv) => {
+        const other = otherParticipant(conv);
+        return (
+          matchesQuery(other.name) &&
+          (!roleFilter || contactById.get(other.id)?.role === roleFilter)
+        );
+      }),
+    [conversations, matchesQuery, roleFilter, otherParticipant, contactById],
   );
   const visibleNewContacts = useMemo(
     () =>
-      normalizedQuery === ""
-        ? newContacts
-        : newContacts.filter((c) =>
-            c.name.toLowerCase().includes(normalizedQuery),
-          ),
-    [newContacts, normalizedQuery],
+      newContacts.filter(
+        (c) => matchesQuery(c.name) && (!roleFilter || c.role === roleFilter),
+      ),
+    [newContacts, matchesQuery, roleFilter],
   );
 
   const activeContact = activeContactId
@@ -228,6 +258,23 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+          </div>
+        )}
+        {availableRoles.length > 1 && (
+          <div className="chat-filter">
+            <select
+              className="chat-filter-select"
+              value={roleFilter ?? ""}
+              onChange={(e) => setRoleFilter(e.target.value || null)}
+              aria-label={t("filterByType")}
+            >
+              <option value="">{t("filterAll")}</option>
+              {availableRoles.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabel(role)}
+                </option>
+              ))}
+            </select>
           </div>
         )}
         <div className="chat-aside-scroll">

@@ -19,6 +19,11 @@
     "sendFailed": "تعذّر إرسال رسالتك. حاول مرة أخرى.",
     "searchPlaceholder": "ابحث عن جهة اتصال…",
     "noResults": "لا توجد نتائج مطابقة",
+    "filterByType": "النوع",
+    "filterAll": "الكل",
+    "roleOwner": "أصحاب المساحات",
+    "roleFreelancer": "المستقلّون",
+    "roleAdmin": "الإدارة",
     "unavailableTitle": "المحادثة غير متاحة بعد",
     "unavailableBody": "ستظهر المحادثة الفورية هنا بمجرد إعدادها من قِبل المنصّة."
   }
