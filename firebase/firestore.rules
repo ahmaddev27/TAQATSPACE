@@ -50,16 +50,27 @@ service cloud.firestore {
       allow delete: if false;
 
       match /messages/{messageId} {
-        // Membership is checked against the PARENT conversation document.
+        // The PARENT conversation document — null until its first message
+        // creates it. Membership is resolved against it.
         function parentConversation() {
-          return get(/databases/$(database)/documents/conversations/$(convId)).data;
+          return get(/databases/$(database)/documents/conversations/$(convId));
+        }
+        function isParentParticipant() {
+          return parentConversation() != null
+            && isParticipant(parentConversation().data);
         }
 
-        allow read: if isParticipant(parentConversation());
+        // A participant may read the thread. A not-yet-created conversation has
+        // no messages, so allowing its (empty) read keeps the live listener
+        // alive until the first message creates the parent — instead of erroring
+        // on get(null).data and tearing the listener down (sent messages would
+        // then never appear without a manual refresh).
+        allow read: if request.auth != null
+          && (parentConversation() == null || isParentParticipant());
 
         // Only a participant may post, and only as themselves (no spoofing the
         // `senderId`). Messages are immutable once written.
-        allow create: if isParticipant(parentConversation())
+        allow create: if isParentParticipant()
           && request.resource.data.senderId == request.auth.uid;
 
         allow update, delete: if false;
