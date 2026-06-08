@@ -23,6 +23,9 @@
    right one shows with no JS and no hydration flash. A single (non-paired)
    logo uses `.brand-logo-img` with no variant class and always shows. */
 .brand-logo { align-items: center; }
+/* Base display lives in CSS (not inline) so the theme toggles below can win —
+   an inline display:block would override `display:none` and show both variants. */
+.brand-logo-img { display: block; }
 .brand-logo-img.is-dark { display: none; }
 [data-theme="dark"] .brand-logo-img.is-light { display: none; }
 [data-theme="dark"] .brand-logo-img.is-dark { display: block; }

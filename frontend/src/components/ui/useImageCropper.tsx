@@ -3,6 +3,9 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { ImageCropModal } from "./ImageCropModal";
 
+/** Image MIME types the canvas cropper can't handle — bypass it for these. */
+const PASSTHROUGH_TYPES = /^image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)$/;
+
 export interface UseImageCropperOptions {
   /** Output aspect ratio (width / height) for the crop frame. */
   aspect: number;

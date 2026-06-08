@@ -45,6 +45,15 @@ export interface ChatConversation {
   updatedAt: number | null;
 }
 
+/** A file attached to a message. The file lives on S3; only this metadata is
+ *  stored in Firestore. A viewable URL is resolved on demand from `path`. */
+export interface ChatAttachment {
+  path: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 /** A single chat message, as surfaced to the UI. */
 export interface ChatMessage {
   id: string;
@@ -52,6 +61,8 @@ export interface ChatMessage {
   text: string;
   /** Epoch millis; null while the serverTimestamp is still resolving. */
   createdAt: number | null;
+  /** Optional file attachment (image/document), or null. */
+  attachment: ChatAttachment | null;
 }
 
 /** The minimal identity needed to author a message / name a conversation. */
@@ -146,11 +157,23 @@ function mapConversation(
 
 function mapMessage(snap: QueryDocumentSnapshot<DocumentData>): ChatMessage {
   const data = snap.data();
+  const raw = data.attachment;
+  const attachment: ChatAttachment | null =
+    raw && typeof raw === "object" && typeof raw.path === "string"
+      ? {
+          path: raw.path,
+          name: typeof raw.name === "string" ? raw.name : "",
+          type: typeof raw.type === "string" ? raw.type : "",
+          size: typeof raw.size === "number" ? raw.size : 0,
+        }
+      : null;
+
   return {
     id: snap.id,
     senderId: typeof data.senderId === "string" ? data.senderId : "",
     text: typeof data.text === "string" ? data.text : "",
     createdAt: toMillis(data.createdAt),
+    attachment,
   };
 }
 
@@ -254,15 +277,27 @@ export async function sendMessage(
   text: string,
   sender: ChatParticipant,
   workspaceId: string | null = null,
+  attachment: ChatAttachment | null = null,
 ): Promise<boolean> {
   const trimmed = text.trim();
-  if (!isFirebaseConfigured() || !convId || trimmed === "") return false;
+  // A message needs either text or an attachment.
+  if (!isFirebaseConfigured() || !convId || (trimmed === "" && !attachment)) {
+    return false;
+  }
 
   try {
     const db = await getFirestoreDb();
     if (!db) return false;
 
-    await writeMessage(db, convId, participants, trimmed, sender, workspaceId);
+    await writeMessage(
+      db,
+      convId,
+      participants,
+      trimmed,
+      sender,
+      workspaceId,
+      attachment,
+    );
     return true;
   } catch {
     return false;
@@ -270,8 +305,15 @@ export async function sendMessage(
 }
 
 /**
- * The actual Firestore write: a single batch that adds the message and upserts
- * the parent conversation, so the list preview and the thread stay consistent.
+ * The actual Firestore write. The parent conversation is upserted FIRST, then
+ * the message is appended — two sequential writes rather than one batch.
+ *
+ * Why not a batch: the message-create security rule checks membership via
+ * `get(parentConversation)`, and Firestore evaluates a batched write against the
+ * pre-batch committed state. A conversation created in the same batch as its
+ * first message isn't visible to that `get()` yet, so the write is denied
+ * ("Missing or insufficient permissions"). Committing the conversation first
+ * makes the parent exist before the message rule runs.
  */
 async function writeMessage(
   db: Firestore,
@@ -280,13 +322,11 @@ async function writeMessage(
   text: string,
   sender: ChatParticipant,
   workspaceId: string | null = null,
+  attachment: ChatAttachment | null = null,
 ): Promise<void> {
-  const {
-    collection,
-    doc,
-    serverTimestamp,
-    writeBatch,
-  } = await import("firebase/firestore");
+  const { collection, doc, serverTimestamp, setDoc } = await import(
+    "firebase/firestore"
+  );
 
   const conversationRef = doc(db, "conversations", convId);
   const messageRef = doc(collection(conversationRef, "messages"));
@@ -295,26 +335,29 @@ async function writeMessage(
     participants.map((p) => [p.id, p.name]),
   );
 
-  const batch = writeBatch(db);
+  // Conversation preview: the text, or the attachment name for an image/file.
+  const preview = text || attachment?.name || "";
 
-  batch.set(messageRef, {
-    senderId: sender.id,
-    text,
-    createdAt: serverTimestamp(),
-  });
-
-  batch.set(
+  // 1) Upsert the conversation + its denormalised preview (creates it on the
+  //    first message), so the parent exists before the message rule's get().
+  await setDoc(
     conversationRef,
     {
       participants: participants.map((p) => p.id),
       participantNames,
       workspaceId,
-      lastMessage: text,
+      lastMessage: preview,
       lastSenderId: sender.id,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
 
-  await batch.commit();
+  // 2) Append the message (with its attachment metadata when present).
+  await setDoc(messageRef, {
+    senderId: sender.id,
+    text,
+    createdAt: serverTimestamp(),
+    ...(attachment ? { attachment } : {}),
+  });
 }

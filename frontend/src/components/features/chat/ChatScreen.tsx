@@ -18,6 +18,7 @@ import {
   type ChatParticipant,
 } from "@/lib/firebase/chat";
 import type { ChatContact } from "@/lib/api/chat";
+import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
 import { ChatComposer } from "./ChatComposer";
 import { relativeTime } from "./time";
@@ -50,6 +51,10 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  // Free-text filter over the left-pane list (contacts + live conversations).
+  const [query, setQuery] = useState("");
+  // Optional by-type filter (e.g. admin filtering owners vs freelancers). null = all.
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   // Id of the conversation whose first snapshot has arrived; used to derive the
   // thread loading state without a synchronous setState inside the effect.
   const [loadedConvId, setLoadedConvId] = useState<string | null>(null);
@@ -138,6 +143,56 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     [self.id, contactById, t],
   );
 
+  // ---- The distinct contact roles present, for the optional by-type filter.
+  //      The filter only surfaces when the list spans more than one role
+  //      (i.e. admins and freelancers, not single-role owners). ----
+  const availableRoles = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of contacts) if (c.role) set.add(c.role);
+    return [...set];
+  }, [contacts]);
+
+  const roleLabel = useCallback(
+    (role: string): string =>
+      role === "workspace_owner"
+        ? t("roleOwner")
+        : role === "freelancer"
+          ? t("roleFreelancer")
+          : role === "admin"
+            ? t("roleAdmin")
+            : role,
+    [t],
+  );
+
+  // ---- Client-side search + by-type filter over the left pane (live
+  //      conversations + contacts). Search matches the display name; the role
+  //      filter matches the contact's role (resolved via `contactById` for
+  //      conversations). ----
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchesQuery = useCallback(
+    (name: string) =>
+      normalizedQuery === "" || name.toLowerCase().includes(normalizedQuery),
+    [normalizedQuery],
+  );
+  const visibleConversations = useMemo(
+    () =>
+      conversations.filter((conv) => {
+        const other = otherParticipant(conv);
+        return (
+          matchesQuery(other.name) &&
+          (!roleFilter || contactById.get(other.id)?.role === roleFilter)
+        );
+      }),
+    [conversations, matchesQuery, roleFilter, otherParticipant, contactById],
+  );
+  const visibleNewContacts = useMemo(
+    () =>
+      newContacts.filter(
+        (c) => matchesQuery(c.name) && (!roleFilter || c.role === roleFilter),
+      ),
+    [newContacts, matchesQuery, roleFilter],
+  );
+
   const activeContact = activeContactId
     ? contactById.get(activeContactId)
     : null;
@@ -149,7 +204,10 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     t("unknownContact");
 
   const handleSend = useCallback(
-    async (text: string): Promise<boolean> => {
+    async (
+      text: string,
+      attachment: ChatAttachmentMeta | null,
+    ): Promise<boolean> => {
       if (!activeContactId || !activeConvId) return false;
       const contactName = activeName;
       const workspaceId = contactById.get(activeContactId)?.workspace_id ?? null;
@@ -163,6 +221,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
         text,
         self,
         workspaceId,
+        attachment,
       );
       if (!ok) {
         toast({ tone: "err", title: t("sendFailed") });
@@ -193,6 +252,36 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
         <div className="chat-aside-head">
           <div className="h3">{t("title")}</div>
         </div>
+        {(conversations.length > 0 || contacts.length > 0) && (
+          <div className="chat-search">
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              className="chat-search-input"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+        )}
+        {availableRoles.length > 1 && (
+          <div className="chat-filter">
+            <select
+              className="chat-filter-select"
+              value={roleFilter ?? ""}
+              onChange={(e) => setRoleFilter(e.target.value || null)}
+              aria-label={t("filterByType")}
+            >
+              <option value="">{t("filterAll")}</option>
+              {availableRoles.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabel(role)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="chat-aside-scroll">
           {conversations.length === 0 && newContacts.length === 0 ? (
             <div className="chat-empty" style={{ padding: 28 }}>
@@ -205,9 +294,16 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                 </div>
               </div>
             </div>
+          ) : visibleConversations.length === 0 &&
+            visibleNewContacts.length === 0 ? (
+            <div className="chat-empty" style={{ padding: 28 }}>
+              <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
+                {t("noResults")}
+              </div>
+            </div>
           ) : (
             <>
-              {conversations.map((conv) => {
+              {visibleConversations.map((conv) => {
                 const other = otherParticipant(conv);
                 return (
                   <ContactRow
@@ -221,10 +317,10 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                 );
               })}
 
-              {newContacts.length > 0 && (
+              {visibleNewContacts.length > 0 && (
                 <>
                   <div className="chat-section-label">{t("startNew")}</div>
-                  {newContacts.map((c) => (
+                  {visibleNewContacts.map((c) => (
                     <ContactRow
                       key={c.id}
                       name={c.name}

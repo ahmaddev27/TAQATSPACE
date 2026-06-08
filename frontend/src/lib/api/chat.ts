@@ -9,6 +9,8 @@ export interface ChatContact {
   id: string;
   name: string;
   workspace_id: string;
+  /** The contact's role (owner/freelancer/admin), for the by-type filter. */
+  role?: string;
 }
 
 /**

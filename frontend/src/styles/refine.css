@@ -98,6 +98,12 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
 
 /* empty / loading inside tables */
 .empty-state { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 56px 24px; text-align: center; color: var(--text-3); }
+/* The icon badge: `.st-ico` is only styled inside stat tiles/modal heads, so in
+   an empty state it would render bare. Give it the same soft-badge treatment. */
+.empty-state .st-ico { width: 48px; height: 48px; border-radius: var(--r-tile); display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); flex: none; }
+.empty-state .st-ico svg { width: 22px; height: 22px; }
+.empty-state .st-ico.amber { background: var(--accent-soft); color: var(--amber-600); }
+[data-theme="dark"] .empty-state .st-ico.amber { color: var(--amber-400); }
 
 /* ============================================================
    FORMS — required, addons, sections, sizing
