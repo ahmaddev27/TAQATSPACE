@@ -1422,6 +1422,157 @@
                 }
             }
         },
+        "/chat/token": {
+            "post": {
+                "operationId": "chat.token",
+                "description": "Returns 503 with a localized message when Firebase is not configured, so\nthe client can degrade gracefully instead of receiving a server error.",
+                "summary": "POST /api/chat/token \u2014 mint a Firebase custom token for the caller",
+                "tags": [
+                    "Chat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "uid": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "token",
+                                                "uid"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u062a\u0639\u0630\u0651\u0631 \u0628\u062f\u0621 \u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629. \u064a\u0631\u062c\u0649 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0644\u0627\u062d\u0642\u064b\u0627."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629 \u0627\u0644\u0641\u0648\u0631\u064a\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629 \u062d\u0627\u0644\u064a\u064b\u0627."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/chat/contacts": {
+            "get": {
+                "operationId": "chat.contacts",
+                "description": "Role-scoped: an owner gets their workspace members; a freelancer gets\ntheir workspace owner(s). Returns `[{ id, name, workspace_id }]`.",
+                "summary": "GET /api/chat/contacts \u2014 the authenticated user's chat-able contacts",
+                "tags": [
+                    "Chat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "contacts": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "contacts"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/stats": {
             "get": {
                 "operationId": "dashboard.stats",
@@ -1850,6 +2001,103 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/notifications/device-tokens": {
+            "post": {
+                "operationId": "deviceToken.store",
+                "summary": "POST /api/notifications/device-tokens \u2014 register (upsert) the caller's\ndevice token. A token is globally unique, so re-registering it (even from\na different account) reassigns it to the current user",
+                "tags": [
+                    "DeviceToken"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreDeviceTokenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062c\u0647\u0627\u0632 \u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "deviceToken.destroy",
+                "summary": "DELETE /api/notifications/device-tokens \u2014 remove one of the caller's\ndevice tokens (e.g. on logout). Scoped to the user so a token can never\nbe deleted on someone else's behalf",
+                "tags": [
+                    "DeviceToken"
+                ],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062c\u0647\u0627\u0632 \u0645\u0646 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -10332,6 +10580,27 @@
                     "workspace_id"
                 ],
                 "title": "StoreBookingRequest"
+            },
+            "StoreDeviceTokenRequest": {
+                "type": "object",
+                "description": "Validates registration of an FCM device token for the authenticated user.",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "maxLength": 512
+                    },
+                    "platform": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    }
+                },
+                "required": [
+                    "token"
+                ],
+                "title": "StoreDeviceTokenRequest"
             },
             "StoreExpenseRequest": {
                 "type": "object",

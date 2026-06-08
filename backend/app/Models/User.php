@@ -96,6 +96,12 @@ class User extends Authenticatable
         return $this->hasMany(Seat::class, 'assigned_member_id');
     }
 
+    /** @return HasMany<DeviceToken, $this> */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     /** @return BelongsToMany<InternetPackage, $this> */
     public function internetPackages(): BelongsToMany
     {
