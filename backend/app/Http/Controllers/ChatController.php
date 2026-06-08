@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\Chat\ChatContactService;
 use App\Services\Firebase\FirebaseService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Issues Firebase **custom tokens** so the SPA can authenticate against
- * Firestore for realtime chat. Thin: the uid and role come straight from the
- * authenticated user.
+ * Realtime-chat support endpoints. Thin by design: minting a Firebase custom
+ * token (so the SPA can authenticate against Firestore) and listing the
+ * authenticated user's chat-able contacts. All business logic is delegated.
  */
 class ChatController extends Controller
 {
     public function __construct(
         private readonly FirebaseService $firebase,
+        private readonly ChatContactService $contacts,
     ) {}
 
     /**
@@ -46,5 +48,18 @@ class ChatController extends Controller
             'token' => $token,
             'uid' => $user->id,
         ]);
+    }
+
+    /**
+     * GET /api/chat/contacts — the authenticated user's chat-able contacts.
+     *
+     * Role-scoped: an owner gets their workspace members; a freelancer gets
+     * their workspace owner(s). Returns `[{ id, name, workspace_id }]`.
+     */
+    public function contacts(Request $request): JsonResponse
+    {
+        $contacts = $this->contacts->contactsFor($request->user());
+
+        return ApiResponse::success(['contacts' => $contacts]);
     }
 }

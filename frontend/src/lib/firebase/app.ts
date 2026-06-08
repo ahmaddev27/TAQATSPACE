@@ -12,6 +12,8 @@
  */
 
 import type { FirebaseApp, FirebaseOptions } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
 import type { Messaging } from "firebase/messaging";
 
 /**
@@ -77,6 +79,8 @@ export function getFirebaseConfig(): FirebaseClientConfig | null {
 /** Lazily-created singletons so HMR/StrictMode double-invokes don't re-init. */
 let appPromise: Promise<FirebaseApp> | null = null;
 let messagingPromise: Promise<Messaging | null> | null = null;
+let authPromise: Promise<Auth | null> | null = null;
+let firestorePromise: Promise<Firestore | null> | null = null;
 
 /**
  * Lazily initialize (or reuse) the Firebase app. Returns `null` when unconfigured
@@ -116,4 +120,47 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
     })();
   }
   return messagingPromise;
+}
+
+/**
+ * Lazily resolve the Firebase `Auth` instance, used by the chat auth bridge to
+ * `signInWithCustomToken`. Returns `null` when unconfigured or outside the
+ * browser. Never throws.
+ */
+export async function getFirebaseAuth(): Promise<Auth | null> {
+  if (!CONFIG || typeof window === "undefined") return null;
+
+  if (!authPromise) {
+    authPromise = (async () => {
+      try {
+        const { getAuth } = await import("firebase/auth");
+        const app = await getFirebaseApp();
+        return app ? getAuth(app) : null;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return authPromise;
+}
+
+/**
+ * Lazily resolve the Cloud `Firestore` instance backing realtime chat. Returns
+ * `null` when unconfigured or outside the browser. Never throws.
+ */
+export async function getFirestoreDb(): Promise<Firestore | null> {
+  if (!CONFIG || typeof window === "undefined") return null;
+
+  if (!firestorePromise) {
+    firestorePromise = (async () => {
+      try {
+        const { getFirestore } = await import("firebase/firestore");
+        const app = await getFirebaseApp();
+        return app ? getFirestore(app) : null;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return firestorePromise;
 }
