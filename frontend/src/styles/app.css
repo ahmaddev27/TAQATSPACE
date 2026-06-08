@@ -221,7 +221,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 /* ---------- Side nav (dashboard) ---------- */
 .dash { display: grid; min-height: 100%; }
 .dash-nav {
-  width: var(--nav-w); background: var(--surface); border-inline-start: none;
+  /* Fill the grid track (DashShell sets it to --nav-w expanded, 72px collapsed)
+     instead of a fixed width — a fixed --nav-w overflowed the 72px collapsed
+     track and the rail's icons spilled over the page content. */
+  width: 100%; background: var(--surface); border-inline-start: none;
   border-inline-end: 1px solid var(--border); display: flex; flex-direction: column;
   padding: 14px; gap: 4px; flex: none;
 }

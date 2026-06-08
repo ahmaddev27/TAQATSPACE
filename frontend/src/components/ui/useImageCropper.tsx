@@ -46,11 +46,13 @@ export function useImageCropper({
   } | null>(null);
 
   const cropFile = useCallback((file: File): Promise<File | null> => {
-    // Pass straight through (no cropper) for: non-image files, and the image
-    // formats a <canvas> cropper can't render/crop — SVG (vector, no intrinsic
-    // pixel size → blank canvas) and ICO (inconsistent <img> support). Cropping
-    // a vector/icon makes no sense anyway, so upload them as-is.
-    if (!file.type.startsWith("image/") || PASSTHROUGH_TYPES.test(file.type)) {
+    // Only RASTER images go through the cropper. Non-images and vector/icon
+    // formats (SVG, ICO) — which a canvas cropper cannot render (no intrinsic
+    // size) — pass straight back unchanged so the upload still works, e.g. an
+    // SVG logo or favicon.
+    const nonCroppable =
+      /^image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)$/.test(file.type);
+    if (!file.type.startsWith("image/") || nonCroppable) {
       return Promise.resolve(file);
     }
     return new Promise<File | null>((resolve) => {
