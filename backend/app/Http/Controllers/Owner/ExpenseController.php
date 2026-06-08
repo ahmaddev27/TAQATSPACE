@@ -130,11 +130,11 @@ class ExpenseController extends Controller
     }
 
     /**
-     * @return array{total: string, this_month: string, by_category: array<string, string>}
+     * @return array{total: string, this_month: string, by_category: array<string, string>, by_month: array<int, array{month: string, total: string}>}
      */
     private function emptySummary(): array
     {
-        return ['total' => '0', 'this_month' => '0', 'by_category' => []];
+        return ['total' => '0', 'this_month' => '0', 'by_category' => [], 'by_month' => []];
     }
 
     /**
