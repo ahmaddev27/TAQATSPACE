@@ -8,13 +8,13 @@ Arabic-first (RTL) + English coworking-space marketplace for Gaza. Three roles: 
 
 | | |
 |---|---|
-| **Overall** | 57 / 80 tasks (71%) — **Phases 1–3 complete** |
-| **Current phase** | Phase 1–3 ✅ · **Phase 4 in progress** (M10 dashboard ✅ · M11 reports/exports ✅ → M12 Launch) |
-| **Current milestone** | M01–M09 ✅ · M10 admin dashboard ✅ · M11 reports/exports ✅ |
-| **Current sprint** | S1–S5 done |
-| **Deployed** | 🟢 **Prod** [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) · 🟢 **Staging** [staging.taqat.space](https://staging.taqat.space) + api.staging.taqat.space |
-| **API docs** | 🟢 Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) (**66 endpoints**) + Postman collection — regenerated |
-| **Last updated** | 2026-06-04 |
+| **Overall** | **Core MVP (M01–M11) ✅** · M12 hardening/testing _in progress_ · **+ 8 platform-expansion milestones** (SSO · realtime chat+push · admin permissions · analytics · profile mgmt · branding/CMS · messaging config · expenses/resources) |
+| **Current focus** | Realtime (Firebase **chat + push + attachments**) ✅ built & activated · file-upload security hardening ✅ · **next:** comprehensive tests + launch hardening (M12) |
+| **Deployed** | 🟢 **Prod** [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) · 🟢 **Staging** [staging.taqat.space](https://staging.taqat.space) + api.staging.taqat.space · _(realtime/chat on `feat/realtime-firebase`, pending merge → deploy)_ |
+| **API docs** | 🟢 Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) (**~124 endpoints**) + Postman collection — regenerated |
+| **Last updated** | 2026-06-08 |
+
+> **Quick orientation:** for *what every user can do*, jump to [System features by role](#system-features-by-role). For *what is built vs. remaining*, see [Milestones](#milestones) + [What's left](#whats-left).
 
 **Legend:** ☐ Todo · 🔄 In Progress · ✅ Done · ⏸ Blocked · ⏭ Deferred
 
@@ -73,11 +73,24 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 | M05 | Workspace Owner Dashboard — Core | P2 | S3–S4 | ✅ | 100% |
 | M06 | Freelancer Dashboard — Core | P2 | S4–S5 | ✅ | 100% |
 | M07 | Invoicing System | P3 | S6 | ✅ | 100% |
-| M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 95% (realtime needs Pusher creds) |
+| M08 | Messaging, Notifications & Real-time | P3 | S7 | ✅ | 100% (realtime now on **Firebase**, see M19) |
 | M09 | Announcements, Packages & Reviews | P3 | S7 | ✅ | 100% |
 | M10 | Super Admin Dashboard | P4 | S8 | ✅ | 100% |
 | M11 | Reports, Exports & Analytics | P4 | S8 | ✅ | 100% |
-| M12 | Testing, Hardening & Production Launch | P4 | S9 | ☐ | 0% |
+| M12 | Testing, Hardening & Production Launch | P4 | S9 | 🔄 | ~20% (deploy+ops done; comprehensive tests pending) |
+
+### Platform-expansion milestones (post-MVP, beyond the original 12)
+
+| MS | Milestone | Status | % |
+|----|-----------|--------|---|
+| M13 | **SSO** — "Sign in with Taqat" (OIDC + PKCE), single logout, post-SSO onboarding, dedicated admin login | ✅ | 100% |
+| M14 | **Profile management** (avatar + edit, tabs, global image cropper) — all roles | ✅ | 100% |
+| M15 | **Dynamic branding + content CMS** (logo dark/light, favicon, meta; landing CMS + reorder/preview; all landing images admin-managed) | ✅ | 100% |
+| M16 | **Messaging config + broadcast** (admin/per-workspace SMTP/SMS; email/SMS broadcast w/ recipient filter) | ✅ | 100% |
+| M17 | **Admin management & permissions** (add admins, roles/permissions, super-admin; enforced across the admin dashboard) | ✅ | 100% |
+| M18 | **Analytics** (city/governorate + gender breakdowns — admin & owner dashboards) | ✅ | 100% |
+| M19 | **Realtime (Firebase)** — FCM web push + Firestore chat (admin/owner/freelancer), file attachments on S3 + per-conversation gallery | ✅ | 100% (activated; staging deploy pending merge) |
+| M20 | **Workspace operations** (per-seat-type pricing; expenses; amenities/resources) | ✅ | 100% |
 
 ---
 
@@ -127,8 +140,73 @@ Thin Controllers → Services → Repositories · constructor DI · FormRequests
 
 ---
 
+## System features by role
+
+What each kind of user sees and can do (✅ = built & working).
+
+### 🌐 Public (no account)
+- Browse the **landing/home**, **About**, **FAQ**, **Contact** (all admin-editable via the CMS).
+- **Explore workspaces** — map (MapLibre / OpenFreeMap) + filters (city/governorate, price, rating, amenities) + search.
+- **Workspace detail** — photo gallery, seat types & **pricing**, amenities, working hours, **reviews**, zoomable location map.
+- **Register** as Freelancer or Workspace Owner · **Log in** (email/password, **Sign in with Taqat** SSO, dedicated **admin login**).
+
+### 👤 Freelancer
+- **Dashboard** — active subscription, seat, and booking status.
+- **Explore + book** a seat at any active workspace (booking request → owner approves).
+- **Subscription** view · **Invoices** (list + **download Arabic PDF**) + overdue alerts.
+- **Reviews** — rate/comment on workspaces they are (or were) subscribed to.
+- **Realtime chat** 💬 — message any **active workspace owner**, their own owner(s), and the **admin**; **file attachments** (images/docs on S3) + **per-conversation attachments gallery**; searchable contacts.
+- **Notifications** — in-app center (bell) + **web push** (booking approved/rejected, invoice created/paid/overdue/reminder, new announcement, seat assigned).
+- **Profile** — avatar (with cropper), name, phone, gender, specialty, bio.
+
+### 🏢 Workspace Owner
+- **Dashboard** — KPIs (members, seats, occupancy, revenue) + **analytics** (members by city/governorate + gender).
+- **Workspace settings** — profile, amenities, working hours, **photos**, interactive **location** picker, **seat types & per-type pricing**.
+- **Members** (subscribers) · **Seat map** + **assignment** · **Subscriptions** list.
+- **Booking requests** — approve/reject (approval creates the subscription + assigns a seat).
+- **Invoices** (list) · **Internet packages** · **Expenses** tracking · **Resources/amenities** management.
+- **Communicate** — direct messages to members · **broadcast** (email/SMS: specific member / all / segment, with recipient filter) · **announcements**.
+- **Realtime chat** 💬 with their members + attachments + gallery.
+- **Notifications** — incl. **workspace approved/rejected/suspended**, **new review**, new booking.
+- **Reports / Exports** — filter-aware **CSV exports** of members/invoices/subscriptions.
+- **Profile** management.
+
+### 🛡️ Super Admin
+- **Dashboard** — platform KPIs, **tracked revenue** (paid / outstanding — no gateway), **analytics** (by city/governorate + gender).
+- **Workspaces moderation** — approve / suspend / reject (notifies the owner).
+- **Users** — list, **suspend/reactivate**, per-user details (freelancer subscription history; owner seat-types/pricing/available seats).
+- **Subscriptions + Invoices** — mark paid/unpaid, **attach payment receipt** in the same step, download PDF / view receipt.
+- **Reports** (recharts) + **CSV exports** (filter-aware).
+- **Admin management & permissions** — add admin accounts, assign **roles/permissions**; super-admin bypass; **enforced across the whole admin dashboard** (nav + pages gated).
+- **Content / CRM hub** — **landing CMS** (text + all images), section **reorder + live preview**; Site/FAQ/About/How-it-works editors (drive the public pages).
+- **Branding** — logo (dark/light), favicon, site meta — applied everywhere.
+- **Messaging config** — platform + per-workspace **SMTP/SMS** settings · **broadcast** (email/SMS: specific/all/segment).
+- **Realtime chat** 💬 — message **any** owner/freelancer (searchable, **filter by user type**) + attachments + gallery.
+- **Profile** management · **dedicated admin login**.
+
+> **Billing model (binding):** admin-managed **manual** status/payment tracking + receipt upload — **no payment gateway, no self-serve plans**. Pricing/seats are per-workspace (owner-set).
+
+> **Access control:** the API is role-gated (Sanctum + role middleware + admin permissions). Realtime **chat is participant-gated by Firestore security rules** — a user can only read/write a conversation whose `participants` include their own id (uid is minted server-side), so no one can reach a conversation they are not part of. Uploaded files are validated (mime + size), stored under UUID names with a **content-derived extension** (no executable-extension polyglots), and sensitive docs (owner ID/license) are private.
+
+---
+
+## What's left
+
+| Item | Status |
+|------|--------|
+| **Comprehensive tests** — backend PHPUnit (auth/SSO/onboarding, admin+permissions, owner CRUD, invoicing/exports, realtime endpoints) + frontend Vitest + Playwright E2E | ☐ planned |
+| **Realtime activation on staging** — merge `feat/realtime-firebase` → dev (deploys chat + attachments + upload-limit/security fixes) | 🔄 user action |
+| **Notification coverage gaps** — subscription-expiry reminder (scheduled job) + account suspend/reactivate | ☐ |
+| **Ops verification** — confirm server **cron** (`schedule:run`) + **queue worker** running (overdue/monthly invoice jobs + queued notifications) | ☐ user/server |
+| **Upload-security recommendations** — drop/sanitize SVG in branding; store receipts on a private disk | ⏭ optional |
+| **Launch hardening (M12)** — rotate exposed secrets (DB/AWS/SSO/Firebase), Sentry, confirm SMS gateway endpoints, finalize prod env | ☐ |
+| **Known bug** — onboarding "complete your data" form appears then disappears (reproduce via E2E, then fix) | ☐ |
+
+---
+
 ## Changelog
 
+- **2026-06-08** — **Realtime milestone (M19) built & activated + chat hardening (on `feat/realtime-firebase`).** **Firebase**: FCM web push (every DB notification also pushes to registered devices) + **Firestore chat** for admin/owner/freelancer with a custom-token auth bridge (uid = our user id) and **participant-gated security rules**. Activated on the live project: Firestore DB + rules deployed via CLI, FCM verified end-to-end, Auth initialized (custom-token sign-in returns 200). **Chat features**: role-scoped contacts (owner→members, freelancer→all active owners + their owner(s) + admin, **admin→everyone** with search + **by-type filter**); **file attachments on S3** (upload → metadata in Firestore → on-demand signed URLs) with inline image/file rendering + a **per-conversation attachments gallery**. **Fixes**: first-message-in-a-new-conversation 403 (write the conversation before the message; rules tolerate a missing parent on read so the listener survives); attachment upload limits (Next Server Action `bodySizeLimit` 12 MB + PHP `.user.ini`); `ApiResponse::success` arg order TypeError. **Notification coverage**: owner now notified on **workspace approve/reject/suspend** + **new review**. **Security**: file-upload audit across all 8 upload endpoints — stored filenames now use a **content-derived extension** (`guessExtension`, not the client name) in `FileUploadService` + workspace photos, and the chat attachment-URL endpoint rejects `../` traversal. CI wired to inject the Firebase web config into the frontend build. `next.config` `serverActions.bodySizeLimit`. OpenAPI/Postman regenerated (~124 endpoints). Map on the workspace detail page made zoomable; empty-state icons given their badge. **Pending:** merge → staging deploy; comprehensive tests.
 - **2026-06-06 (cont.)** — **Phase 4 M11 + admin CRM + landing reorder (on `feat/phase-2`).** **M11 Reports/exports done**: backend `GET /admin/reports` (revenue-by-month, status breakdowns, top workspaces) + `GET /admin/exports/{type}` streamed CSV (UTF-8 BOM); frontend `/admin/reports` (recharts) + CSV "Export" buttons via an auth-proxying route handler. **Admin "CRM" section**: renamed/grouped the content hub (`/admin/rm` → `/admin/crm`) into a dedicated CRM nav group (Landing + Site/FAQ/About/How-it-works editors). **Landing CMS: section reordering + live preview** (Layout tab with up/down + enable toggles; sticky preview pane; public landing renders by `sections_order`). Fixes: featured-section subtitle now renders as its eyebrow; deploy "broken pipe" (subshell-detach Node). OpenAPI grew to ~80 paths.
 - **2026-06-06** — **Phase 4 M10 started: Super-Admin dashboard + financial tracking (on `feat/phase-2`).** Business-model-aligned (no gateway, no plans — manual tracking): backend admin endpoints (stats, users list+status, subscriptions list, invoices list + mark-paid/unpaid + **receipt upload**, `receipt_path` migration, pdf/receipt URLs) — 8 routes, OpenAPI now 74 paths. Frontend: real admin dashboard (KPIs + tracked paid/outstanding revenue) + Workspaces / Users / Subscriptions / Invoices management pages (approve/suspend, mark paid w/ optional date, mark unpaid, upload receipt → also marks paid, download PDF / view receipt) + admin nav + i18n. Also fixed the deploy "broken pipe" (subshell-detach Node so SSH exits clean).
 - **2026-06-04 (cont. 2)** — **rm CMS public display + registration fix + business model.** The admin **"rm" CMS now drives the public pages** (footer + Contact show admin-managed email/phone/whatsapp/address/social; FAQ items; About lead+sections; home How-it-works steps) — merging over i18n. **Workspace-owner registration fixed end-to-end**: was broken (never sent email/password, never created a workspace); now creates the owner (pending_verification) AND the Workspace (pending) with all details + per-seat-type pricing in one transaction. **Business model noted for Phase 4:** billing is **admin-managed status/payment tracking + receipt upload** — NO payment gateway, NO self-serve plans; pricing/seats are per-workspace (owner-set). OpenAPI/Postman regenerated.
