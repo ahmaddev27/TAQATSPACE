@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Enums\AdminPermission;
 use App\Enums\UserStatus;
 use App\Support\ApiResponse;
 use Closure;
@@ -12,13 +11,17 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Gate for the admin-management module. Requires an authenticated, active user
- * who holds the `manage_admins` permission (granted only to `super_admin`).
- * Pair with `auth:sanctum` in the route group.
+ * Parameterized admin-permission gate. Requires an authenticated, active user
+ * who holds the named Spatie permission, e.g. `can.permission:manage_billing`.
+ * Pair with `auth:sanctum` + `role.admin` in the route group.
+ *
+ * A `super_admin` holds every permission; a standard `admin` holds the curated
+ * default subset; a custom admin holds exactly what was granted — so a grant
+ * actually restricts which admin areas the account can reach.
  */
-final class EnsureCanManageAdmins
+final class EnsureHasAdminPermission
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $permission): Response
     {
         $user = $request->user();
 
@@ -34,7 +37,7 @@ final class EnsureCanManageAdmins
             return ApiResponse::message($message, 403);
         }
 
-        if (! $user->can(AdminPermission::ManageAdmins->value)) {
+        if (! $user->can($permission)) {
             return ApiResponse::message(__('messages.insufficient_permissions'), 403);
         }
 

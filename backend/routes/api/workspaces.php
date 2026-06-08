@@ -30,7 +30,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
     });
 
 // Admin moderation.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_workspaces'])
     ->prefix('admin/workspaces')
     ->group(function (): void {
         Route::get('/', [WorkspaceController::class, 'adminIndex']);

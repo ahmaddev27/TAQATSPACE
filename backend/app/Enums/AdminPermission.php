@@ -9,10 +9,11 @@ use App\Enums\Concerns\HasValues;
 /**
  * Named Spatie permissions that gate the major admin areas.
  *
- * `super_admin` is granted every permission; `admin` receives the
- * {@see self::defaultsForAdmin()} subset by default. New admin-management
- * endpoints are gated on {@see self::ManageAdmins}; retrofitting the remaining
- * permissions onto the legacy admin routes is intentionally out of scope.
+ * `super_admin` is granted every permission (via its role); a standard `admin`
+ * receives the {@see self::defaultsForAdmin()} subset by default — assigned as
+ * DIRECT per-account grants, so a limited admin is genuinely restricted (the
+ * `admin` role itself grants nothing). Every admin route group is gated by its
+ * permission via `can.permission:<perm>` (e.g. billing → manage_billing).
  */
 enum AdminPermission: string
 {

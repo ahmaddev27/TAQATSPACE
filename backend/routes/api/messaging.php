@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Platform messaging — Super Admin.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messaging'])
     ->prefix('admin/settings/messaging')
     ->group(function (): void {
         Route::get('/', [MessagingSettingsController::class, 'show']);
@@ -28,7 +28,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])
 
 // Compose & broadcast (email and/or SMS) to a chosen audience — Super Admin
 // sends through the platform accounts.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messaging'])
     ->post('/admin/messaging/broadcast', [AdminBroadcastController::class, 'store']);
 
 // Per-workspace messaging — Workspace Owner.

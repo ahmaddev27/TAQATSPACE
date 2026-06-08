@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/branding', [BrandingController::class, 'show']);
 
 // Admin manage.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_content'])
     ->prefix('admin/branding')
     ->group(function (): void {
         Route::get('/', [AdminBrandingController::class, 'show']);

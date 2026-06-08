@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAllAdminWorkspaces } from "@/lib/api/admin";
 import { WorkspacesTable } from "@/components/features/admin/WorkspacesTable";
 
@@ -11,6 +12,7 @@ export default async function AdminWorkspacesPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_workspaces");
   const t = await getTranslations("admin.workspaces");
 
   const workspaces = await getAllAdminWorkspaces();

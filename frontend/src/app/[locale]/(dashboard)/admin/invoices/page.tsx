@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAllAdminInvoices } from "@/lib/api/admin";
 import { InvoicesTable } from "@/components/features/admin/InvoicesTable";
 
@@ -11,6 +12,7 @@ export default async function AdminInvoicesPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_billing");
   const t = await getTranslations("admin.invoices");
 
   const invoices = await getAllAdminInvoices();

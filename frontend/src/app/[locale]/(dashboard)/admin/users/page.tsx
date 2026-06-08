@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAllAdminUsers } from "@/lib/api/admin";
 import { UsersTable } from "@/components/features/admin/UsersTable";
 
@@ -11,6 +12,7 @@ export default async function AdminUsersPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_users");
   const t = await getTranslations("admin.users");
 
   const users = await getAllAdminUsers();
