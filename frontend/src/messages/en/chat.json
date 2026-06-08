@@ -19,6 +19,11 @@
     "sendFailed": "Couldn't send your message. Please try again.",
     "searchPlaceholder": "Search contacts…",
     "noResults": "No matching results",
+    "filterByType": "Type",
+    "filterAll": "All",
+    "roleOwner": "Workspace owners",
+    "roleFreelancer": "Freelancers",
+    "roleAdmin": "Admin",
     "unavailableTitle": "Chat isn't available yet",
     "unavailableBody": "Live chat will appear here once it has been set up by the platform."
   }

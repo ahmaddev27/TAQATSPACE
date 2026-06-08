@@ -68,6 +68,23 @@
   color: var(--text-3);
 }
 
+/* ---- By-type filter (admins/freelancers: owners vs freelancers) ---- */
+.chat-filter {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.chat-filter-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-1);
+  font: inherit;
+  cursor: pointer;
+}
+
 .chat-item {
   display: flex;
   align-items: center;
