@@ -50,6 +50,8 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  // Free-text filter over the left-pane list (contacts + live conversations).
+  const [query, setQuery] = useState("");
   // Id of the conversation whose first snapshot has arrived; used to derive the
   // thread loading state without a synchronous setState inside the effect.
   const [loadedConvId, setLoadedConvId] = useState<string | null>(null);
@@ -138,6 +140,28 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     [self.id, contactById, t],
   );
 
+  // ---- Client-side search over the left pane (live conversations + contacts).
+  //      Matches the other participant's display name, case-insensitively. ----
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleConversations = useMemo(
+    () =>
+      normalizedQuery === ""
+        ? conversations
+        : conversations.filter((conv) =>
+            otherParticipant(conv).name.toLowerCase().includes(normalizedQuery),
+          ),
+    [conversations, normalizedQuery, otherParticipant],
+  );
+  const visibleNewContacts = useMemo(
+    () =>
+      normalizedQuery === ""
+        ? newContacts
+        : newContacts.filter((c) =>
+            c.name.toLowerCase().includes(normalizedQuery),
+          ),
+    [newContacts, normalizedQuery],
+  );
+
   const activeContact = activeContactId
     ? contactById.get(activeContactId)
     : null;
@@ -193,6 +217,19 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
         <div className="chat-aside-head">
           <div className="h3">{t("title")}</div>
         </div>
+        {(conversations.length > 0 || contacts.length > 0) && (
+          <div className="chat-search">
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              className="chat-search-input"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+        )}
         <div className="chat-aside-scroll">
           {conversations.length === 0 && newContacts.length === 0 ? (
             <div className="chat-empty" style={{ padding: 28 }}>
@@ -205,9 +242,16 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                 </div>
               </div>
             </div>
+          ) : visibleConversations.length === 0 &&
+            visibleNewContacts.length === 0 ? (
+            <div className="chat-empty" style={{ padding: 28 }}>
+              <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
+                {t("noResults")}
+              </div>
+            </div>
           ) : (
             <>
-              {conversations.map((conv) => {
+              {visibleConversations.map((conv) => {
                 const other = otherParticipant(conv);
                 return (
                   <ContactRow
@@ -221,10 +265,10 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                 );
               })}
 
-              {newContacts.length > 0 && (
+              {visibleNewContacts.length > 0 && (
                 <>
                   <div className="chat-section-label">{t("startNew")}</div>
-                  {newContacts.map((c) => (
+                  {visibleNewContacts.map((c) => (
                     <ContactRow
                       key={c.id}
                       name={c.name}

@@ -1,0 +1,48 @@
+import { setRequestLocale } from "next-intl/server";
+import { serverFetch } from "@/lib/api";
+import { listChatContacts, type ChatContact } from "@/lib/api/chat";
+import { ChatScreen } from "@/components/features/chat/ChatScreen";
+import type { ApiEnvelope, User } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * Admin realtime chat (Firestore-backed). The admin can start a conversation
+ * with any active owner or freelancer (platform support); the contact list is
+ * searchable in {@link ChatScreen}. Contacts and the signed-in identity load
+ * server-side; the live thread + auth bridge run client-side. Contacts may be
+ * empty if the chat backend is unconfigured — the screen degrades to the
+ * "unavailable" state.
+ */
+export default async function AdminChatPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const me = await serverFetch<ApiEnvelope<{ user: User }>>("/auth/me");
+  const contacts = await safeContacts();
+
+  return (
+    <div className="page">
+      <ChatScreen
+        self={{ id: me.data.user.id, name: me.data.user.name }}
+        contacts={contacts}
+      />
+    </div>
+  );
+}
+
+/**
+ * Fetch contacts, tolerating a 503 (Firebase unconfigured) or any backend
+ * hiccup — the chat screen handles an empty contact list gracefully.
+ */
+async function safeContacts(): Promise<ChatContact[]> {
+  try {
+    return await listChatContacts();
+  } catch {
+    return [];
+  }
+}

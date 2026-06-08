@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\NewReviewNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +41,7 @@ class ReviewService
      */
     public function create(User $member, string $workspaceId, array $data): Review
     {
-        return DB::transaction(function () use ($member, $workspaceId, $data): Review {
+        $review = DB::transaction(function () use ($member, $workspaceId, $data): Review {
             $review = Review::query()->create([
                 'member_id' => $member->id,
                 'workspace_id' => $workspaceId,
@@ -52,6 +53,26 @@ class ReviewService
 
             return $review->load('member:id,name');
         });
+
+        $this->notifyOwnerOfReview($workspaceId, $review, $member);
+
+        return $review;
+    }
+
+    /**
+     * Notify the workspace owner of a freshly-posted review (after commit). A
+     * self-review — should the owner ever review their own space — is skipped.
+     */
+    private function notifyOwnerOfReview(string $workspaceId, Review $review, User $member): void
+    {
+        $workspace = Workspace::query()->with('owner')->find($workspaceId);
+        $owner = $workspace?->owner;
+
+        if ($owner === null || $owner->id === $member->id) {
+            return;
+        }
+
+        $owner->notify(new NewReviewNotification($workspace, $review, $member->name));
     }
 
     /**

@@ -45,6 +45,29 @@
   min-height: 0;
 }
 
+/* ---- Contact/conversation search (left pane) ---- */
+.chat-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-3);
+  flex: none;
+}
+.chat-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--text-1);
+  outline: none;
+}
+.chat-search-input::placeholder {
+  color: var(--text-3);
+}
+
 .chat-item {
   display: flex;
   align-items: center;
