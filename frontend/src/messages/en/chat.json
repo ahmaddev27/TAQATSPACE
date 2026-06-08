@@ -28,6 +28,9 @@
     "removeAttachment": "Remove attachment",
     "attachmentTooLarge": "File is larger than the 10 MB limit.",
     "attachmentFailed": "Couldn't upload the attachment. Please try again.",
+    "attachmentsPanel": "Attachments",
+    "noAttachmentsTitle": "No attachments",
+    "noAttachmentsBody": "Files and images shared in this conversation will show up here.",
     "unavailableTitle": "Chat isn't available yet",
     "unavailableBody": "Live chat will appear here once it has been set up by the platform."
   }
