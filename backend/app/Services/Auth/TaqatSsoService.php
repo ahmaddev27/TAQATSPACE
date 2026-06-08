@@ -163,17 +163,13 @@ class TaqatSsoService
     public function buildLogoutUrl(int|string $accessTokenId): ?string
     {
         $session = Cache::pull(self::SESSION_CACHE_PREFIX.$accessTokenId);
+        $idToken = is_array($session) && is_string($session['id_token'] ?? null)
+            ? $session['id_token']
+            : null;
 
-        if (! is_array($session)) {
-            return null;
-        }
-
-        try {
-            $endpoint = $this->endSessionEndpoint();
-        } catch (RuntimeException) {
-            // Discovery failed — degrade gracefully to a local-only logout.
-            return null;
-        }
+        // Build the logout URL even when the session marker is missing (cache
+        // evicted / different store / TTL) — only id_token_hint depends on it.
+        $endpoint = $this->endSessionEndpoint();
 
         if ($endpoint === null) {
             return null;
@@ -184,7 +180,7 @@ class TaqatSsoService
         $params = array_filter([
             'client_id' => $config['client_id'],
             'post_logout_redirect_uri' => $this->postLogoutRedirectUri(),
-            'id_token_hint' => is_string($session['id_token'] ?? null) ? $session['id_token'] : null,
+            'id_token_hint' => $idToken,
         ], static fn ($value): bool => $value !== null && $value !== '');
 
         return $endpoint.'?'.http_build_query($params);
@@ -196,7 +192,21 @@ class TaqatSsoService
      */
     private function endSessionEndpoint(): ?string
     {
-        $endpoints = $this->discover();
+        // Explicit override first — for IdPs whose discovery omits
+        // end_session_endpoint (e.g. Laravel Passport does not advertise OIDC
+        // RP-initiated logout). Set TAQAT_SSO_END_SESSION_URL to the IdP's
+        // logout route in that case.
+        $override = $this->config()['end_session_endpoint'] ?? null;
+        if (is_string($override) && $override !== '') {
+            return $override;
+        }
+
+        try {
+            $endpoints = $this->discover();
+        } catch (RuntimeException) {
+            // Discovery unavailable — degrade gracefully to a local-only logout.
+            return null;
+        }
 
         $endpoint = $endpoints['end_session_endpoint'] ?? null;
 
@@ -370,7 +380,7 @@ class TaqatSsoService
      */
     private function config(): array
     {
-        /** @var array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string, post_logout_redirect_uri: ?string} $config */
+        /** @var array{issuer: ?string, client_id: string, client_secret: ?string, redirect_uri: ?string, post_logout_redirect_uri: ?string, end_session_endpoint: ?string} $config */
         $config = config('services.taqat_sso');
 
         return $config;

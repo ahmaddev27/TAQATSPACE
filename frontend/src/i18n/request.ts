@@ -22,6 +22,8 @@ const NAMESPACES = [
   "broadcast",
   "announcements",
   "profile",
+  "management",
+  "chat",
 ] as const;
 
 /** Recursively merge `source` into `target` (objects deep, scalars overwrite). */

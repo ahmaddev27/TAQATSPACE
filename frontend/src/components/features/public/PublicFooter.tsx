@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/navigation";
-import { TileLogo } from "@/components/layout/TileLogo";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { cmsText } from "@/lib/cms";
 import type { SiteContent } from "@/lib/types";
 import type { PublicDict } from "./i18n";
@@ -26,7 +26,7 @@ export function PublicFooter({ dict, site = {}, locale = "ar" }: PublicFooterPro
     {
       heading: f.members,
       links: [
-        { href: "/register/freelancer", label: f.regFree },
+        { href: "/login", label: f.regFree },
         { href: "/faq", label: f.faq },
         { href: "/contact", label: f.contact },
       ],
@@ -34,7 +34,7 @@ export function PublicFooter({ dict, site = {}, locale = "ar" }: PublicFooterPro
     {
       heading: f.owners,
       links: [
-        { href: "/register/workspace", label: f.listSpace },
+        { href: "/login", label: f.listSpace },
         { href: "/login", label: f.login },
         { href: "/contact", label: f.contact },
       ],
@@ -46,7 +46,7 @@ export function PublicFooter({ dict, site = {}, locale = "ar" }: PublicFooterPro
       <div className="container pub-footer-in">
         <div className="pub-footer-brand">
           <Link href="/" className="logo" aria-label="TAQAT">
-            <TileLogo size={24} />
+            <BrandLogo size={24} />
           </Link>
           <p className="muted" style={{ maxWidth: 260, marginTop: 14 }}>
             {f.tag}

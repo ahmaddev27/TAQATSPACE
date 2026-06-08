@@ -11,6 +11,7 @@ use App\Models\Review;
 use App\Models\Seat;
 use App\Models\Subscription;
 use App\Models\Workspace;
+use App\Notifications\WorkspaceStatusChangedNotification;
 use App\Repositories\Eloquent\WorkspaceRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
@@ -187,7 +188,7 @@ class WorkspaceService
      */
     public function changeStatus(Workspace $workspace, WorkspaceStatus $status): Workspace
     {
-        return DB::transaction(function () use ($workspace, $status): Workspace {
+        $workspace = DB::transaction(function () use ($workspace, $status): Workspace {
             $workspace = $this->workspaces->update($workspace, ['status' => $status->value]);
 
             if ($status === WorkspaceStatus::Suspended) {
@@ -199,6 +200,58 @@ class WorkspaceService
 
             return $workspace;
         });
+
+        // Notify the owner after commit so a rolled-back transition never alerts.
+        $this->notifyOwnerOfStatus($workspace, $status);
+
+        return $workspace;
+    }
+
+    /**
+     * Notify the workspace owner of a moderation outcome — approval (now active),
+     * rejection, or suspension — ending the "pending review" wait with a clear
+     * signal. Other transitions (e.g. back to pending) are intentionally silent.
+     */
+    private function notifyOwnerOfStatus(Workspace $workspace, WorkspaceStatus $status): void
+    {
+        $notifiable = in_array(
+            $status,
+            [WorkspaceStatus::Active, WorkspaceStatus::Rejected, WorkspaceStatus::Suspended],
+            true,
+        );
+
+        if (! $notifiable) {
+            return;
+        }
+
+        $workspace->owner?->notify(new WorkspaceStatusChangedNotification($workspace, $status));
+    }
+
+    /**
+     * Admin publish gate. Marks the workspace as publicly published (sets
+     * `published_at`) so it appears on the public landing/discovery. Separate
+     * from the account `status`; idempotent (a stamp is set only when missing).
+     */
+    public function publish(Workspace $workspace): Workspace
+    {
+        if ($workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => now()]);
+    }
+
+    /**
+     * Admin unpublish. Clears `published_at`, hiding the workspace from public
+     * discovery again without touching its account `status`.
+     */
+    public function unpublish(Workspace $workspace): Workspace
+    {
+        if (! $workspace->isPublished()) {
+            return $workspace;
+        }
+
+        return $this->workspaces->update($workspace, ['published_at' => null]);
     }
 
     /**
@@ -264,7 +317,10 @@ class WorkspaceService
         $paths = [];
 
         foreach ($files as $file) {
-            $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
+            // Extension from the file's real content, never the client name, so a
+            // polyglot can't be stored under an executable extension.
+            $extension = $file->guessExtension() ?: 'jpg';
+            $filename = Str::uuid()->toString().'.'.$extension;
             $paths[] = $file->storeAs($directory, $filename, ['disk' => $this->photoDisk()]);
         }
 

@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { TileLogo } from "./TileLogo";
+import { BrandLogo } from "./BrandLogo";
 import type { RoleNav } from "./nav-config";
 
 export interface SidebarProps {
@@ -18,10 +18,32 @@ export interface SidebarProps {
   onLogout: () => void;
 }
 
-/** Is `href` the active route? Index routes match exactly; others by prefix. */
-function isActive(pathname: string, href: string, indexHref: string): boolean {
+/** Does `href` match the current path? Index routes match exactly; others by prefix. */
+function matchesPath(pathname: string, href: string, indexHref: string): boolean {
   if (href === indexHref) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * The single active nav href = the MOST SPECIFIC (longest) matching item, so a
+ * parent like `/admin/settings/messaging` is not also highlighted when a child
+ * like `/admin/settings/messaging/broadcast` is open.
+ */
+function findActiveHref(
+  pathname: string,
+  hrefs: string[],
+  indexHref: string,
+): string | null {
+  let best: string | null = null;
+  for (const href of hrefs) {
+    if (
+      matchesPath(pathname, href, indexHref) &&
+      (best === null || href.length > best.length)
+    ) {
+      best = href;
+    }
+  }
+  return best;
 }
 
 export function Sidebar({
@@ -35,6 +57,11 @@ export function Sidebar({
   const tc = useTranslations("common");
   const pathname = usePathname();
   const indexHref = nav.groups[0]?.items[0]?.href ?? "/";
+  const activeHref = findActiveHref(
+    pathname,
+    nav.groups.flatMap((g) => g.items.map((i) => i.href)),
+    indexHref,
+  );
 
   // The desktop rail can be collapsed to icons, but the mobile drawer always
   // shows full labels — so labels render whenever the drawer is open, even if
@@ -56,7 +83,7 @@ export function Sidebar({
               T
             </span>
           ) : (
-            <TileLogo size={26} />
+            <BrandLogo size={26} />
           )}
         </Link>
       </div>
@@ -69,7 +96,7 @@ export function Sidebar({
             )}
             {group.titleKey && !showLabels && <div className="nav-sep" />}
             {group.items.map((item) => {
-              const active = isActive(pathname, item.href, indexHref);
+              const active = item.href === activeHref;
               const label = t(`items.${item.key}`);
               return (
                 <Link

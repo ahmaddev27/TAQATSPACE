@@ -17,6 +17,8 @@ import type { User } from "@/lib/types";
 export interface ProfileFormInput {
   name: string;
   phone: string;
+  /** `""` (unspecified) or `"male"` / `"female"`; sent as null when empty. */
+  gender: string;
   specialty: string;
   bio: string;
 }
@@ -34,10 +36,16 @@ export async function updateProfileAction(
 ): Promise<ActionResult<User>> {
   let result: ActionResult<User>;
 
+  // Empty select = "prefer not to say" → null (unspecified) for the API.
+  const gender = input.gender === "" ? null : input.gender;
+
   if (avatar) {
     const fd = new FormData();
     fd.set("name", input.name);
     fd.set("phone", input.phone);
+    // FormData carries strings only; omit gender entirely when unspecified so the
+    // backend's `sometimes|nullable` rule leaves the stored value untouched/null.
+    if (gender !== null) fd.set("gender", gender);
     fd.set("specialty", input.specialty);
     fd.set("bio", input.bio);
     fd.set("avatar", avatar);
@@ -52,6 +60,7 @@ export async function updateProfileAction(
       body: {
         name: input.name,
         phone: input.phone,
+        gender,
         specialty: input.specialty,
         bio: input.bio,
       },

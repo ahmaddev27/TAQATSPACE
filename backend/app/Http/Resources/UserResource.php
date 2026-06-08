@@ -24,12 +24,16 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            'gender' => $this->gender?->value,
             'role' => $this->role->value,
             'status' => $this->status->value,
             'needs_onboarding' => $this->needsOnboarding(),
             'specialty' => $this->specialty,
             'bio' => $this->bio,
             'avatar' => $this->avatarUrl(),
+            // Only the local email/password account (the internal admin) may change
+            // its password; SSO-provisioned users have their credentials at the IdP.
+            'can_change_password' => $this->sso_sub === null,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             // Staff-only authorization context so the SPA can adapt the admin UI

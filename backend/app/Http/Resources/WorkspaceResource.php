@@ -54,10 +54,15 @@ class WorkspaceResource extends JsonResource
                 'phone' => $this->owner->phone,
             ]),
 
-            // Owner/Admin-only: masked messaging config (never the secrets).
+            // Owner/Admin-only: publish state + masked messaging config (never
+            // the secrets). The public discovery payload never exposes these.
             $this->mergeWhen(
                 $this->canManage($request),
-                fn (): array => ['messaging' => $this->maskedMessaging()],
+                fn (): array => [
+                    'is_published' => $this->isPublished(),
+                    'published_at' => $this->published_at?->toIso8601String(),
+                    'messaging' => $this->maskedMessaging(),
+                ],
             ),
         ];
     }

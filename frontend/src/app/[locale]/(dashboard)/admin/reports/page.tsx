@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { getAdminReports } from "@/lib/api/admin";
+import { getAdminAnalytics, getAdminReports } from "@/lib/api/admin";
 import { ReportsDashboard } from "@/components/features/admin/ReportsDashboard";
+import { AnalyticsDashboard } from "@/components/features/admin/AnalyticsDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,12 @@ export default async function AdminReportsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("admin.reports");
+  const ta = await getTranslations("admin.analytics");
 
-  const reports = await getAdminReports();
+  const [reports, analytics] = await Promise.all([
+    getAdminReports(),
+    getAdminAnalytics(),
+  ]);
 
   return (
     <div className="page">
@@ -27,6 +32,17 @@ export default async function AdminReportsPage({
       </div>
 
       <ReportsDashboard data={reports} />
+
+      <div className="page-head" style={{ marginTop: 16 }}>
+        <div>
+          <h2 className="h2">{ta("title")}</h2>
+          <p className="muted" style={{ marginTop: 5 }}>
+            {ta("subtitle")}
+          </p>
+        </div>
+      </div>
+
+      <AnalyticsDashboard data={analytics} />
     </div>
   );
 }

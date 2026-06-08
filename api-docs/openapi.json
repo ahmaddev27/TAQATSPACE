@@ -10,6 +10,270 @@
         }
     ],
     "paths": {
+        "/admin/admins": {
+            "get": {
+                "operationId": "adminManagement.index",
+                "summary": "GET /api/admin/admins \u2014 filtered, paginated admin directory",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {},
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "adminManagement.store",
+                "summary": "POST /api/admin/admins \u2014 create a new admin account",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/admins/{user}": {
+            "put": {
+                "operationId": "adminManagement.update",
+                "summary": "PUT /api/admin/admins/{user} \u2014 update an admin's status, role, permissions\nand/or password. The acting super-admin is passed for self-lockout guards",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "adminManagement.destroy",
+                "summary": "DELETE /api/admin/admins/{user} \u2014 deactivate (suspend) an admin account",
+                "tags": [
+                    "AdminManagement"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u064a\u0642\u0627\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0634\u0631\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/analytics": {
+            "get": {
+                "operationId": "analytics.index",
+                "summary": "GET /api/admin/analytics \u2014 demographic (gender) and geographic (city)\ndistributions across the platform",
+                "tags": [
+                    "Analytics"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "by_city": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "workspaces": {
+                                                                "type": "integer"
+                                                            },
+                                                            "active_members": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "workspaces",
+                                                            "active_members"
+                                                        ]
+                                                    }
+                                                },
+                                                "by_gender": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "by_city",
+                                                "by_gender"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workspace/announcements": {
             "get": {
                 "operationId": "announcement.index",
@@ -743,6 +1007,187 @@
                 }
             }
         },
+        "/branding": {
+            "get": {
+                "operationId": "branding.show",
+                "summary": "GET /api/branding \u2014 public site branding (site name, meta, and the\nresolved favicon / logo URLs) so the app can render it. Returns {} when\nnothing is set, so the app falls back to its built-in branding",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/branding": {
+            "get": {
+                "operationId": "admin.branding.show",
+                "summary": "GET /api/admin/branding \u2014 current branding (or {} when unset), with each\nimage path resolved to a sibling display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "branding.update",
+                "summary": "PUT /api/admin/branding \u2014 upsert the branding (site name, meta, and the\nfavicon / light / dark logo paths)",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateBrandingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0647\u0648\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/branding/images": {
+            "post": {
+                "operationId": "branding.uploadImage",
+                "summary": "POST /api/admin/branding/images \u2014 store a branding asset (favicon or a\nlogo) and return its canonical path plus a resolved display URL",
+                "tags": [
+                    "Branding"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadBrandingImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/admin/messaging/broadcast": {
             "post": {
                 "operationId": "admin.broadcast.store",
@@ -958,6 +1403,293 @@
                                         "message": {
                                             "type": "string",
                                             "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/chat/token": {
+            "post": {
+                "operationId": "chat.token",
+                "description": "Returns 503 with a localized message when Firebase is not configured, so\nthe client can degrade gracefully instead of receiving a server error.",
+                "summary": "POST /api/chat/token \u2014 mint a Firebase custom token for the caller",
+                "tags": [
+                    "Chat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "uid": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "token",
+                                                "uid"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u062a\u0639\u0630\u0651\u0631 \u0628\u062f\u0621 \u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629. \u064a\u0631\u062c\u0649 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0644\u0627\u062d\u0642\u064b\u0627."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629 \u0627\u0644\u0641\u0648\u0631\u064a\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629 \u062d\u0627\u0644\u064a\u064b\u0627."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/chat/contacts": {
+            "get": {
+                "operationId": "chat.contacts",
+                "description": "Role-scoped: an owner gets their workspace members; a freelancer gets\ntheir workspace owner(s). Returns `[{ id, name, workspace_id }]`.",
+                "summary": "GET /api/chat/contacts \u2014 the authenticated user's chat-able contacts",
+                "tags": [
+                    "Chat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "contacts": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "contacts"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/chat/attachments": {
+            "post": {
+                "operationId": "chat.uploadAttachment",
+                "summary": "POST /api/chat/attachments \u2014 store a chat attachment on S3 and return its\nmetadata. The client embeds `{ path, name, type, size }` in the Firestore\nmessage; the file itself never touches Firestore",
+                "tags": [
+                    "Chat"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreChatAttachmentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "size": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "name",
+                                                "type",
+                                                "size"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/chat/attachments/url": {
+            "get": {
+                "operationId": "chat.attachmentUrl",
+                "summary": "GET /api/chat/attachments/url?path=\u2026 \u2014 resolve a fresh viewable URL for a\nstored attachment (a short-lived signed S3 URL), so older messages stay\naccessible without persisting an expiring URL in Firestore",
+                "tags": [
+                    "Chat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0627\u0644\u0645\u0631\u0641\u0642 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f."
                                         },
                                         "errors": {
                                             "type": "null"
@@ -1302,6 +2034,14 @@
                                                                     "amount"
                                                                 ]
                                                             }
+                                                        },
+                                                        "members_by_gender": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "members_by_status": {
+                                                            "type": "array",
+                                                            "items": {}
                                                         }
                                                     },
                                                     "required": [
@@ -1312,7 +2052,9 @@
                                                         "overdue_invoices",
                                                         "revenue_this_month",
                                                         "revenue_last_month",
-                                                        "revenue_chart"
+                                                        "revenue_chart",
+                                                        "members_by_gender",
+                                                        "members_by_status"
                                                     ]
                                                 },
                                                 {
@@ -1356,6 +2098,14 @@
                                                                     "amount"
                                                                 ]
                                                             }
+                                                        },
+                                                        "members_by_gender": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "members_by_status": {
+                                                            "type": "array",
+                                                            "items": {}
                                                         }
                                                     },
                                                     "required": [
@@ -1366,7 +2116,9 @@
                                                         "overdue_invoices",
                                                         "revenue_this_month",
                                                         "revenue_last_month",
-                                                        "revenue_chart"
+                                                        "revenue_chart",
+                                                        "members_by_gender",
+                                                        "members_by_status"
                                                     ]
                                                 }
                                             ]
@@ -1389,28 +2141,68 @@
                 }
             }
         },
-        "/auth/verify-email/{id}/{hash}": {
-            "get": {
-                "operationId": "verification.verify",
-                "summary": "Signed link from the verification email. Marks the email verified and,\nfor freelancers, activates the account, then redirects to the SPA",
+        "/notifications/device-tokens": {
+            "post": {
+                "operationId": "deviceToken.store",
+                "summary": "POST /api/notifications/device-tokens \u2014 register (upsert) the caller's\ndevice token. A token is globally unique, so re-registering it (even from\na different account) reassigns it to the current user",
                 "tags": [
-                    "EmailVerification"
+                    "DeviceToken"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreDeviceTokenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062c\u0647\u0627\u0632 \u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "deviceToken.destroy",
+                "summary": "DELETE /api/notifications/device-tokens \u2014 remove one of the caller's\ndevice tokens (e.g. on logout). Scoped to the user so a token can never\nbe deleted on someone else's behalf",
+                "tags": [
+                    "DeviceToken"
                 ],
                 "parameters": [
                     {
-                        "name": "id",
-                        "in": "path",
+                        "name": "token",
+                        "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "hash",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "maxLength": 512
                         }
                     }
                 ],
@@ -1420,22 +2212,95 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062c\u0647\u0627\u0632 \u0645\u0646 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
         },
-        "/auth/email/resend": {
-            "post": {
-                "operationId": "emailVerification.resend",
+        "/workspace/expenses": {
+            "get": {
+                "operationId": "expense.index",
+                "description": "Paginated, filterable expenses (category + spent-on range) plus a spend\nsummary (total, this month, by-category).",
+                "summary": "GET /api/workspace/expenses",
                 "tags": [
-                    "EmailVerification"
+                    "Expense"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "rent",
+                                "utilities",
+                                "salaries",
+                                "maintenance",
+                                "supplies",
+                                "marketing",
+                                "other",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -1447,24 +2312,155 @@
                                         {
                                             "type": "object",
                                             "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "expenses": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/ExpenseResource"
+                                                            }
+                                                        },
+                                                        "summary": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total": {
+                                                                    "type": "string"
+                                                                },
+                                                                "this_month": {
+                                                                    "type": "string"
+                                                                },
+                                                                "by_category": {
+                                                                    "type": "object",
+                                                                    "additionalProperties": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "total",
+                                                                "this_month",
+                                                                "by_category"
+                                                            ]
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "expenses",
+                                                        "summary",
+                                                        "meta"
+                                                    ]
+                                                },
                                                 "message": {
-                                                    "type": "string",
-                                                    "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u062a\u062d\u0642\u0642."
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
+                                                "data",
                                                 "message"
                                             ]
                                         },
                                         {
                                             "type": "object",
                                             "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "expenses": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "summary": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total": {
+                                                                    "type": "string"
+                                                                },
+                                                                "this_month": {
+                                                                    "type": "string"
+                                                                },
+                                                                "by_category": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "total",
+                                                                "this_month",
+                                                                "by_category"
+                                                            ]
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer",
+                                                                    "const": 15
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "expenses",
+                                                        "summary",
+                                                        "meta"
+                                                    ]
+                                                },
                                                 "message": {
-                                                    "type": "string",
-                                                    "const": "\u062a\u0645 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0645\u0633\u0628\u0642\u064b\u0627."
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
+                                                "data",
                                                 "message"
                                             ]
                                         }
@@ -1472,6 +2468,278 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "expense.store",
+                "summary": "POST /api/workspace/expenses",
+                "tags": [
+                    "Expense"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreExpenseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExpenseResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0635\u0631\u0648\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/expenses/{expense}": {
+            "put": {
+                "operationId": "expense.update",
+                "summary": "PUT /api/workspace/expenses/{expense}",
+                "tags": [
+                    "Expense"
+                ],
+                "parameters": [
+                    {
+                        "name": "expense",
+                        "in": "path",
+                        "required": true,
+                        "description": "The expense ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateExpenseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExpenseResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u0635\u0631\u0648\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "expense.destroy",
+                "summary": "DELETE /api/workspace/expenses/{expense}",
+                "tags": [
+                    "Expense"
+                ],
+                "parameters": [
+                    {
+                        "name": "expense",
+                        "in": "path",
+                        "required": true,
+                        "description": "The expense ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0645\u0635\u0631\u0648\u0641."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -2509,12 +3777,74 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {}
+                                            "type": "object",
+                                            "additionalProperties": {}
                                         },
                                         "message": {
                                             "type": "string",
                                             "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/landing/images": {
+            "post": {
+                "operationId": "landing.uploadImage",
+                "summary": "POST /api/admin/landing/images \u2014 store a section image and return its\ncanonical path (for round-tripping into the content) plus a display URL",
+                "tags": [
+                    "Landing"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadLandingImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
                                         }
                                     },
                                     "required": [
@@ -4897,11 +6227,11 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -4956,7 +6286,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Registration successful. Please verify your email."
+                                            "const": "Registration successful."
                                         }
                                     },
                                     "required": [
@@ -5132,6 +6462,497 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/resources": {
+            "get": {
+                "operationId": "resource.index",
+                "description": "Paginated, filterable resources (type + status) plus a by-status counts\nsummary.",
+                "summary": "GET /api/workspace/resources",
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "meeting_room",
+                                "private_office",
+                                "equipment",
+                                "parking",
+                                "other",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "available",
+                                "in_use",
+                                "maintenance",
+                                "unavailable",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 200
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "resources": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/ResourceResource"
+                                                            }
+                                                        },
+                                                        "summary": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "by_status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "total",
+                                                                "by_status"
+                                                            ]
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "resources",
+                                                        "summary",
+                                                        "meta"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "resources": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "summary": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "by_status": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "minItems": 0,
+                                                                    "maxItems": 0,
+                                                                    "additionalItems": false
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "total",
+                                                                "by_status"
+                                                            ]
+                                                        },
+                                                        "meta": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "current_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                },
+                                                                "per_page": {
+                                                                    "type": "integer",
+                                                                    "const": 15
+                                                                },
+                                                                "total": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "last_page": {
+                                                                    "type": "integer",
+                                                                    "const": 1
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "current_page",
+                                                                "per_page",
+                                                                "total",
+                                                                "last_page"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "resources",
+                                                        "summary",
+                                                        "meta"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "resource.store",
+                "summary": "POST /api/workspace/resources",
+                "tags": [
+                    "Resource"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreResourceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ResourceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0645\u0648\u0631\u062f."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/resources/{resource}": {
+            "put": {
+                "operationId": "resource.update",
+                "summary": "PUT /api/workspace/resources/{resource}",
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "name": "resource",
+                        "in": "path",
+                        "required": true,
+                        "description": "The resource ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateResourceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ResourceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u0648\u0631\u062f."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "resource.destroy",
+                "summary": "DELETE /api/workspace/resources/{resource}",
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "name": "resource",
+                        "in": "path",
+                        "required": true,
+                        "description": "The resource ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0645\u0648\u0631\u062f."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -7254,6 +9075,110 @@
                     }
                 }
             }
+        },
+        "/admin/workspaces/{workspace}/publish": {
+            "put": {
+                "operationId": "workspace.adminPublish",
+                "summary": "PUT /api/admin/workspaces/{workspace}/publish \u2014 admin publishes the\nworkspace to public discovery (separate from the account-status gate)",
+                "tags": [
+                    "Workspace"
+                ],
+                "parameters": [
+                    {
+                        "name": "workspace",
+                        "in": "path",
+                        "required": true,
+                        "description": "The workspace ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkspaceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0646\u0634\u0631 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0641\u064a \u0627\u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0627\u0644\u0639\u0627\u0645."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/workspaces/{workspace}/unpublish": {
+            "put": {
+                "operationId": "workspace.adminUnpublish",
+                "summary": "PUT /api/admin/workspaces/{workspace}/unpublish \u2014 admin removes the\nworkspace from public discovery without changing its account status",
+                "tags": [
+                    "Workspace"
+                ],
+                "parameters": [
+                    {
+                        "name": "workspace",
+                        "in": "path",
+                        "required": true,
+                        "description": "The workspace ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkspaceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0632\u0627\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0645\u0646 \u0627\u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0627\u0644\u0639\u0627\u0645."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -7333,6 +9258,52 @@
                     "channels"
                 ],
                 "title": "AdminBroadcastRequest"
+            },
+            "AdminResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_super_admin": {
+                        "type": "boolean"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "status",
+                    "roles",
+                    "is_super_admin",
+                    "permissions",
+                    "created_at"
+                ],
+                "title": "AdminResource"
             },
             "AdminUserDetailResource": {
                 "type": "array",
@@ -7530,12 +9501,66 @@
                             "null"
                         ],
                         "maxLength": 30
+                    },
+                    "gender": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Optional for every role; null means \"unspecified\".",
+                        "enum": [
+                            "male",
+                            "female"
+                        ]
                     }
                 },
                 "required": [
                     "role"
                 ],
                 "title": "CompleteOnboardingRequest"
+            },
+            "ExpenseResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "string"
+                    },
+                    "spent_on": {
+                        "type": "string"
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "category",
+                    "amount",
+                    "spent_on",
+                    "notes",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ExpenseResource"
             },
             "ForgotPasswordRequest": {
                 "type": "object",
@@ -7887,6 +9912,9 @@
                             "phone": {
                                 "type": "string"
                             },
+                            "gender": {
+                                "type": "string"
+                            },
                             "specialty": {
                                 "type": "string"
                             },
@@ -7899,6 +9927,7 @@
                             "name",
                             "email",
                             "phone",
+                            "gender",
                             "specialty",
                             "avatar"
                         ]
@@ -8396,6 +10425,49 @@
                 ],
                 "title": "ResetPasswordRequest"
             },
+            "ResourceResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "type",
+                    "quantity",
+                    "status",
+                    "notes",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ResourceResource"
+            },
             "ReviewBookingRequest": {
                 "type": "object",
                 "properties": {
@@ -8521,6 +10593,57 @@
                 ],
                 "title": "SeatResource"
             },
+            "StoreAdminRequest": {
+                "type": "object",
+                "description": "Validates creating a new admin account. Authorization is enforced by the\nroute middleware (auth:sanctum + can.manage_admins).",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "admin_role": {
+                        "type": "string",
+                        "enum": [
+                            "super_admin",
+                            "admin"
+                        ]
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "manage_admins",
+                                "manage_workspaces",
+                                "manage_users",
+                                "manage_billing",
+                                "manage_content",
+                                "manage_messaging",
+                                "view_reports"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "admin_role",
+                    "password_confirmation"
+                ],
+                "title": "StoreAdminRequest"
+            },
             "StoreAnnouncementRequest": {
                 "type": "object",
                 "properties": {
@@ -8593,6 +10716,88 @@
                     "workspace_id"
                 ],
                 "title": "StoreBookingRequest"
+            },
+            "StoreChatAttachmentRequest": {
+                "type": "object",
+                "description": "Validates a chat attachment upload. The route is already behind\n`auth:sanctum`, so any authenticated user may attach a file to their chats.",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    }
+                },
+                "required": [
+                    "file"
+                ],
+                "title": "StoreChatAttachmentRequest"
+            },
+            "StoreDeviceTokenRequest": {
+                "type": "object",
+                "description": "Validates registration of an FCM device token for the authenticated user.",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "maxLength": 512
+                    },
+                    "platform": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    }
+                },
+                "required": [
+                    "token"
+                ],
+                "title": "StoreDeviceTokenRequest"
+            },
+            "StoreExpenseRequest": {
+                "type": "object",
+                "description": "Validates a new workspace expense submitted by the owner. Ownership is\nenforced in the controller/service (the expense is attached to the owner's\nown workspace), so no workspace_id is accepted from the client.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "rent",
+                            "utilities",
+                            "salaries",
+                            "maintenance",
+                            "supplies",
+                            "marketing",
+                            "other"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 99999999.99
+                    },
+                    "spent_on": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "title",
+                    "category",
+                    "amount",
+                    "spent_on"
+                ],
+                "title": "StoreExpenseRequest"
             },
             "StoreInvoiceRequest": {
                 "type": "object",
@@ -8681,6 +10886,54 @@
                     "is_unlimited"
                 ],
                 "title": "StorePackageRequest"
+            },
+            "StoreResourceRequest": {
+                "type": "object",
+                "description": "Validates a new workspace resource submitted by the owner. The resource is\nattached to the owner's own workspace server-side; no workspace_id is taken.",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "meeting_room",
+                            "private_office",
+                            "equipment",
+                            "parking",
+                            "other"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100000
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "in_use",
+                            "maintenance",
+                            "unavailable"
+                        ]
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "name",
+                    "type",
+                    "quantity",
+                    "status"
+                ],
+                "title": "StoreResourceRequest"
             },
             "StoreReviewRequest": {
                 "type": "object",
@@ -9015,6 +11268,50 @@
                 ],
                 "title": "TestMessagingRequest"
             },
+            "UpdateAdminRequest": {
+                "type": "object",
+                "description": "Validates updating an existing admin account: status, role, permissions, and\nan optional password reset. Every field is optional so callers can patch a\nsingle attribute. Self-lockout protection is enforced in the service.",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    },
+                    "admin_role": {
+                        "type": "string",
+                        "enum": [
+                            "super_admin",
+                            "admin"
+                        ]
+                    },
+                    "password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "password_confirmation": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "manage_admins",
+                                "manage_workspaces",
+                                "manage_users",
+                                "manage_billing",
+                                "manage_content",
+                                "manage_messaging",
+                                "view_reports"
+                            ]
+                        }
+                    }
+                },
+                "title": "UpdateAdminRequest"
+            },
             "UpdateAnnouncementRequest": {
                 "type": "object",
                 "properties": {
@@ -9052,6 +11349,94 @@
                 },
                 "title": "UpdateAnnouncementRequest"
             },
+            "UpdateBrandingRequest": {
+                "type": "object",
+                "description": "Validates a site-branding payload: the site name, the SEO meta (title +\ndescription) and the three brand image PATHS (favicon, light/dark logos).\n\nEvery field is optional \u2014 the app falls back to its built-in branding for\nanything the admin leaves unset. Image fields carry the canonical media-disk\npath returned by the branding image-upload endpoint (a string), not the file\nitself. Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "site_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 120
+                    },
+                    "meta_title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 160
+                    },
+                    "meta_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 320
+                    },
+                    "favicon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_light": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    },
+                    "logo_dark": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2048
+                    }
+                },
+                "title": "UpdateBrandingRequest"
+            },
+            "UpdateExpenseRequest": {
+                "type": "object",
+                "description": "Validates an edit to an existing workspace expense. Every field is optional\n(`sometimes`) so the owner may patch a subset.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "rent",
+                            "utilities",
+                            "salaries",
+                            "maintenance",
+                            "supplies",
+                            "marketing",
+                            "other"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 99999999.99
+                    },
+                    "spent_on": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    }
+                },
+                "title": "UpdateExpenseRequest"
+            },
             "UpdateLandingRequest": {
                 "type": "object",
                 "description": "Validates the bilingual landing-page CMS payload. Every field is optional\n(partial overrides) so any subset of the schema is accepted; the frontend\nsupplies i18n defaults for anything omitted. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
@@ -9065,6 +11450,136 @@
                         "items": {
                             "type": "string",
                             "maxLength": 50
+                        }
+                    },
+                    "hero": {
+                        "type": "object",
+                        "description": "--- Hero ---",
+                        "properties": {
+                            "image": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Section image: stored media PATH (uploaded via POST .../images).\nThe resolved display URL (`imageUrl`) is added by the service on\nread and accepted here so a round-tripped payload still validates.",
+                                "maxLength": 1000
+                            },
+                            "imageUrl": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 2000
+                            },
+                            "imageSecondary": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "imageSecondaryUrl": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 2000
+                            },
+                            "title": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "highlight": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "subtitle": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                }
+                            },
+                            "ctaPrimary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            },
+                            "ctaSecondary": {
+                                "type": "object",
+                                "properties": {
+                                    "ar": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "en": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
                         }
                     },
                     "sections": {
@@ -9145,6 +11660,34 @@
                                             "boolean",
                                             "null"
                                         ]
+                                    },
+                                    "image": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "imageUrl": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    },
+                                    "imageSecondary": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    },
+                                    "imageSecondaryUrl": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
                                     },
                                     "title": {
                                         "type": "object",
@@ -9287,107 +11830,6 @@
                                                 "maxLength": 500
                                             }
                                         }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "hero": {
-                        "type": "object",
-                        "description": "--- Hero ---",
-                        "properties": {
-                            "title": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "highlight": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "subtitle": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 1000
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 1000
-                                    }
-                                }
-                            },
-                            "ctaPrimary": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            },
-                            "ctaSecondary": {
-                                "type": "object",
-                                "properties": {
-                                    "ar": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    },
-                                    "en": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
                                     }
                                 }
                             }
@@ -9697,6 +12139,16 @@
                         ],
                         "maxLength": 30
                     },
+                    "gender": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "male",
+                            "female"
+                        ]
+                    },
                     "specialty": {
                         "type": [
                             "string",
@@ -9719,6 +12171,48 @@
                     }
                 },
                 "title": "UpdateProfileRequest"
+            },
+            "UpdateResourceRequest": {
+                "type": "object",
+                "description": "Validates an edit to an existing workspace resource. Every field is optional\n(`sometimes`) so the owner may patch a subset.",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "meeting_room",
+                            "private_office",
+                            "equipment",
+                            "parking",
+                            "other"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100000
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "in_use",
+                            "maintenance",
+                            "unavailable"
+                        ]
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    }
+                },
+                "title": "UpdateResourceRequest"
             },
             "UpdateSeatRequest": {
                 "type": "object",
@@ -10013,6 +12507,39 @@
                 },
                 "title": "UpdateWorkspaceRequest"
             },
+            "UploadBrandingImageRequest": {
+                "type": "object",
+                "description": "Validates a single branding-asset upload (favicon or a light/dark logo).\n\nAccepts the raster formats used elsewhere plus SVG (logos/favicons are often\nvector). Authorization is handled by the route middleware (auth:sanctum +\nrole.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "SVG is not an image() per GD, so validate by extension/mime only.",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadBrandingImageRequest"
+            },
+            "UploadLandingImageRequest": {
+                "type": "object",
+                "description": "Validates a single landing-section image upload. Authorization is handled by\nthe route middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadLandingImageRequest"
+            },
             "UploadReceiptRequest": {
                 "type": "object",
                 "description": "Validates a payment-receipt upload (pdf/jpg/png, max 5MB). Uploading a receipt\nis the admin's proof of payment, so the invoice is marked paid by the handler;\nan optional `paid_at` backdates that payment. Authorization is enforced by the\nroute middleware (auth:sanctum + role.admin).",
@@ -10054,6 +12581,9 @@
                             "null"
                         ]
                     },
+                    "gender": {
+                        "type": "string"
+                    },
                     "role": {
                         "type": "string"
                     },
@@ -10081,11 +12611,47 @@
                             "null"
                         ]
                     },
+                    "can_change_password": {
+                        "type": "boolean",
+                        "description": "Only the local email/password account (the internal admin) may change\nits password; SSO-provisioned users have their credentials at the IdP."
+                    },
                     "email_verified_at": {
                         "type": "string"
                     },
                     "created_at": {
                         "type": "string"
+                    },
+                    "": {
+                        "description": "Staff-only authorization context so the SPA can adapt the admin UI\n(e.g. hide the admin-management nav for a non-super-admin). Resolved\nonly for admin accounts to keep the common path query-free.",
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "is_super_admin": {
+                                        "type": "boolean"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "is_super_admin",
+                                    "permissions"
+                                ]
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 0,
+                                "maxItems": 0,
+                                "additionalItems": false
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -10093,14 +12659,17 @@
                     "name",
                     "email",
                     "phone",
+                    "gender",
                     "role",
                     "status",
                     "needs_onboarding",
                     "specialty",
                     "bio",
                     "avatar",
+                    "can_change_password",
                     "email_verified_at",
-                    "created_at"
+                    "created_at",
+                    null
                 ],
                 "title": "UserResource"
             },
@@ -10225,6 +12794,12 @@
                             "phone"
                         ]
                     },
+                    "is_published": {
+                        "type": "boolean"
+                    },
+                    "published_at": {
+                        "type": "string"
+                    },
                     "messaging": {
                         "type": "object",
                         "additionalProperties": {}
@@ -10284,25 +12859,6 @@
                     }
                 }
             },
-            "ModelNotFoundException": {
-                "description": "Not found",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
             "AuthenticationException": {
                 "description": "Unauthenticated",
                 "content": {
@@ -10324,6 +12880,25 @@
             },
             "AuthorizationException": {
                 "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
                 "content": {
                     "application/json": {
                         "schema": {

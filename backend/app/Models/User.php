@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AdminRole;
+use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
-use App\Notifications\VerifyEmailNotification;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
@@ -31,6 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'phone',
+        'gender',
         'role',
         'status',
         'sso_sub',
@@ -57,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
+            'gender' => Gender::class,
             'role' => UserRole::class,
             'status' => UserStatus::class,
             'documents' => 'array',
@@ -93,6 +94,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function assignedSeats(): HasMany
     {
         return $this->hasMany(Seat::class, 'assigned_member_id');
+    }
+
+    /** @return HasMany<DeviceToken, $this> */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
     }
 
     /** @return BelongsToMany<InternetPackage, $this> */
@@ -146,11 +153,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // ---- Notifications (SPA-aware, queued) ----
-
-    public function sendEmailVerificationNotification(): void
-    {
-        $this->notify(new VerifyEmailNotification);
-    }
 
     /**
      * @param  string  $token

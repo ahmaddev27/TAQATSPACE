@@ -51,6 +51,13 @@
       "monthly": "شهري",
       "daily": "يومي",
       "custom": "مخصص"
+    },
+    "gender": {
+      "label": "الجنس",
+      "hint": "اختياري",
+      "unspecified": "أفضّل عدم التحديد",
+      "male": "ذكر",
+      "female": "أنثى"
     }
   },
   "nav": {
@@ -66,10 +73,13 @@
     "items": {
       "dashboard": "لوحة التحكم",
       "members": "المشتركون",
+      "expenses": "المصاريف",
+      "resources": "الموارد",
       "seats": "المقاعد",
       "requests": "طلبات الحجز",
       "invoices": "الفواتير",
       "packages": "باقات الإنترنت",
+      "chat": "المحادثات",
       "messages": "الرسائل",
       "announcements": "الإعلانات",
       "reports": "التقارير",

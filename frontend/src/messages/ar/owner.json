@@ -26,6 +26,20 @@
       "noWorkspaceBody": "أكمل إعداد مساحتك لتبدأ في استقبال الأعضاء والحجوزات.",
       "createWorkspace": "إنشاء مساحة"
     },
+    "analytics": {
+      "title": "إحصائيات الأعضاء",
+      "subtitle": "أعضاؤك حسب الجنس وحالة الاشتراك.",
+      "byGenderTitle": "الأعضاء حسب الجنس",
+      "byStatusTitle": "الأعضاء حسب الحالة",
+      "noData": "لا يوجد أعضاء بعد"
+    },
+    "memberStatus": {
+      "active": "نشط",
+      "pending": "قيد الانتظار",
+      "suspended": "موقوف",
+      "cancelled": "ملغى",
+      "expired": "منتهٍ"
+    },
     "members": {
       "title": "المشتركون",
       "subtitle": "إدارة أعضاء مساحتك واشتراكاتهم",
@@ -245,6 +259,9 @@
       "photoDeleted": "تم حذف الصورة",
       "photoFailed": "تعذّرت معالجة الصورة",
       "status": "حالة المساحة",
+      "publishStatus": "الظهور العام",
+      "published": "منشورة",
+      "pendingPublish": "بانتظار نشر الإدارة",
       "days": {
         "saturday": "السبت",
         "sunday": "الأحد",

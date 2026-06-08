@@ -30,9 +30,7 @@ return [
     'account_pending' => 'الحساب قيد التحقق.',
     'invalid_credentials' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
     'current_password_incorrect' => 'كلمة المرور الحالية غير صحيحة.',
-    'email_already_verified' => 'تم التحقق من البريد الإلكتروني مسبقًا.',
-    'verification_link_sent' => 'تم إرسال رابط التحقق.',
-    'invalid_verification_link' => 'رابط التحقق غير صالح.',
+    'password_change_sso' => 'كلمة المرور تُدار عبر الدخول الموحّد من طاقات ولا يمكن تغييرها من هنا.',
 
     // إعادة تعيين كلمة المرور
     'reset_link_sent' => 'إذا كان هذا البريد الإلكتروني موجودًا، فقد تم إرسال رابط إعادة التعيين.',
@@ -57,6 +55,8 @@ return [
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
+    'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
+    'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',
     'workspace_already_registered' => 'لديك مساحة عمل مسجّلة بالفعل.',
 
     // الصور
@@ -137,10 +137,12 @@ return [
     'review_only_subscribed' => 'يمكنك تقييم مساحة عمل أنت مشترك فيها أو كنت مشتركًا فيها فقط.',
     'review_already_reviewed' => 'لقد قمت بتقييم مساحة العمل هذه بالفعل.',
 
-    // محتوى الإدارة / الصفحة الرئيسية / الإعدادات
+    // محتوى الإدارة / الصفحة الرئيسية / الهوية / الإعدادات
     'content_updated' => 'تم تحديث المحتوى.',
     'landing_content_updated' => 'تم تحديث محتوى الصفحة الرئيسية.',
     'landing_image_uploaded' => 'تم رفع الصورة.',
+    'branding_updated' => 'تم تحديث الهوية.',
+    'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
 
@@ -169,5 +171,26 @@ return [
     'broadcast_sms_not_configured_platform' => 'الرسائل النصية غير مهيّأة للمنصة. يرجى إعداد مزوّد رسائل نصية قبل الإرسال.',
     'broadcast_email_not_configured_workspace' => 'البريد الإلكتروني غير مهيّأ لمساحة عملك. يرجى إعداد SMTP أو استخدام حساب المنصة قبل الإرسال.',
     'broadcast_sms_not_configured_workspace' => 'الرسائل النصية غير مهيّأة لمساحة عملك. يرجى إعداد مزوّد رسائل نصية أو استخدام حساب المنصة قبل الإرسال.',
+
+    // إدارة المساحة — المصاريف
+    'expense_created' => 'تم تسجيل المصروف.',
+    'expense_updated' => 'تم تحديث المصروف.',
+    'expense_deleted' => 'تم حذف المصروف.',
+    'expense_no_access' => 'ليس لديك صلاحية الوصول إلى هذا المصروف.',
+
+    // إدارة المساحة — الموارد
+    'resource_created' => 'تمت إضافة المورد.',
+    'resource_updated' => 'تم تحديث المورد.',
+    'resource_deleted' => 'تم حذف المورد.',
+    'resource_no_access' => 'ليس لديك صلاحية الوصول إلى هذا المورد.',
+
+    // الإشعارات الفورية — رموز الأجهزة
+    'device_token_registered' => 'تم تسجيل الجهاز لاستقبال الإشعارات.',
+    'device_token_removed' => 'تم إلغاء تسجيل الجهاز من الإشعارات.',
+
+    // المحادثة (Firebase / Firestore الفورية)
+    'chat_not_configured' => 'المحادثة الفورية غير متاحة حاليًا.',
+    'chat_token_failed' => 'تعذّر بدء جلسة المحادثة. يرجى المحاولة لاحقًا.',
+    'chat_attachment_not_found' => 'المرفق غير موجود.',
 
 ];

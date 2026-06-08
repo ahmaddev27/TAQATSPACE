@@ -30,9 +30,7 @@ return [
     'account_pending' => 'Account pending verification.',
     'invalid_credentials' => 'Invalid email or password.',
     'current_password_incorrect' => 'The current password is incorrect.',
-    'email_already_verified' => 'Email already verified.',
-    'verification_link_sent' => 'Verification link sent.',
-    'invalid_verification_link' => 'Invalid verification link.',
+    'password_change_sso' => 'Your password is managed by Taqat single sign-on and cannot be changed here.',
 
     // Password reset
     'reset_link_sent' => 'If that email exists, a reset link has been sent.',
@@ -57,6 +55,8 @@ return [
     'workspace_created' => 'Workspace created and submitted for review.',
     'workspace_updated' => 'Workspace updated.',
     'workspace_status_updated' => 'Workspace status updated.',
+    'workspace_published' => 'Workspace published to public discovery.',
+    'workspace_unpublished' => 'Workspace removed from public discovery.',
     'workspace_already_registered' => 'You already have a registered workspace.',
 
     // Photos
@@ -137,10 +137,12 @@ return [
     'review_only_subscribed' => 'You can only review a workspace you are or were subscribed to.',
     'review_already_reviewed' => 'You have already reviewed this workspace.',
 
-    // Admin content / landing / settings
+    // Admin content / landing / branding / settings
     'content_updated' => 'Content updated.',
     'landing_content_updated' => 'Landing content updated.',
     'landing_image_uploaded' => 'Image uploaded.',
+    'branding_updated' => 'Branding updated.',
+    'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'messaging_settings_updated' => 'Messaging settings updated.',
 
@@ -169,5 +171,26 @@ return [
     'broadcast_sms_not_configured_platform' => 'SMS is not configured for the platform. Configure an SMS provider before sending.',
     'broadcast_email_not_configured_workspace' => 'Email is not configured for your workspace. Configure SMTP or use the platform account before sending.',
     'broadcast_sms_not_configured_workspace' => 'SMS is not configured for your workspace. Configure an SMS provider or use the platform account before sending.',
+
+    // Workspace management — expenses
+    'expense_created' => 'Expense recorded.',
+    'expense_updated' => 'Expense updated.',
+    'expense_deleted' => 'Expense deleted.',
+    'expense_no_access' => 'You do not have access to this expense.',
+
+    // Workspace management — resources
+    'resource_created' => 'Resource added.',
+    'resource_updated' => 'Resource updated.',
+    'resource_deleted' => 'Resource deleted.',
+    'resource_no_access' => 'You do not have access to this resource.',
+
+    // Push notifications — device tokens
+    'device_token_registered' => 'Device registered for notifications.',
+    'device_token_removed' => 'Device unregistered from notifications.',
+
+    // Chat (Firebase / Firestore realtime)
+    'chat_not_configured' => 'Realtime chat is not available right now.',
+    'chat_token_failed' => 'Could not start a chat session. Please try again later.',
+    'chat_attachment_not_found' => 'Attachment not found.',
 
 ];

@@ -35,9 +35,16 @@ export interface CropOutputOptions {
 /** Output MIME types we can re-encode to; anything else falls back to JPEG. */
 const SUPPORTED_OUTPUT = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+/** Source MIMEs that carry transparency — export them as PNG, never JPEG. */
+const TRANSPARENT_SOURCES = new Set(["image/svg+xml", "image/x-icon"]);
+
 /** Pick a safe output MIME for the canvas encoder, preserving the source type. */
 function resolveOutputType(sourceType: string): string {
-  return SUPPORTED_OUTPUT.has(sourceType) ? sourceType : "image/jpeg";
+  if (SUPPORTED_OUTPUT.has(sourceType)) return sourceType;
+  // Vector/icon sources rasterize to PNG so transparency (e.g. for a logo on a
+  // dark background) survives, instead of getting a white JPEG matte.
+  if (TRANSPARENT_SOURCES.has(sourceType)) return "image/png";
+  return "image/jpeg";
 }
 
 /** Swap a file's extension to match the (possibly changed) output type. */

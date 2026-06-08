@@ -19,6 +19,17 @@
 .logo img { height: 34px; width: auto; display: block; }
 .logo-word { font-family: var(--font-lt); font-weight: 700; font-size: 1.15rem; letter-spacing: .12em; color: var(--text); }
 
+/* Admin-set brand logo: render both variants, toggle by theme via CSS so the
+   right one shows with no JS and no hydration flash. A single (non-paired)
+   logo uses `.brand-logo-img` with no variant class and always shows. */
+.brand-logo { align-items: center; }
+/* Base display lives in CSS (not inline) so the theme toggles below can win —
+   an inline display:block would override `display:none` and show both variants. */
+.brand-logo-img { display: block; }
+.brand-logo-img.is-dark { display: none; }
+[data-theme="dark"] .brand-logo-img.is-light { display: none; }
+[data-theme="dark"] .brand-logo-img.is-dark { display: block; }
+
 /* ---------- Buttons ---------- */
 .btn {
   --btn-h: 40px;
@@ -210,7 +221,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 /* ---------- Side nav (dashboard) ---------- */
 .dash { display: grid; min-height: 100%; }
 .dash-nav {
-  width: var(--nav-w); background: var(--surface); border-inline-start: none;
+  /* Fill the grid track (DashShell sets it to --nav-w expanded, 72px collapsed)
+     instead of a fixed width — a fixed --nav-w overflowed the 72px collapsed
+     track and the rail's icons spilled over the page content. */
+  width: 100%; background: var(--surface); border-inline-start: none;
   border-inline-end: 1px solid var(--border); display: flex; flex-direction: column;
   padding: 14px; gap: 4px; flex: none;
 }

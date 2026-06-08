@@ -5,6 +5,7 @@ import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   AdminPermission,
   AdminRole,
+  Branding,
   BroadcastInput,
   BroadcastResult,
   ContentKey,
@@ -63,6 +64,60 @@ export async function uploadLandingImage(
   formData.append("image", file);
 
   return authedMutate<LandingImageUpload>("/admin/landing/images", {
+    method: "POST",
+    formData,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Site branding (PUT /admin/branding, POST /admin/branding/images)           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist the site branding (`PUT /admin/branding`): site name, SEO meta, and
+ * the favicon / light / dark logo paths.
+ *
+ * Branding is read in the root `[locale]` layout (favicon + meta + logo CSS
+ * vars), so on success we revalidate the whole locale layout — that flushes
+ * every shell (public, dashboard, auth) at once. Image fields carry the
+ * canonical path returned by {@link uploadBrandingImage}.
+ */
+export async function updateBranding(
+  branding: Branding,
+): Promise<ActionResult<Branding>> {
+  const result = await authedMutate<Branding>("/admin/branding", {
+    method: "PUT",
+    body: branding,
+  });
+
+  if (result.ok) {
+    revalidatePath("/[locale]", "layout");
+  }
+
+  return result;
+}
+
+/** A stored branding asset: canonical path (saved) + display URL (preview). */
+export interface BrandingImageUpload {
+  path: string;
+  url: string;
+}
+
+/**
+ * Upload a single branding asset — a favicon or a light/dark logo
+ * (`POST /admin/branding/images`).
+ *
+ * Returns the canonical storage `path` (persisted into branding via
+ * {@link updateBranding}) and a resolved `url` for immediate preview.
+ * Uploading does not itself publish anything — the admin must still save.
+ */
+export async function uploadBrandingImage(
+  file: File,
+): Promise<ActionResult<BrandingImageUpload>> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  return authedMutate<BrandingImageUpload>("/admin/branding/images", {
     method: "POST",
     formData,
   });
@@ -130,6 +185,31 @@ export async function updateWorkspaceStatus(
   if (result.ok) {
     revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
     revalidatePath("/[locale]/(dashboard)/admin", "page");
+  }
+  return result;
+}
+
+/**
+ * Publish or unpublish a workspace to public discovery
+ * (`PUT /admin/workspaces/{id}/publish|unpublish`). This is a gate separate
+ * from the account status: only published workspaces appear on the public
+ * landing/discovery. Revalidates the admin list, the admin home, and the public
+ * landing/explore pages so the change is reflected immediately.
+ */
+export async function setWorkspacePublished(
+  workspaceId: string,
+  published: boolean,
+): Promise<ActionResult<Workspace>> {
+  const action = published ? "publish" : "unpublish";
+  const result = await authedMutate<Workspace>(
+    `/admin/workspaces/${workspaceId}/${action}`,
+    { method: "PUT" },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
+    revalidatePath("/[locale]/(dashboard)/admin", "page");
+    revalidatePath("/[locale]/(public)", "page");
+    revalidatePath("/[locale]/(public)/explore", "page");
   }
   return result;
 }

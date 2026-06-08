@@ -154,9 +154,17 @@ export const WORKSPACE_STEP_FIELDS: (keyof WorkspaceRegisterValues)[][] = [
  * so these schemas omit it; documents are collected later, not at onboarding.
  * ------------------------------------------------------------------------- */
 
+/** The selectable gender values; empty string means "prefer not to say". */
+export const GENDER_OPTIONS = ["male", "female"] as const;
+export type GenderCode = (typeof GENDER_OPTIONS)[number];
+
+/** Optional gender field: empty string (unspecified) or one of the codes. */
+const genderField = z.enum(["", ...GENDER_OPTIONS]);
+
 export function freelancerOnboardingSchema(t: Translate) {
   return z.object({
     phone: z.string().min(6, t("phone")),
+    gender: genderField,
     specialty: z.string().min(1, t("required")),
     bio: z.string().optional(),
   });
@@ -180,6 +188,7 @@ export function ownerOnboardingSchema(t: Translate) {
 
   return z.object({
     phone: z.string().min(6, t("phone")),
+    gender: genderField,
     workspace_name: z.string().min(2, t("required")),
     description: z.string().min(1, t("required")),
     capacity: z.number({ message: t("required") }).min(1, t("required")),

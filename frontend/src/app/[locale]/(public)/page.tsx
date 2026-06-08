@@ -317,12 +317,12 @@ export default async function HomePage({
             </h1>
             <p className="ed-lead">{heroSub}</p>
             <div className="row wrap" style={{ gap: 12, marginTop: 4 }}>
-              <Link href="/register/freelancer">
+              <Link href="/login">
                 <Button variant="primary" size="lg" icon="user">
                   {heroCta1}
                 </Button>
               </Link>
-              <Link href="/register/workspace">
+              <Link href="/login">
                 <Button variant="secondary" size="lg" icon="building">
                   {heroCta2}
                 </Button>
@@ -387,12 +387,12 @@ export default async function HomePage({
           </h2>
           <p style={{ maxWidth: 480, opacity: 0.85 }}>{h.ctaBandD}</p>
           <div className="row wrap" style={{ gap: 12, justifyContent: "center", marginTop: 8 }}>
-            <Link href="/register/freelancer">
+            <Link href="/login">
               <Button variant="accent" size="lg">
                 {heroCta1}
               </Button>
             </Link>
-            <Link href="/register/workspace">
+            <Link href="/login">
               <Button variant="secondary" size="lg">
                 {heroCta2}
               </Button>

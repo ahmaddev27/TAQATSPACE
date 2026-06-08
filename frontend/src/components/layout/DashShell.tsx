@@ -12,8 +12,10 @@ import {
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { PushRegistrar } from "@/components/providers/PushRegistrar";
 import type { UserRole } from "@/lib/types/auth";
-import { ROLE_NAV, filterNavByPermissions } from "./nav-config";
+import { isFirebaseConfigured } from "@/lib/firebase/app";
+import { ROLE_NAV, filterNavByPermissions, filterNavByRealtime } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { NavProgress } from "./NavProgress";
@@ -59,11 +61,20 @@ export function DashShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastPathRef = useRef(pathname);
 
-  // Hide permission-gated items (e.g. admin management) the user cannot access.
-  // The auth payload carries the admin account's effective permission grant.
+  // Firebase config is fixed at build time, so realtime availability is stable.
+  const firebaseReady = isFirebaseConfigured();
+
+  // Hide permission-gated items (e.g. admin management) the user cannot access,
+  // then collapse the Chat/Messages duplication to a single 1:1 surface based on
+  // whether realtime chat is available. The auth payload carries the admin
+  // account's effective permission grant.
   const nav = useMemo(
-    () => filterNavByPermissions(ROLE_NAV[role], user?.permissions),
-    [role, user?.permissions],
+    () =>
+      filterNavByRealtime(
+        filterNavByPermissions(ROLE_NAV[role], user?.permissions),
+        firebaseReady,
+      ),
+    [role, user?.permissions, firebaseReady],
   );
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
@@ -128,6 +139,9 @@ export function DashShell({
       <Suspense fallback={null}>
         <NavProgress />
       </Suspense>
+
+      {/* FCM web-push lifecycle (no-op until Firebase env is configured). */}
+      <PushRegistrar />
 
       {mobileOpen && (
         <div className="nav-backdrop" onClick={closeMobile} aria-hidden="true" />

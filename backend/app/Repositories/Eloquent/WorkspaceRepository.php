@@ -15,13 +15,14 @@ use Illuminate\Database\Eloquent\Builder;
 class WorkspaceRepository
 {
     /**
-     * Public discovery listing — only active workspaces, conditionally filtered.
+     * Public discovery listing — only active AND admin-published workspaces,
+     * conditionally filtered.
      *
      * @param  array<string, mixed>  $filters
      */
     public function paginatePublic(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Workspace::query()->active()->with('seatTypes');
+        $query = Workspace::query()->public()->with('seatTypes');
 
         $this->applyFilters($query, $filters);
         $this->applySort($query, $filters['sort'] ?? null);
@@ -54,14 +55,15 @@ class WorkspaceRepository
     }
 
     /**
-     * Distinct city names across active workspaces, alphabetically sorted.
+     * Distinct city names across publicly visible (active + published)
+     * workspaces, alphabetically sorted.
      *
      * @return array<int, string>
      */
     public function activeCities(): array
     {
         return Workspace::query()
-            ->active()
+            ->public()
             ->whereNotNull('city')
             ->distinct()
             ->orderBy('city')
@@ -71,7 +73,7 @@ class WorkspaceRepository
 
     public function findActiveById(string $id): ?Workspace
     {
-        return Workspace::query()->active()->with('seatTypes')->find($id);
+        return Workspace::query()->public()->with('seatTypes')->find($id);
     }
 
     public function findByOwnerId(string $ownerId): ?Workspace

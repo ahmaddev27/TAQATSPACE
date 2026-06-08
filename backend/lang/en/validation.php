@@ -273,6 +273,10 @@ return [
         'key' => 'key',
         'value' => 'value',
         'enabled' => 'enabled',
+
+        'category' => 'category',
+        'spent_on' => 'spend date',
+        'quantity' => 'quantity',
     ],
 
 ];

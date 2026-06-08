@@ -164,12 +164,12 @@ export default async function AboutPage({
           </h2>
           <p style={{ maxWidth: 480, opacity: 0.85 }}>{a.ctaBody}</p>
           <div className="row wrap" style={{ gap: 12, justifyContent: "center", marginTop: 8 }}>
-            <Link href="/register/freelancer">
+            <Link href="/login">
               <Button variant="accent" size="lg">
                 {dict.home.heroCta1}
               </Button>
             </Link>
-            <Link href="/register/workspace">
+            <Link href="/login">
               <Button variant="secondary" size="lg">
                 {dict.home.heroCta2}
               </Button>

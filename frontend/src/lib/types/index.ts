@@ -8,6 +8,7 @@ export type {
   User,
   UserRole,
   UserStatus,
+  Gender,
   AdminRole,
   AdminPermission,
   ApiEnvelope,
@@ -59,6 +60,7 @@ export type {
   AboutContent,
   HowItWorksStep,
   HowItWorksContent,
+  Branding,
 } from "./content";
 
 /* -------------------------------------------------------------------------- */
@@ -171,6 +173,14 @@ export interface Workspace {
   photos: string[];
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
+  /**
+   * Public-publish gate, separate from `status`. Present only for requests that
+   * may manage the workspace (its owner or an admin); absent on public payloads.
+   * `is_published` is true once an admin has published it to public discovery;
+   * `published_at` is the ISO timestamp of that action (null when unpublished).
+   */
+  is_published?: boolean;
+  published_at?: string | null;
   avg_rating: number | null;
   /**
    * Per-seat-type pricing. All three types may be present; disabled ones are
@@ -394,6 +404,24 @@ export interface RevenueChartPoint {
   amount: number;
 }
 
+/**
+ * A gender distribution bucket. `label` is a stable token
+ * (`male` | `female` | `unspecified`) the UI localises; `value` is the count.
+ */
+export interface GenderDatum {
+  label: "male" | "female" | "unspecified";
+  value: number;
+}
+
+/**
+ * A subscription-status distribution bucket. `label` is the raw status token
+ * the UI localises; `value` is the count.
+ */
+export interface StatusDatum {
+  label: SubscriptionStatus;
+  value: number;
+}
+
 /** Owner dashboard aggregate (`GET /workspace/dashboard`). */
 export interface OwnerStats {
   occupancy_pct: number;
@@ -404,6 +432,10 @@ export interface OwnerStats {
   revenue_this_month: number;
   revenue_last_month: number;
   revenue_chart: RevenueChartPoint[];
+  /** This workspace's active members bucketed by gender (zero-filled). */
+  members_by_gender: GenderDatum[];
+  /** This workspace's members bucketed by subscription status (zero-filled). */
+  members_by_status: StatusDatum[];
 }
 
 export interface MemberSummarySubscription {

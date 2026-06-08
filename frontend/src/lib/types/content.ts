@@ -14,6 +14,30 @@ import type { LocalizedText } from "./landing";
 export type ContentKey = "site" | "faq" | "about" | "how_it_works";
 
 /* -------------------------------------------------------------------------- */
+/*  branding — site name, SEO meta, favicon + light/dark logos                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Admin-controlled site branding (`GET /branding` public, `GET/PUT
+ * /admin/branding` admin). Image fields are canonical media-disk PATHS; the
+ * backend resolves each to a sibling `*Url` for display. Everything is
+ * optional — the app falls back to its built-in branding for anything unset.
+ */
+export interface Branding {
+  site_name?: string;
+  meta_title?: string;
+  meta_description?: string;
+  /** Canonical storage paths (round-tripped on save). */
+  favicon?: string;
+  logo_light?: string;
+  logo_dark?: string;
+  /** Resolved display URLs (read-only, added by the backend). */
+  faviconUrl?: string;
+  logo_lightUrl?: string;
+  logo_darkUrl?: string;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  site — contact / social details surfaced on the contact page + footer      */
 /* -------------------------------------------------------------------------- */
 

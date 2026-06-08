@@ -1,15 +1,14 @@
-import { ResetPasswordForm } from "@/components/features/auth/ResetPasswordForm";
+import { redirect } from "next/navigation";
 
+/**
+ * Credentials are owned by the unified SSO system — there is no local password
+ * to reset. This legacy route now redirects to the SSO launch screen.
+ */
 export default async function ResetPasswordPage({
-  searchParams,
+  params,
 }: {
-  searchParams: Promise<{ token?: string; email?: string }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { token = "", email = "" } = await searchParams;
-
-  return (
-    <div className="auth-center">
-      <ResetPasswordForm token={token} email={email} />
-    </div>
-  );
+  const { locale } = await params;
+  redirect(`/${locale}/login`);
 }
