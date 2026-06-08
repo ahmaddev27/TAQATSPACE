@@ -15,6 +15,13 @@ export interface NavItem {
    * Items without it are visible to everyone in the role.
    */
   permission?: AdminPermission;
+  /**
+   * Gates the item on realtime-chat (Firebase) availability so the in-app 1:1
+   * surface is never duplicated. `"primary"` items (the realtime Chat) show only
+   * when Firebase is configured; `"fallback"` items (the legacy DB Messages) show
+   * only when it is not. Items without this field are unaffected.
+   */
+  realtime?: "primary" | "fallback";
 }
 
 export interface NavGroup {
@@ -54,6 +61,31 @@ export function filterNavByPermissions(
 }
 
 /**
+ * Resolve the realtime-chat-vs-legacy-messages duplication: when Firebase is
+ * configured the realtime Chat (`realtime: "primary"`) is the single 1:1 surface
+ * and the DB Messages fallback (`realtime: "fallback"`) is hidden; when it is
+ * not, the reverse. Items without a `realtime` field are always kept. Empty
+ * groups are pruned. Keeps the user from ever seeing two 1:1 tools — or none.
+ */
+export function filterNavByRealtime(
+  nav: RoleNav,
+  firebaseReady: boolean,
+): RoleNav {
+  const groups = nav.groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.realtime === "primary") return firebaseReady;
+        if (item.realtime === "fallback") return !firebaseReady;
+        return true;
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { ...nav, groups };
+}
+
+/**
  * Role-aware navigation, matching the prototype `NAV` map but pointing at real
  * Next routes. Screen agents own the destination pages; missing pages are
  * stubbed by their respective areas.
@@ -86,8 +118,8 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       {
         titleKey: "sectionEngage",
         items: [
-          { key: "chat", href: "/owner/chat", icon: "chat" },
-          { key: "messages", href: "/owner/messages", icon: "chat" },
+          { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
+          { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
           { key: "broadcast", href: "/owner/messaging", icon: "send" },
           { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
           { key: "reports", href: "/owner/reports", icon: "chart" },
@@ -103,7 +135,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "home", href: "/freelancer", icon: "home" },
           { key: "explore", href: "/explore", icon: "search" },
-          { key: "chat", href: "/freelancer/chat", icon: "chat" },
+          { key: "chat", href: "/freelancer/chat", icon: "chat", realtime: "primary" },
         ],
       },
       {
@@ -151,6 +183,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       {
         titleKey: "sectionSettings",
         items: [
+          {
+            key: "chat",
+            href: "/admin/chat",
+            icon: "chat",
+            realtime: "primary",
+          },
           {
             key: "messaging",
             href: "/admin/settings/messaging",

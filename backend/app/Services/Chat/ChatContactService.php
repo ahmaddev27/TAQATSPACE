@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Chat;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\Subscription;
 use App\Models\User;
 
@@ -14,6 +16,8 @@ use App\Models\User;
  *    subscription to their workspace — i.e. their members.
  *  - A **freelancer** may chat with the owner(s) of the workspace(s) they are
  *    subscribed to.
+ *  - An **admin** may start a conversation with any active owner or freelancer
+ *    (platform-wide support); the SPA provides client-side search over the list.
  *
  * The result is the minimal shape the SPA needs to open a conversation:
  * `[{ id, name, workspace_id }]`. Contacts are de-duplicated by user id.
@@ -35,7 +39,36 @@ class ChatContactService
             return $this->freelancerContacts($user);
         }
 
+        if ($user->isAdmin()) {
+            return $this->adminContacts($user);
+        }
+
         return [];
+    }
+
+    /**
+     * Platform-wide contacts for an admin: every active owner and freelancer
+     * (excluding the admin themselves), ordered by name. `workspace_id` is not
+     * meaningful here — the conversation id is derived from the participant ids
+     * alone — so it is returned empty. The SPA filters/searches this list
+     * client-side.
+     *
+     * @return list<array{id: string, name: string, workspace_id: string}>
+     */
+    private function adminContacts(User $admin): array
+    {
+        return User::query()
+            ->whereIn('role', [UserRole::WorkspaceOwner->value, UserRole::Freelancer->value])
+            ->where('status', UserStatus::Active->value)
+            ->whereKeyNot($admin->id)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(static fn (User $user): array => [
+                'id' => (string) $user->id,
+                'name' => (string) $user->name,
+                'workspace_id' => '',
+            ])
+            ->all();
     }
 
     /**
