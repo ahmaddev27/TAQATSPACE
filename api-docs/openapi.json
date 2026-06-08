@@ -1591,7 +1591,7 @@
                     }
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
@@ -1622,8 +1622,7 @@
                                             ]
                                         },
                                         "message": {
-                                            "type": "integer",
-                                            "const": 201
+                                            "type": "null"
                                         }
                                     },
                                     "required": [
