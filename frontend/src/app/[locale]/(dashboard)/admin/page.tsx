@@ -124,7 +124,8 @@ export default async function AdminDashboardPage({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              // auto-fill so it flows from 4 columns down to 2 (and 1) on phones.
+              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
               gap: 10,
             }}
           >
