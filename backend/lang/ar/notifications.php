@@ -49,6 +49,10 @@ return [
             'title' => 'تم رفض الحجز',
             'body' => 'تم رفض حجزك في :workspace.',
         ],
+        'new_booking_request' => [
+            'title' => 'طلب حجز جديد',
+            'body' => 'قدّم :name طلب حجز في :workspace.',
+        ],
         'new_workspace_registration' => [
             'title' => 'تسجيل مساحة عمل جديدة',
             'body' => 'قام :name بتسجيل مساحة عمل جديدة.',

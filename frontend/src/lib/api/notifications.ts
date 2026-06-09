@@ -13,6 +13,7 @@ import type { ApiEnvelope } from "@/lib/types";
 export type NotificationType =
   | "booking_approved"
   | "booking_rejected"
+  | "new_booking_request"
   | "invoice_created"
   | "invoice_overdue"
   | "invoice_paid"

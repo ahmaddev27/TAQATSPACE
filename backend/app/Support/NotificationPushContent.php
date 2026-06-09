@@ -69,6 +69,10 @@ final class NotificationPushContent
             'booking_approved', 'booking_rejected' => self::translatedBody($type, [
                 'workspace' => self::stringField($payload, 'workspace_name'),
             ]),
+            'new_booking_request' => self::translatedBody('new_booking_request', [
+                'name' => self::stringField($payload, 'member_name'),
+                'workspace' => self::stringField($payload, 'workspace_name'),
+            ]),
             'new_workspace_registration' => self::translatedBody('new_workspace_registration', [
                 'name' => self::stringField($payload, 'owner_name'),
             ]),
