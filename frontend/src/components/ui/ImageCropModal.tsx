@@ -85,9 +85,11 @@ export function ImageCropModal({
   // the effect body — and the transform is reset for the freshly loaded image.
   useEffect(() => {
     const url = URL.createObjectURL(file);
-    setObjectUrl(url);
     const img = new window.Image();
     img.onload = () => {
+      // Set both in the async onload (not synchronously in the effect body) —
+      // the displayed src and the dimensions become available together.
+      setObjectUrl(url);
       setImage(img);
       setZoom(1);
       setRotation(0);
