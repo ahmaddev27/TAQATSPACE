@@ -113,6 +113,11 @@
 .explore-head { background: var(--surface); border-bottom: 1px solid var(--border); padding: 28px 0 0; }
 .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 18px 0; }
 .filter-bar .select-wrap { width: 160px; }
+/* Full-width filters on phones so they stack cleanly instead of fixed 160px. */
+@media (max-width: 560px) {
+  .filter-bar { align-items: stretch; }
+  .filter-bar .select-wrap { width: 100%; }
+}
 .explore-split { display: grid; grid-template-columns: 1fr .9fr; gap: 24px; padding-top: 24px; padding-bottom: 48px; align-items: start; }
 .explore-list { display: flex; flex-direction: column; gap: 14px; }
 .explore-row { display: flex; gap: 16px; padding: 14px; cursor: pointer; }
@@ -171,6 +176,9 @@
 
 /* misc auth/register */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Stack the two columns on phones — used by many admin/owner forms (messaging
+   settings, broadcast, profile, CMS editor) that would otherwise be cramped. */
+@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
 .link { color: var(--primary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: var(--fs-sm); }
 .link:hover { text-decoration: underline; }
 .confirm-art { width: 76px; height: 76px; border-radius: var(--r-2xl); display: grid; place-items: center; margin: 0 auto; background: var(--warning-bg); color: var(--warning); }
