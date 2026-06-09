@@ -14,8 +14,22 @@ export async function POST() {
       { method: "POST" },
     );
     ssoLogoutUrl = result?.sso_logout_url ?? null;
-  } catch {
-    // no-op
+    // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
+    console.info("[sso-logout] proxy: backend returned", {
+      sso_logout_url: ssoLogoutUrl,
+    });
+  } catch (err) {
+    // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
+    // serverFetch throws on any non-2xx; a 401 here means the backend logout()
+    // never ran (auth middleware blocked it) — so no backend log appears.
+    const status =
+      err && typeof err === "object" && "status" in err
+        ? (err as { status?: number }).status
+        : undefined;
+    console.error("[sso-logout] proxy: backend call failed", {
+      status,
+      message: err instanceof Error ? err.message : String(err),
+    });
   }
 
   const store = await cookies();
