@@ -97,7 +97,10 @@ class RegistrationService
         $user = DB::transaction(function () use ($user, $data, $role): User {
             $attributes = [
                 'role' => $role->value,
-                'phone' => $data['phone'] ?? $user->phone,
+                // Phone is optional at onboarding; the IdP already supplied one on
+                // provision. Keep the existing value when the field is left blank
+                // rather than wiping it with an empty string.
+                'phone' => filled($data['phone'] ?? null) ? $data['phone'] : $user->phone,
                 'gender' => $data['gender'] ?? $user->gender,
                 'onboarding_completed_at' => now(),
                 'status' => $role === UserRole::WorkspaceOwner
