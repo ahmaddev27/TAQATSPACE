@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TAQAT.space — عرض الميزات / Features Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --primary:#1F82C7; --primary-dark:#135789; --accent:#F6A91B;
+  --ink:#0F1B2A; --muted:#5B6B7B; --line:#E3E9EF; --bg:#F4F7FA; --card:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Cairo','Inter',system-ui,sans-serif;color:var(--ink);background:#dfe6ee;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.en{font-family:'Inter',sans-serif}
+.ar{direction:rtl}
+.deck{display:flex;flex-direction:column;align-items:center;gap:22px;padding:26px 10px}
+
+.slide{position:relative;width:1280px;height:720px;background:var(--card);overflow:hidden;
+  box-shadow:0 10px 40px rgba(15,27,42,.16);border-radius:14px;
+  display:flex;flex-direction:column}
+.slide::after{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:8px;
+  background:var(--rc,var(--primary))}
+
+/* ---- cover ---- */
+.cover{background:linear-gradient(135deg,#0E3A5C,#135789 55%,#1F82C7);color:#fff;padding:64px 72px;justify-content:center}
+.cover::after{background:var(--accent)}
+.cover-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.logo{font-family:'Inter';font-weight:800;font-size:30px;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.cover h1{font-size:33px;line-height:1.25;margin-top:18px;font-weight:700}
+.cover h1.en{font-size:22px;opacity:.86;font-weight:600;margin-top:6px}
+.cover .lede{margin-top:16px;font-size:15px;line-height:1.7;opacity:.92;max-width:560px}
+.cover .lede.en{opacity:.72;font-size:13.5px}
+.cover-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.cover-tags span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.cover-art img{width:100%;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.4);
+  border:1px solid rgba(255,255,255,.25)}
+.cover-foot{position:absolute;bottom:26px;inset-inline-start:72px;inset-inline-end:72px;
+  display:flex;justify-content:space-between;font-size:12px;opacity:.7}
+
+/* ---- divider ---- */
+.divider{background:linear-gradient(135deg,#0F1B2A,#1d2c3d);color:#fff;justify-content:center;padding:0 80px}
+.divider::after{background:var(--rc)}
+.divider-num{position:absolute;inset-inline-end:60px;top:40px;font-family:'Inter';font-weight:800;
+  font-size:150px;color:rgba(255,255,255,.07);line-height:1}
+.divider .kicker{color:var(--rc);font-family:'Inter';font-weight:700;letter-spacing:3px;font-size:14px;margin-bottom:14px}
+.divider h2{font-size:42px;font-weight:700;line-height:1.2}
+.divider h2.en{font-size:24px;opacity:.7;font-weight:600;margin-top:4px}
+.divider p{margin-top:18px;font-size:15px;opacity:.78;max-width:680px}
+.divider p.en{opacity:.55;font-size:13px;margin-top:2px}
+
+/* ---- content ---- */
+.content{flex-direction:row;padding:48px 56px 40px 64px;gap:40px}
+.c-left{flex:1;min-width:0;display:flex;flex-direction:column}
+.c-right{width:46%;display:flex;align-items:center}
+.no-shot .c-left{flex:1}
+.no-shot{padding-inline-end:64px}
+.kicker{display:flex;gap:8px;align-items:baseline;font-weight:700;font-size:13px;
+  color:var(--rc);margin-bottom:6px}
+.kicker .en{opacity:.6;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.slide h3{font-size:26px;font-weight:700;line-height:1.2}
+.slide h3.en{font-size:16px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.block-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--rc);margin-top:16px}
+.block-label.en{color:var(--muted);opacity:.7;margin-top:1px;margin-bottom:6px;letter-spacing:.5px}
+.stories{display:flex;flex-direction:column;gap:7px}
+.story{background:var(--bg);border-inline-start:3px solid var(--rc);border-radius:8px;
+  padding:8px 12px}
+.story .ar{display:block;font-size:13.5px;font-weight:600;line-height:1.45}
+.story .en{display:block;font-size:11.5px;color:var(--muted);line-height:1.4;font-style:italic}
+.blist{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.blist li{position:relative;padding-inline-start:20px;line-height:1.4}
+.blist li::before{content:'';position:absolute;inset-inline-start:2px;top:8px;width:8px;height:8px;
+  border-radius:2px;background:var(--rc)}
+.blist li .ar{display:block;font-size:13.5px;font-weight:600}
+.blist li .en{display:block;font-size:11.5px;color:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.step{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
+  border-radius:9px;padding:7px 11px}
+.step-n{width:22px;height:22px;border-radius:50%;background:var(--rc);color:#fff;display:grid;
+  place-items:center;font-family:'Inter';font-weight:700;font-size:12px;flex:none}
+.step-t .ar{display:block;font-size:12px;font-weight:600;line-height:1.3}
+.step-t .en{display:block;font-size:10px;color:var(--muted)}
+.shot{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;box-shadow:0 8px 26px rgba(15,27,42,.1)}
+.shot img{width:100%;display:block}
+.shot figcaption{padding:7px 12px;font-size:11px;display:flex;justify-content:space-between;
+  border-top:1px solid var(--line);background:#fff}
+.shot figcaption .en{color:var(--muted)}
+
+/* ---- gallery ---- */
+.gallery{padding:40px 56px}
+.g-head{margin-bottom:18px}
+.g-head h3{font-size:24px;font-weight:700}
+.g-head h3.en{font-size:15px;color:var(--muted);font-weight:600}
+.g-grid{flex:1;display:grid;gap:16px}
+.g-grid.g-3{grid-template-columns:repeat(3,1fr)}
+.g-grid.g-4{grid-template-columns:repeat(4,1fr)}
+.g-grid .shot{align-self:start}
+
+/* ---- closing ---- */
+.closing{background:linear-gradient(135deg,#0E3A5C,#1F82C7);color:#fff;justify-content:center;
+  align-items:center;text-align:center;padding:56px}
+.closing::after{background:var(--accent)}
+.closing .logo{font-size:34px}
+.closing h2{font-size:30px;font-weight:700;margin-top:14px}
+.closing h2.en{font-size:18px;opacity:.78;font-weight:600}
+.close-grid{display:flex;gap:40px;margin:34px 0 26px}
+.close-grid>div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.cg-n{font-family:'Inter';font-weight:800;font-size:40px;color:var(--accent);line-height:1}
+.close-grid span{font-size:12px}
+.close-grid .en{opacity:.6}
+.closing p{font-size:14px;opacity:.85}
+.closing p.en{opacity:.6;font-size:12px}
+
+/* slide number chip */
+.snum{position:absolute;inset-inline-end:20px;bottom:16px;font-family:'Inter';font-size:11px;
+  color:var(--muted);font-weight:600;opacity:.7}
+.cover .snum,.divider .snum,.closing .snum{color:rgba(255,255,255,.6)}
+
+@media print{
+  @page{size:1280px 720px;margin:0}
+  body{background:#fff}
+  .deck{padding:0;gap:0}
+  .slide{box-shadow:none;border-radius:0;page-break-after:always;break-after:page}
+  .slide:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+
+    <section class="slide cover">
+      <div class="cover-grid">
+        <div>
+          <div class="logo">TAQAT<span>.space</span></div>
+          <h1 class="ar">منصّة مساحات العمل المشتركة في غزّة</h1>
+          <h1 class="en">A Coworking-Space Marketplace &amp; Management Platform for Gaza</h1>
+          <p class="lede ar">سوق رقمي ثنائي اللغة يربط العاملين المستقلّين بأصحاب المساحات، مع لوحة إدارة كاملة للمنصّة — من الاكتشاف والحجز إلى الاشتراكات والفوترة والتواصل الفوري.</p>
+          <p class="lede en">A bilingual (Arabic-first) marketplace connecting freelancers with workspace owners, with a full super-admin back office — from discovery and booking to subscriptions, invoicing and realtime chat.</p>
+          <div class="cover-tags">
+            <span>Freelancer</span><span>Workspace Owner</span><span>Super Admin</span>
+            <span>Arabic / English · RTL</span><span>Web + PWA Push</span>
+          </div>
+        </div>
+        <div class="cover-art">
+          <figure class="shot"><img src="img/01-public-home.png" alt="01-public-home" /></figure>
+        </div>
+      </div>
+      <div class="cover-foot"><span class="ar">عرض الميزات للإدارة — مناقشة المشروع</span><span class="en">Features overview · for management review</span></div>
+    <div class="snum">1 / 30</div></section>
+
+    <section class="slide content" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">نظرة عامة</span><span class="en">Overview</span></div><h3 class="ar">ما هي منصّة طاقة؟</h3><h3 class="en">What is TaqatSpace?</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">سوق عام لاكتشاف مساحات العمل المشتركة في غزّة وحجز مقعد فيها</span><span class="en">A public marketplace to discover Gaza coworking spaces and book a seat</span></li><li><span class="ar">لوحة لأصحاب المساحات لإدارة المشتركين والمقاعد والفواتير والباقات</span><span class="en">An owner back office for members, seats, invoices and internet packages</span></li><li><span class="ar">لوحة سوبر أدمن لإدارة المنصّة بالكامل: موافقات، مستخدمون، ماليّة، محتوى</span><span class="en">A super-admin console: approvals, users, finance and site content</span></li><li><span class="ar">عربي أوّلاً (RTL) + إنجليزي، وضع داكن، وإشعارات فوريّة على الويب</span><span class="en">Arabic-first (RTL) + English, dark mode, and web push notifications</span></li><li><span class="ar">الفوترة تتبّع يدوي يُديره المشرف بالإيصالات — بلا بوّابة دفع</span><span class="en">Invoicing is admin-managed manual tracking with receipts — no payment gateway</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/01-public-home.png" alt="Public landing page" /><figcaption><span class="ar">الصفحة الرئيسية العامّة</span><span class="en">Public landing page</span></figcaption></figure></div>
+    <div class="snum">2 / 30</div></section>
+
+    <section class="slide content" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">الأدوار</span><span class="en">The three roles</span></div><h3 class="ar">ثلاثة أدوار، رحلة واحدة متّسقة</h3><h3 class="en">Three roles, one coherent journey</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">العامل المستقل: يكتشف مساحة، يطلب حجزاً، يصبح مشتركاً، ويتابع فواتيره</span><span class="en">Freelancer: discovers a space, requests a booking, becomes a member, tracks invoices</span></li><li><span class="ar">صاحب المساحة: يُسجّل مساحته، يوافق على الطلبات، ويدير المقاعد والمشتركين والفوترة</span><span class="en">Workspace owner: registers a space, approves requests, runs seats, members and billing</span></li><li><span class="ar">السوبر أدمن: يوافق على المساحات، يدير المستخدمين والماليّة والمحتوى والمدراء الفرعيّين</span><span class="en">Super admin: approves spaces, manages users, finance, content and sub-admins</span></li><li><span class="ar">التواصل الفوري (دردشة) يربط الأدوار الثلاثة داخل المنصّة</span><span class="en">Realtime chat links all three roles inside the platform</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/32-admin-users.png" alt="Admin users directory" /><figcaption><span class="ar">دليل المستخدمين لدى الأدمن</span><span class="en">Admin users directory</span></figcaption></figure></div>
+    <div class="snum">3 / 30</div></section>
+
+    <section class="slide content no-shot" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">التقنية</span><span class="en">Architecture &amp; stack</span></div><h3 class="ar">بنية إنتاجيّة نظيفة وقابلة للتوسّع</h3><h3 class="en">A clean, production-grade, scalable stack</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">الخلفية: Laravel 13 — متحكّمات رفيعة ← خدمات ← مستودعات، مع API Resources</span><span class="en">Backend: Laravel 13 — thin controllers → services → repositories, API Resources</span></li><li><span class="ar">الواجهة: Next.js 16 (App Router, RSC, Server Actions) وثنائيّة اللغة next-intl</span><span class="en">Frontend: Next.js 16 (App Router, RSC, Server Actions) with next-intl i18n</span></li><li><span class="ar">قاعدة البيانات MySQL 8، وتخزين الوسائط على AWS S3 (روابط موقّعة)</span><span class="en">MySQL 8 database, media on AWS S3 (presigned URLs)</span></li><li><span class="ar">Firebase: دردشة فوريّة (Firestore) + إشعارات الدفع (FCM)</span><span class="en">Firebase: realtime chat (Firestore) + push notifications (FCM)</span></li><li><span class="ar">الدخول عبر Sanctum + الدخول الموحّد «سجّل عبر طاقة» (OIDC + PKCE)</span><span class="en">Auth via Sanctum + “Sign in with Taqat” SSO (OIDC + PKCE)</span></li><li><span class="ar">صلاحيات دقيقة عبر Spatie، توثيق OpenAPI تلقائي + مجموعة Postman</span><span class="en">Granular Spatie permissions, auto OpenAPI docs + Postman collection</span></li></ul></div>
+      <div class="c-right"></div>
+    <div class="snum">4 / 30</div></section>
+
+    <section class="slide divider" style="--rc:#1F82C7">
+      <div class="divider-num">01</div>
+      <div class="divider-body">
+        <div class="kicker" style="--rc:#1F82C7">PUBLIC SITE</div>
+        <h2 class="ar">الموقع العام</h2>
+        <h2 class="en">Public site</h2>
+        <p class="ar">الاكتشاف والتسجيل — أوّل لقاء مع المنصّة</p>
+        <p class="en">Discovery and sign-up — the platform&#x27;s first impression</p>
+      </div>
+    <div class="snum">5 / 30</div></section>
+
+    <section class="slide content" style="--rc:#1F82C7">
+      <div class="c-left"><div class="kicker" style="--rc:#1F82C7"><span class="ar">الموقع العام</span><span class="en">Public site</span></div><h3 class="ar">صفحة هبوط تُدار بالكامل من لوحة الأدمن</h3><h3 class="en">A landing page fully managed from the admin CMS</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كزائر، أريد أن أفهم الخدمة بسرعة وأرى مساحات مميّزة لأبدأ</span><span class="en">As a visitor, I want to grasp the offering fast and see featured spaces</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">أقسام قابلة لإعادة الترتيب: البطل، الإحصائيات، لماذا نحن، كيف يعمل، المميّزة، آراء</span><span class="en">Reorderable sections: hero, stats, why-us, how-it-works, featured, testimonials</span></li><li><span class="ar">محتوى وصور وترتيب الأقسام يُحرّرها الأدمن دون نشر برمجي</span><span class="en">Content, images and section order are edited by the admin — no deploy</span></li><li><span class="ar">حركات ظهور خفيفة عند التمرير، وآمنة لتفضيل تقليل الحركة</span><span class="en">Subtle on-scroll reveal animations, reduced-motion safe</span></li></ul><div class="block-label ar">سير العمل</div><div class="block-label en">Flow</div><div class="flow"><div class="step"><div class="step-n">1</div><div class="step-t"><span class="ar">يصل الزائر للرئيسية</span><span class="en">Visitor lands on home</span></div></div><div class="step"><div class="step-n">2</div><div class="step-t"><span class="ar">يستكشف المساحات</span><span class="en">Browses spaces</span></div></div><div class="step"><div class="step-n">3</div><div class="step-t"><span class="ar">يفتح تفاصيل مساحة</span><span class="en">Opens a space</span></div></div><div class="step"><div class="step-n">4</div><div class="step-t"><span class="ar">يسجّل أو يدخل</span><span class="en">Registers / signs in</span></div></div></div></div>
+      <div class="c-right"><figure class="shot"><img src="img/01-public-home.png" alt="Home" /><figcaption><span class="ar">الرئيسية</span><span class="en">Home</span></figcaption></figure></div>
+    <div class="snum">6 / 30</div></section>
+
+    <section class="slide content" style="--rc:#1F82C7">
+      <div class="c-left"><div class="kicker" style="--rc:#1F82C7"><span class="ar">الموقع العام</span><span class="en">Public site</span></div><h3 class="ar">اكتشاف المساحات والتفاصيل</h3><h3 class="en">Explore spaces &amp; space detail</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كعامل مستقل، أريد تصفية المساحات حسب المدينة والسعر والتقييم لأجد الأنسب</span><span class="en">As a freelancer, I want to filter by city, price and rating to find the right space</span></div><div class="story"><span class="ar">أريد رؤية الصور والمرافق وأنواع المقاعد والتقييمات قبل أن أحجز</span><span class="en">I want photos, amenities, seat types and reviews before I book</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">بحث وفلاتر: المدينة، نطاق السعر، التقييم، نوع المقعد</span><span class="en">Search &amp; filters: city, price range, rating, seat type</span></li><li><span class="ar">صفحة تفاصيل المساحة: معرض صور، مرافق، تسعير المقاعد، خريطة، تقييمات</span><span class="en">Space detail: gallery, amenities, seat pricing, map, reviews</span></li><li><span class="ar">زر «اطلب حجزاً» يبدأ رحلة الاشتراك</span><span class="en">A “Request booking” CTA starts the subscription journey</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/02-public-explore.png" alt="Explore" /><figcaption><span class="ar">استكشاف المساحات</span><span class="en">Explore</span></figcaption></figure></div>
+    <div class="snum">7 / 30</div></section>
+
+    <section class="slide gallery" style="--rc:#1F82C7">
+      <div class="g-head">
+        <h3 class="ar">الموقع العام — لقطات</h3>
+        <h3 class="en">Public site — screens</h3>
+      </div>
+      <div class="g-grid g-4"><figure class="shot"><img src="img/03-public-detail.png" alt="Workspace detail" /><figcaption><span class="ar">تفاصيل المساحة</span><span class="en">Workspace detail</span></figcaption></figure><figure class="shot"><img src="img/04-register-freelancer.png" alt="Register freelancer" /><figcaption><span class="ar">تسجيل عامل مستقل</span><span class="en">Register freelancer</span></figcaption></figure><figure class="shot"><img src="img/05-register-workspace.png" alt="Register workspace" /><figcaption><span class="ar">تسجيل مساحة</span><span class="en">Register workspace</span></figcaption></figure><figure class="shot"><img src="img/06-login.png" alt="Login + SSO" /><figcaption><span class="ar">تسجيل الدخول + الدخول الموحّد</span><span class="en">Login + SSO</span></figcaption></figure></div>
+    <div class="snum">8 / 30</div></section>
+
+    <section class="slide content" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">الدخول والهويّة</span><span class="en">Auth, SSO &amp; onboarding</span></div><h3 class="ar">دخول موحّد «سجّل عبر طاقة» + استكمال الحساب</h3><h3 class="en">“Sign in with Taqat” SSO + onboarding</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كمستخدم، أريد الدخول بحساب طاقة الموحّد دون كلمة مرور جديدة</span><span class="en">As a user, I want to sign in with my Taqat account — no new password</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">OIDC Authorization Code + PKCE، مع جلب البيانات من /userinfo</span><span class="en">OIDC Authorization Code + PKCE, claims from /userinfo</span></li><li><span class="ar">حساب جديد عبر SSO يكمل خطوة اختيار الدور (مستقل / صاحب مساحة)</span><span class="en">A new SSO account completes a role-selection onboarding step</span></li><li><span class="ar">الرمز يُحفظ في كوكي آمن (httpOnly)، وكل النداءات المُصادَقة من الخادم</span><span class="en">Token kept in an httpOnly cookie; authenticated calls run server-side</span></li><li><span class="ar">خروج موحّد (Single Logout) من مزوّد الهويّة</span><span class="en">RP-initiated single logout at the identity provider</span></li><li><span class="ar">رقم الهاتف يأتي من مزوّد الهويّة — لا نطلب تأكيده من جانبنا</span><span class="en">Phone comes from the IdP — we no longer re-confirm it on our side</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/06-login.png" alt="Login" /><figcaption><span class="ar">تسجيل الدخول</span><span class="en">Login</span></figcaption></figure></div>
+    <div class="snum">9 / 30</div></section>
+
+    <section class="slide divider" style="--rc:#16A34A">
+      <div class="divider-num">02</div>
+      <div class="divider-body">
+        <div class="kicker" style="--rc:#16A34A">FREELANCER</div>
+        <h2 class="ar">لوحة العامل المستقل</h2>
+        <h2 class="en">Freelancer dashboard</h2>
+        <p class="ar">الحجز، الاشتراك، الفواتير، والتواصل</p>
+        <p class="en">Booking, subscription, invoices and chat</p>
+      </div>
+    <div class="snum">10 / 30</div></section>
+
+    <section class="slide content" style="--rc:#16A34A">
+      <div class="c-left"><div class="kicker" style="--rc:#16A34A"><span class="ar">العامل المستقل</span><span class="en">Freelancer</span></div><h3 class="ar">الرئيسية: كل شيء في لمحة</h3><h3 class="en">Home: everything at a glance</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كعامل مستقل، أريد رؤية حالة اشتراكي ومقعدي وفاتورتي القادمة فوراً</span><span class="en">As a freelancer, I want my subscription, seat and next invoice at a glance</span></div><div class="story"><span class="ar">أريد تنبيهاً واضحاً إن لم يكن لديّ اشتراك نشط بعد</span><span class="en">I want a clear prompt when I don&#x27;t have an active subscription yet</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">بطاقة حالة الاشتراك + المقعد المخصّص + موعد التجديد</span><span class="en">Subscription status + assigned seat + renewal date</span></li><li><span class="ar">بطاقات: نوع المقعد، الفاتورة القادمة، الإشعارات غير المقروءة</span><span class="en">Tiles: seat type, next invoice, unread notifications</span></li><li><span class="ar">روابط سريعة وحالة «لا اشتراك» مع دعوة للحجز</span><span class="en">Quick links and a no-subscription empty state with a CTA</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/20-freelancer-home.png" alt="Freelancer home" /><figcaption><span class="ar">رئيسية العامل المستقل</span><span class="en">Freelancer home</span></figcaption></figure></div>
+    <div class="snum">11 / 30</div></section>
+
+    <section class="slide content" style="--rc:#16A34A">
+      <div class="c-left"><div class="kicker" style="--rc:#16A34A"><span class="ar">العامل المستقل</span><span class="en">Freelancer</span></div><h3 class="ar">الاشتراك والفواتير</h3><h3 class="en">Subscription &amp; invoices</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كعامل مستقل، أريد متابعة تفاصيل اشتراكي وإمكانيّة إلغائه</span><span class="en">As a freelancer, I want to see my subscription details and cancel it</span></div><div class="story"><span class="ar">أريد سجلّ فواتيري وتنزيل نسخة PDF، وتنبيهاً بالمتأخّر منها</span><span class="en">I want my invoice history, PDF download, and an overdue alert</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">صفحة الاشتراك: المساحة، المقعد، السعر، الفترة، الإلغاء</span><span class="en">Subscription page: space, seat, price, period, cancel</span></li><li><span class="ar">سجلّ الفواتير: الحالة، الاستحقاق، الدفع، الإجمالي المدفوع، تنزيل PDF</span><span class="en">Invoice history: status, due, paid, total paid, PDF download</span></li><li><span class="ar">تنبيه أعلى الصفحة عند وجود فواتير متأخّرة</span><span class="en">An overdue banner when invoices are past due</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/21-freelancer-subscription.png" alt="My subscription" /><figcaption><span class="ar">اشتراكي</span><span class="en">My subscription</span></figcaption></figure></div>
+    <div class="snum">12 / 30</div></section>
+
+    <section class="slide gallery" style="--rc:#16A34A">
+      <div class="g-head">
+        <h3 class="ar">العامل المستقل — لقطات</h3>
+        <h3 class="en">Freelancer — screens</h3>
+      </div>
+      <div class="g-grid g-4"><figure class="shot"><img src="img/22-freelancer-invoices.png" alt="My invoices" /><figcaption><span class="ar">فواتيري</span><span class="en">My invoices</span></figcaption></figure><figure class="shot"><img src="img/23-freelancer-notifications.png" alt="Notifications" /><figcaption><span class="ar">الإشعارات</span><span class="en">Notifications</span></figcaption></figure><figure class="shot"><img src="img/24-freelancer-profile.png" alt="Profile + avatar" /><figcaption><span class="ar">الملف الشخصي + الصورة</span><span class="en">Profile + avatar</span></figcaption></figure><figure class="shot"><img src="img/53-freelancer-home-en.png" alt="English locale" /><figcaption><span class="ar">الواجهة بالإنجليزيّة</span><span class="en">English locale</span></figcaption></figure></div>
+    <div class="snum">13 / 30</div></section>
+
+    <section class="slide content no-shot" style="--rc:#16A34A">
+      <div class="c-left"><div class="kicker" style="--rc:#16A34A"><span class="ar">العامل المستقل</span><span class="en">Freelancer</span></div><h3 class="ar">رحلة الحجز حتى التفعيل</h3><h3 class="en">From booking to active membership</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">إشعار فوري عند الموافقة أو الرفض على الطلب</span><span class="en">Instant notification on approval or rejection</span></li><li><span class="ar">بريد + إشعار داخل التطبيق + دفع على الويب</span><span class="en">Email + in-app + web push</span></li></ul><div class="block-label ar">سير العمل</div><div class="block-label en">Flow</div><div class="flow"><div class="step"><div class="step-n">1</div><div class="step-t"><span class="ar">يستكشف ويفتح مساحة</span><span class="en">Explore &amp; open a space</span></div></div><div class="step"><div class="step-n">2</div><div class="step-t"><span class="ar">يرسل طلب حجز (نوع المقعد + رسالة)</span><span class="en">Send a booking request</span></div></div><div class="step"><div class="step-n">3</div><div class="step-t"><span class="ar">يوافق صاحب المساحة ويُخصّص مقعداً</span><span class="en">Owner approves + assigns a seat</span></div></div><div class="step"><div class="step-n">4</div><div class="step-t"><span class="ar">يُنشأ اشتراك نشط تلقائياً</span><span class="en">An active subscription is created</span></div></div><div class="step"><div class="step-n">5</div><div class="step-t"><span class="ar">تصل الفواتير + إشعار التخصيص</span><span class="en">Invoices + seat-assigned notice arrive</span></div></div></div></div>
+      <div class="c-right"></div>
+    <div class="snum">14 / 30</div></section>
+
+    <section class="slide divider" style="--rc:#176AA8">
+      <div class="divider-num">03</div>
+      <div class="divider-body">
+        <div class="kicker" style="--rc:#176AA8">WORKSPACE OWNER</div>
+        <h2 class="ar">لوحة صاحب المساحة</h2>
+        <h2 class="en">Workspace owner</h2>
+        <p class="ar">إدارة المساحة بالكامل: مقاعد، مشتركون، فوترة، باقات</p>
+        <p class="en">Run the whole space: seats, members, billing, packages</p>
+      </div>
+    <div class="snum">15 / 30</div></section>
+
+    <section class="slide content" style="--rc:#176AA8">
+      <div class="c-left"><div class="kicker" style="--rc:#176AA8"><span class="ar">صاحب المساحة</span><span class="en">Owner</span></div><h3 class="ar">لوحة التحكّم: نبض المساحة</h3><h3 class="en">Dashboard: the pulse of the space</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كصاحب مساحة، أريد لمحة عن المشتركين والإشغال والإيرادات المتتبَّعة</span><span class="en">As an owner, I want an at-a-glance view of members, occupancy and tracked revenue</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">إحصائيات: المشتركون، المقاعد المشغولة، الفواتير، الإيراد المتتبَّع</span><span class="en">Stats: members, occupied seats, invoices, tracked revenue</span></li><li><span class="ar">الإيراد محاسبيّ يُديره صاحب المساحة يدويّاً — لا مبالغ بوّابة دفع</span><span class="en">Revenue is owner-managed bookkeeping — not gateway money</span></li><li><span class="ar">روابط سريعة لكلّ أقسام الإدارة</span><span class="en">Quick links into every management area</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/10-owner-dashboard.png" alt="Owner dashboard" /><figcaption><span class="ar">لوحة صاحب المساحة</span><span class="en">Owner dashboard</span></figcaption></figure></div>
+    <div class="snum">16 / 30</div></section>
+
+    <section class="slide content" style="--rc:#176AA8">
+      <div class="c-left"><div class="kicker" style="--rc:#176AA8"><span class="ar">صاحب المساحة</span><span class="en">Owner</span></div><h3 class="ar">المشتركون والمقاعد</h3><h3 class="en">Members &amp; seats</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كصاحب مساحة، أريد إدارة مشتركيّ ورؤية تفاصيل كلّ واحد</span><span class="en">As an owner, I want to manage members and open each member&#x27;s details</span></div><div class="story"><span class="ar">أريد خريطة مقاعد بصريّة لأرى المتاح والمشغول وأخصّص المقاعد</span><span class="en">I want a visual seat map to see availability and assign seats</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">جدول المشتركين + درج تفاصيل (اشتراك، مقعد، فواتير)</span><span class="en">Members table + detail drawer (subscription, seat, invoices)</span></li><li><span class="ar">خريطة مقاعد تفاعليّة بأنواع وحالات المقاعد</span><span class="en">Interactive seat map with seat types and statuses</span></li><li><span class="ar">صور المستخدمين (أفتار) تظهر أينما وُجدت</span><span class="en">User avatars shown wherever a member appears</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/12-owner-seats.png" alt="Seats" /><figcaption><span class="ar">المقاعد</span><span class="en">Seats</span></figcaption></figure></div>
+    <div class="snum">17 / 30</div></section>
+
+    <section class="slide content" style="--rc:#176AA8">
+      <div class="c-left"><div class="kicker" style="--rc:#176AA8"><span class="ar">صاحب المساحة</span><span class="en">Owner</span></div><h3 class="ar">طلبات الحجز والفوترة</h3><h3 class="en">Booking requests &amp; invoicing</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كصاحب مساحة، أريد مراجعة طلبات الحجز والموافقة عليها بتخصيص مقعد</span><span class="en">As an owner, I want to review requests and approve them by assigning a seat</span></div><div class="story"><span class="ar">أريد توليد الفواتير الشهريّة ومتابعة المدفوع والمتأخّر</span><span class="en">I want to generate monthly invoices and track paid vs overdue</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">طلب جديد يُنبّه صاحب المساحة فوراً</span><span class="en">A new request instantly notifies the owner</span></li><li><span class="ar">الموافقة تُنشئ اشتراكاً وتشغل المقعد في معاملة واحدة</span><span class="en">Approval creates a subscription + occupies the seat atomically</span></li><li><span class="ar">فواتير: توليد شهري، تعليم مدفوع، متأخّر، تذكير، PDF</span><span class="en">Invoices: monthly generation, mark-paid, overdue, reminders, PDF</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/13-owner-requests.png" alt="Booking requests" /><figcaption><span class="ar">طلبات الحجز</span><span class="en">Booking requests</span></figcaption></figure></div>
+    <div class="snum">18 / 30</div></section>
+
+    <section class="slide gallery" style="--rc:#176AA8">
+      <div class="g-head">
+        <h3 class="ar">صاحب المساحة — لقطات</h3>
+        <h3 class="en">Owner — screens</h3>
+      </div>
+      <div class="g-grid g-4"><figure class="shot"><img src="img/11-owner-members.png" alt="Members" /><figcaption><span class="ar">المشتركون</span><span class="en">Members</span></figcaption></figure><figure class="shot"><img src="img/14-owner-invoices.png" alt="Invoices" /><figcaption><span class="ar">الفواتير</span><span class="en">Invoices</span></figcaption></figure><figure class="shot"><img src="img/15-owner-packages.png" alt="Internet packages" /><figcaption><span class="ar">باقات الإنترنت</span><span class="en">Internet packages</span></figcaption></figure><figure class="shot"><img src="img/16-owner-reports.png" alt="Reports" /><figcaption><span class="ar">التقارير</span><span class="en">Reports</span></figcaption></figure></div>
+    <div class="snum">19 / 30</div></section>
+
+    <section class="slide content no-shot" style="--rc:#176AA8">
+      <div class="c-left"><div class="kicker" style="--rc:#176AA8"><span class="ar">صاحب المساحة</span><span class="en">Owner</span></div><h3 class="ar">ما وراء الأساسيّات</h3><h3 class="en">Beyond the basics</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">باقات الإنترنت: إنشاؤها وتخصيصها للمشتركين</span><span class="en">Internet packages: create and assign to members</span></li><li><span class="ar">المصروفات والموارد لإدارة تشغيل المساحة</span><span class="en">Expenses and resources to run space operations</span></li><li><span class="ar">الإعلانات والرسائل الجماعيّة للمشتركين</span><span class="en">Announcements and broadcast messaging to members</span></li><li><span class="ar">تقارير ورسوم بيانيّة + تصدير</span><span class="en">Reports, charts and export</span></li><li><span class="ar">دردشة فوريّة مع المشتركين والأدمن</span><span class="en">Realtime chat with members and admins</span></li></ul><div class="block-label ar">سير العمل</div><div class="block-label en">Flow</div><div class="flow"><div class="step"><div class="step-n">1</div><div class="step-t"><span class="ar">يسجّل المساحة</span><span class="en">Register space</span></div></div><div class="step"><div class="step-n">2</div><div class="step-t"><span class="ar">يوافق الأدمن</span><span class="en">Admin approves</span></div></div><div class="step"><div class="step-n">3</div><div class="step-t"><span class="ar">يجهّز المقاعد والباقات</span><span class="en">Set up seats &amp; packages</span></div></div><div class="step"><div class="step-n">4</div><div class="step-t"><span class="ar">يستقبل الطلبات ويوافق</span><span class="en">Receive &amp; approve requests</span></div></div><div class="step"><div class="step-n">5</div><div class="step-t"><span class="ar">يُفوتر ويُحلّل</span><span class="en">Invoice &amp; analyze</span></div></div></div></div>
+      <div class="c-right"></div>
+    <div class="snum">20 / 30</div></section>
+
+    <section class="slide divider" style="--rc:#F6A91B">
+      <div class="divider-num">04</div>
+      <div class="divider-body">
+        <div class="kicker" style="--rc:#F6A91B">SUPER ADMIN</div>
+        <h2 class="ar">لوحة السوبر أدمن</h2>
+        <h2 class="en">Super admin console</h2>
+        <p class="ar">موافقات، مستخدمون، ماليّة، محتوى، ومدراء فرعيّون بصلاحيّات دقيقة</p>
+        <p class="en">Approvals, users, finance, content and scoped sub-admins</p>
+      </div>
+    <div class="snum">21 / 30</div></section>
+
+    <section class="slide content" style="--rc:#F6A91B">
+      <div class="c-left"><div class="kicker" style="--rc:#F6A91B"><span class="ar">السوبر أدمن</span><span class="en">Super admin</span></div><h3 class="ar">إحصائيات المنصّة</h3><h3 class="en">Platform analytics</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كسوبر أدمن، أريد لوحة بمؤشّرات المنصّة كلّها لاتّخاذ القرار</span><span class="en">As a super admin, I want a platform-wide KPI dashboard</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">عدّادات: المساحات، المستخدمون، الاشتراكات، الفواتير</span><span class="en">Counters: workspaces, users, subscriptions, invoices</span></li><li><span class="ar">تتبّع الإيرادات: المحصّل والمستحقّ (تتبّع يدوي بالإيصالات)</span><span class="en">Revenue tracking: collected vs outstanding (manual, receipt-based)</span></li><li><span class="ar">توزيعات حسب المدينة والجنس لفهم القاعدة</span><span class="en">City and gender distributions to understand the base</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/30-admin-analytics.png" alt="Platform analytics" /><figcaption><span class="ar">إحصائيات المنصّة</span><span class="en">Platform analytics</span></figcaption></figure></div>
+    <div class="snum">22 / 30</div></section>
+
+    <section class="slide content" style="--rc:#F6A91B">
+      <div class="c-left"><div class="kicker" style="--rc:#F6A91B"><span class="ar">السوبر أدمن</span><span class="en">Super admin</span></div><h3 class="ar">الموافقات وإدارة المستخدمين</h3><h3 class="en">Approvals &amp; user management</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كسوبر أدمن، أريد الموافقة على المساحات الجديدة أو تعليقها</span><span class="en">As a super admin, I want to approve or suspend new workspaces</span></div><div class="story"><span class="ar">أريد دليل مستخدمين قابلاً للفلترة مع تفاصيل وتصدير</span><span class="en">I want a filterable user directory with detail and CSV export</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">المساحات: موافقة / تعليق، مع إشعار صاحب المساحة بالتغيير</span><span class="en">Workspaces: approve/suspend, notifying the owner of the change</span></li><li><span class="ar">المستخدمون: فلترة، تفعيل/تعليق، صفحة تفصيل، تصدير CSV</span><span class="en">Users: filter, activate/suspend, detail page, CSV export</span></li><li><span class="ar">إشعار المستخدم عند تعليق حسابه أو إعادة تفعيله</span><span class="en">User notified when their account is suspended or reactivated</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/31-admin-workspaces.png" alt="Workspaces" /><figcaption><span class="ar">إدارة المساحات</span><span class="en">Workspaces</span></figcaption></figure></div>
+    <div class="snum">23 / 30</div></section>
+
+    <section class="slide content" style="--rc:#F6A91B">
+      <div class="c-left"><div class="kicker" style="--rc:#F6A91B"><span class="ar">السوبر أدمن</span><span class="en">Super admin</span></div><h3 class="ar">الماليّة والمدراء والصلاحيّات</h3><h3 class="en">Finance, admins &amp; permissions</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كسوبر أدمن، أريد إنشاء مدراء فرعيّين ومنحهم صلاحيّات محدّدة بدقّة</span><span class="en">As a super admin, I want to create sub-admins with fine-grained permissions</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">ماليّة المنصّة: الاشتراكات والفواتير عبر كل المساحات</span><span class="en">Platform finance: subscriptions and invoices across all spaces</span></li><li><span class="ar">إدارة المدراء: أدوار (سوبر/عادي) + 7 صلاحيّات مُسمّاة</span><span class="en">Admin management: roles (super/standard) + 7 named permissions</span></li><li><span class="ar">الصلاحيّات تُقيّد كلّ مسار API وتُخفي عناصر الواجهة غير المتاحة</span><span class="en">Permissions gate every API route and hide unavailable UI</span></li><li><span class="ar">السوبر أدمن يملك كل الصلاحيّات؛ العادي يملك ما يُمنح له مباشرة فقط</span><span class="en">Super admin holds all; a standard admin holds only its direct grants</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/33-admin-finance.png" alt="Finance" /><figcaption><span class="ar">الماليّة</span><span class="en">Finance</span></figcaption></figure></div>
+    <div class="snum">24 / 30</div></section>
+
+    <section class="slide content" style="--rc:#F6A91B">
+      <div class="c-left"><div class="kicker" style="--rc:#F6A91B"><span class="ar">السوبر أدمن</span><span class="en">Super admin</span></div><h3 class="ar">إدارة محتوى الصفحة الرئيسيّة</h3><h3 class="en">Landing-page content management</h3><div class="block-label ar">قصص المستخدم</div><div class="block-label en">User stories</div><div class="stories"><div class="story"><span class="ar">كسوبر أدمن، أريد تحرير محتوى الصفحة العامّة دون مطوّر</span><span class="en">As a super admin, I want to edit the public page without a developer</span></div></div><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">تحرير نصوص وصور وترتيب أقسام الصفحة الرئيسيّة</span><span class="en">Edit copy, images and section order of the landing page</span></li><li><span class="ar">اختيار المساحات المميّزة وخطوات «كيف يعمل»</span><span class="en">Choose featured workspaces and the “how it works” steps</span></li><li><span class="ar">كل التغييرات فوريّة على الموقع العام</span><span class="en">All changes are live on the public site immediately</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/32-admin-users.png" alt="Users directory" /><figcaption><span class="ar">دليل المستخدمين</span><span class="en">Users directory</span></figcaption></figure></div>
+    <div class="snum">25 / 30</div></section>
+
+    <section class="slide divider" style="--rc:#52525B">
+      <div class="divider-num">05</div>
+      <div class="divider-body">
+        <div class="kicker" style="--rc:#52525B">PLATFORM SYSTEMS</div>
+        <h2 class="ar">الأنظمة المشتركة</h2>
+        <h2 class="en">Cross-cutting systems</h2>
+        <p class="ar">ما يربط الأدوار معاً ويجعل المنصّة حيّة</p>
+        <p class="en">What ties the roles together and keeps the platform alive</p>
+      </div>
+    <div class="snum">26 / 30</div></section>
+
+    <section class="slide content" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">تواصل</span><span class="en">Communication</span></div><h3 class="ar">الدردشة الفوريّة + الإشعارات</h3><h3 class="en">Realtime chat + notifications</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">دردشة فوريّة (Firestore) بين الأدوار، بمرفقات تُخزَّن على S3</span><span class="en">Realtime chat (Firestore) across roles, with S3-backed attachments</span></li><li><span class="ar">جهات اتصال محدّدة حسب الدور + صورة المرسِل بجانب الرسالة</span><span class="en">Role-scoped contacts + the sender&#x27;s avatar beside each message</span></li><li><span class="ar">شارة عدد الرسائل غير المقروءة بجانب «المحادثات»</span><span class="en">An unread-messages badge next to the Chat nav item</span></li><li><span class="ar">16 نوع إشعار: قاعدة بيانات + بريد + دفع على الويب (FCM)</span><span class="en">16 notification types: database + email + web push (FCM)</span></li><li><span class="ar">أمثلة: طلب حجز جديد، الموافقة/الرفض، فاتورة، تخصيص مقعد، قرب انتهاء الاشتراك</span><span class="en">e.g. new booking request, approve/reject, invoice, seat assigned, expiry</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/23-freelancer-notifications.png" alt="Notifications center" /><figcaption><span class="ar">مركز الإشعارات</span><span class="en">Notifications center</span></figcaption></figure></div>
+    <div class="snum">27 / 30</div></section>
+
+    <section class="slide content" style="--rc:#52525B">
+      <div class="c-left"><div class="kicker" style="--rc:#52525B"><span class="ar">الفوترة</span><span class="en">Billing model</span></div><h3 class="ar">فوترة بتتبّع يدوي — لا بوّابة دفع</h3><h3 class="en">Manual, tracked billing — no payment gateway</h3><div class="block-label ar">الميزات</div><div class="block-label en">Capabilities</div><ul class="blist"><li><span class="ar">الفواتير تُولَّد شهريّاً تلقائيّاً عبر مهمّة مجدوَلة</span><span class="en">Invoices auto-generate monthly via a scheduled job</span></li><li><span class="ar">تعليم المتأخّر يوميّاً، وتذكيرات، وتنبيه قرب انتهاء الاشتراك</span><span class="en">Daily overdue marking, reminders, and subscription-expiry alerts</span></li><li><span class="ar">المشرف يسجّل المدفوعات والإيصالات يدويّاً</span><span class="en">The admin records payments and receipts manually</span></li><li><span class="ar">تنزيل الفاتورة PDF للمشترك وصاحب المساحة</span><span class="en">Invoice PDF download for the member and the owner</span></li></ul></div>
+      <div class="c-right"><figure class="shot"><img src="img/14-owner-invoices.png" alt="Owner invoices" /><figcaption><span class="ar">فواتير صاحب المساحة</span><span class="en">Owner invoices</span></figcaption></figure></div>
+    <div class="snum">28 / 30</div></section>
+
+    <section class="slide gallery" style="--rc:#52525B">
+      <div class="g-head">
+        <h3 class="ar">ثنائيّة اللغة + الوضع الداكن + نظام التصميم</h3>
+        <h3 class="en">Bilingual + dark mode + design system</h3>
+      </div>
+      <div class="g-grid g-3"><figure class="shot"><img src="img/50-public-home-en.png" alt="English (LTR)" /><figcaption><span class="ar">الواجهة بالإنجليزيّة (LTR)</span><span class="en">English (LTR)</span></figcaption></figure><figure class="shot"><img src="img/52-owner-invoices-dark.png" alt="Dark mode" /><figcaption><span class="ar">الوضع الداكن</span><span class="en">Dark mode</span></figcaption></figure><figure class="shot"><img src="img/40-foundations.png" alt="Design system" /><figcaption><span class="ar">نظام التصميم</span><span class="en">Design system</span></figcaption></figure></div>
+    <div class="snum">29 / 30</div></section>
+
+    <section class="slide closing">
+      <div class="logo">TAQAT<span>.space</span></div>
+      <h2 class="ar">منصّة جاهزة، قابلة للتوسّع، وثنائيّة اللغة</h2>
+      <h2 class="en">A ready, scalable, bilingual platform</h2>
+      <div class="close-grid">
+        <div><div class="cg-n">3</div><span class="ar">أدوار متكاملة</span><span class="en">Integrated roles</span></div>
+        <div><div class="cg-n">23+</div><span class="ar">شاشة منتَج</span><span class="en">Product screens</span></div>
+        <div><div class="cg-n">16</div><span class="ar">نوع إشعار</span><span class="en">Notification types</span></div>
+        <div><div class="cg-n">AR/EN</div><span class="ar">عربي أوّلاً + إنجليزي</span><span class="en">Arabic-first + English</span></div>
+      </div>
+      <p class="ar">للمناقشة: خارطة الطريق، خطط التوسّع، ونماذج الإيرادات المستقبليّة.</p>
+      <p class="en">For discussion: roadmap, scaling plans, and future revenue models.</p>
+    <div class="snum">30 / 30</div></section>
+</div>
+</body>
+</html>
