@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -171,24 +170,6 @@ class TaqatSsoService
         // Build the logout URL even when the session marker is missing (cache
         // evicted / different store / TTL) — only id_token_hint depends on it.
         $endpoint = $this->endSessionEndpoint();
-
-        // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
-        // Dedicated file at debug level so it bypasses LOG_LEVEL / the default
-        // channel: storage/logs/sso-logout.log.
-        Log::build([
-            'driver' => 'single',
-            'path' => storage_path('logs/sso-logout.log'),
-            'level' => 'debug',
-        ])->info('[sso-logout] buildLogoutUrl', [
-            'access_token_id' => $accessTokenId,
-            'session_found' => is_array($session),
-            'has_id_token' => $idToken !== null,
-            'config_end_session_endpoint' => $this->config()['end_session_endpoint'] ?? null,
-            'config_post_logout_redirect_uri' => $this->config()['post_logout_redirect_uri'] ?? null,
-            'config_client_id' => $this->config()['client_id'] ?? null,
-            'resolved_endpoint' => $endpoint,
-            'cache_store' => config('cache.default'),
-        ]);
 
         if ($endpoint === null) {
             return null;
