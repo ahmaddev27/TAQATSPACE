@@ -173,7 +173,13 @@ class TaqatSsoService
         $endpoint = $this->endSessionEndpoint();
 
         // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
-        Log::info('[sso-logout] buildLogoutUrl', [
+        // Dedicated file at debug level so it bypasses LOG_LEVEL / the default
+        // channel: storage/logs/sso-logout.log.
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/sso-logout.log'),
+            'level' => 'debug',
+        ])->info('[sso-logout] buildLogoutUrl', [
             'access_token_id' => $accessTokenId,
             'session_found' => is_array($session),
             'has_id_token' => $idToken !== null,

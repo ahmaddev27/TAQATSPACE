@@ -50,7 +50,13 @@ class AuthService
             : null;
 
         // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
-        Log::info('[sso-logout] AuthService::logout', [
+        // Dedicated file at debug level so it bypasses LOG_LEVEL / the default
+        // channel: storage/logs/sso-logout.log.
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/sso-logout.log'),
+            'level' => 'debug',
+        ])->info('[sso-logout] AuthService::logout', [
             'user_id' => $user->id,
             'sso_sub' => $user->sso_sub,
             'has_current_token' => $token !== null,
