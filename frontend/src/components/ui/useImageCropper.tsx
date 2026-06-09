@@ -50,9 +50,7 @@ export function useImageCropper({
     // formats (SVG, ICO) — which a canvas cropper cannot render (no intrinsic
     // size) — pass straight back unchanged so the upload still works, e.g. an
     // SVG logo or favicon.
-    const nonCroppable =
-      /^image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)$/.test(file.type);
-    if (!file.type.startsWith("image/") || nonCroppable) {
+    if (!file.type.startsWith("image/") || PASSTHROUGH_TYPES.test(file.type)) {
       return Promise.resolve(file);
     }
     return new Promise<File | null>((resolve) => {
