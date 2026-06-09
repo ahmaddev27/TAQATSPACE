@@ -50,6 +50,10 @@ return [
             'title' => 'Booking declined',
             'body' => 'Your booking at :workspace was declined.',
         ],
+        'new_booking_request' => [
+            'title' => 'New booking request',
+            'body' => ':name requested to book :workspace.',
+        ],
         'new_workspace_registration' => [
             'title' => 'New workspace registration',
             'body' => ':name registered a new workspace.',

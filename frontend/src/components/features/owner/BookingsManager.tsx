@@ -122,6 +122,8 @@ export function BookingsManager({ bookings, availableSeats }: BookingsManagerPro
                 <div className="row" style={{ gap: 14 }}>
                   <Avatar
                     initial={avatarInitial(b.member?.name)}
+                    src={b.member?.avatar}
+                    alt={b.member?.name}
                     size="lg"
                     round
                   />

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\MessageService;
 use App\Support\ApiResponse;
+use App\Support\MediaUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -61,7 +62,7 @@ class MessageController extends Controller
             'member' => [
                 'id' => $member->id,
                 'name' => $member->name,
-                'avatar' => $member->avatar,
+                'avatar' => MediaUrl::resolve($member->avatar),
             ],
             'messages' => MessageResource::collection($thread),
         ]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\BookingRequest;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,7 +32,7 @@ class BookingRequestResource extends JsonResource
                 'name' => $this->member->name,
                 'email' => $this->member->email,
                 'specialty' => $this->member->specialty,
-                'avatar' => $this->member->avatar,
+                'avatar' => MediaUrl::resolve($this->member->avatar),
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

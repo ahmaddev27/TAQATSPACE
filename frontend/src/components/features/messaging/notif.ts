@@ -17,6 +17,8 @@ export function notifPresentation(type: string): NotifPresentation {
       return { icon: "checkCircle", tone: "ok" };
     case "booking_rejected":
       return { icon: "xCircle", tone: "warn" };
+    case "new_booking_request":
+      return { icon: "inbox", tone: "info" };
     case "invoice_paid":
       return { icon: "wallet", tone: "ok" };
     case "invoice_overdue":
@@ -51,6 +53,8 @@ export function notifHref(
     case "booking_approved":
     case "booking_rejected":
       return role === "owner" ? `${base}/requests` : `${base}`;
+    case "new_booking_request":
+      return `${base}/requests`;
     case "invoice_created":
     case "invoice_overdue":
     case "invoice_paid":

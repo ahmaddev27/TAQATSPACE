@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\Message;
 use App\Models\User;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -33,7 +34,7 @@ class MessageThreadResource extends JsonResource
             'member' => [
                 'id' => $member?->id,
                 'name' => $member?->name,
-                'avatar' => $member?->avatar,
+                'avatar' => MediaUrl::resolve($member?->avatar),
                 'specialty' => $member?->specialty,
             ],
             'last_message' => $lastMessage === null ? null : [

@@ -69,6 +69,8 @@ export interface ChatMessage {
 export interface ChatParticipant {
   id: string;
   name: string;
+  /** Resolved avatar URL, when known; absent for ad-hoc participant stubs. */
+  avatar?: string | null;
 }
 
 /** Resolved chat session: the signed-in Firebase uid (= our user id). */

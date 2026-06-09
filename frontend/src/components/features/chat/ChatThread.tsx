@@ -11,6 +11,11 @@ import { clockTime } from "./time";
 
 export interface ChatThreadProps {
   contactName: string;
+  /** The contact's resolved avatar URL (or null → render their name initial). */
+  contactAvatar?: string | null;
+  /** The signed-in user's display name + avatar, for sided message avatars. */
+  selfName: string;
+  selfAvatar?: string | null;
   messages: ChatMessage[];
   /** The signed-in Firebase uid (= our user id), to side each bubble. */
   selfUid: string;
@@ -25,6 +30,9 @@ export interface ChatThreadProps {
  */
 export function ChatThread({
   contactName,
+  contactAvatar,
+  selfName,
+  selfAvatar,
   messages,
   selfUid,
   loading,
@@ -58,7 +66,12 @@ export function ChatThread({
         >
           <Icon name="arrowR" />
         </button>
-        <Avatar initial={avatarInitial(contactName)} round />
+        <Avatar
+          initial={avatarInitial(contactName)}
+          src={contactAvatar}
+          alt={contactName}
+          round
+        />
         <div className="grow" style={{ minWidth: 0 }}>
           <div className="chat-name">{contactName}</div>
         </div>
@@ -95,10 +108,30 @@ export function ChatThread({
               </div>
             </div>
           ) : (
-            messages.map((m) => {
+            messages.map((m, i) => {
               const out = m.senderId === selfUid;
+              // Show the sender's avatar only on the last message of a
+              // consecutive same-sender run, so a burst of messages from one
+              // person isn't a column of repeated faces. Other rows keep a
+              // same-width spacer so every bubble stays aligned.
+              const endsGroup =
+                i === messages.length - 1 ||
+                messages[i + 1].senderId !== m.senderId;
+              const avatarSrc = out ? selfAvatar : contactAvatar;
+              const avatarName = out ? selfName : contactName;
               return (
                 <div key={m.id} className={`chat-row ${out ? "out" : "in"}`}>
+                  {endsGroup ? (
+                    <Avatar
+                      initial={avatarInitial(avatarName)}
+                      src={avatarSrc}
+                      alt={avatarName}
+                      size="sm"
+                      round
+                    />
+                  ) : (
+                    <span className="chat-msg-spacer" aria-hidden="true" />
+                  )}
                   <div>
                     {m.attachment && (
                       <MessageAttachment attachment={m.attachment} />

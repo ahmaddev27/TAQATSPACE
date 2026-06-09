@@ -218,3 +218,25 @@
   .cta-band { padding: 40px 22px; }
   .pub-footer-in { grid-template-columns: 1fr 1fr; gap: 24px; padding: 40px 20px 24px; }
 }
+
+/* ---------- Landing entrance + scroll reveal ---------- */
+@keyframes ed-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+.ed-hero-copy { animation: ed-rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.ed-collage { animation: ed-rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s both; }
+
+/* Scroll reveal: the hidden state applies only after JS marks the page active,
+   so SSR / no-JS shows everything. Each [data-reveal] block fades up on entry. */
+.reveal-active [data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.reveal-active [data-reveal].is-revealed { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-hero-copy, .ed-collage { animation: none; }
+  .reveal-active [data-reveal] { opacity: 1; transform: none; transition: none; }
+}

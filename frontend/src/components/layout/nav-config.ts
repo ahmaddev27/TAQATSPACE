@@ -86,6 +86,25 @@ export function filterNavByRealtime(
 }
 
 /**
+ * Set the unread-messages badge on the Chat nav item (across every group). A
+ * count of 0 leaves the nav untouched, so no badge renders. Returns a new nav
+ * object — the input is never mutated.
+ */
+export function applyChatBadge(nav: RoleNav, unread: number): RoleNav {
+  if (unread <= 0) return nav;
+
+  return {
+    ...nav,
+    groups: nav.groups.map((group) => ({
+      ...group,
+      items: group.items.map((item) =>
+        item.key === "chat" ? { ...item, badge: unread } : item,
+      ),
+    })),
+  };
+}
+
+/**
  * Role-aware navigation, matching the prototype `NAV` map but pointing at real
  * Next routes. Screen agents own the destination pages; missing pages are
  * stubbed by their respective areas.

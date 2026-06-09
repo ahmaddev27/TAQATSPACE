@@ -188,14 +188,24 @@
 /* ---- Bubbles ---- */
 .chat-row {
   display: flex;
+  align-items: flex-end;
+  gap: 8px;
   max-width: 78%;
 }
 .chat-row.out {
   align-self: flex-end;
   justify-content: flex-end;
+  /* Sender avatar sits on the author's own side (end), so reverse the row. */
+  flex-direction: row-reverse;
 }
 .chat-row.in {
   align-self: flex-start;
+}
+/* Keeps bubbles aligned on rows where the avatar is hidden (mid-group). Matches
+   the small avatar's footprint (28px) so the bubble column never shifts. */
+.chat-msg-spacer {
+  flex: none;
+  width: 28px;
 }
 .chat-bubble {
   padding: 9px 13px;

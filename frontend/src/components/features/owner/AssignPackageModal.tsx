@@ -109,7 +109,7 @@ export function AssignPackageModal({ pkg, members, onClose }: AssignPackageModal
           ) : (
             assigned.map((m) => (
               <div key={m.id} className="row" style={{ gap: 10 }}>
-                <Avatar initial={avatarInitial(m.name)} size="sm" round />
+                <Avatar initial={avatarInitial(m.name)} src={m.avatar} alt={m.name} size="sm" round />
                 <span className="grow" style={{ fontSize: "var(--fs-sm)" }}>
                   {m.name}
                 </span>
