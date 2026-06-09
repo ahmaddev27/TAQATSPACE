@@ -8,6 +8,7 @@ use App\Enums\SeatStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Notifications\AccountStatusChangedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -74,6 +75,11 @@ class AdminUserService
     public function changeStatus(User $user, UserStatus $status): User
     {
         $user->forceFill(['status' => $status->value])->save();
+
+        // Tell the user when they are suspended or reactivated — never silently.
+        if (in_array($status, [UserStatus::Suspended, UserStatus::Active], true)) {
+            $user->notify(new AccountStatusChangedNotification($status));
+        }
 
         return $user->refresh();
     }
