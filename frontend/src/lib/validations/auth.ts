@@ -163,7 +163,9 @@ const genderField = z.enum(["", ...GENDER_OPTIONS]);
 
 export function freelancerOnboardingSchema(t: Translate) {
   return z.object({
-    phone: z.string().min(6, t("phone")),
+    // Optional: the phone is provided by the Taqat SSO on provision, so we don't
+    // re-require/confirm it here. Validated only for length when actually filled.
+    phone: z.string().trim().max(30, t("phone")),
     gender: genderField,
     specialty: z.string().min(1, t("required")),
     bio: z.string().optional(),
@@ -187,7 +189,8 @@ export function ownerOnboardingSchema(t: Translate) {
   });
 
   return z.object({
-    phone: z.string().min(6, t("phone")),
+    // Optional at onboarding — the phone comes from the Taqat SSO on provision.
+    phone: z.string().trim().max(30, t("phone")),
     gender: genderField,
     workspace_name: z.string().min(2, t("required")),
     description: z.string().min(1, t("required")),

@@ -81,12 +81,16 @@ export function DashShell({
     () =>
       applyChatBadge(
         filterNavByRealtime(
-          filterNavByPermissions(ROLE_NAV[role], user?.permissions),
+          filterNavByPermissions(
+            ROLE_NAV[role],
+            user?.permissions,
+            user?.is_super_admin,
+          ),
           firebaseReady,
         ),
         chatUnread,
       ),
-    [role, user?.permissions, firebaseReady, chatUnread],
+    [role, user?.permissions, user?.is_super_admin, firebaseReady, chatUnread],
   );
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);

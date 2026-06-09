@@ -45,7 +45,12 @@ export interface RoleNav {
 export function filterNavByPermissions(
   nav: RoleNav,
   permissions: readonly AdminPermission[] | undefined,
+  isSuperAdmin = false,
 ): RoleNav {
+  // A super-admin holds every permission — never hide anything from them, even
+  // if the permission list arrives empty for any reason.
+  if (isSuperAdmin) return nav;
+
   const granted = new Set(permissions ?? []);
 
   const groups = nav.groups

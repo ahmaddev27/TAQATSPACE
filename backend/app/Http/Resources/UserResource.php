@@ -57,7 +57,7 @@ class UserResource extends JsonResource
 
         return [
             'is_super_admin' => $this->isSuperAdmin(),
-            'permissions' => $this->getPermissionNames()->values()->all(),
+            'permissions' => $this->effectivePermissionNames(),
         ];
     }
 
