@@ -61,6 +61,10 @@ export function ImageCropModal({
   const t = useTranslations("common.cropper");
 
   const [image, setImage] = useState<HTMLImageElement | null>(null);
+  // The object URL actually rendered in the <img>, kept in state rather than
+  // read off `image.src` — that URL can be revoked early (React StrictMode runs
+  // the effect's cleanup between its double-invoke), which would blank the box.
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -81,6 +85,7 @@ export function ImageCropModal({
   // the effect body — and the transform is reset for the freshly loaded image.
   useEffect(() => {
     const url = URL.createObjectURL(file);
+    setObjectUrl(url);
     const img = new window.Image();
     img.onload = () => {
       setImage(img);
@@ -259,7 +264,7 @@ export function ImageCropModal({
           {image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={image.src}
+              src={objectUrl ?? image.src}
               alt=""
               draggable={false}
               className="cropper-img"
