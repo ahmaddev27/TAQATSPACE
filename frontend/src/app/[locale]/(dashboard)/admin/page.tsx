@@ -34,6 +34,8 @@ export default async function AdminDashboardPage({
 
   // Quick links lead to permission-gated pages — show only the ones this admin
   // may actually open, so a limited admin never sees a link to a 403/redirect.
+  // A super-admin holds every permission and always sees them all.
+  const isSuperAdmin = me.data.user.is_super_admin ?? false;
   const granted = new Set(me.data.user.permissions ?? []);
   const quickLinks: QuickLink[] = (
     [
@@ -42,7 +44,7 @@ export default async function AdminDashboardPage({
       { href: "/admin/subscriptions", icon: "card", label: t("qaSubscriptions"), permission: "manage_billing" },
       { href: "/admin/invoices", icon: "receipt", label: t("qaInvoices"), permission: "manage_billing" },
     ] satisfies QuickLink[]
-  ).filter((q) => granted.has(q.permission));
+  ).filter((q) => isSuperAdmin || granted.has(q.permission));
 
   return (
     <div className="page">

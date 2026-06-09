@@ -33,7 +33,7 @@ class AdminResource extends JsonResource
             'status' => $this->status->value,
             'roles' => $this->getRoleNames()->values()->all(),
             'is_super_admin' => $this->isSuperAdmin(),
-            'permissions' => $this->getPermissionNames()->values()->all(),
+            'permissions' => $this->effectivePermissionNames(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
