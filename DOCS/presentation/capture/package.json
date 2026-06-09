@@ -1,0 +1,10 @@
+{
+  "name": "taqat-presentation-capture",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless capture of the TaqatSpace design prototype screens for the features deck.",
+  "type": "commonjs",
+  "dependencies": {
+    "puppeteer-core": "^23.0.0"
+  }
+}
