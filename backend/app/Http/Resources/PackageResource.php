@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\InternetPackage;
 use App\Models\User;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,7 +33,7 @@ class PackageResource extends JsonResource
             'members' => $this->whenLoaded('members', fn () => $this->members->map(static fn (User $member): array => [
                 'id' => $member->id,
                 'name' => $member->name,
-                'avatar' => $member->avatar,
+                'avatar' => MediaUrl::resolve($member->avatar),
                 'assigned_at' => $member->pivot?->assigned_at,
             ])->all()),
             'created_at' => $this->created_at?->toIso8601String(),

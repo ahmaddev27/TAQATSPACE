@@ -17,6 +17,7 @@ import {
   type ChatMessage,
   type ChatParticipant,
 } from "@/lib/firebase/chat";
+import { markConversationSeen } from "@/lib/firebase/chatRead";
 import type { ChatContact } from "@/lib/api/chat";
 import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
@@ -112,6 +113,14 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   // The thread is "loading" while a conversation is selected but its first
   // Firestore snapshot hasn't resolved yet.
   const loadingThread = activeConvId != null && loadedConvId !== activeConvId;
+
+  // Viewing the active conversation (or receiving a new message while it's open)
+  // marks it seen, which clears its unread badge in the sidebar.
+  useEffect(() => {
+    if (!activeConvId) return;
+    const conv = conversations.find((c) => c.id === activeConvId);
+    if (conv) markConversationSeen(conv.id, conv.updatedAt);
+  }, [activeConvId, conversations]);
 
   // ---- Build the left-pane list: live conversations first, then contacts
   //      that have no conversation yet (so a new chat can be started). ----
@@ -309,6 +318,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                   <ContactRow
                     key={conv.id}
                     name={other.name}
+                    avatar={contactById.get(other.id)?.avatar ?? null}
                     preview={conv.lastMessage || t("noMessagesYet")}
                     time={relativeTime(conv.updatedAt, locale)}
                     active={other.id === activeContactId}
@@ -324,6 +334,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                     <ContactRow
                       key={c.id}
                       name={c.name}
+                      avatar={c.avatar}
                       preview={t("tapToStart")}
                       active={c.id === activeContactId}
                       onSelect={() => setActiveContactId(c.id)}
@@ -341,6 +352,9 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
           <>
             <ChatThread
               contactName={activeName}
+              contactAvatar={activeContact?.avatar ?? null}
+              selfName={self.name}
+              selfAvatar={self.avatar ?? null}
               messages={messages}
               selfUid={self.id}
               loading={loadingThread}
@@ -366,12 +380,14 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
 /** A single selectable row in the left pane (conversation or new contact). */
 function ContactRow({
   name,
+  avatar,
   preview,
   time,
   active,
   onSelect,
 }: {
   name: string;
+  avatar?: string | null;
   preview: string;
   time?: string;
   active: boolean;
@@ -383,7 +399,7 @@ function ContactRow({
       className={`chat-item ${active ? "active" : ""}`.trim()}
       onClick={onSelect}
     >
-      <Avatar initial={avatarInitial(name)} round />
+      <Avatar initial={avatarInitial(name)} src={avatar} alt={name} round />
       <div className="grow">
         <div className="chat-name">{name}</div>
         <div className="chat-preview">{preview}</div>

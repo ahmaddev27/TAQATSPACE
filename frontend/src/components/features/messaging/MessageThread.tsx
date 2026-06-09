@@ -46,7 +46,7 @@ export function MessageThread({
         >
           <Icon name="arrowR" />
         </button>
-        <Avatar initial={avatarInitial(member.name)} round />
+        <Avatar initial={avatarInitial(member.name)} src={member.avatar} alt={member.name} round />
         <div>
           <div style={{ fontWeight: 600 }}>{member.name}</div>
           {member.specialty && (

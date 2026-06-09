@@ -10,6 +10,7 @@ use App\Enums\WorkspaceStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\MediaUrl;
 
 /**
  * Derives the realtime-chat contact list for a user, scoped to their role.
@@ -50,13 +51,14 @@ class ChatContactService
      * Shape a single contact row. `role` is the contact's own role, so the SPA
      * can group/filter the list by user type.
      *
-     * @return array{id: string, name: string, workspace_id: string, role: string}
+     * @return array{id: string, name: string, avatar: ?string, workspace_id: string, role: string}
      */
     private function contact(User $user, string $workspaceId): array
     {
         return [
             'id' => (string) $user->id,
             'name' => (string) $user->name,
+            'avatar' => MediaUrl::resolve($user->avatar),
             'workspace_id' => $workspaceId,
             'role' => $user->role->value,
         ];
@@ -76,7 +78,7 @@ class ChatContactService
         }
 
         return Subscription::query()
-            ->with('member:id,name,role')
+            ->with('member:id,name,role,avatar')
             ->where('workspace_id', $workspace->id)
             ->get(['id', 'member_id', 'workspace_id'])
             ->filter(static fn (Subscription $s): bool => $s->member !== null)
@@ -99,7 +101,7 @@ class ChatContactService
         // 1. Owners of every active workspace — reach out to any open space.
         Workspace::query()
             ->where('status', WorkspaceStatus::Active->value)
-            ->with('owner:id,name,role')
+            ->with('owner:id,name,role,avatar')
             ->get(['id', 'owner_id'])
             ->each(function (Workspace $workspace) use (&$contacts): void {
                 if ($workspace->owner !== null) {
@@ -111,7 +113,7 @@ class ChatContactService
         // 2. Owners of subscribed workspaces (even if not active), so an existing
         //    conversation stays reachable after a workspace is suspended/closed.
         Subscription::query()
-            ->with('workspace.owner:id,name,role')
+            ->with('workspace.owner:id,name,role,avatar')
             ->where('member_id', $freelancer->id)
             ->get(['id', 'workspace_id'])
             ->each(function (Subscription $subscription) use (&$contacts): void {
@@ -146,7 +148,7 @@ class ChatContactService
             ->where('status', UserStatus::Active->value)
             ->whereKeyNot($admin->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'role'])
+            ->get(['id', 'name', 'role', 'avatar'])
             ->map(fn (User $user): array => $this->contact($user, ''))
             ->all();
     }
@@ -161,7 +163,7 @@ class ChatContactService
         return User::query()
             ->where('role', UserRole::Admin->value)
             ->where('status', UserStatus::Active->value)
-            ->get(['id', 'name', 'role'])
+            ->get(['id', 'name', 'role', 'avatar'])
             ->mapWithKeys(fn (User $admin): array => [
                 (string) $admin->id => $this->contact($admin, ''),
             ])

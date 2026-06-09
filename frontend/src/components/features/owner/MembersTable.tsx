@@ -132,7 +132,7 @@ export function MembersTable({ members }: MembersTableProps) {
       sortable: true,
       cell: (m) => (
         <div className="row" style={{ gap: 10 }}>
-          <Avatar initial={avatarInitial(m.user.name)} round />
+          <Avatar initial={avatarInitial(m.user.name)} src={m.user.avatar} alt={m.user.name} round />
           <div>
             <div style={{ fontWeight: 600 }}>{m.user.name}</div>
             <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>

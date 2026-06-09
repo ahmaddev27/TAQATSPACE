@@ -76,7 +76,7 @@ export function ThreadList({
                   }
                 }}
               >
-                <Avatar initial={avatarInitial(th.member.name)} round />
+                <Avatar initial={avatarInitial(th.member.name)} src={th.member.avatar} alt={th.member.name} round />
                 <div className="grow">
                   <div className="thread-name">{th.member.name}</div>
                   <div className="thread-preview">

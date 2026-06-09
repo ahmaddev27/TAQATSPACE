@@ -18,23 +18,29 @@ export default async function FreelancerInvoicesPage({
   const overdueCount = invoices.filter((inv) => inv.status === "overdue").length;
 
   return (
-    <div className="stack" style={{ gap: 24 }}>
-      <div className="stack" style={{ gap: 4 }}>
-        <h1 className="h1">{t("title")}</h1>
-        <p className="muted">{t("subtitle")}</p>
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1 className="h1">{t("title")}</h1>
+          <p className="muted" style={{ marginTop: 5 }}>
+            {t("subtitle")}
+          </p>
+        </div>
       </div>
 
-      {overdueCount > 0 && (
-        <Alert
-          tone="danger"
-          icon="alert"
-          title={t("overdueAlert.title", { count: overdueCount })}
-        >
-          {t("overdueAlert.body")}
-        </Alert>
-      )}
+      <div className="stack" style={{ gap: 24, marginTop: 8 }}>
+        {overdueCount > 0 && (
+          <Alert
+            tone="danger"
+            icon="alert"
+            title={t("overdueAlert.title", { count: overdueCount })}
+          >
+            {t("overdueAlert.body")}
+          </Alert>
+        )}
 
-      <MemberInvoicesList invoices={invoices} />
+        <MemberInvoicesList invoices={invoices} />
+      </div>
     </div>
   );
 }

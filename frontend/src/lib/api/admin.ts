@@ -237,6 +237,7 @@ export interface ManagedAdmin {
   id: string;
   name: string;
   email: string;
+  avatar: string | null;
   status: UserStatus;
   /** Spatie roles held by the account (e.g. `["super_admin"]`). */
   roles: AdminRole[];

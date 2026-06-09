@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Message;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,7 +33,7 @@ class MessageResource extends JsonResource
             'sender' => $this->whenLoaded('sender', fn (): array => [
                 'id' => $this->sender->id,
                 'name' => $this->sender->name,
-                'avatar' => $this->sender->avatar,
+                'avatar' => MediaUrl::resolve($this->sender->avatar),
             ]),
         ];
     }

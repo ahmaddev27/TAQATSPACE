@@ -109,7 +109,7 @@ export function UsersTable({ users }: UsersTableProps) {
       sortable: true,
       cell: (u) => (
         <div className="row" style={{ gap: 10 }}>
-          <Avatar initial={nameInitial(u.name)} round />
+          <Avatar initial={nameInitial(u.name)} src={u.avatar} alt={u.name} round />
           <span style={{ fontWeight: 600 }}>{u.name}</span>
         </div>
       ),

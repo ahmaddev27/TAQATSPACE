@@ -206,7 +206,7 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
       sortable: true,
       cell: ({ sub }) => (
         <div className="row" style={{ gap: 10 }}>
-          <Avatar initial={avatarInitial(sub.member.name)} round />
+          <Avatar initial={avatarInitial(sub.member.name)} src={sub.member.avatar} alt={sub.member.name} round />
           <div>
             <div style={{ fontWeight: 600 }}>{sub.member.name}</div>
             <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>

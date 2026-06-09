@@ -72,7 +72,7 @@ function Header({ user, locale, t }: { user: AdminUserDetail; locale: string; t:
   return (
     <section className="card card-pad">
       <div className="row wrap" style={{ gap: 18, alignItems: "flex-start" }}>
-        <Avatar initial={nameInitial(user.name)} size="lg" round />
+        <Avatar initial={nameInitial(user.name)} src={user.avatar} alt={user.name} size="lg" round />
         <div className="stack" style={{ gap: 8, flex: 1, minWidth: 220 }}>
           <div className="row wrap" style={{ gap: 10, alignItems: "center" }}>
             <h1 className="h2" style={{ margin: 0 }}>{user.name}</h1>
