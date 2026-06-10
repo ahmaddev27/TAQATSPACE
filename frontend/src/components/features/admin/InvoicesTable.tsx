@@ -58,6 +58,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const [page, setPage] = useState(1);
 
   const [receiptTarget, setReceiptTarget] = useState<AdminInvoice | null>(null);
+  // Row whose action is running, so only its button spins (not every row's).
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [payTarget, setPayTarget] = useState<AdminInvoice | null>(null);
   const [payDate, setPayDate] = useState("");
   const [payReceipt, setPayReceipt] = useState<File | null>(null);
@@ -95,6 +97,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const pageRows = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
   const runUnpaid = (invoice: AdminInvoice) => {
+    setBusyId(invoice.id);
     startTransition(async () => {
       const res = await markInvoiceUnpaid(invoice.id);
       if (res.ok) {
@@ -102,6 +105,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
       } else {
         toast({ tone: "err", title: t("toast.markFailed"), body: res.message });
       }
+      setBusyId(null);
     });
   };
 
@@ -188,7 +192,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               variant="secondary"
               size="sm"
               icon="x"
-              loading={pending}
+              loading={pending && busyId === inv.id}
               onClick={() => runUnpaid(inv)}
             >
               {t("markUnpaid")}
@@ -199,7 +203,6 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 variant="primary"
                 size="sm"
                 icon="check"
-                loading={pending}
                 onClick={() => {
                   setPayDate("");
                   setPayReceipt(null);

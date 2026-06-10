@@ -87,9 +87,15 @@ export function UsersTable({ users }: UsersTableProps) {
   const curPage = Math.min(page, pages);
   const pageRows = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
+  // Id of the row whose status is updating, so only its buttons show a spinner
+  // (a shared `pending` would spin every row's action at once).
+  const [busyId, setBusyId] = useState<string | null>(null);
+
   const runStatus = (user: User, next: UserStatus) => {
+    const id = String(user.id);
+    setBusyId(id);
     startTransition(async () => {
-      const res = await updateUserStatus(String(user.id), next);
+      const res = await updateUserStatus(id, next);
       if (res.ok) {
         toast({
           tone: "ok",
@@ -99,6 +105,7 @@ export function UsersTable({ users }: UsersTableProps) {
       } else {
         toast({ tone: "err", title: t("toast.statusFailed"), body: res.message });
       }
+      setBusyId(null);
     });
   };
 
@@ -161,7 +168,7 @@ export function UsersTable({ users }: UsersTableProps) {
               variant="primary"
               size="sm"
               icon="check"
-              loading={pending}
+              loading={pending && busyId === String(u.id)}
               onClick={() => runStatus(u, "active")}
             >
               {t("activate")}
@@ -172,7 +179,7 @@ export function UsersTable({ users }: UsersTableProps) {
               variant="danger"
               size="sm"
               icon="x"
-              loading={pending}
+              loading={pending && busyId === String(u.id)}
               onClick={() => runStatus(u, "suspended")}
             >
               {t("suspend")}
