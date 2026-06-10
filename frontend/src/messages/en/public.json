@@ -136,6 +136,7 @@
       "sortPriceAsc": "Lowest price",
       "sortPriceDesc": "Highest price",
       "clear": "Clear filters",
+      "loadMore": "Load more",
       "results": "{count} results",
       "empty": "No spaces match your search.",
       "emptyHint": "Try widening or clearing the filters.",
