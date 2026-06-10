@@ -31,6 +31,11 @@
         "new_message": "رسالة جديدة",
         "new_workspace_registration": "تسجيل مساحة عمل جديدة",
         "seat_assigned": "تم تأكيد مقعدك",
+        "invoice_receipt_submitted": "وصل دفع بانتظار المراجعة",
+        "account_status_changed": "تغيّر حالة حسابك",
+        "subscription_expiring": "اشتراكك على وشك الانتهاء",
+        "new_review": "تقييم جديد",
+        "workspace_status_changed": "تغيّر حالة مساحتك",
         "generic": "إشعار"
       }
     },
