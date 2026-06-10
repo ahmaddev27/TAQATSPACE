@@ -13,7 +13,8 @@
         'paid' => 'مدفوعة',
         'overdue' => 'متأخرة',
         'cancelled' => 'ملغاة',
-        'pending' => 'قيد الانتظار',
+        'under_review' => 'قيد المراجعة',
+        'pending' => 'غير مدفوعة',
     ];
     $statusLabel = $statusLabels[$statusValue] ?? $statusLabels['pending'];
 
@@ -40,7 +41,7 @@
             direction: rtl;
             color: #0E1726;
             font-size: 12px;
-            line-height: 1.75;
+            line-height: 1.95;
             margin: 0;
             padding: 0;
         }
@@ -114,7 +115,8 @@
             line-height: 1;
         }
         .badge-paid { background: #E6F6EC; color: #1B8A4B; }
-        .badge-pending { background: #FEF3D6; color: #B5790B; }
+        .badge-pending { background: #EEF1F5; color: #667085; }
+        .badge-under_review { background: #FEF3D6; color: #B5790B; }
         .badge-overdue { background: #FDE7E7; color: #C0392B; }
         .badge-cancelled { background: #EEF1F5; color: #667085; }
 
@@ -133,8 +135,8 @@
             color: #1F82C7;
             margin-bottom: 10px;
         }
-        .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.5; }
-        .party-line { color: #667085; font-size: 11px; line-height: 1.8; margin-top: 3px; }
+        .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; }
+        .party-line { color: #667085; font-size: 11px; line-height: 1.9; margin-top: 6px; }
 
         /* ---------- Meta strip ---------- */
         .meta {
@@ -151,7 +153,7 @@
         }
         .meta td + td { border-right: 1px solid #E4E9F0; }
         .meta .meta-label { font-size: 10.5px; color: #667085; font-weight: bold; }
-        .meta .meta-value { font-size: 13px; font-weight: bold; color: #0E1726; margin-top: 5px; }
+        .meta .meta-value { font-size: 13px; font-weight: bold; color: #0E1726; margin-top: 8px; }
 
         /* ---------- Line items ---------- */
         .items { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
@@ -169,14 +171,14 @@
         .items thead th:last-child { border-top-left-radius: 8px; }
         .items tbody td {
             border-bottom: 1px solid #E4E9F0;
-            padding: 16px;
+            padding: 18px 16px;
             text-align: right;
             vertical-align: top;
-            line-height: 1.7;
+            line-height: 1.9;
         }
         .items tbody td:last-child { text-align: left; font-weight: bold; }
-        .items .desc-title { font-weight: bold; color: #0E1726; font-size: 12.5px; }
-        .items .desc-sub { color: #667085; font-size: 11px; margin-top: 4px; }
+        .items .desc-title { font-weight: bold; color: #0E1726; font-size: 12.5px; line-height: 1.7; }
+        .items .desc-sub { color: #667085; font-size: 11px; margin-top: 7px; line-height: 1.7; }
 
         /* ---------- Totals ---------- */
         .totals { width: 100%; border-collapse: collapse; margin-top: 18px; }
@@ -319,6 +321,27 @@
             <td class="t-value">{!! $money($invoice->amount) !!}</td>
         </tr>
     </table>
+
+    {{-- Payment details: surfaced once a receipt is attached or the invoice is
+         settled, so the PDF shows the real status + when/how it was paid. --}}
+    @if ($isPaid || $invoice->receipt_path)
+        <table class="meta" style="margin-top: 30px;">
+            <tr>
+                <td>
+                    <div class="meta-label">حالة الدفع<br><span class="en">Payment status</span></div>
+                    <div class="meta-value">{{ $statusLabel }}</div>
+                </td>
+                <td>
+                    <div class="meta-label">تاريخ الدفع<br><span class="en">Paid on</span></div>
+                    <div class="meta-value"><span class="num">{{ $invoice->paid_at?->format('Y-m-d') ?? '—' }}</span></div>
+                </td>
+                <td>
+                    <div class="meta-label">إيصال الدفع<br><span class="en">Receipt</span></div>
+                    <div class="meta-value">{{ $invoice->receipt_path ? 'مُرفق' : '—' }}</div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     {{-- Footer --}}
     <div class="footer">
