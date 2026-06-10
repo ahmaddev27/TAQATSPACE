@@ -17,6 +17,7 @@ import {
   type ChatMessage,
   type ChatParticipant,
 } from "@/lib/firebase/chat";
+import { markConversationSeen } from "@/lib/firebase/chatRead";
 import type { ChatContact } from "@/lib/api/chat";
 import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
@@ -113,6 +114,14 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   // Firestore snapshot hasn't resolved yet.
   const loadingThread = activeConvId != null && loadedConvId !== activeConvId;
 
+  // Viewing the active conversation (or receiving a new message while it's open)
+  // marks it seen, which clears its unread badge in the sidebar.
+  useEffect(() => {
+    if (!activeConvId) return;
+    const conv = conversations.find((c) => c.id === activeConvId);
+    if (conv) markConversationSeen(conv.id, conv.updatedAt);
+  }, [activeConvId, conversations]);
+
   // ---- Build the left-pane list: live conversations first, then contacts
   //      that have no conversation yet (so a new chat can be started). ----
   const knownContactIds = useMemo(() => {
@@ -132,13 +141,15 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
 
   /** Resolve the other participant's id + display name for a conversation. */
   const otherParticipant = useCallback(
-    (conv: ChatConversation): { id: string; name: string } => {
+    (conv: ChatConversation): { id: string; name: string; subscribed: boolean } => {
       const id = conv.participants.find((p) => p !== self.id) ?? "";
+      const contact = contactById.get(id);
+      // Prefer the contact-list name: it's role-appropriate (a workspace name for
+      // a freelancer, "owner - workspace" for an admin), unlike the personal name
+      // stored on the Firestore conversation.
       const name =
-        conv.participantNames[id] ??
-        contactById.get(id)?.name ??
-        t("unknownContact");
-      return { id, name };
+        contact?.name ?? conv.participantNames[id] ?? t("unknownContact");
+      return { id, name, subscribed: contact?.subscribed ?? false };
     },
     [self.id, contactById, t],
   );
@@ -309,6 +320,8 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                   <ContactRow
                     key={conv.id}
                     name={other.name}
+                    avatar={contactById.get(other.id)?.avatar ?? null}
+                    subscribed={other.subscribed}
                     preview={conv.lastMessage || t("noMessagesYet")}
                     time={relativeTime(conv.updatedAt, locale)}
                     active={other.id === activeContactId}
@@ -324,6 +337,8 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                     <ContactRow
                       key={c.id}
                       name={c.name}
+                      avatar={c.avatar}
+                      subscribed={c.subscribed}
                       preview={t("tapToStart")}
                       active={c.id === activeContactId}
                       onSelect={() => setActiveContactId(c.id)}
@@ -341,6 +356,9 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
           <>
             <ChatThread
               contactName={activeName}
+              contactAvatar={activeContact?.avatar ?? null}
+              selfName={self.name}
+              selfAvatar={self.avatar ?? null}
               messages={messages}
               selfUid={self.id}
               loading={loadingThread}
@@ -366,12 +384,16 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
 /** A single selectable row in the left pane (conversation or new contact). */
 function ContactRow({
   name,
+  avatar,
+  subscribed,
   preview,
   time,
   active,
   onSelect,
 }: {
   name: string;
+  avatar?: string | null;
+  subscribed?: boolean;
   preview: string;
   time?: string;
   active: boolean;
@@ -383,9 +405,16 @@ function ContactRow({
       className={`chat-item ${active ? "active" : ""}`.trim()}
       onClick={onSelect}
     >
-      <Avatar initial={avatarInitial(name)} round />
-      <div className="grow">
-        <div className="chat-name">{name}</div>
+      <Avatar initial={avatarInitial(name)} src={avatar} alt={name} round />
+      <div className="grow" style={{ minWidth: 0 }}>
+        <div className="chat-name">
+          <span>{name}</span>
+          {subscribed ? (
+            <span className="chat-sub-badge">
+              <Icon name="checkCircle" size={12} />
+            </span>
+          ) : null}
+        </div>
         <div className="chat-preview">{preview}</div>
       </div>
       {time ? <span className="chat-time">{time}</span> : null}

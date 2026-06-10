@@ -104,7 +104,7 @@ export function AdminsTable({ admins, currentUserId }: AdminsTableProps) {
       sortable: true,
       cell: (a) => (
         <div className="row" style={{ gap: 10 }}>
-          <Avatar initial={nameInitial(a.name)} round />
+          <Avatar initial={nameInitial(a.name)} src={a.avatar} alt={a.name} round />
           <span style={{ fontWeight: 600 }}>{a.name}</span>
         </div>
       ),

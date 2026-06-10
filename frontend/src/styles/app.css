@@ -252,6 +252,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 
 /* ---------- Seat map ---------- */
 .seatmap { display: grid; gap: 8px; }
+/* The column count is set inline (repeat(N,1fr)); cap it on small screens so the
+   seats stay legible instead of shrinking to ~40px. !important beats the inline. */
+@media (max-width: 640px) { .seatmap { grid-template-columns: repeat(4, 1fr) !important; gap: 6px; } }
+@media (max-width: 440px) { .seatmap { grid-template-columns: repeat(3, 1fr) !important; } }
 .seat {
   aspect-ratio: 1; border-radius: var(--r-tile); border: 1.5px solid var(--seat-available-bd);
   background: var(--seat-available); color: var(--text-3); cursor: pointer;
@@ -301,7 +305,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 }
 .cropper-frame:active { cursor: grabbing; }
 .cropper-img {
-  position: absolute; top: 50%; inset-inline-start: 50%; transform-origin: center center;
+  /* Physical `left` (not the logical `inset-inline-start`): the JS centering
+     transform uses a physical translate(-50%), so in RTL a logical start edge
+     would map to `right` and push the image off-canvas (blank cropper). */
+  position: absolute; top: 50%; left: 50%; transform-origin: center center;
   max-width: none; pointer-events: none; -webkit-user-drag: none;
 }
 .cropper-grid { position: absolute; inset: 0; pointer-events: none;

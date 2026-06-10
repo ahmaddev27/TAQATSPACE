@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AdminPermission;
 use App\Enums\AdminRole;
 use App\Enums\Gender;
 use App\Enums\UserRole;
@@ -126,6 +127,26 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->hasRole(AdminRole::SuperAdmin->value);
+    }
+
+    /**
+     * Effective admin permission names for the SPA's authorization context.
+     *
+     * Spatie's getPermissionNames() returns DIRECT grants only, but a super-admin
+     * holds every permission via its role (not directly) — so it would otherwise
+     * come back empty and the SPA would hide the whole admin UI. Resolve it
+     * explicitly: a super-admin has every permission; a standard admin has exactly
+     * its own direct grants (the `admin` role intentionally grants none).
+     *
+     * @return list<string>
+     */
+    public function effectivePermissionNames(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return AdminPermission::values();
+        }
+
+        return $this->getPermissionNames()->values()->all();
     }
 
     public function isOwner(): bool

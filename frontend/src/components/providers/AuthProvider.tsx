@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { dashboardFor } from "@/lib/auth";
+import { unregisterPush } from "@/lib/firebase/messaging";
 import type { ClientAuthResult, User, UserRole } from "@/lib/types/auth";
 
 interface AuthContextValue {
@@ -86,6 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
+    // 0) Unregister FCM push while the session is still authenticated — the
+    //    device-token DELETE needs the bearer cookie that step 1 clears, so
+    //    doing it afterwards would 401. unregisterPush is idempotent + silent.
+    await unregisterPush();
+
     // 1) Clear the local session (delete the Sanctum token + httpOnly cookies).
     //    Also capture the backend-built SSO logout URL as a fallback.
     let backendSsoLogoutUrl: string | null = null;
@@ -103,23 +109,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
 
-    // 2) End the IdP session too (single logout). Build the end-session URL on
-    //    the CLIENT so it works independently of the backend response and adapts
-    //    to each environment: the endpoint + client_id come from NEXT_PUBLIC
-    //    envs, and post_logout_redirect_uri uses the current origin (so staging
-    //    and prod each return to their own site). Must be registered at the IdP.
+    // 2) End the IdP session too (single logout). Prefer the BACKEND-built URL:
+    //    it carries the `id_token_hint` and the exact registered
+    //    `post_logout_redirect_uri` the IdP requires — neither of which the
+    //    client can reproduce (the id_token never leaves the server). Sending an
+    //    end-session request without those is rejected by the provider.
+    if (backendSsoLogoutUrl) {
+      window.location.href = backendSsoLogoutUrl;
+      return;
+    }
+    // Fallback only: a client-built end-session URL from NEXT_PUBLIC envs, used
+    // when the backend returned nothing (e.g. the id_token was not retained).
+    // The redirect must match a URI registered at the IdP, so include the
+    // `/login?loggedout=1` path (not just the bare origin).
     const ssoEndpoint = process.env.NEXT_PUBLIC_SSO_LOGOUT_URL;
     const ssoClientId = process.env.NEXT_PUBLIC_SSO_CLIENT_ID;
     if (ssoEndpoint && ssoClientId) {
       const params = new URLSearchParams({
-        post_logout_redirect_uri: window.location.origin,
+        post_logout_redirect_uri: `${window.location.origin}/login?loggedout=1`,
         client_id: ssoClientId,
       });
       window.location.assign(`${ssoEndpoint}?${params.toString()}`);
-      return;
-    }
-    if (backendSsoLogoutUrl) {
-      window.location.href = backendSsoLogoutUrl;
       return;
     }
 

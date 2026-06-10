@@ -22,6 +22,7 @@
       "types": {
         "booking_approved": "تمت الموافقة على طلب الحجز",
         "booking_rejected": "تم رفض طلب الحجز",
+        "new_booking_request": "طلب حجز جديد",
         "invoice_created": "فاتورة جديدة بانتظار الدفع",
         "invoice_overdue": "فاتورة متأخرة",
         "invoice_paid": "تم استلام الدفعة",

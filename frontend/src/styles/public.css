@@ -113,6 +113,11 @@
 .explore-head { background: var(--surface); border-bottom: 1px solid var(--border); padding: 28px 0 0; }
 .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 18px 0; }
 .filter-bar .select-wrap { width: 160px; }
+/* Full-width filters on phones so they stack cleanly instead of fixed 160px. */
+@media (max-width: 560px) {
+  .filter-bar { align-items: stretch; }
+  .filter-bar .select-wrap { width: 100%; }
+}
 .explore-split { display: grid; grid-template-columns: 1fr .9fr; gap: 24px; padding-top: 24px; padding-bottom: 48px; align-items: start; }
 .explore-list { display: flex; flex-direction: column; gap: 14px; }
 .explore-row { display: flex; gap: 16px; padding: 14px; cursor: pointer; }
@@ -171,6 +176,9 @@
 
 /* misc auth/register */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Stack the two columns on phones — used by many admin/owner forms (messaging
+   settings, broadcast, profile, CMS editor) that would otherwise be cramped. */
+@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
 .link { color: var(--primary); font-weight: 500; cursor: pointer; text-decoration: none; font-size: var(--fs-sm); }
 .link:hover { text-decoration: underline; }
 .confirm-art { width: 76px; height: 76px; border-radius: var(--r-2xl); display: grid; place-items: center; margin: 0 auto; background: var(--warning-bg); color: var(--warning); }
@@ -209,4 +217,26 @@
   .pub-header-in .btn-ghost { display: none; }
   .cta-band { padding: 40px 22px; }
   .pub-footer-in { grid-template-columns: 1fr 1fr; gap: 24px; padding: 40px 20px 24px; }
+}
+
+/* ---------- Landing entrance + scroll reveal ---------- */
+@keyframes ed-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+.ed-hero-copy { animation: ed-rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.ed-collage { animation: ed-rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s both; }
+
+/* Scroll reveal: the hidden state applies only after JS marks the page active,
+   so SSR / no-JS shows everything. Each [data-reveal] block fades up on entry. */
+.reveal-active [data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.reveal-active [data-reveal].is-revealed { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-hero-copy, .ed-collage { animation: none; }
+  .reveal-active [data-reveal] { opacity: 1; transform: none; transition: none; }
 }

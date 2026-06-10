@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getPlatformMessaging } from "@/lib/api/admin";
 import { MessagingSettingsForm } from "@/components/features/admin/MessagingSettingsForm";
 import type { PlatformMessagingConfig } from "@/lib/types";
@@ -26,6 +27,7 @@ export default async function AdminMessagingSettingsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_messaging");
   const t = await getTranslations("messaging.settings.admin");
 
   // A read failure must not break the page; fall back to an empty config.

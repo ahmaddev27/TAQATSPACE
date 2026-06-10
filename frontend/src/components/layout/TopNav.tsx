@@ -3,12 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import type { UserRole } from "@/lib/types/auth";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { TopBarUserMenu } from "./TopBarUserMenu";
+import "@/components/features/messaging/messaging.css";
 
 export interface TopNavProps {
   role: UserRole;
@@ -17,6 +19,10 @@ export interface TopNavProps {
   avatarInitial: string;
   /** Whether the mobile off-canvas drawer is open (drives the hamburger state). */
   mobileOpen: boolean;
+  /** Locale-relative chat route, or null when chat isn't available for this user. */
+  chatHref: string | null;
+  /** Live count of conversations with unseen incoming messages. */
+  chatUnread: number;
   onMenu: () => void;
   onLogout: () => void;
 }
@@ -40,10 +46,13 @@ export function TopNav({
   roleLabel,
   avatarInitial,
   mobileOpen,
+  chatHref,
+  chatUnread,
   onMenu,
   onLogout,
 }: TopNavProps) {
   const t = useTranslations("common");
+  const tNav = useTranslations("nav");
   const locale = useLocale();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -92,6 +101,23 @@ export function TopNav({
 
       <LanguageToggle />
       <ThemeToggle />
+
+      {chatHref && (
+        <div className="notif-bell">
+          <Link
+            href={chatHref}
+            className="icon-btn"
+            aria-label={tNav("items.chat")}
+          >
+            <Icon name="chat" />
+            {chatUnread > 0 && (
+              <span className="notif-bell-badge tnum">
+                {chatUnread > 99 ? "99+" : chatUnread}
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
 
       <NotificationBell />
 

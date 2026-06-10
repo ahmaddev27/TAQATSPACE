@@ -28,7 +28,11 @@ export default async function AdminChatPage({
   return (
     <div className="page">
       <ChatScreen
-        self={{ id: me.data.user.id, name: me.data.user.name }}
+        self={{
+          id: me.data.user.id,
+          name: me.data.user.name,
+          avatar: me.data.user.avatar,
+        }}
         contacts={contacts}
       />
     </div>

@@ -1,9 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { serverFetch } from "@/lib/api";
 import { getAdminStats } from "@/lib/api/admin";
 import { StatTile } from "@/components/ui/StatTile";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { invoiceMoney } from "@/components/features/invoices/format";
+import type { ApiEnvelope, User } from "@/lib/types";
+import type { AdminPermission } from "@/lib/types/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +14,8 @@ interface QuickLink {
   href: string;
   icon: IconName;
   label: string;
+  /** Admin permission required to reach the linked page. */
+  permission: AdminPermission;
 }
 
 export default async function AdminDashboardPage({
@@ -22,14 +27,24 @@ export default async function AdminDashboardPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin.dashboard");
 
-  const stats = await getAdminStats();
+  const [stats, me] = await Promise.all([
+    getAdminStats(),
+    serverFetch<ApiEnvelope<{ user: User }>>("/auth/me"),
+  ]);
 
-  const quickLinks: QuickLink[] = [
-    { href: "/admin/workspaces", icon: "building", label: t("qaWorkspaces") },
-    { href: "/admin/users", icon: "users", label: t("qaUsers") },
-    { href: "/admin/subscriptions", icon: "card", label: t("qaSubscriptions") },
-    { href: "/admin/invoices", icon: "receipt", label: t("qaInvoices") },
-  ];
+  // Quick links lead to permission-gated pages — show only the ones this admin
+  // may actually open, so a limited admin never sees a link to a 403/redirect.
+  // A super-admin holds every permission and always sees them all.
+  const isSuperAdmin = me.data.user.is_super_admin ?? false;
+  const granted = new Set(me.data.user.permissions ?? []);
+  const quickLinks: QuickLink[] = (
+    [
+      { href: "/admin/workspaces", icon: "building", label: t("qaWorkspaces"), permission: "manage_workspaces" },
+      { href: "/admin/users", icon: "users", label: t("qaUsers"), permission: "manage_users" },
+      { href: "/admin/subscriptions", icon: "card", label: t("qaSubscriptions"), permission: "manage_billing" },
+      { href: "/admin/invoices", icon: "receipt", label: t("qaInvoices"), permission: "manage_billing" },
+    ] satisfies QuickLink[]
+  ).filter((q) => isSuperAdmin || granted.has(q.permission));
 
   return (
     <div className="page">
@@ -116,7 +131,8 @@ export default async function AdminDashboardPage({
           </div>
         </div>
 
-        {/* Quick links to the management pages */}
+        {/* Quick links to the management pages — only those this admin can open */}
+        {quickLinks.length > 0 && (
         <div className="card card-pad stack" style={{ gap: 12 }}>
           <h3 className="h3" style={{ fontSize: "var(--fs-md)" }}>
             {t("quickLinks")}
@@ -124,7 +140,9 @@ export default async function AdminDashboardPage({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              // auto-fit (not auto-fill): on desktop the cards stretch to fill the
+              // row; on phones they wrap to 2/1 — with no empty phantom tracks.
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
               gap: 10,
             }}
           >
@@ -150,6 +168,7 @@ export default async function AdminDashboardPage({
             ))}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

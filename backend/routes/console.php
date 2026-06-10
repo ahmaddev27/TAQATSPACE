@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Invoicing schedule (M07 — T040, T043).
 Schedule::command('invoices:generate-monthly')->monthlyOn(1, '08:00');
 Schedule::command('invoices:mark-overdue')->dailyAt('09:00');
+
+// Remind members 3 days before their subscription expires.
+Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');

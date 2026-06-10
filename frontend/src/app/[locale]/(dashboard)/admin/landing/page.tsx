@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAdminLanding } from "@/lib/api/landing";
 import { listWorkspaces } from "@/lib/api/workspaces";
 import {
@@ -16,6 +17,7 @@ export default async function AdminLandingPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireAdminPermission(locale, "manage_content");
   const t = await getTranslations("admin.landing");
 
   // A CMS failure must not break the page; fall back to an empty draft.

@@ -15,7 +15,13 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { PushRegistrar } from "@/components/providers/PushRegistrar";
 import type { UserRole } from "@/lib/types/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/app";
-import { ROLE_NAV, filterNavByPermissions, filterNavByRealtime } from "./nav-config";
+import { useChatUnread } from "@/lib/firebase/useChatUnread";
+import {
+  ROLE_NAV,
+  applyChatBadge,
+  filterNavByPermissions,
+  filterNavByRealtime,
+} from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { NavProgress } from "./NavProgress";
@@ -64,18 +70,34 @@ export function DashShell({
   // Firebase config is fixed at build time, so realtime availability is stable.
   const firebaseReady = isFirebaseConfigured();
 
+  // Live count of conversations with unseen incoming messages, for the Chat badge.
+  const chatUnread = useChatUnread(user?.id);
+
   // Hide permission-gated items (e.g. admin management) the user cannot access,
   // then collapse the Chat/Messages duplication to a single 1:1 surface based on
-  // whether realtime chat is available. The auth payload carries the admin
-  // account's effective permission grant.
+  // whether realtime chat is available, and finally stamp the unread-chat badge.
+  // The auth payload carries the admin account's effective permission grant.
   const nav = useMemo(
     () =>
-      filterNavByRealtime(
-        filterNavByPermissions(ROLE_NAV[role], user?.permissions),
-        firebaseReady,
+      applyChatBadge(
+        filterNavByRealtime(
+          filterNavByPermissions(
+            ROLE_NAV[role],
+            user?.permissions,
+            user?.is_super_admin,
+          ),
+          firebaseReady,
+        ),
+        chatUnread,
       ),
-    [role, user?.permissions, firebaseReady],
+    [role, user?.permissions, user?.is_super_admin, firebaseReady, chatUnread],
   );
+
+  // The chat surface's href, taken from the already-filtered nav so the topbar
+  // chat shortcut appears only when (and where) the sidebar chat item does.
+  const chatHref =
+    nav.groups.flatMap((group) => group.items).find((item) => item.key === "chat")
+      ?.href ?? null;
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -162,6 +184,8 @@ export function DashShell({
           roleLabel={t(nav.roleLabelKey)}
           avatarInitial={avatarInitial}
           mobileOpen={mobileOpen}
+          chatHref={chatHref}
+          chatUnread={chatUnread}
           onMenu={onMenu}
           onLogout={handleLogout}
         />

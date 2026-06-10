@@ -1,9 +1,7 @@
-import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { serverFetch } from "@/lib/api";
 import { getAllManagedAdmins } from "@/lib/api/admin";
+import { requireAdminPermission } from "@/lib/admin-guard";
 import { AdminsTable } from "@/components/features/admin/AdminsTable";
-import type { ApiEnvelope, User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -16,14 +14,7 @@ export default async function AdminManagementPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin.admins");
 
-  // Defense-in-depth: the backend gates the endpoints and the nav hides the
-  // link, but a non-super-admin reaching this URL directly is bounced to the
-  // admin home rather than shown an empty/erroring table.
-  const me = await serverFetch<ApiEnvelope<{ user: User }>>("/auth/me");
-  if (!me.data.user.is_super_admin) {
-    redirect(`/${locale}/admin`);
-  }
-
+  const me = await requireAdminPermission(locale, "manage_admins");
   const admins = await getAllManagedAdmins();
 
   return (
@@ -38,10 +29,7 @@ export default async function AdminManagementPage({
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <AdminsTable
-          admins={admins}
-          currentUserId={String(me.data.user.id)}
-        />
+        <AdminsTable admins={admins} currentUserId={String(me.id)} />
       </div>
     </div>
   );

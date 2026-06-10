@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 | `super_admin` role) so a standard admin cannot manage other admins.
 */
 
-Route::middleware(['auth:sanctum', 'can.manage_admins'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_admins'])
     ->prefix('admin/admins')
     ->group(function (): void {
         Route::get('/', [AdminManagementController::class, 'index']);

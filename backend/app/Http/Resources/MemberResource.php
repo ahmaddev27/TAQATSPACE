@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Subscription;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -35,7 +36,7 @@ class MemberResource extends JsonResource
                 'phone' => $member?->phone,
                 'gender' => $member?->gender?->value,
                 'specialty' => $member?->specialty,
-                'avatar' => $member?->avatar,
+                'avatar' => MediaUrl::resolve($member?->avatar),
             ],
             'status' => $this->status->value,
             'plan_type' => $this->plan_type->value,

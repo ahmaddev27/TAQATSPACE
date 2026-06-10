@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/content/{key}', [SiteContentController::class, 'show']);
 
 // Admin manage.
-Route::middleware(['auth:sanctum', 'role.admin'])
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_content'])
     ->prefix('admin/content')
     ->group(function (): void {
         Route::get('/{key}', [AdminSiteContentController::class, 'show']);

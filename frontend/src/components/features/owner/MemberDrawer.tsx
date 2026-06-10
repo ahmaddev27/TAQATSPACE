@@ -86,7 +86,7 @@ export function MemberDrawer({
     >
       <div className="stack" style={{ gap: 0 }}>
         <div className="drawer-section row" style={{ gap: 14 }}>
-          <Avatar initial={avatarInitial(member.user.name)} size="lg" round />
+          <Avatar initial={avatarInitial(member.user.name)} src={member.user.avatar} alt={member.user.name} size="lg" round />
           <div>
             <div className="h3">{member.user.name}</div>
             <div className="muted">{member.user.specialty ?? "—"}</div>

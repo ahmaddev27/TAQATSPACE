@@ -13,6 +13,7 @@ import { getPublicDict } from "@/components/features/public/i18n";
 import { WorkspaceCard } from "@/components/features/public/WorkspaceCard";
 import { HeroSeatMini } from "@/components/features/public/HeroSeatMini";
 import { Marquee } from "@/components/features/public/Marquee";
+import { ScrollReveal } from "@/components/features/public/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -307,6 +308,9 @@ export default async function HomePage({
 
   return (
     <>
+      {/* Subtle scroll-reveal for the sections below (no-JS/reduced-motion safe). */}
+      <ScrollReveal />
+
       {/* HERO */}
       <section className="ed-hero">
         <div className="container ed-hero-in">
@@ -374,10 +378,17 @@ export default async function HomePage({
       <Marquee dict={dict} />
 
       {/* Reorderable sections — admin-controlled order via cms.sections_order */}
-      {order.map((key) => sectionNodes[key])}
+      {order.map((key) => {
+        const node = sectionNodes[key];
+        return node ? (
+          <div key={key} data-reveal>
+            {node}
+          </div>
+        ) : null;
+      })}
 
       {/* CTA band */}
-      <section className="container">
+      <section className="container" data-reveal>
         <div className="cta-band">
           <div className="cta-bulb">
             <Icon name="bulb" size={30} />

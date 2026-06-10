@@ -22,6 +22,7 @@
       "types": {
         "booking_approved": "Booking request approved",
         "booking_rejected": "Booking request rejected",
+        "new_booking_request": "New booking request",
         "invoice_created": "New invoice awaiting payment",
         "invoice_overdue": "Invoice overdue",
         "invoice_paid": "Payment received",
