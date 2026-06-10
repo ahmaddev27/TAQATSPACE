@@ -1,8 +1,9 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { StatusBadge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import type { Invoice } from "@/lib/api/invoices";
 import { DownloadPdfLink } from "./DownloadPdfLink";
+import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
+import { SubmitReceiptButton } from "./SubmitReceiptButton";
 import { invoiceDate, invoiceMoney, sumAmounts } from "./format";
 
 export interface MemberInvoicesListProps {
@@ -68,10 +69,24 @@ export async function MemberInvoicesList({ invoices }: MemberInvoicesListProps) 
                   {invoiceMoney(inv.amount, inv.currency)}
                 </td>
                 <td>
-                  <StatusBadge status={inv.status} locale={locale} />
+                  <InvoiceStatusBadge status={inv.status} locale={locale} />
                 </td>
                 <td>
                   <div className="row-actions">
+                    {(inv.status === "pending" || inv.status === "overdue") && (
+                      <SubmitReceiptButton invoiceId={inv.id} />
+                    )}
+                    {inv.receipt_url && (
+                      <a
+                        href={inv.receipt_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-ghost btn-sm"
+                      >
+                        <Icon name="receipt" size={15} />
+                        {t("receipt.view")}
+                      </a>
+                    )}
                     <DownloadPdfLink
                       invoiceId={inv.id}
                       label={t("downloadPdf")}

@@ -66,9 +66,11 @@ export default async function ExplorePage({
 
   let workspaces: Workspace[] = [];
   let cities: string[] = [];
+  let hasMore = false;
   try {
     const [page, cityList] = await Promise.all([listWorkspaces(filters), listCities()]);
     workspaces = page.data;
+    hasMore = page.meta.current_page < page.meta.last_page;
     cities = cityList;
   } catch {
     workspaces = [];
@@ -87,7 +89,14 @@ export default async function ExplorePage({
         </div>
       </div>
 
-      <ExploreResults workspaces={workspaces} dict={dict} locale={locale} />
+      <ExploreResults
+        key={JSON.stringify(filters)}
+        workspaces={workspaces}
+        initialHasMore={hasMore}
+        filters={filters}
+        dict={dict}
+        locale={locale}
+      />
     </>
   );
 }

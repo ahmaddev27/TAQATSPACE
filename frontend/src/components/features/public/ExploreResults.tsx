@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
@@ -9,6 +9,8 @@ import { Amenity } from "@/components/ui/Amenity";
 import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { CoverImage } from "@/components/ui/CoverImage";
 import type { Workspace } from "@/lib/types";
+import type { WorkspaceFilters } from "@/lib/api/workspaces";
+import { fetchMoreWorkspaces } from "@/lib/actions/workspaces";
 import type { PublicDict } from "./i18n";
 import { amenityLabel, coverImage, placeholderCover, occupancyPct, toNumber } from "./helpers";
 
@@ -22,20 +24,43 @@ const MapView = dynamic(() => import("./MapView").then((m) => m.MapView), {
 
 export interface ExploreResultsProps {
   workspaces: Workspace[];
+  initialHasMore: boolean;
+  filters: WorkspaceFilters;
   dict: PublicDict;
   locale: string;
 }
 
-export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps) {
+export function ExploreResults({
+  workspaces,
+  initialHasMore,
+  filters,
+  dict,
+  locale,
+}: ExploreResultsProps) {
   const e = dict.explore;
   const c = dict.common;
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(workspaces[0]?.id ?? null);
 
+  // Appended pages from "load more"; starts with the server-rendered first page.
+  const [items, setItems] = useState(workspaces);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, startLoad] = useTransition();
+
+  const loadMore = () => {
+    startLoad(async () => {
+      const next = await fetchMoreWorkspaces(filters, page + 1);
+      setItems((prev) => [...prev, ...next.workspaces]);
+      setPage((p) => p + 1);
+      setHasMore(next.hasMore);
+    });
+  };
+
   // Only workspaces with coordinates can render a pin.
   const mapPoints = useMemo(
     () =>
-      workspaces
+      items
         .filter((w) => w.latitude != null && w.longitude != null)
         .map((w) => ({
           id: w.id,
@@ -44,10 +69,10 @@ export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps
           lng: toNumber(w.longitude),
           price: toNumber(w.price_per_month),
         })),
-    [workspaces],
+    [items],
   );
 
-  if (workspaces.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="container" style={{ padding: "64px 0 96px" }}>
         <div className="card card-pad" style={{ textAlign: "center", maxWidth: 440, margin: "0 auto" }}>
@@ -68,7 +93,7 @@ export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps
   return (
     <div className="container explore-split">
       <div className="explore-list">
-        {workspaces.map((w) => {
+        {items.map((w) => {
           const price = toNumber(w.price_per_month);
           const rating = toNumber(w.avg_rating);
           const amenities = w.amenities ?? [];
@@ -131,6 +156,18 @@ export function ExploreResults({ workspaces, dict, locale }: ExploreResultsProps
             </div>
           );
         })}
+
+        {hasMore && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ width: "100%", marginTop: 4 }}
+            onClick={loadMore}
+            disabled={loadingMore}
+          >
+            {loadingMore ? "…" : e.loadMore}
+          </button>
+        )}
       </div>
 
       <div className="explore-map">

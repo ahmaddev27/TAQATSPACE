@@ -18,9 +18,14 @@ export type NotificationType =
   | "invoice_overdue"
   | "invoice_paid"
   | "invoice_reminder"
+  | "invoice_receipt_submitted"
   | "new_announcement"
   | "new_message"
   | "new_workspace_registration"
+  | "workspace_status_changed"
+  | "account_status_changed"
+  | "subscription_expiring"
+  | "new_review"
   | "seat_assigned";
 
 /**

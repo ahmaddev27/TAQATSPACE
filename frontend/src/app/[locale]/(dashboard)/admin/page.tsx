@@ -111,10 +111,7 @@ export default async function AdminDashboardPage({
               {t("revenueSubtitle")}
             </p>
           </div>
-          <div
-            className="grid-stats"
-            style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
-          >
+          <div className="grid-stats grid-stats--2">
             <StatTile
               icon="wallet"
               label={t("revenuePaid")}

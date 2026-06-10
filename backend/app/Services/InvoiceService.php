@@ -13,9 +13,11 @@ use App\Models\Workspace;
 use App\Notifications\InvoiceCreatedNotification;
 use App\Notifications\InvoiceOverdueNotification;
 use App\Notifications\InvoicePaidNotification;
+use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,36 @@ use RuntimeException;
 class InvoiceService
 {
     private const REMINDER_TTL_HOURS = 24;
+
+    public function __construct(
+        private readonly FileUploadService $uploads,
+    ) {}
+
+    /**
+     * A freelancer submits proof of payment: store the receipt and move the
+     * invoice to "under review" so the owner can verify it before confirming.
+     * Allowed only while the invoice is still unpaid (pending/overdue).
+     */
+    public function submitReceipt(Invoice $invoice, UploadedFile $receipt): Invoice
+    {
+        $invoice->forceFill([
+            'receipt_path' => $this->uploads->upload(
+                $receipt,
+                'receipts/'.$invoice->id,
+                (string) config('filesystems.media', 'public'),
+                'public',
+            ),
+            'status' => InvoiceStatus::UnderReview->value,
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace.owner');
+
+        $invoice->subscription?->workspace?->owner?->notify(
+            new InvoiceReceiptSubmittedNotification($invoice),
+        );
+
+        return $invoice;
+    }
 
     /**
      * Idempotently generate one invoice per active subscription for the current

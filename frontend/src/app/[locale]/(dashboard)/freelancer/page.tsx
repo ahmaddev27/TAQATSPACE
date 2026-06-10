@@ -127,7 +127,7 @@ export default async function FreelancerHomePage() {
               </div>
             </div>
 
-            <div className="grid-stats" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div className="grid-stats grid-stats--3">
               <StatTile
                 icon="grid"
                 label={t("seatType")}

@@ -142,6 +142,24 @@
   white-space: nowrap;
   flex: none;
 }
+/* Right-end meta column: time on top, unread dot below. */
+.chat-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex: none;
+}
+/* Unread thread: stronger text + a primary dot; it also floats to the top. */
+.chat-item.is-unread .chat-name { color: var(--text); font-weight: 700; }
+.chat-item.is-unread .chat-preview { color: var(--text-2); font-weight: 600; }
+.chat-unread-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex: none;
+}
 .chat-section-label {
   padding: 12px 12px 6px;
   font-size: var(--fs-xs);

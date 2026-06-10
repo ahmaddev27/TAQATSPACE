@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
+import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { Select } from "@/components/ui/Select";
 import { Tabs } from "@/components/ui/Tabs";
 import {
@@ -146,7 +146,7 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       id: "status",
       header: t("table.status"),
       sortable: true,
-      cell: (inv) => <StatusBadge status={inv.status} locale={locale} />,
+      cell: (inv) => <InvoiceStatusBadge status={inv.status} locale={locale} />,
     },
     {
       id: "actions",

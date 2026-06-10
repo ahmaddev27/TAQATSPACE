@@ -68,9 +68,11 @@ function stepForField(field: string): number {
  * routes to the pending-review screen via the parent.
  */
 export function OwnerOnboardingForm({
+  defaultPhone = "",
   onBack,
   onDone,
 }: {
+  defaultPhone?: string;
   onBack: () => void;
   onDone: (result: OnboardingResult) => void;
 }) {
@@ -98,7 +100,7 @@ export function OwnerOnboardingForm({
     resolver: zodResolver(ownerOnboardingSchema(tv)),
     mode: "onTouched",
     defaultValues: {
-      phone: "",
+      phone: defaultPhone,
       gender: "",
       workspace_name: "",
       description: "",

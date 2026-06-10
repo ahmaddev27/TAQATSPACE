@@ -17,7 +17,11 @@ import {
   type ChatMessage,
   type ChatParticipant,
 } from "@/lib/firebase/chat";
-import { markConversationSeen } from "@/lib/firebase/chatRead";
+import {
+  getSeenMap,
+  markConversationSeen,
+  subscribeSeen,
+} from "@/lib/firebase/chatRead";
 import type { ChatContact } from "@/lib/api/chat";
 import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
@@ -66,6 +70,22 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     for (const c of contacts) map.set(c.id, c);
     return map;
   }, [contacts]);
+
+  // Local "last seen" watermark per conversation, mirrored into state so the
+  // unread indicator recomputes when a thread is opened (here or in another tab).
+  const [seen, setSeen] = useState<Record<string, number>>(() => getSeenMap());
+  useEffect(() => subscribeSeen(() => setSeen(getSeenMap())), []);
+
+  // A conversation is unread when its last message came from the other party and
+  // arrived after we last opened it.
+  const isUnread = useCallback(
+    (conv: ChatConversation): boolean => {
+      const incoming =
+        conv.lastSenderId !== null && conv.lastSenderId !== self.id;
+      return incoming && (conv.updatedAt ?? 0) > (seen[conv.id] ?? 0);
+    },
+    [self.id, seen],
+  );
 
   // ---- Auth bridge: sign in to Firebase once on mount. ----
   useEffect(() => {
@@ -187,14 +207,28 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   );
   const visibleConversations = useMemo(
     () =>
-      conversations.filter((conv) => {
-        const other = otherParticipant(conv);
-        return (
-          matchesQuery(other.name) &&
-          (!roleFilter || contactById.get(other.id)?.role === roleFilter)
-        );
-      }),
-    [conversations, matchesQuery, roleFilter, otherParticipant, contactById],
+      conversations
+        .filter((conv) => {
+          const other = otherParticipant(conv);
+          return (
+            matchesQuery(other.name) &&
+            (!roleFilter || contactById.get(other.id)?.role === roleFilter)
+          );
+        })
+        // Unread threads float to the top; within each group, most-recent first.
+        .sort((a, b) => {
+          const unreadDiff = (isUnread(b) ? 1 : 0) - (isUnread(a) ? 1 : 0);
+          if (unreadDiff !== 0) return unreadDiff;
+          return (b.updatedAt ?? 0) - (a.updatedAt ?? 0);
+        }),
+    [
+      conversations,
+      matchesQuery,
+      roleFilter,
+      otherParticipant,
+      contactById,
+      isUnread,
+    ],
   );
   const visibleNewContacts = useMemo(
     () =>
@@ -322,6 +356,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                     name={other.name}
                     avatar={contactById.get(other.id)?.avatar ?? null}
                     subscribed={other.subscribed}
+                    unread={isUnread(conv)}
                     preview={conv.lastMessage || t("noMessagesYet")}
                     time={relativeTime(conv.updatedAt, locale)}
                     active={other.id === activeContactId}
@@ -386,6 +421,7 @@ function ContactRow({
   name,
   avatar,
   subscribed,
+  unread,
   preview,
   time,
   active,
@@ -394,6 +430,7 @@ function ContactRow({
   name: string;
   avatar?: string | null;
   subscribed?: boolean;
+  unread?: boolean;
   preview: string;
   time?: string;
   active: boolean;
@@ -402,7 +439,7 @@ function ContactRow({
   return (
     <button
       type="button"
-      className={`chat-item ${active ? "active" : ""}`.trim()}
+      className={`chat-item ${active ? "active" : ""} ${unread ? "is-unread" : ""}`.trim()}
       onClick={onSelect}
     >
       <Avatar initial={avatarInitial(name)} src={avatar} alt={name} round />
@@ -417,7 +454,10 @@ function ContactRow({
         </div>
         <div className="chat-preview">{preview}</div>
       </div>
-      {time ? <span className="chat-time">{time}</span> : null}
+      <span className="chat-row-meta">
+        {time ? <span className="chat-time">{time}</span> : null}
+        {unread ? <span className="chat-unread-dot" aria-hidden="true" /> : null}
+      </span>
     </button>
   );
 }

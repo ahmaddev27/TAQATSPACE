@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { TileLogo } from "@/components/layout/TileLogo";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { AdminLoginForm } from "@/components/features/auth/AdminLoginForm";
 
 /**
@@ -28,7 +28,7 @@ export default async function AdminLoginPage({
 
         <div>
           <div style={{ marginBottom: 24 }}>
-            <TileLogo size={46} />
+            <BrandLogo size={46} forceDark />
           </div>
           <p className="auth-quote">{t("subtitle")}</p>
         </div>

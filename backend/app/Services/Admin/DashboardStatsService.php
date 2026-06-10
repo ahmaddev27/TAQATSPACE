@@ -53,7 +53,9 @@ class DashboardStatsService
                 'freelancers' => (int) $userRoleCounts->get(UserRole::Freelancer->value, 0),
                 'owners' => (int) $userRoleCounts->get(UserRole::WorkspaceOwner->value, 0),
                 'admins' => (int) $userRoleCounts->get(UserRole::Admin->value, 0),
-                'total' => (int) $userRoleCounts->sum(),
+                // Platform members only — staff (admins) are not counted as users.
+                'total' => (int) $userRoleCounts->get(UserRole::Freelancer->value, 0)
+                    + (int) $userRoleCounts->get(UserRole::WorkspaceOwner->value, 0),
                 'pending' => (int) $userStatusCounts->get(UserStatus::PendingVerification->value, 0),
             ],
             'subscriptions' => [
