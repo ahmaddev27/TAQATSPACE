@@ -162,56 +162,28 @@ class TaqatSsoService
      */
     public function buildLogoutUrl(int|string $accessTokenId): ?string
     {
-        \App\Support\SsoLogoutLog::write('buildLogoutUrl ENTER', [
-            'access_token_id' => $accessTokenId,
-            'cache_store' => config('cache.default'),
-        ]);
-
         $session = Cache::pull(self::SESSION_CACHE_PREFIX.$accessTokenId);
         $idToken = is_array($session) && is_string($session['id_token'] ?? null)
             ? $session['id_token']
             : null;
 
-        \App\Support\SsoLogoutLog::write('buildLogoutUrl SESSION', [
-            'session_found' => is_array($session),
-            'has_id_token' => $idToken !== null,
-        ]);
-
         // Build the logout URL even when the session marker is missing (cache
         // evicted / different store / TTL) — only id_token_hint depends on it.
         $endpoint = $this->endSessionEndpoint();
 
-        \App\Support\SsoLogoutLog::write('buildLogoutUrl ENDPOINT', [
-            'resolved_endpoint' => $endpoint,
-        ]);
-
         if ($endpoint === null) {
-            \App\Support\SsoLogoutLog::write('buildLogoutUrl EXIT_NULL', [
-                'reason' => 'endSessionEndpoint() returned null',
-            ]);
-
             return null;
         }
 
         $config = $this->config();
-        $redirect = $this->postLogoutRedirectUri();
 
         $params = array_filter([
             'client_id' => $config['client_id'],
-            'post_logout_redirect_uri' => $redirect,
+            'post_logout_redirect_uri' => $this->postLogoutRedirectUri(),
             'id_token_hint' => $idToken,
         ], static fn ($value): bool => $value !== null && $value !== '');
 
-        $url = $endpoint.'?'.http_build_query($params);
-
-        \App\Support\SsoLogoutLog::write('buildLogoutUrl EXIT', [
-            'client_id' => $config['client_id'] ?? null,
-            'post_logout_redirect_uri' => $redirect,
-            'has_id_token_hint' => $idToken !== null,
-            'url' => $url,
-        ]);
-
-        return $url;
+        return $endpoint.'?'.http_build_query($params);
     }
 
     /**
@@ -225,31 +197,18 @@ class TaqatSsoService
         // RP-initiated logout). Set TAQAT_SSO_END_SESSION_URL to the IdP's
         // logout route in that case.
         $override = $this->config()['end_session_endpoint'] ?? null;
-
-        \App\Support\SsoLogoutLog::write('endSessionEndpoint OVERRIDE', [
-            'config_override' => $override,
-        ]);
-
         if (is_string($override) && $override !== '') {
             return $override;
         }
 
         try {
             $endpoints = $this->discover();
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             // Discovery unavailable — degrade gracefully to a local-only logout.
-            \App\Support\SsoLogoutLog::write('endSessionEndpoint DISCOVER_FAILED', [
-                'error' => $e->getMessage(),
-            ]);
-
             return null;
         }
 
         $endpoint = $endpoints['end_session_endpoint'] ?? null;
-
-        \App\Support\SsoLogoutLog::write('endSessionEndpoint DISCOVERY', [
-            'discovered_endpoint' => $endpoint,
-        ]);
 
         return is_string($endpoint) && $endpoint !== '' ? $endpoint : null;
     }
@@ -262,16 +221,11 @@ class TaqatSsoService
     {
         $configured = $this->config()['post_logout_redirect_uri'] ?? null;
 
-        $result = is_string($configured) && $configured !== ''
-            ? $configured
-            : rtrim((string) config('app.frontend_url'), '/').'/login?loggedout=1';
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
 
-        \App\Support\SsoLogoutLog::write('postLogoutRedirectUri', [
-            'configured' => $configured,
-            'result' => $result,
-        ]);
-
-        return $result;
+        return rtrim((string) config('app.frontend_url'), '/').'/login?loggedout=1';
     }
 
     /**

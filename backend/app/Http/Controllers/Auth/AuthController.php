@@ -53,23 +53,11 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        \App\Support\SsoLogoutLog::write('AuthController::logout ENTER', [
-            'user_id' => $request->user()?->id,
-            'authenticated' => $request->user() !== null,
-        ]);
-
         $ssoLogoutUrl = $this->auth->logout($request->user());
 
         // RP-initiated single logout: when the session was opened via Taqat SSO,
         // hand the frontend the IdP end-session URL so it can also sign the user
         // out upstream. Null for password sessions — the SPA then logs out locally.
-        $payload = ['sso_logout_url' => $ssoLogoutUrl];
-
-        \App\Support\SsoLogoutLog::write('AuthController::logout EXIT', [
-            'sso_logout_url' => $ssoLogoutUrl,
-            'response_payload' => $payload,
-        ]);
-
-        return ApiResponse::success($payload);
+        return ApiResponse::success(['sso_logout_url' => $ssoLogoutUrl]);
     }
 }
