@@ -41,6 +41,8 @@ export function notifPresentation(type: string): NotifPresentation {
       return { icon: "building", tone: "info" };
     case "account_status_changed":
       return { icon: "user", tone: "info" };
+    case "new_contact_message":
+      return { icon: "mail", tone: "info" };
     default:
       return { icon: "bell", tone: "info" };
   }

@@ -26,6 +26,7 @@ export type NotificationType =
   | "account_status_changed"
   | "subscription_expiring"
   | "new_review"
+  | "new_contact_message"
   | "seat_assigned";
 
 /**

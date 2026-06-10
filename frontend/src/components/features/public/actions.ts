@@ -43,8 +43,8 @@ export interface ContactActionInput {
 }
 
 /**
- * Contact form stub — no backend endpoint exists yet, so this validates input
- * and resolves successfully. Wire to a real endpoint when it ships.
+ * Submit the public "Contact us" form. Validates locally, then persists the
+ * message via the public `POST /contact` endpoint (which notifies the admins).
  */
 export async function submitContactAction(
   input: ContactActionInput,
@@ -59,5 +59,13 @@ export async function submitContactAction(
     return { ok: false, status: 422, message: "validation", errors };
   }
 
-  return { ok: true, data: null };
+  return authedMutate<null>("/contact", {
+    method: "POST",
+    body: {
+      name: input.name.trim(),
+      email: input.email.trim(),
+      subject: input.subject.trim(),
+      message: input.message.trim(),
+    },
+  });
 }

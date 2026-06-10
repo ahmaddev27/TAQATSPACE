@@ -36,6 +36,7 @@
         "subscription_expiring": "Subscription expiring soon",
         "new_review": "New review",
         "workspace_status_changed": "Workspace status changed",
+        "new_contact_message": "New contact message",
         "generic": "Notification"
       }
     },
