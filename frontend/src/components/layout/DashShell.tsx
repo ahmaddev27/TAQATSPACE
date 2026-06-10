@@ -93,6 +93,12 @@ export function DashShell({
     [role, user?.permissions, user?.is_super_admin, firebaseReady, chatUnread],
   );
 
+  // The chat surface's href, taken from the already-filtered nav so the topbar
+  // chat shortcut appears only when (and where) the sidebar chat item does.
+  const chatHref =
+    nav.groups.flatMap((group) => group.items).find((item) => item.key === "chat")
+      ?.href ?? null;
+
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   // The single top-bar control: collapse the rail on desktop, open the drawer
@@ -178,6 +184,8 @@ export function DashShell({
           roleLabel={t(nav.roleLabelKey)}
           avatarInitial={avatarInitial}
           mobileOpen={mobileOpen}
+          chatHref={chatHref}
+          chatUnread={chatUnread}
           onMenu={onMenu}
           onLogout={handleLogout}
         />
