@@ -274,13 +274,20 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
     {
       id: "actions",
       header: "",
-      cell: ({ sub, display }) => (
+      cell: ({ sub, display }) => {
+        // Renewal is only allowed once the running term has reached its end
+        // date (mirrors the backend guard); a null end date counts as due.
+        const days = daysUntil(sub.end_date);
+        const renewable = days === null || days <= 0;
+        return (
         <div className="row-actions" style={{ gap: 6 }}>
           {display !== "cancelled" && (
             <Button
               variant="secondary"
               size="sm"
               icon="refresh"
+              disabled={!renewable}
+              title={renewable ? undefined : t("renewNotDue")}
               loading={pending && busyId === sub.id}
               onClick={(e) => {
                 e.stopPropagation();
@@ -304,7 +311,8 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
             />
           )}
         </div>
-      ),
+        );
+      },
     },
   ];
 

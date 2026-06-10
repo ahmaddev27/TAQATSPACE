@@ -107,6 +107,16 @@ class BookingService
                 if ($seat->status !== SeatStatus::Available) {
                     abort(409, __('messages.seat_unavailable'));
                 }
+
+                // The assigned seat must match the type the freelancer requested
+                // (when they specified one), so an owner can't place them in a
+                // different seat class than they asked for.
+                if (
+                    $booking->preferred_seat_type !== null
+                    && $seat->type !== $booking->preferred_seat_type
+                ) {
+                    abort(422, __('messages.seat_type_mismatch'));
+                }
             }
 
             $workspace = $booking->workspace;

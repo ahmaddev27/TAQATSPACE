@@ -71,6 +71,15 @@ class OwnerSubscriptionService
             throw new RuntimeException(__('messages.subscription_already_cancelled'));
         }
 
+        // Block early renewal: the running term must have reached its end date
+        // before it can be extended for another cycle.
+        if (
+            $subscription->end_date !== null
+            && $subscription->end_date->gt(Carbon::today())
+        ) {
+            throw new RuntimeException(__('messages.subscription_not_due_for_renewal'));
+        }
+
         return DB::transaction(function () use ($workspace, $subscription): Subscription {
             $nextEnd = $this->nextPeriodEnd($subscription);
 

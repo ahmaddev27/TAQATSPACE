@@ -295,7 +295,7 @@ export function OwnerOnboardingForm({
               lat={lat}
               lng={lng}
               label={tw("mapLabel")}
-              hint={tw("mapStubNote")}
+              hint={tw("mapHint")}
               onChange={(nextLat, nextLng) => {
                 setValue("lat", nextLat, { shouldValidate: true });
                 setValue("lng", nextLng, { shouldValidate: true });

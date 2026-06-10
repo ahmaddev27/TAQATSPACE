@@ -43,9 +43,11 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
   const { toast } = useToast();
   const confirm = useConfirm();
   const [, startTransition] = useTransition();
-  // Track WHICH workspace is being acted on, so only that row's button spins
-  // (a single `pending` flag would spin every row's buttons at once).
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  // Track the specific (row + action) in flight so ONLY the clicked button
+  // spins. A row exposes several action buttons, so a row-only flag would spin
+  // all of them — e.g. clicking "unpublish" must not spin "suspend".
+  const [busy, setBusy] = useState<string | null>(null);
+  const busyKey = (id: string, action: string) => `${id}:${action}`;
 
   // Filters live in the URL so they are shareable and readable by the CSV
   // export link below (the download then matches the on-screen view).
@@ -86,10 +88,12 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
     status: WorkspaceStatus,
     note?: string,
   ) => {
-    setPendingId(workspace.id);
+    // Activating and suspending are distinct buttons, so they key separately.
+    const action = status === "active" ? "activate" : "suspend";
+    setBusy(busyKey(workspace.id, action));
     startTransition(async () => {
       const res = await updateWorkspaceStatus(workspace.id, status, note);
-      setPendingId(null);
+      setBusy(null);
       if (res.ok) {
         toast({ tone: "ok", title: t("toast.statusUpdated") });
         setSuspendTarget(null);
@@ -110,10 +114,10 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
   };
 
   const runPublish = (workspace: Workspace, published: boolean) => {
-    setPendingId(workspace.id);
+    setBusy(busyKey(workspace.id, "publish"));
     startTransition(async () => {
       const res = await setWorkspacePublished(workspace.id, published);
-      setPendingId(null);
+      setBusy(null);
       if (res.ok) {
         toast({
           tone: "ok",
@@ -208,7 +212,7 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
               variant="primary"
               size="sm"
               icon="check"
-              loading={pendingId === w.id}
+              loading={busy === busyKey(w.id, "activate")}
               onClick={() =>
                 runStatus(w, "active")
               }
@@ -221,7 +225,6 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
               variant="danger"
               size="sm"
               icon="x"
-              loading={pendingId === w.id}
               onClick={() => {
                 setReason("");
                 setSuspendTarget(w);
@@ -234,7 +237,7 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
             variant={w.is_published ? "ghost" : "secondary"}
             size="sm"
             icon={w.is_published ? "eyeOff" : "eye"}
-            loading={pendingId === w.id}
+            loading={busy === busyKey(w.id, "publish")}
             onClick={() => togglePublish(w)}
           >
             {w.is_published ? t("unpublish") : t("publish")}
@@ -318,7 +321,7 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
               <Button
                 variant="danger"
                 icon="x"
-                loading={pendingId === suspendTarget?.id}
+                loading={busy === busyKey(suspendTarget.id, "suspend")}
                 disabled={reason.trim() === ""}
                 onClick={submitSuspend}
               >

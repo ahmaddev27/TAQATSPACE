@@ -51,6 +51,16 @@ export function BookingsManager({ bookings, availableSeats }: BookingsManagerPro
     [bookings],
   );
 
+  // Only offer seats that match the freelancer's requested type; a null
+  // preference ("any seat") keeps the full list available.
+  const seatsForApproval = useMemo(() => {
+    if (!approveFor) return [];
+    const wanted = approveFor.preferred_seat_type;
+    return wanted
+      ? availableSeats.filter((s) => s.type === wanted)
+      : availableSeats;
+  }, [approveFor, availableSeats]);
+
   const tabs = [
     { id: "pending", label: `${t("bookings.tabPending")} (${counts.pending})` },
     { id: "approved", label: `${t("bookings.tabApproved")} (${counts.approved})` },
@@ -199,7 +209,12 @@ export function BookingsManager({ bookings, availableSeats }: BookingsManagerPro
       {approveFor && (
         <ApproveBookingModal
           memberName={approveFor.member?.name ?? "—"}
-          seats={availableSeats}
+          requestedTypeLabel={
+            approveFor.preferred_seat_type
+              ? tc(`seatType.${approveFor.preferred_seat_type}` as never)
+              : null
+          }
+          seats={seatsForApproval}
           pending={pending}
           onConfirm={doApprove}
           onClose={() => setApproveFor(null)}

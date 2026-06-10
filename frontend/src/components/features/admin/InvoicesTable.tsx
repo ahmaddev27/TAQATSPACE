@@ -185,7 +185,12 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
     {
       id: "actions",
       header: "",
-      cell: (inv) => (
+      cell: (inv) => {
+        // Uploading a receipt is only meaningful while there's still something
+        // to settle. Once the invoice is paid AND a receipt is attached, the
+        // upload action is hidden — the PDF + "view receipt" are shown instead.
+        const isSettled = inv.status === "paid" && Boolean(inv.receipt_url);
+        return (
         <div className="row-actions">
           {inv.status === "paid" ? (
             <Button
@@ -213,14 +218,16 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               </Button>
             )
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            icon="upload"
-            onClick={() => setReceiptTarget(inv)}
-          >
-            {t("uploadReceipt")}
-          </Button>
+          {!isSettled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="upload"
+              onClick={() => setReceiptTarget(inv)}
+            >
+              {t("uploadReceipt")}
+            </Button>
+          )}
           {inv.pdf_url && (
             <a
               className="btn btn-ghost btn-sm"
@@ -244,7 +251,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             </a>
           )}
         </div>
-      ),
+        );
+      },
     },
   ];
 

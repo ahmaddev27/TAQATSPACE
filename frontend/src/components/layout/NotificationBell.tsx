@@ -34,6 +34,7 @@ const PANEL_SIZE = 8;
  */
 export function NotificationBell() {
   const t = useTranslations("messaging.notifications");
+  const tCommon = useTranslations("common");
   const { role } = useAuth();
   const router = useRouter();
 
@@ -149,16 +150,26 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="notif-pop">
-          <NotificationPanel
-            notifications={items}
-            unreadCount={unread}
-            hrefRole={hrefRole}
-            onClose={() => setOpen(false)}
-            onMarkAllRead={markAllRead}
-            onItemClick={handleItemClick}
+        <>
+          {/* Dims the screen behind the mobile drawer; tapping it closes (the
+              full-height drawer is CSS-only, hidden on desktop). */}
+          <button
+            type="button"
+            className="notif-backdrop"
+            aria-label={tCommon("close")}
+            onClick={() => setOpen(false)}
           />
-        </div>
+          <div className="notif-pop">
+            <NotificationPanel
+              notifications={items}
+              unreadCount={unread}
+              hrefRole={hrefRole}
+              onClose={() => setOpen(false)}
+              onMarkAllRead={markAllRead}
+              onItemClick={handleItemClick}
+            />
+          </div>
+        </>
       )}
     </div>
   );

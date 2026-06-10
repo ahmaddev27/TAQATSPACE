@@ -7,21 +7,53 @@ import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { submitReview } from "@/lib/actions/reviews";
+import type { Review } from "@/lib/types";
+import { formatDate } from "./format";
 
 export interface ReviewFormProps {
   workspaceId: string;
   workspaceName: string;
+  /** The freelancer's existing review, when they've already rated this space. */
+  existingReview?: Review | null;
 }
 
-/** Freelancer rates the workspace they're subscribed to (1–5 stars + comment). */
-export function ReviewForm({ workspaceId, workspaceName }: ReviewFormProps) {
+/** Static 1–5 star row reflecting a saved rating. */
+function StarRow({ rating }: { rating: number }) {
+  return (
+    <div className="star-input" aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Icon
+          key={n}
+          name="star"
+          size={24}
+          className={rating >= n ? "star-fill" : "star-empty"}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Freelancer rates the workspace they're subscribed to. A space can be reviewed
+ * once: when a review already exists (or has just been posted) the saved rating,
+ * comment, and date are shown read-only instead of the form.
+ */
+export function ReviewForm({
+  workspaceId,
+  workspaceName,
+  existingReview = null,
+}: ReviewFormProps) {
   const t = useTranslations("freelancer.review");
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
-  const [done, setDone] = useState(false);
+  const [posted, setPosted] = useState<Review | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // The review to display read-only: a freshly-posted one wins, else the one
+  // loaded from the server.
+  const review = posted ?? existingReview;
 
   const submit = () => {
     if (rating < 1) {
@@ -35,11 +67,17 @@ export function ReviewForm({ workspaceId, workspaceName }: ReviewFormProps) {
         comment,
       });
       if (res.ok) {
-        setDone(true);
+        setPosted({
+          id: "local",
+          reviewer_name: "",
+          rating,
+          comment: comment.trim() || null,
+          created_at: new Date().toISOString(),
+        });
         toast({ tone: "ok", title: t("thanks") });
       } else if (res.status === 409) {
-        // Already reviewed — treat as done rather than an error.
-        setDone(true);
+        // Already reviewed — surface a neutral notice (the page reload will then
+        // render the saved review).
         toast({ tone: "info", title: t("already") });
       } else {
         toast({ tone: "err", title: t("failed"), body: res.message });
@@ -47,15 +85,21 @@ export function ReviewForm({ workspaceId, workspaceName }: ReviewFormProps) {
     });
   };
 
-  if (done) {
+  if (review) {
     return (
-      <div className="card card-pad" style={{ textAlign: "center" }}>
-        <span className="st-ico" style={{ margin: "0 auto" }}>
-          <Icon name="checkCircle" size={22} />
-        </span>
-        <p className="muted" style={{ marginTop: 10 }}>
-          {t("thanks")}
-        </p>
+      <div className="card card-pad stack" style={{ gap: 12 }}>
+        <div className="between">
+          <h3 className="h3">{t("yourReview")}</h3>
+          <span className="muted-3 tnum ltr" style={{ fontSize: "var(--fs-sm)" }}>
+            {formatDate(review.created_at)}
+          </span>
+        </div>
+        <StarRow rating={review.rating} />
+        {review.comment && (
+          <p className="muted" style={{ lineHeight: 1.8 }}>
+            {review.comment}
+          </p>
+        )}
       </div>
     );
   }

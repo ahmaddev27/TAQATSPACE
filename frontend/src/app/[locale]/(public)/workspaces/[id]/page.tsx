@@ -10,6 +10,7 @@ import type { Review, Workspace } from "@/lib/types";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { Gallery } from "@/components/features/public/Gallery";
 import { AmenityGrid } from "@/components/features/public/AmenityGrid";
+import { WorkingHours } from "@/components/features/public/WorkingHours";
 import { SeatPricing } from "@/components/features/public/SeatPricing";
 import { ReviewList } from "@/components/features/public/ReviewList";
 import { DetailTabs } from "@/components/features/public/DetailTabs";
@@ -129,6 +130,8 @@ export default async function WorkspaceDetailPage({
       )}
 
       <AmenityGrid amenities={workspace.amenities ?? []} locale={locale} dict={dict} />
+
+      <WorkingHours hours={workspace.working_hours} dict={dict} />
 
       {lat != null && lng != null && (
         <div>

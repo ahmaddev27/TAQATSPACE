@@ -34,6 +34,19 @@ class ReviewService
     }
 
     /**
+     * The member's own review of a workspace, or null when they have not
+     * reviewed it yet. Used to render the read-only review (vs. the form).
+     */
+    public function forMember(User $member, string $workspaceId): ?Review
+    {
+        return Review::query()
+            ->where('member_id', $member->id)
+            ->where('workspace_id', $workspaceId)
+            ->with('member:id,name')
+            ->first();
+    }
+
+    /**
      * Persist the review and refresh the workspace's denormalized average
      * rating in a single transaction.
      *
