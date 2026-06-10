@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { CancelSubscriptionButton } from "@/components/features/freelancer/CancelSubscriptionButton";
 import { SubscriptionHistoryTable } from "@/components/features/freelancer/SubscriptionHistoryTable";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
+import { ReviewForm } from "@/components/features/freelancer/ReviewForm";
 import { formatDate, formatMoney } from "@/components/features/freelancer/format";
 
 export const dynamic = "force-dynamic";
@@ -107,6 +108,13 @@ export default async function FreelancerSubscriptionPage({
           </div>
         ) : (
           <NoSubscriptionPanel pendingRequests={0} />
+        )}
+
+        {active?.workspace && (
+          <ReviewForm
+            workspaceId={active.workspace.id}
+            workspaceName={active.workspace.name}
+          />
         )}
 
         <div className="stack" style={{ gap: 14 }}>
