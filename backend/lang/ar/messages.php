@@ -146,6 +146,7 @@ return [
     'branding_updated' => 'تم تحديث الهوية.',
     'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
+    'cannot_modify_admin' => 'لا يمكن تعديل حالة حساب إداري من هنا.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
 
     // إدارة المشرفين (للمشرف الأعلى فقط)

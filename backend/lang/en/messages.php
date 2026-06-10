@@ -146,6 +146,7 @@ return [
     'branding_updated' => 'Branding updated.',
     'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
+    'cannot_modify_admin' => 'An admin account cannot be modified from here.',
     'messaging_settings_updated' => 'Messaging settings updated.',
 
     // Admin management (super-admin only)
