@@ -86,6 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
+    // TEMP DEBUG (SSO single-logout) — remove once verified. Logs to the browser
+    // console.
+    console.info("[sso-logout] client: logout() ENTER");
     // 1) Clear the local session (delete the Sanctum token + httpOnly cookies).
     //    Also capture the backend-built SSO logout URL as a fallback.
     let backendSsoLogoutUrl: string | null = null;
@@ -98,8 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         | { sso_logout_url?: string | null }
         | null;
       backendSsoLogoutUrl = body?.sso_logout_url ?? null;
-    } catch {
+      console.info("[sso-logout] client: proxy response", {
+        status: res.status,
+        body,
+        backendSsoLogoutUrl,
+      });
+    } catch (err) {
       // Cookies are cleared server-side regardless; never block sign-out.
+      console.error("[sso-logout] client: proxy fetch failed", err);
     }
     setUser(null);
 
@@ -109,6 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //    client can reproduce (the id_token never leaves the server). Sending an
     //    end-session request without those is rejected by the provider.
     if (backendSsoLogoutUrl) {
+      console.info(
+        "[sso-logout] client: BRANCH=backend-url → redirecting to",
+        backendSsoLogoutUrl,
+      );
       window.location.href = backendSsoLogoutUrl;
       return;
     }
@@ -118,14 +131,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // `/login?loggedout=1` path (not just the bare origin).
     const ssoEndpoint = process.env.NEXT_PUBLIC_SSO_LOGOUT_URL;
     const ssoClientId = process.env.NEXT_PUBLIC_SSO_CLIENT_ID;
+    console.info("[sso-logout] client: NEXT_PUBLIC fallback check", {
+      hasEndpoint: Boolean(ssoEndpoint),
+      hasClientId: Boolean(ssoClientId),
+    });
     if (ssoEndpoint && ssoClientId) {
       const params = new URLSearchParams({
         post_logout_redirect_uri: `${window.location.origin}/login?loggedout=1`,
         client_id: ssoClientId,
       });
-      window.location.assign(`${ssoEndpoint}?${params.toString()}`);
+      const clientUrl = `${ssoEndpoint}?${params.toString()}`;
+      console.info(
+        "[sso-logout] client: BRANCH=next-public → redirecting to",
+        clientUrl,
+      );
+      window.location.assign(clientUrl);
       return;
     }
+    console.info("[sso-logout] client: BRANCH=local-only (no IdP logout)");
 
     // 3) Local-only fallback: land on login, then refresh so cached authed RSC
     //    payloads (dashboard shell) are discarded.
