@@ -183,6 +183,16 @@
         "fixed": "Fixed",
         "private_office": "Private office"
       },
+      "seatSetup": {
+        "title": "Create your seats",
+        "subtitle": "Choose how many seats of each type to create — they're auto-numbered. You can adjust them later once approved.",
+        "create": "Create seats",
+        "skip": "Skip for now",
+        "continue": "Continue",
+        "error": "Couldn't create the seats. Please try again.",
+        "createdTitle": "Seats created",
+        "createdBody": "{count} seats were created for your space."
+      },
       "amenities": "Available amenities",
       "amenityCodes": {
         "wifi": "Wi-Fi",

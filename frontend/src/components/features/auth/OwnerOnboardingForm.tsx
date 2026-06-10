@@ -22,6 +22,7 @@ import {
   type OwnerOnboardingValues,
 } from "@/lib/validations/auth";
 import type { OnboardingResult } from "./OnboardingFlow";
+import { OwnerSeatSetup } from "./OwnerSeatSetup";
 
 const GAZA_CENTER = { lat: 31.5, lng: 34.47 };
 
@@ -85,6 +86,13 @@ export function OwnerOnboardingForm({
 
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
+  // After the workspace is created we move to an interactive seat-setup phase
+  // (still pending), then hand off to the parent's pending-review screen.
+  const [phase, setPhase] = useState<"form" | "seats">("form");
+  const [pendingResult, setPendingResult] = useState<OnboardingResult | null>(null);
+  const [seatSetupTypes, setSeatSetupTypes] = useState<
+    Array<{ type: string; count: number }>
+  >([]);
 
   const steps = [tw("steps.info"), tw("steps.location"), tw("steps.seats")];
 
@@ -190,7 +198,23 @@ export function OwnerOnboardingForm({
       };
 
       if (res.ok && body.role) {
-        onDone(body as OnboardingResult);
+        // Workspace created — go set up its seats (from the enabled types'
+        // capacities) before the pending-review screen. With no enabled type
+        // there's nothing to lay out, so hand off directly.
+        const enabled = values.seat_types
+          .filter((s) => s.enabled)
+          .map((s) => ({
+            type: s.type,
+            count: s.capacity.trim() === "" ? 0 : Math.trunc(Number(s.capacity)),
+          }));
+
+        if (enabled.length > 0) {
+          setPendingResult(body as OnboardingResult);
+          setSeatSetupTypes(enabled);
+          setPhase("seats");
+        } else {
+          onDone(body as OnboardingResult);
+        }
         return;
       }
 
@@ -208,6 +232,15 @@ export function OwnerOnboardingForm({
     } catch {
       setServerError(t("error"));
     }
+  }
+
+  if (phase === "seats" && pendingResult) {
+    return (
+      <OwnerSeatSetup
+        types={seatSetupTypes}
+        onDone={() => onDone(pendingResult)}
+      />
+    );
   }
 
   return (

@@ -45,6 +45,7 @@ return [
     // Onboarding (SSO role selection)
     'onboarding_completed' => 'Your account is ready.',
     'onboarding_already_completed' => 'Your account has already been set up.',
+    'onboarding_seats_created' => 'Seats created successfully.',
 
     // Profile
     'profile_updated' => 'Profile updated successfully.',
