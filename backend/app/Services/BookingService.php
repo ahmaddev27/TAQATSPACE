@@ -111,12 +111,17 @@ class BookingService
 
             $workspace = $booking->workspace;
 
+            // A monthly plan runs for one month from today; set the expiry up front
+            // so the member (and renewal/expiry reminders) have a real end date.
+            $startDate = Carbon::today();
+
             $subscription = Subscription::query()->create([
                 'member_id' => $booking->member_id,
                 'workspace_id' => $booking->workspace_id,
                 'seat_id' => $seat?->id,
                 'plan_type' => PlanType::Monthly->value,
-                'start_date' => Carbon::today()->toDateString(),
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $startDate->copy()->addMonth()->toDateString(),
                 'monthly_price' => $this->resolveMonthlyPrice($booking, $workspace),
                 'status' => SubscriptionStatus::Active->value,
             ]);
