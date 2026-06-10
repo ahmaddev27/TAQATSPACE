@@ -32,6 +32,14 @@ export type ForegroundHandler = (payload: MessagePayload) => void;
 let unsubscribeForeground: (() => void) | null = null;
 
 /**
+ * The FCM token minted this session. Kept so logout can unregister exactly that
+ * token from the backend once — without re-minting a fresh one — so a repeated
+ * unregister (the logout-driven unmount) never DELETEs after the auth cookie is
+ * cleared (which would 401).
+ */
+let activeToken: string | null = null;
+
+/**
  * Whether the current browser environment can support FCM web push at all:
  * configured + secure context + service worker + Notification + Push APIs.
  */
@@ -132,6 +140,7 @@ export async function registerForPush(
     });
     if (!token) return;
 
+    activeToken = token;
     await persistToken(token);
 
     // Replace any prior foreground subscription (e.g. account switch) so a
@@ -155,22 +164,19 @@ export async function unregisterPush(): Promise<void> {
 
   if (!canUsePush()) return;
 
+  // Unregister the server-side row using the token minted this session, and
+  // clear it so a repeated call (the logout-driven unmount) is a server no-op —
+  // otherwise the second DELETE races the cleared auth cookie and 401s. Callers
+  // must invoke this BEFORE clearing the session for the DELETE to authenticate.
+  const token = activeToken;
+  activeToken = null;
+  if (token) await forgetToken(token);
+
   try {
     const messaging = await getFirebaseMessaging();
     if (!messaging) return;
 
-    const { getToken, deleteToken } = await import("firebase/messaging");
-
-    // Recover the current token so the backend can drop the matching row, then
-    // invalidate it locally.
-    let token: string | null = null;
-    try {
-      token = await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY });
-    } catch {
-      token = null;
-    }
-    if (token) await forgetToken(token);
-
+    const { deleteToken } = await import("firebase/messaging");
     await deleteToken(messaging);
   } catch {
     // Token already gone or browser unsupported — nothing to do.
