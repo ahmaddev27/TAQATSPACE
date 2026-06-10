@@ -111,6 +111,8 @@ return [
     'reminder_sent' => 'تم إرسال التذكير.',
     'invoice_member_no_subscription' => 'هذا العضو ليس لديه اشتراك نشط في مساحة عملك.',
     'invoice_already_paid' => 'تم دفع هذه الفاتورة بالفعل.',
+    'invoice_receipt_submitted' => 'تم رفع وصل الدفع، والفاتورة الآن قيد المراجعة.',
+    'invoice_receipt_not_allowed' => 'لا يمكن رفع وصل دفع لهذه الفاتورة في حالتها الحالية.',
     'invoice_reminder_recently_sent' => 'تم إرسال تذكير لهذه الفاتورة خلال الـ 24 ساعة الماضية بالفعل.',
 
     // الإعلانات

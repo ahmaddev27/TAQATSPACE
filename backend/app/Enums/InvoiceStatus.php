@@ -11,6 +11,7 @@ enum InvoiceStatus: string
     use HasValues;
 
     case Pending = 'pending';
+    case UnderReview = 'under_review';
     case Paid = 'paid';
     case Overdue = 'overdue';
     case Cancelled = 'cancelled';
