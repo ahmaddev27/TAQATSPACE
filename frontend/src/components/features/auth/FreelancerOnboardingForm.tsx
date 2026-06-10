@@ -23,9 +23,11 @@ import type { OnboardingResult } from "./OnboardingFlow";
  * success the account is active and the parent routes to the dashboard.
  */
 export function FreelancerOnboardingForm({
+  defaultPhone = "",
   onBack,
   onDone,
 }: {
+  defaultPhone?: string;
   onBack: () => void;
   onDone: (result: OnboardingResult) => void;
 }) {
@@ -45,7 +47,7 @@ export function FreelancerOnboardingForm({
   } = useForm<FreelancerOnboardingValues>({
     resolver: zodResolver(freelancerOnboardingSchema(tv)),
     mode: "onTouched",
-    defaultValues: { phone: "", gender: "", specialty: "", bio: "" },
+    defaultValues: { phone: defaultPhone, gender: "", specialty: "", bio: "" },
   });
 
   async function onSubmit(values: FreelancerOnboardingValues) {

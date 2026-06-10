@@ -240,19 +240,20 @@ class TaqatSsoService
         $email = isset($claims['email']) ? (string) $claims['email'] : null;
         $name = $this->resolveName($claims, $email);
         $phone = $this->resolvePhone($claims);
+        $avatar = $this->resolveAvatar($claims);
 
         $existing = $this->users->findBySsoSub($sub)
             ?? ($email !== null ? $this->users->findByEmail($email) : null);
 
         if ($existing !== null) {
-            return $this->backfill($existing, $sub, $name, $phone);
+            return $this->backfill($existing, $sub, $name, $phone, $avatar);
         }
 
         if ($email === null) {
             throw new RuntimeException('Userinfo response missing email claim.');
         }
 
-        return $this->provision($sub, $email, $name, $phone);
+        return $this->provision($sub, $email, $name, $phone, $avatar);
     }
 
     /**
@@ -285,7 +286,22 @@ class TaqatSsoService
         return null;
     }
 
-    private function backfill(User $user, string $sub, string $name, ?string $phone): User
+    /**
+     * The OIDC `picture` claim (a URL) when the IdP supplies one. Stored verbatim
+     * as the avatar — {@see \App\Support\MediaUrl} returns full URLs unchanged.
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    private function resolveAvatar(array $claims): ?string
+    {
+        if (isset($claims['picture']) && is_string($claims['picture']) && trim($claims['picture']) !== '') {
+            return trim($claims['picture']);
+        }
+
+        return null;
+    }
+
+    private function backfill(User $user, string $sub, string $name, ?string $phone, ?string $avatar): User
     {
         $updates = [];
 
@@ -301,6 +317,10 @@ class TaqatSsoService
             $updates['name'] = $name;
         }
 
+        if (($user->avatar === null || $user->avatar === '') && $avatar !== null) {
+            $updates['avatar'] = $avatar;
+        }
+
         if ($updates !== []) {
             $user->update($updates);
         }
@@ -308,7 +328,7 @@ class TaqatSsoService
         return $user;
     }
 
-    private function provision(string $sub, string $email, string $name, ?string $phone): User
+    private function provision(string $sub, string $email, string $name, ?string $phone, ?string $avatar): User
     {
         // A freshly-provisioned SSO user has not yet chosen freelancer vs
         // workspace-owner. `role` carries a Freelancer placeholder only to keep
@@ -323,6 +343,7 @@ class TaqatSsoService
             'email' => $email,
             'password' => Str::random(64),
             'phone' => $phone,
+            'avatar' => $avatar,
             'role' => $role->value,
             'status' => UserStatus::PendingVerification->value,
             'sso_sub' => $sub,
