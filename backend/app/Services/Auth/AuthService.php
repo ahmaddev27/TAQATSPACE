@@ -7,7 +7,6 @@ namespace App\Services\Auth;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class AuthService
 {
@@ -43,29 +42,32 @@ class AuthService
      */
     public function logout(User $user): ?string
     {
+        \App\Support\SsoLogoutLog::write('AuthService::logout ENTER', [
+            'user_id' => $user->id,
+            'sso_sub' => $user->sso_sub,
+        ]);
+
         $token = $user->currentAccessToken();
+
+        \App\Support\SsoLogoutLog::write('AuthService::logout TOKEN', [
+            'has_current_token' => $token !== null,
+            'token_class' => $token !== null ? $token::class : null,
+            'token_key' => $token !== null ? $token->getKey() : null,
+        ]);
 
         $ssoLogoutUrl = $token !== null
             ? $this->sso->buildLogoutUrl($token->getKey())
             : null;
 
-        // TEMP DEBUG (SSO single-logout diagnosis) — remove once verified.
-        // Dedicated file at debug level so it bypasses LOG_LEVEL / the default
-        // channel: storage/logs/sso-logout.log.
-        Log::build([
-            'driver' => 'single',
-            'path' => storage_path('logs/sso-logout.log'),
-            'level' => 'debug',
-        ])->info('[sso-logout] AuthService::logout', [
-            'user_id' => $user->id,
-            'sso_sub' => $user->sso_sub,
-            'has_current_token' => $token !== null,
-            'token_class' => $token !== null ? $token::class : null,
-            'token_key' => $token !== null ? $token->getKey() : null,
+        \App\Support\SsoLogoutLog::write('AuthService::logout BUILD_RESULT', [
             'sso_logout_url' => $ssoLogoutUrl,
         ]);
 
         $token?->delete();
+
+        \App\Support\SsoLogoutLog::write('AuthService::logout EXIT', [
+            'returning' => $ssoLogoutUrl,
+        ]);
 
         return $ssoLogoutUrl;
     }
