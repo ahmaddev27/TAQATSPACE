@@ -93,6 +93,33 @@ class SeatService
     }
 
     /**
+     * Onboarding seat setup: set each requested type's capacity to the chosen
+     * count, then generate the physical seats from those capacities. Used by the
+     * pending owner during onboarding (before activation), so it bypasses the
+     * normal active-owner seat API. Returns the resulting seats, ordered.
+     *
+     * @param  array<int, array{type: string, count: int}>  $counts
+     * @return Collection<int, Seat>
+     */
+    public function setupFromCounts(Workspace $workspace, array $counts): Collection
+    {
+        DB::transaction(function () use ($workspace, $counts): void {
+            foreach ($counts as $row) {
+                $count = max(0, (int) $row['count']);
+
+                $workspace->seatTypes()->updateOrCreate(
+                    ['type' => $row['type']],
+                    ['enabled' => $count > 0, 'capacity' => $count],
+                );
+            }
+
+            $this->syncSeatsToCapacity($workspace);
+        });
+
+        return $workspace->seats()->orderBy('seat_number')->get();
+    }
+
+    /**
      * Bring one seat type to its target count: create missing seats or prune
      * removable surplus. Never deletes a seat that is not safely removable.
      *

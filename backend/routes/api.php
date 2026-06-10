@@ -33,6 +33,7 @@ Route::prefix('auth')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/complete-onboarding', [OnboardingController::class, 'complete']);
+        Route::post('/onboarding/seats', [OnboardingController::class, 'seats']);
     });
 });
 

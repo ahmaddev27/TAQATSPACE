@@ -206,7 +206,7 @@ export function ResourcesTable({ resources, summary }: ResourcesTableProps) {
 
   return (
     <div className="stack" style={{ gap: 18 }}>
-      <div className="grid-stats">
+      <div className="grid-stats grid-stats--5">
         <StatTile icon="layers" label={t("summaryTotal")} value={summary.total} />
         {RESOURCE_STATUSES.map((s) => (
           <StatTile
@@ -220,7 +220,7 @@ export function ResourcesTable({ resources, summary }: ResourcesTableProps) {
 
       <div className="dt">
         <div className="dt-toolbar">
-          <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+          <div className="dt-tools">
             <Select
               value={type}
               onChange={(e) => {

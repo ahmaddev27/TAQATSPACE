@@ -360,6 +360,9 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 variant="primary"
                 icon="check"
                 loading={pending}
+                disabled={
+                  !payDate || !(payReceipt || Boolean(payTarget.receipt_url))
+                }
                 onClick={submitPaid}
               >
                 {tPay("confirm")}
@@ -371,11 +374,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             <p className="muted">
               {tPay("body", { invoice: payTarget.invoice_number })}
             </p>
-            <Field
-              label={tPay("paidAt")}
-              optional
-              optionalLabel={tPay("optional")}
-            >
+            <Field label={tPay("paidAt")}>
               <Input
                 className="ltr"
                 type="date"
@@ -386,8 +385,6 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             <Field
               label={tPay("receipt")}
               hint={tPay("receiptHint")}
-              optional
-              optionalLabel={tPay("optional")}
             >
               <FileDropzone
                 value={payReceipt}

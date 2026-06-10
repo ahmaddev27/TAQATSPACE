@@ -7,8 +7,11 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\CompleteOnboardingRequest;
+use App\Http\Requests\Auth\OnboardingSeatsRequest;
+use App\Http\Resources\SeatResource;
 use App\Http\Resources\UserResource;
 use App\Services\Auth\RegistrationService;
+use App\Services\SeatService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
@@ -38,5 +41,25 @@ class OnboardingController extends Controller
             // Owners await admin approval; freelancers are active immediately.
             'next' => $user->role === UserRole::WorkspaceOwner ? 'pending' : 'dashboard',
         ], __('messages.onboarding_completed'));
+    }
+
+    /**
+     * Generate the workspace's physical seats during onboarding, from the
+     * per-type counts the (still pending) owner chooses. Runs outside the active
+     * owner seat API so the owner can lay out their space before approval.
+     */
+    public function seats(OnboardingSeatsRequest $request, SeatService $seats): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        /** @var \App\Models\Workspace $workspace */
+        $workspace = $user->workspace;
+
+        $created = $seats->setupFromCounts($workspace, $request->validated()['seats']);
+
+        return ApiResponse::success([
+            'seats' => SeatResource::collection($created),
+        ], __('messages.onboarding_seats_created'));
     }
 }

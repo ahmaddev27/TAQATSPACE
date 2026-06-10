@@ -45,6 +45,7 @@ return [
     // إكمال التسجيل (اختيار الدور بعد الدخول الموحّد)
     'onboarding_completed' => 'تم تجهيز حسابك.',
     'onboarding_already_completed' => 'تم إعداد حسابك بالفعل.',
+    'onboarding_seats_created' => 'تم إنشاء المقاعد بنجاح.',
 
     // الملف الشخصي
     'profile_updated' => 'تم تحديث الملف الشخصي بنجاح.',
