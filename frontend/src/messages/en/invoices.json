@@ -84,6 +84,13 @@
         "status": "Status"
       },
       "downloadPdf": "PDF",
+      "receipt": {
+        "upload": "Upload receipt",
+        "view": "View receipt",
+        "submitted": "Receipt uploaded; the invoice is now under review.",
+        "failed": "Couldn't upload the receipt.",
+        "tooLarge": "File exceeds 5MB."
+      },
       "empty": {
         "title": "No invoices yet",
         "body": "Invoices will appear here once your subscription is billed."
