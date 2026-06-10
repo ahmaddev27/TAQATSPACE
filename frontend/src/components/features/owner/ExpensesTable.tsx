@@ -249,7 +249,7 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
 
       <div className="dt">
         <div className="dt-toolbar">
-          <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+          <div className="dt-tools">
             <Select
               value={category}
               onChange={(e) => {
