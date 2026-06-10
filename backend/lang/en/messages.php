@@ -147,6 +147,9 @@ return [
     'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
     'cannot_modify_admin' => 'An admin account cannot be modified from here.',
+    'contact_sent' => 'Your message has been sent; we will be in touch soon.',
+    'contact_marked_read' => 'Message marked as read.',
+    'contact_deleted' => 'Message deleted.',
     'messaging_settings_updated' => 'Messaging settings updated.',
 
     // Admin management (super-admin only)
