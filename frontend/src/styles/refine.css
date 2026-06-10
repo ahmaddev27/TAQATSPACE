@@ -136,7 +136,9 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
 /* ============================================================
    MODALS & DRAWERS
    ============================================================ */
-.modal { width: 100%; max-width: 480px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
+/* overflow:hidden clips the header/footer (which carry their own background) to
+   the card's border-radius, so the bottom corners are rounded like the top. */
+.modal { width: 100%; max-width: 480px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; overflow: hidden; }
 .modal-lg { max-width: 640px; }
 .modal-sm { max-width: 400px; }
 .modal-head { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex: none; }
