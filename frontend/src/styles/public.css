@@ -142,6 +142,19 @@
 /* detail */
 .gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-top: 8px; }
 .gallery-side { display: grid; gap: 12px; }
+/* Interactive gallery: hero + thumbnail strip (shows every uploaded photo). */
+.gallery-viewer { margin-top: 8px; display: flex; flex-direction: column; gap: 12px; }
+.gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.gallery-thumb { flex: 0 0 92px; width: 92px; padding: 0; border: 2px solid transparent; border-radius: var(--r-lg); background: none; cursor: pointer; overflow: hidden; opacity: .7; transition: opacity var(--t-fast), border-color var(--t-fast); }
+.gallery-thumb:hover { opacity: 1; }
+.gallery-thumb.is-active { border-color: var(--primary); opacity: 1; }
+
+/* working hours */
+.hours-table { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.hours-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; font-size: var(--fs-sm); }
+.hours-line:not(:last-child) { border-bottom: 1px solid var(--border); }
+.hours-line-day { font-weight: 600; }
+.hours-line-closed { color: var(--text-3); }
 .detail-split { display: grid; grid-template-columns: 1fr 340px; gap: 40px; padding: 32px 0 56px; align-items: start; }
 .amen-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
 .amen-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); font-size: var(--fs-sm); }

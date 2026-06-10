@@ -65,6 +65,51 @@
   flex: none;
 }
 
+/* ---- Mobile: the anchored dropdown becomes a full-height side drawer ----
+   On phones the absolute dropdown overflowed the viewport, so below the phone
+   breakpoint the panel is pinned to the inline-end edge, spans the full height,
+   and slides in — reusing the app `.drawer` / `.nav-backdrop` conventions. */
+.notif-backdrop {
+  display: none;
+}
+@media (max-width: 560px) {
+  .notif-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 119;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(10, 12, 16, 0.5);
+    animation: fade var(--t-slow);
+  }
+  [data-theme="dark"] .notif-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .notif-pop {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
+    width: min(420px, 88vw);
+    max-width: 88vw;
+    z-index: 120;
+    animation: slidein var(--t-slow);
+  }
+  [dir="rtl"] .notif-pop {
+    --slidefrom: -100%;
+  }
+  .notif-panel {
+    height: 100%;
+    max-height: 100%;
+    border: none;
+    border-inline-start: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: var(--sh-md);
+  }
+}
+
 /* ---- Notifications full-list page ---- */
 .notif-list {
   display: flex;

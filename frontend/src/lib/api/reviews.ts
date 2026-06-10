@@ -18,6 +18,19 @@ export async function reviewsForWorkspace(
   return res.data;
 }
 
+/**
+ * Freelancer: their OWN review of a workspace, or null when not yet reviewed.
+ * Backs the once-per-workspace rule + read-only display on the dashboard.
+ */
+export async function myReviewForWorkspace(
+  workspaceId: string,
+): Promise<Review | null> {
+  const res = await serverFetch<ApiEnvelope<{ review: Review | null }>>(
+    `/reviews/mine?workspace_id=${encodeURIComponent(workspaceId)}`,
+  );
+  return res.data.review;
+}
+
 export interface CreateReviewInput {
   workspace_id: string;
   rating: number;

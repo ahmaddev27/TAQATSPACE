@@ -151,6 +151,17 @@
       "reviewsTab": "Reviews",
       "amenities": "Amenities",
       "location": "Location",
+      "workingHours": "Working hours",
+      "closed": "Closed",
+      "days": {
+        "saturday": "Saturday",
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday"
+      },
       "seatTypesTitle": "Seat types & pricing",
       "monthlyFrom": "or monthly from",
       "seatTypeLabel": "Seat type",

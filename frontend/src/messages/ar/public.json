@@ -151,6 +151,17 @@
       "reviewsTab": "التقييمات",
       "amenities": "المرافق",
       "location": "الموقع",
+      "workingHours": "ساعات العمل",
+      "closed": "مغلق",
+      "days": {
+        "saturday": "السبت",
+        "sunday": "الأحد",
+        "monday": "الإثنين",
+        "tuesday": "الثلاثاء",
+        "wednesday": "الأربعاء",
+        "thursday": "الخميس",
+        "friday": "الجمعة"
+      },
       "seatTypesTitle": "أنواع المقاعد والأسعار",
       "monthlyFrom": "أو اشتراك شهري من",
       "seatTypeLabel": "نوع المقعد",

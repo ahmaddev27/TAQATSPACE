@@ -76,6 +76,7 @@ return [
     'seat_referenced_by_subscription' => 'Seat is referenced by a subscription and cannot be deleted.',
     'seat_not_in_workspace' => 'The selected seat does not belong to this workspace.',
     'seat_unavailable' => 'The selected seat is no longer available. Please choose another seat.',
+    'seat_type_mismatch' => 'The selected seat type does not match the type the member requested.',
 
     // Members
     'member_not_found' => 'Member not found.',
@@ -92,6 +93,7 @@ return [
     'booking_already_subscribed' => 'You already have an active subscription to this workspace.',
     'booking_already_reviewed' => 'This booking request has already been reviewed.',
     'subscription_already_cancelled' => 'This subscription is already cancelled.',
+    'subscription_not_due_for_renewal' => 'The subscription cannot be renewed before its end date is reached.',
     'subscription_no_access' => 'You do not have access to this subscription.',
 
     // Packages

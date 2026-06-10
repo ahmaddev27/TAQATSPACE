@@ -3,21 +3,25 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import { SeatMap, type SeatMapSeat } from "@/components/ui/SeatMap";
 import type { Seat } from "@/lib/types";
 
 export interface ApproveBookingModalProps {
   memberName: string;
+  /** The freelancer's requested seat-type label, or null for "any seat". */
+  requestedTypeLabel: string | null;
   seats: Seat[];
   pending: boolean;
   onConfirm: (seatId: string) => void;
   onClose: () => void;
 }
 
-/** Approve a booking by picking an available seat from the map. */
+/** Approve a booking by picking an available seat (matching the requested type). */
 export function ApproveBookingModal({
   memberName,
+  requestedTypeLabel,
   seats,
   pending,
   onConfirm,
@@ -57,11 +61,21 @@ export function ApproveBookingModal({
         </>
       }
     >
-      <p className="muted" style={{ marginBottom: 16, fontSize: "var(--fs-sm)" }}>
+      <p className="muted" style={{ marginBottom: 12, fontSize: "var(--fs-sm)" }}>
         {t("bookings.approvePrompt", { name: memberName })}
       </p>
+      {requestedTypeLabel && (
+        <p className="row" style={{ gap: 6, marginBottom: 16, fontSize: "var(--fs-sm)" }}>
+          <Icon name="grid" size={15} />
+          {t("bookings.requestedTypeHint", { type: requestedTypeLabel })}
+        </p>
+      )}
       {mapSeats.length === 0 ? (
-        <p className="muted">{t("seats.noSeatsTitle")}</p>
+        <p className="muted">
+          {requestedTypeLabel
+            ? t("bookings.noMatchingSeats")
+            : t("seats.noSeatsTitle")}
+        </p>
       ) : (
         <SeatMap
           seats={mapSeats}

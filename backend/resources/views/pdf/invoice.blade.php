@@ -120,9 +120,14 @@
         .badge-overdue { background: #FDE7E7; color: #C0392B; }
         .badge-cancelled { background: #EEF1F5; color: #667085; }
 
-        /* ---------- Party cards ---------- */
-        .parties { width: 100%; border-collapse: separate; border-spacing: 16px 0; margin: 0 -16px 28px; }
-        .party-cell { width: 50%; vertical-align: top; }
+        /* ---------- Party cards ----------
+           A plain collapsed table with explicit column widths + a spacer column
+           (the same pattern as the .meta strip, which mPDF renders reliably).
+           The previous border-spacing + negative-margin hack overflowed 100%
+           width in mPDF, so the two cells overlapped and the text ran together. */
+        .parties { width: 100%; border-collapse: collapse; margin: 0 0 28px; }
+        .party-cell { width: 48%; vertical-align: top; }
+        .party-gap { width: 4%; }
         .party-card {
             background: #F7FAFC;
             border: 1px solid #E4E9F0;
@@ -251,6 +256,7 @@
                     @endif
                 </div>
             </td>
+            <td class="party-gap"></td>
             <td class="party-cell">
                 <div class="party-card">
                     <div class="party-label">العميل<br><span class="en">Bill to</span></div>

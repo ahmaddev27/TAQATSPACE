@@ -76,6 +76,7 @@ return [
     'seat_referenced_by_subscription' => 'المقعد مرتبط باشتراك ولا يمكن حذفه.',
     'seat_not_in_workspace' => 'المقعد المحدد لا ينتمي إلى مساحة العمل هذه.',
     'seat_unavailable' => 'المقعد المحدد لم يعد متاحًا. يرجى اختيار مقعد آخر.',
+    'seat_type_mismatch' => 'نوع المقعد المحدد لا يطابق النوع الذي طلبه العضو.',
 
     // الأعضاء
     'member_not_found' => 'العضو غير موجود.',
@@ -92,6 +93,7 @@ return [
     'booking_already_subscribed' => 'لديك اشتراك نشط في مساحة العمل هذه بالفعل.',
     'booking_already_reviewed' => 'تمت مراجعة طلب الحجز هذا بالفعل.',
     'subscription_already_cancelled' => 'تم إلغاء هذا الاشتراك بالفعل.',
+    'subscription_not_due_for_renewal' => 'لا يمكن تجديد الاشتراك قبل وصول تاريخ انتهائه.',
     'subscription_no_access' => 'ليس لديك صلاحية الوصول إلى هذا الاشتراك.',
 
     // الباقات

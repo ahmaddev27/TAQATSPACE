@@ -49,6 +49,25 @@ class ReviewController extends Controller
         );
     }
 
+    /**
+     * The authenticated freelancer's own review of a workspace (or null), so the
+     * UI can show the read-only review instead of the submission form.
+     */
+    public function mine(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'workspace_id' => ['required', 'string'],
+        ]);
+
+        /** @var User $member */
+        $member = $request->user();
+        $review = $this->reviews->forMember($member, (string) $validated['workspace_id']);
+
+        return ApiResponse::success([
+            'review' => $review !== null ? new ReviewResource($review) : null,
+        ]);
+    }
+
     public function index(Request $request, Workspace $workspace): JsonResponse
     {
         $perPage = (int) $request->integer('per_page', 15);
