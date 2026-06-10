@@ -118,6 +118,8 @@
       "title": "استكشف المساحات",
       "subtitle": "{count} مساحة عمل عبر قطاع غزة",
       "searchPlaceholder": "ابحث باسم المساحة أو المنطقة…",
+      "search": "بحث",
+      "city": "المدينة",
       "allCities": "كل المدن",
       "anyPrice": "كل الأسعار",
       "priceRange": "نطاق السعر",

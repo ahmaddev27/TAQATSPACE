@@ -118,6 +118,8 @@
       "title": "Explore spaces",
       "subtitle": "{count} coworking spaces across Gaza",
       "searchPlaceholder": "Search by name or area…",
+      "search": "Search",
+      "city": "City",
       "allCities": "All cities",
       "anyPrice": "Any price",
       "priceRange": "Price range",
