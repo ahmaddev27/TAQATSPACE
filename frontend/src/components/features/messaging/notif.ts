@@ -26,12 +26,23 @@ export function notifPresentation(type: string): NotifPresentation {
       return { icon: "alert", tone: "warn" };
     case "invoice_created":
       return { icon: "receipt", tone: "info" };
+    case "invoice_receipt_submitted":
+      return { icon: "receipt", tone: "warn" };
+    case "subscription_expiring":
+      return { icon: "card", tone: "warn" };
     case "new_announcement":
       return { icon: "megaphone", tone: "warn" };
     case "new_message":
       return { icon: "chat", tone: "info" };
+    case "new_review":
+      return { icon: "checkCircle", tone: "ok" };
     case "new_workspace_registration":
+    case "workspace_status_changed":
       return { icon: "building", tone: "info" };
+    case "account_status_changed":
+      return { icon: "user", tone: "info" };
+    case "new_contact_message":
+      return { icon: "mail", tone: "info" };
     default:
       return { icon: "bell", tone: "info" };
   }
@@ -59,7 +70,10 @@ export function notifHref(
     case "invoice_overdue":
     case "invoice_paid":
     case "invoice_reminder":
+    case "invoice_receipt_submitted":
       return `${base}/invoices`;
+    case "subscription_expiring":
+      return role === "owner" ? `${base}/subscriptions` : `${base}/subscription`;
     case "new_announcement":
       return role === "owner" ? `${base}/announcements` : `${base}`;
     case "new_message":

@@ -40,7 +40,7 @@ export default async function OwnerInvoicesPage({
       </div>
 
       <div className="stack" style={{ gap: 18, marginTop: 8 }}>
-        <div className="grid-stats" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+        <div className="grid-stats grid-stats--3">
           <StatTile
             icon="receipt"
             amber={Number(summary.total_outstanding) > 0}

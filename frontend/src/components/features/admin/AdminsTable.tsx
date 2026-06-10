@@ -48,6 +48,8 @@ export function AdminsTable({ admins, currentUserId }: AdminsTableProps) {
   const { toast } = useToast();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  // Row whose action is running, so only its button spins (not every row's).
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const { filters, setFilter } = useUrlFilters(FILTER_KEYS);
   const status: StatusFilter = (filters.status as StatusFilter) || "all";
@@ -87,6 +89,7 @@ export function AdminsTable({ admins, currentUserId }: AdminsTableProps) {
       icon: "x",
     });
     if (!ok) return;
+    setBusyId(admin.id);
     startTransition(async () => {
       const res = await deactivateAdmin(admin.id);
       if (res.ok) {
@@ -94,6 +97,7 @@ export function AdminsTable({ admins, currentUserId }: AdminsTableProps) {
       } else {
         toast({ tone: "err", title: t("toast.deactivateFailed"), body: res.message });
       }
+      setBusyId(null);
     });
   };
 
@@ -166,7 +170,7 @@ export function AdminsTable({ admins, currentUserId }: AdminsTableProps) {
                 variant="danger"
                 size="sm"
                 icon="x"
-                loading={pending}
+                loading={pending && busyId === a.id}
                 onClick={() => handleDeactivate(a)}
               >
                 {t("deactivate")}

@@ -29,7 +29,7 @@ type Choice = "freelancer" | "workspace_owner";
 export function OnboardingFlow() {
   const t = useTranslations("auth.onboarding");
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [choice, setChoice] = useState<Choice | null>(null);
   const [ownerDone, setOwnerDone] = useState(false);
@@ -95,11 +95,19 @@ export function OnboardingFlow() {
       )}
 
       {choice === "freelancer" && (
-        <FreelancerOnboardingForm onBack={() => setChoice(null)} onDone={handleDone} />
+        <FreelancerOnboardingForm
+          defaultPhone={user?.phone ?? ""}
+          onBack={() => setChoice(null)}
+          onDone={handleDone}
+        />
       )}
 
       {choice === "workspace_owner" && (
-        <OwnerOnboardingForm onBack={() => setChoice(null)} onDone={handleDone} />
+        <OwnerOnboardingForm
+          defaultPhone={user?.phone ?? ""}
+          onBack={() => setChoice(null)}
+          onDone={handleDone}
+        />
       )}
     </div>
   );

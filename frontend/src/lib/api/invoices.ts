@@ -53,6 +53,9 @@ export interface Invoice {
   paid_at: string | null;
   is_overdue: boolean;
   invoice_pdf_path: string | null;
+  /** Stored payment-receipt path + a resolved (presigned) URL, when uploaded. */
+  receipt_path: string | null;
+  receipt_url: string | null;
   notes: string | null;
   created_at: string | null;
   subscription?: InvoiceSubscription;

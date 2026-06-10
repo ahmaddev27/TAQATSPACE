@@ -28,6 +28,7 @@ export const STATUS_MAP: Record<
   expired: { cls: "badge-neutral", ar: "منتهٍ", en: "Expired" },
   pending: { cls: "badge-warning", ar: "قيد المراجعة", en: "Pending" },
   pending_verification: { cls: "badge-warning", ar: "قيد المراجعة", en: "Pending" },
+  under_review: { cls: "badge-warning", ar: "قيد المراجعة", en: "Under review" },
   approved: { cls: "badge-success", ar: "مقبول", en: "Approved" },
   rejected: { cls: "badge-danger", ar: "مرفوض", en: "Rejected" },
   suspended: { cls: "badge-danger", ar: "موقوف", en: "Suspended" },

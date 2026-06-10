@@ -27,6 +27,18 @@
       "editProfile": "Edit profile",
       "exploreOther": "Explore other spaces"
     },
+    "review": {
+      "title": "Rate this workspace",
+      "subtitle": "Share your experience at {name} to help others.",
+      "starLabel": "{n} stars",
+      "commentPlaceholder": "Write a comment (optional)…",
+      "submit": "Submit review",
+      "pickRating": "Pick a star rating first.",
+      "thanks": "Thanks for your review!",
+      "already": "You've already reviewed this workspace.",
+      "yourReview": "Your review",
+      "failed": "Couldn't submit the review."
+    },
     "subscription": {
       "title": "My subscription",
       "subtitle": "Manage your current subscription and view history",

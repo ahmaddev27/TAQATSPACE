@@ -77,7 +77,12 @@ export type SubscriptionStatus =
   | "pending"
   | "suspended";
 export type BookingStatus = "pending" | "approved" | "rejected";
-export type InvoiceStatus = "pending" | "paid" | "overdue" | "cancelled";
+export type InvoiceStatus =
+  | "pending"
+  | "under_review"
+  | "paid"
+  | "overdue"
+  | "cancelled";
 export type WorkspaceStatus = "pending" | "active" | "suspended" | "rejected";
 
 /* -------------------------------------------------------------------------- */

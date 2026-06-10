@@ -58,12 +58,12 @@ class PushNotificationToDevices
 
             [$title, $body] = NotificationPushContent::resolve($payload);
 
-            $result = $this->firebase->sendToTokens(
-                $tokens,
-                $title,
-                $body,
-                $this->dataFor($payload),
-            );
+            $data = $this->dataFor($payload);
+            // Deep-link the native push to the relevant in-app page; the service
+            // worker reads `data.link` when the notification is clicked.
+            $data['link'] = $this->linkFor((string) ($payload['type'] ?? ''), $notifiable);
+
+            $result = $this->firebase->sendToTokens($tokens, $title, $body, $data);
 
             $this->pruneInvalidTokens($result['invalid_tokens']);
         } catch (Throwable $e) {
@@ -104,12 +104,45 @@ class PushNotificationToDevices
         $data = [];
 
         foreach ($payload as $key => $value) {
-            if (is_scalar($value) || $value === null) {
-                $data[$key] = $value;
+            // FCM HTTP v1 requires every data value to be a (non-null) string;
+            // coerce scalars and drop nulls so a single int/bool field can't
+            // reject the whole push.
+            if (is_scalar($value)) {
+                $data[$key] = (string) $value;
             }
         }
 
         return $data;
+    }
+
+    /**
+     * A locale-prefixed in-app path for the push to open, scoped to the
+     * recipient's role + the notification type (mirrors the SPA's notifHref).
+     * Defaults to the role's dashboard root when there's no specific target.
+     */
+    private function linkFor(string $type, User $user): string
+    {
+        $locale = (string) config('app.locale', 'ar');
+
+        $base = match (true) {
+            $user->isOwner() => '/owner',
+            $user->isAdmin() => '/admin',
+            default => '/freelancer',
+        };
+
+        $section = match ($type) {
+            'booking_approved', 'booking_rejected', 'new_booking_request' => $user->isOwner() ? '/requests' : '',
+            'invoice_created', 'invoice_overdue', 'invoice_paid', 'invoice_reminder', 'invoice_receipt_submitted' => '/invoices',
+            'subscription_expiring' => $user->isFreelancer() ? '/subscription' : '/subscriptions',
+            'seat_assigned' => $user->isOwner() ? '/seats' : '',
+            'new_announcement' => $user->isOwner() ? '/announcements' : '',
+            'new_review' => $user->isOwner() ? '/reports' : '',
+            'new_contact_message' => $user->isAdmin() ? '/messages' : '',
+            'new_message' => $user->isOwner() ? '/messages' : '/chat',
+            default => '',
+        };
+
+        return "/{$locale}{$base}{$section}";
     }
 
     /**

@@ -40,45 +40,40 @@ function PhotoSlot({ src, alt, h, className }: PhotoSlotProps) {
 }
 
 /**
- * Workspace gallery that adapts to the number of real photos — it never pads
- * empty slots with placeholders (so one uploaded photo shows alone, not beside
- * two fake ones). A single placeholder is shown only when there are no photos.
+ * Workspace gallery: one large hero image plus a thumbnail strip of EVERY
+ * uploaded photo (selecting a thumbnail swaps the hero). This shows all photos
+ * rather than capping at the first few; a single placeholder is used only when
+ * no photos exist.
  */
 export function Gallery({ photos, alt }: GalleryProps) {
   const real = photos.filter(Boolean);
-
-  if (real.length === 0) {
-    return (
-      <div className="gallery gallery-1">
-        <PhotoSlot src={PLACEHOLDER} alt={alt} h={320} />
-      </div>
-    );
-  }
-
-  if (real.length === 1) {
-    return (
-      <div className="gallery gallery-1">
-        <PhotoSlot src={real[0]} alt={alt} h={320} />
-      </div>
-    );
-  }
-
-  if (real.length === 2) {
-    return (
-      <div className="gallery gallery-2">
-        <PhotoSlot src={real[0]} alt={alt} h={300} />
-        <PhotoSlot src={real[1]} alt={alt} h={300} />
-      </div>
-    );
-  }
+  const list = real.length > 0 ? real : [PLACEHOLDER];
+  const [active, setActive] = useState(0);
+  const index = Math.min(active, list.length - 1);
 
   return (
-    <div className="gallery">
-      <PhotoSlot src={real[0]} alt={alt} h={320} className="gallery-main" />
-      <div className="gallery-side">
-        <PhotoSlot src={real[1]} alt={alt} h={152} />
-        <PhotoSlot src={real[2]} alt={alt} h={152} />
-      </div>
+    <div className="gallery-viewer">
+      {/* `key` remounts the hero per photo so a prior load-failure doesn't
+          stick when switching to a different image. */}
+      <PhotoSlot key={list[index]} src={list[index]} alt={alt} h={360} />
+
+      {list.length > 1 && (
+        <div className="gallery-thumbs" role="tablist" aria-label={alt}>
+          {list.map((src, i) => (
+            <button
+              key={`${src}-${i}`}
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              aria-label={`${alt} ${i + 1}`}
+              className={`gallery-thumb${i === index ? " is-active" : ""}`}
+              onClick={() => setActive(i)}
+            >
+              <PhotoSlot key={src} src={src} alt={`${alt} ${i + 1}`} h={68} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

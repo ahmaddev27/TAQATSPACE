@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Member;
 
+use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
@@ -46,6 +48,29 @@ class InvoiceController extends Controller
         $invoice->load(['subscription.workspace', 'subscription.seat']);
 
         return ApiResponse::success(new InvoiceResource($invoice));
+    }
+
+    /**
+     * POST /api/member/invoices/{invoice}/receipt — upload proof of payment.
+     * Moves the invoice to "under review" for the owner to confirm. Allowed only
+     * for the member's own, still-unpaid (pending/overdue) invoices.
+     */
+    public function uploadReceipt(SubmitReceiptRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->invoices->userCanAccess($invoice, $request->user())) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        if (! in_array($invoice->status, [InvoiceStatus::Pending, InvoiceStatus::Overdue], true)) {
+            return ApiResponse::error(__('messages.invoice_receipt_not_allowed'), 422);
+        }
+
+        $invoice = $this->invoices->submitReceipt($invoice, $request->file('receipt'));
+
+        return ApiResponse::success(
+            new InvoiceResource($invoice),
+            __('messages.invoice_receipt_submitted'),
+        );
     }
 
     /**

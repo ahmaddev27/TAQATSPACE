@@ -4,7 +4,6 @@ import { getMemberSummary } from "@/lib/api/memberDashboard";
 import { Icon } from "@/components/ui/Icon";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatusBadge } from "@/components/ui/Badge";
-import { NotificationBell } from "@/components/features/freelancer/NotificationBell";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
 import { QuickLinks } from "@/components/features/freelancer/QuickLinks";
 import { formatDate, formatMoney } from "@/components/features/freelancer/format";
@@ -34,7 +33,6 @@ export default async function FreelancerHomePage() {
             {t("subtitle")}
           </p>
         </div>
-        <NotificationBell unread={summary.unread_notifications} />
       </div>
 
       <div className="stack" style={{ gap: 24, marginTop: 8 }}>
@@ -127,7 +125,7 @@ export default async function FreelancerHomePage() {
               </div>
             </div>
 
-            <div className="grid-stats" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div className="grid-stats grid-stats--3">
               <StatTile
                 icon="grid"
                 label={t("seatType")}

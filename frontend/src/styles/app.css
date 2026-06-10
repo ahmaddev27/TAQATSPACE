@@ -373,6 +373,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 @media (max-width: 1280px) { .grid-stats--5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 900px) { .grid-stats--5 { grid-template-columns: repeat(2, 1fr); } }
 
+/* Fixed-count variants that still collapse on small screens. Use these classes
+   instead of an inline `grid-template-columns` (inline styles ignore the media
+   queries above, so tiles stay N-across and crush on phones). */
+.grid-stats--3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) { .grid-stats--3 { grid-template-columns: 1fr; } }
+.grid-stats--2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 560px) { .grid-stats--2 { grid-template-columns: 1fr; } }
+
 /* icon dir mirroring */
 [dir="rtl"] .dir-ico { transform: scaleX(-1); }
 
@@ -393,6 +401,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 /* rating */
 .rating { display:inline-flex; align-items:center; gap:5px; font-family: var(--font-num); }
 .star-fill { color: var(--amber-500); fill: var(--amber-500); }
+.star-empty { color: var(--border); fill: transparent; }
+/* Interactive star picker (review form). */
+.star-input { display: inline-flex; gap: 4px; }
+.star-btn { background: none; border: none; padding: 2px; cursor: pointer; line-height: 0; color: inherit; transition: transform var(--t-fast); }
+.star-btn:hover { transform: scale(1.1); }
 
 /* page section */
 .page { padding: var(--s-8); }

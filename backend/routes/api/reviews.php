@@ -15,5 +15,6 @@ Route::get('/workspaces/{workspace}/reviews', [ReviewController::class, 'index']
 
 Route::middleware(['auth:sanctum', 'role.freelancer'])
     ->group(function (): void {
+        Route::get('/reviews/mine', [ReviewController::class, 'mine']);
         Route::post('/reviews', [ReviewController::class, 'store']);
     });

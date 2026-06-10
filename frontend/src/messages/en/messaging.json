@@ -31,6 +31,12 @@
         "new_message": "New message",
         "new_workspace_registration": "New workspace registration",
         "seat_assigned": "Your seat is confirmed",
+        "invoice_receipt_submitted": "Payment receipt to review",
+        "account_status_changed": "Account status changed",
+        "subscription_expiring": "Subscription expiring soon",
+        "new_review": "New review",
+        "workspace_status_changed": "Workspace status changed",
+        "new_contact_message": "New contact message",
         "generic": "Notification"
       }
     },

@@ -1,10 +1,12 @@
 import { getTranslations, getLocale, setRequestLocale } from "next-intl/server";
 import { listSubscriptions } from "@/lib/api/subscriptions";
+import { myReviewForWorkspace } from "@/lib/api/reviews";
 import { Icon } from "@/components/ui/Icon";
 import { StatusBadge } from "@/components/ui/Badge";
 import { CancelSubscriptionButton } from "@/components/features/freelancer/CancelSubscriptionButton";
 import { SubscriptionHistoryTable } from "@/components/features/freelancer/SubscriptionHistoryTable";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
+import { ReviewForm } from "@/components/features/freelancer/ReviewForm";
 import { formatDate, formatMoney } from "@/components/features/freelancer/format";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,12 @@ export default async function FreelancerSubscriptionPage({
   const currency = tCommon("currency");
   const active = subscriptions.find((s) => s.status === "active") ?? null;
   const seatType = active?.seat?.type;
+
+  // A workspace can be reviewed once: load any existing review so the section
+  // renders read-only instead of the form.
+  const existingReview = active?.workspace
+    ? await myReviewForWorkspace(active.workspace.id)
+    : null;
 
   return (
     <div className="page">
@@ -107,6 +115,14 @@ export default async function FreelancerSubscriptionPage({
           </div>
         ) : (
           <NoSubscriptionPanel pendingRequests={0} />
+        )}
+
+        {active?.workspace && (
+          <ReviewForm
+            workspaceId={active.workspace.id}
+            workspaceName={active.workspace.name}
+            existingReview={existingReview}
+          />
         )}
 
         <div className="stack" style={{ gap: 14 }}>

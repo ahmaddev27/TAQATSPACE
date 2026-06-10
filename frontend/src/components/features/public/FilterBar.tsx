@@ -93,72 +93,99 @@ export function FilterBar({ dict, cities, locale, seatType }: FilterBarProps) {
   return (
     <div className="stack" style={{ gap: 0 }}>
       <div className="filter-bar">
-        <div className="input-icon grow" style={{ maxWidth: 300 }}>
-          <Icon name="search" />
-          <input
-            className="input"
-            placeholder={e.searchPlaceholder}
-            value={search}
-            onChange={(ev) => setSearch(ev.target.value)}
-          />
-        </div>
+        <label className="filter-field filter-field--search">
+          <span className="filter-field-label">{e.search}</span>
+          <span className="input-icon">
+            <Icon name="search" />
+            <input
+              className="input"
+              placeholder={e.searchPlaceholder}
+              value={search}
+              onChange={(ev) => setSearch(ev.target.value)}
+            />
+          </span>
+        </label>
 
-        <Select value={params.get("city") ?? ""} onChange={(ev) => setSingle("city", ev.target.value)}>
-          <option value="">{e.allCities}</option>
-          {cities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </Select>
+        <label className="filter-field">
+          <span className="filter-field-label">{e.city}</span>
+          <Select value={params.get("city") ?? ""} onChange={(ev) => setSingle("city", ev.target.value)}>
+            <option value="">{e.allCities}</option>
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </Select>
+        </label>
 
-        <div className="input-icon" style={{ width: 96 }}>
+        <label className="filter-field">
+          <span className="filter-field-label">{e.minPrice}</span>
           <input
             className="input"
             type="number"
             inputMode="numeric"
             min={0}
-            placeholder={e.minPrice}
+            placeholder="0"
             value={params.get("min_price") ?? ""}
             onChange={(ev) => setSingle("min_price", ev.target.value)}
           />
-        </div>
-        <div className="input-icon" style={{ width: 96 }}>
+        </label>
+
+        <label className="filter-field">
+          <span className="filter-field-label">{e.maxPrice}</span>
           <input
             className="input"
             type="number"
             inputMode="numeric"
             min={0}
-            placeholder={e.maxPrice}
+            placeholder="∞"
             value={params.get("max_price") ?? ""}
             onChange={(ev) => setSingle("max_price", ev.target.value)}
           />
-        </div>
+        </label>
 
-        <Select value={seatType ?? ""} onChange={(ev) => setSingle("seat_type", ev.target.value)}>
-          <option value="">{e.anySeatType}</option>
-          {SEAT_TYPES.map((s) => (
-            <option key={s} value={s}>
-              {seatLabel(s)}
-            </option>
-          ))}
-        </Select>
+        <label className="filter-field">
+          <span className="filter-field-label">{e.seatType}</span>
+          <Select value={seatType ?? ""} onChange={(ev) => setSingle("seat_type", ev.target.value)}>
+            <option value="">{e.anySeatType}</option>
+            {SEAT_TYPES.map((s) => (
+              <option key={s} value={s}>
+                {seatLabel(s)}
+              </option>
+            ))}
+          </Select>
+        </label>
 
-        <Select
-          value={params.get("min_rating") ?? ""}
-          onChange={(ev) => setSingle("min_rating", ev.target.value)}
-        >
-          <option value="">{e.anyRating}</option>
-          {RATINGS.map((r) => (
-            <option key={r} value={r}>
-              {interpolate(e.ratingPlus, { value: r })}
-            </option>
-          ))}
-        </Select>
+        <label className="filter-field">
+          <span className="filter-field-label">{e.minRating}</span>
+          <Select
+            value={params.get("min_rating") ?? ""}
+            onChange={(ev) => setSingle("min_rating", ev.target.value)}
+          >
+            <option value="">{e.anyRating}</option>
+            {RATINGS.map((r) => (
+              <option key={r} value={r}>
+                {interpolate(e.ratingPlus, { value: r })}
+              </option>
+            ))}
+          </Select>
+        </label>
+
+        <label className="filter-field">
+          <span className="filter-field-label">{e.sort}</span>
+          <Select
+            value={params.get("sort") ?? "rating"}
+            onChange={(ev) => setSingle("sort", ev.target.value)}
+          >
+            <option value="rating">{e.sortRating}</option>
+            <option value="price">{e.sortPriceAsc}</option>
+            <option value="-price">{e.sortPriceDesc}</option>
+          </Select>
+        </label>
 
         <button
           type="button"
-          className="btn btn-secondary btn-sm"
+          className="btn btn-secondary btn-sm filter-field-btn"
           onClick={() => setShowAmenities((v) => !v)}
           aria-expanded={showAmenities}
         >
@@ -166,23 +193,6 @@ export function FilterBar({ dict, cities, locale, seatType }: FilterBarProps) {
           {e.amenities}
           {selectedAmenities.length > 0 ? ` (${selectedAmenities.length})` : ""}
         </button>
-
-        <div className="grow" />
-
-        <div className="row" style={{ gap: 8 }}>
-          <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-            {e.sort}:
-          </span>
-          <Select
-            value={params.get("sort") ?? "rating"}
-            onChange={(ev) => setSingle("sort", ev.target.value)}
-            style={{ width: 150 }}
-          >
-            <option value="rating">{e.sortRating}</option>
-            <option value="price">{e.sortPriceAsc}</option>
-            <option value="-price">{e.sortPriceDesc}</option>
-          </Select>
-        </div>
 
         {hasFilters && (
           <Button variant="ghost" size="sm" icon="x" onClick={clearAll}>

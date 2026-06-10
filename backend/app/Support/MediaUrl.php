@@ -22,6 +22,12 @@ class MediaUrl
             return null;
         }
 
+        // Already an absolute URL (e.g. an SSO `picture` claim stored as the
+        // avatar) — return it unchanged instead of treating it as a disk path.
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
         $diskName = (string) config('filesystems.media', 'public');
         $disk = Storage::disk($diskName);
 

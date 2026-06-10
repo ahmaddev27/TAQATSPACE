@@ -64,6 +64,25 @@ export async function markPaid(
 }
 
 /**
+ * Freelancer: upload proof of payment for one of their own invoices. Moves the
+ * invoice to "under review" for the owner to confirm.
+ */
+export async function submitReceipt(
+  invoiceId: string,
+  receipt: File,
+): Promise<ActionResult<Invoice>> {
+  const formData = new FormData();
+  formData.set("receipt", receipt);
+
+  const result = await authedMutate<Invoice>(
+    `/member/invoices/${invoiceId}/receipt`,
+    { method: "POST", formData },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
+/**
  * Owner: send a payment reminder. The backend rate-limits to one per 24h and
  * answers 429 when called too soon — surfaced to the caller via `ActionResult`.
  */

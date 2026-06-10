@@ -111,12 +111,21 @@
 
 /* explore */
 .explore-head { background: var(--surface); border-bottom: 1px solid var(--border); padding: 28px 0 0; }
-.filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 18px 0; }
-.filter-bar .select-wrap { width: 160px; }
-/* Full-width filters on phones so they stack cleanly instead of fixed 160px. */
-@media (max-width: 560px) {
-  .filter-bar { align-items: stretch; }
-  .filter-bar .select-wrap { width: 100%; }
+/* Discovery filters: each control is a labelled column so its purpose (esp. the
+   two price bounds) is clear and it gets real width; they wrap onto fewer rows on
+   small screens. align-items:flex-end keeps label-less buttons on the control row. */
+.filter-bar { display: flex; align-items: flex-end; gap: 12px 14px; flex-wrap: wrap; padding: 18px 0; }
+.filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.filter-field-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); padding-inline-start: 2px; }
+.filter-field--search { flex: 1 1 240px; max-width: 320px; }
+.filter-field .input,
+.filter-field .select,
+.filter-field .input-icon { width: 100%; }
+.filter-bar > .btn,
+.filter-field-btn { align-self: flex-end; }
+@media (max-width: 600px) {
+  .filter-field { flex: 1 1 calc(50% - 14px); }
+  .filter-field--search { flex: 1 1 100%; max-width: none; }
 }
 .explore-split { display: grid; grid-template-columns: 1fr .9fr; gap: 24px; padding-top: 24px; padding-bottom: 48px; align-items: start; }
 .explore-list { display: flex; flex-direction: column; gap: 14px; }
@@ -133,6 +142,19 @@
 /* detail */
 .gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-top: 8px; }
 .gallery-side { display: grid; gap: 12px; }
+/* Interactive gallery: hero + thumbnail strip (shows every uploaded photo). */
+.gallery-viewer { margin-top: 8px; display: flex; flex-direction: column; gap: 12px; }
+.gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.gallery-thumb { flex: 0 0 92px; width: 92px; padding: 0; border: 2px solid transparent; border-radius: var(--r-lg); background: none; cursor: pointer; overflow: hidden; opacity: .7; transition: opacity var(--t-fast), border-color var(--t-fast); }
+.gallery-thumb:hover { opacity: 1; }
+.gallery-thumb.is-active { border-color: var(--primary); opacity: 1; }
+
+/* working hours */
+.hours-table { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.hours-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; font-size: var(--fs-sm); }
+.hours-line:not(:last-child) { border-bottom: 1px solid var(--border); }
+.hours-line-day { font-weight: 600; }
+.hours-line-closed { color: var(--text-3); }
 .detail-split { display: grid; grid-template-columns: 1fr 340px; gap: 40px; padding: 32px 0 56px; align-items: start; }
 .amen-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
 .amen-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); font-size: var(--fs-sm); }

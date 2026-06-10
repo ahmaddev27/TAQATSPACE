@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
+import { InvoiceStatusBadge } from "@/components/features/invoices/InvoiceStatusBadge";
 import { Field } from "@/components/ui/Field";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/Input";
@@ -58,6 +58,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const [page, setPage] = useState(1);
 
   const [receiptTarget, setReceiptTarget] = useState<AdminInvoice | null>(null);
+  // Row whose action is running, so only its button spins (not every row's).
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [payTarget, setPayTarget] = useState<AdminInvoice | null>(null);
   const [payDate, setPayDate] = useState("");
   const [payReceipt, setPayReceipt] = useState<File | null>(null);
@@ -95,6 +97,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const pageRows = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
   const runUnpaid = (invoice: AdminInvoice) => {
+    setBusyId(invoice.id);
     startTransition(async () => {
       const res = await markInvoiceUnpaid(invoice.id);
       if (res.ok) {
@@ -102,6 +105,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
       } else {
         toast({ tone: "err", title: t("toast.markFailed"), body: res.message });
       }
+      setBusyId(null);
     });
   };
 
@@ -169,7 +173,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
       id: "status",
       header: t("colStatus"),
       sortable: true,
-      cell: (inv) => <StatusBadge status={inv.status} locale={locale} />,
+      cell: (inv) => <InvoiceStatusBadge status={inv.status} locale={locale} />,
     },
     {
       id: "paid",
@@ -181,14 +185,19 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
     {
       id: "actions",
       header: "",
-      cell: (inv) => (
+      cell: (inv) => {
+        // Uploading a receipt is only meaningful while there's still something
+        // to settle. Once the invoice is paid AND a receipt is attached, the
+        // upload action is hidden — the PDF + "view receipt" are shown instead.
+        const isSettled = inv.status === "paid" && Boolean(inv.receipt_url);
+        return (
         <div className="row-actions">
           {inv.status === "paid" ? (
             <Button
               variant="secondary"
               size="sm"
               icon="x"
-              loading={pending}
+              loading={pending && busyId === inv.id}
               onClick={() => runUnpaid(inv)}
             >
               {t("markUnpaid")}
@@ -199,7 +208,6 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 variant="primary"
                 size="sm"
                 icon="check"
-                loading={pending}
                 onClick={() => {
                   setPayDate("");
                   setPayReceipt(null);
@@ -210,14 +218,16 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               </Button>
             )
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            icon="upload"
-            onClick={() => setReceiptTarget(inv)}
-          >
-            {t("uploadReceipt")}
-          </Button>
+          {!isSettled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="upload"
+              onClick={() => setReceiptTarget(inv)}
+            >
+              {t("uploadReceipt")}
+            </Button>
+          )}
           {inv.pdf_url && (
             <a
               className="btn btn-ghost btn-sm"
@@ -241,7 +251,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             </a>
           )}
         </div>
-      ),
+        );
+      },
     },
   ];
 
@@ -349,6 +360,9 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
                 variant="primary"
                 icon="check"
                 loading={pending}
+                disabled={
+                  !payDate || !(payReceipt || Boolean(payTarget.receipt_url))
+                }
                 onClick={submitPaid}
               >
                 {tPay("confirm")}
@@ -360,11 +374,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             <p className="muted">
               {tPay("body", { invoice: payTarget.invoice_number })}
             </p>
-            <Field
-              label={tPay("paidAt")}
-              optional
-              optionalLabel={tPay("optional")}
-            >
+            <Field label={tPay("paidAt")}>
               <Input
                 className="ltr"
                 type="date"
@@ -375,8 +385,6 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             <Field
               label={tPay("receipt")}
               hint={tPay("receiptHint")}
-              optional
-              optionalLabel={tPay("optional")}
             >
               <FileDropzone
                 value={payReceipt}

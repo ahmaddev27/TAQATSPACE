@@ -102,7 +102,12 @@ class AdminUserService
      */
     private function filteredQuery(array $filters): Builder
     {
-        $query = User::query();
+        // The user directory manages platform members only — staff (admins) are
+        // administered in the admin-management module, never here.
+        $query = User::query()->whereIn('role', [
+            UserRole::Freelancer->value,
+            UserRole::WorkspaceOwner->value,
+        ]);
 
         if (! empty($filters['role']) && UserRole::tryFrom((string) $filters['role']) !== null) {
             $query->where('role', $filters['role']);

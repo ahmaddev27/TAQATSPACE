@@ -45,6 +45,7 @@ return [
     // Onboarding (SSO role selection)
     'onboarding_completed' => 'Your account is ready.',
     'onboarding_already_completed' => 'Your account has already been set up.',
+    'onboarding_seats_created' => 'Seats created successfully.',
 
     // Profile
     'profile_updated' => 'Profile updated successfully.',
@@ -76,6 +77,7 @@ return [
     'seat_referenced_by_subscription' => 'Seat is referenced by a subscription and cannot be deleted.',
     'seat_not_in_workspace' => 'The selected seat does not belong to this workspace.',
     'seat_unavailable' => 'The selected seat is no longer available. Please choose another seat.',
+    'seat_type_mismatch' => 'The selected seat type does not match the type the member requested.',
 
     // Members
     'member_not_found' => 'Member not found.',
@@ -92,6 +94,7 @@ return [
     'booking_already_subscribed' => 'You already have an active subscription to this workspace.',
     'booking_already_reviewed' => 'This booking request has already been reviewed.',
     'subscription_already_cancelled' => 'This subscription is already cancelled.',
+    'subscription_not_due_for_renewal' => 'The subscription cannot be renewed before its end date is reached.',
     'subscription_no_access' => 'You do not have access to this subscription.',
 
     // Packages
@@ -111,6 +114,8 @@ return [
     'reminder_sent' => 'Reminder sent.',
     'invoice_member_no_subscription' => 'This member has no active subscription in your workspace.',
     'invoice_already_paid' => 'This invoice has already been paid.',
+    'invoice_receipt_submitted' => 'Payment receipt uploaded; the invoice is now under review.',
+    'invoice_receipt_not_allowed' => 'A receipt cannot be uploaded for this invoice in its current state.',
     'invoice_reminder_recently_sent' => 'A reminder was already sent for this invoice in the last 24 hours.',
 
     // Announcements
@@ -144,6 +149,10 @@ return [
     'branding_updated' => 'Branding updated.',
     'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
+    'cannot_modify_admin' => 'An admin account cannot be modified from here.',
+    'contact_sent' => 'Your message has been sent; we will be in touch soon.',
+    'contact_marked_read' => 'Message marked as read.',
+    'contact_deleted' => 'Message deleted.',
     'messaging_settings_updated' => 'Messaging settings updated.',
 
     // Admin management (super-admin only)

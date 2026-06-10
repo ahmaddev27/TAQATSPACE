@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'role.freelancer'])
     ->group(function (): void {
         Route::get('/', [MemberInvoiceController::class, 'index']);
         Route::get('/{invoice}', [MemberInvoiceController::class, 'show']);
+        Route::post('/{invoice}/receipt', [MemberInvoiceController::class, 'uploadReceipt']);
     });
 
 // PDF download — owner OR the member the invoice belongs to (checked in controller).

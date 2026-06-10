@@ -45,6 +45,7 @@ return [
     // إكمال التسجيل (اختيار الدور بعد الدخول الموحّد)
     'onboarding_completed' => 'تم تجهيز حسابك.',
     'onboarding_already_completed' => 'تم إعداد حسابك بالفعل.',
+    'onboarding_seats_created' => 'تم إنشاء المقاعد بنجاح.',
 
     // الملف الشخصي
     'profile_updated' => 'تم تحديث الملف الشخصي بنجاح.',
@@ -76,6 +77,7 @@ return [
     'seat_referenced_by_subscription' => 'المقعد مرتبط باشتراك ولا يمكن حذفه.',
     'seat_not_in_workspace' => 'المقعد المحدد لا ينتمي إلى مساحة العمل هذه.',
     'seat_unavailable' => 'المقعد المحدد لم يعد متاحًا. يرجى اختيار مقعد آخر.',
+    'seat_type_mismatch' => 'نوع المقعد المحدد لا يطابق النوع الذي طلبه العضو.',
 
     // الأعضاء
     'member_not_found' => 'العضو غير موجود.',
@@ -92,6 +94,7 @@ return [
     'booking_already_subscribed' => 'لديك اشتراك نشط في مساحة العمل هذه بالفعل.',
     'booking_already_reviewed' => 'تمت مراجعة طلب الحجز هذا بالفعل.',
     'subscription_already_cancelled' => 'تم إلغاء هذا الاشتراك بالفعل.',
+    'subscription_not_due_for_renewal' => 'لا يمكن تجديد الاشتراك قبل وصول تاريخ انتهائه.',
     'subscription_no_access' => 'ليس لديك صلاحية الوصول إلى هذا الاشتراك.',
 
     // الباقات
@@ -111,6 +114,8 @@ return [
     'reminder_sent' => 'تم إرسال التذكير.',
     'invoice_member_no_subscription' => 'هذا العضو ليس لديه اشتراك نشط في مساحة عملك.',
     'invoice_already_paid' => 'تم دفع هذه الفاتورة بالفعل.',
+    'invoice_receipt_submitted' => 'تم رفع وصل الدفع، والفاتورة الآن قيد المراجعة.',
+    'invoice_receipt_not_allowed' => 'لا يمكن رفع وصل دفع لهذه الفاتورة في حالتها الحالية.',
     'invoice_reminder_recently_sent' => 'تم إرسال تذكير لهذه الفاتورة خلال الـ 24 ساعة الماضية بالفعل.',
 
     // الإعلانات
@@ -144,6 +149,10 @@ return [
     'branding_updated' => 'تم تحديث الهوية.',
     'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
+    'cannot_modify_admin' => 'لا يمكن تعديل حالة حساب إداري من هنا.',
+    'contact_sent' => 'تم إرسال رسالتك، سنتواصل معك قريباً.',
+    'contact_marked_read' => 'تم تعليم الرسالة كمقروءة.',
+    'contact_deleted' => 'تم حذف الرسالة.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
 
     // إدارة المشرفين (للمشرف الأعلى فقط)

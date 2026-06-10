@@ -48,6 +48,12 @@ class UserController extends Controller
      */
     public function updateStatus(UpdateUserStatusRequest $request, User $user): JsonResponse
     {
+        // Staff accounts (incl. the acting super-admin themselves) are never
+        // suspendable from the user directory.
+        if ($user->isAdmin()) {
+            return ApiResponse::error(__('messages.cannot_modify_admin'), 403);
+        }
+
         $updated = $this->users->changeStatus($user, $request->status());
 
         return ApiResponse::success(new UserResource($updated), __('messages.user_status_updated'));
