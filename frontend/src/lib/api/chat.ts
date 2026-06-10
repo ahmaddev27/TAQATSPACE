@@ -13,6 +13,8 @@ export interface ChatContact {
   workspace_id: string;
   /** The contact's role (owner/freelancer/admin), for the by-type filter. */
   role?: string;
+  /** True when the viewer is a member of this contact's workspace (badge). */
+  subscribed?: boolean;
 }
 
 /**

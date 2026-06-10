@@ -111,9 +111,22 @@
 .chat-name {
   font-weight: 600;
   font-size: var(--fs-sm);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.chat-name > :first-child {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* "You're a member of this workspace" mark next to a freelancer's space chat. */
+.chat-sub-badge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--success);
+  flex: none;
 }
 .chat-preview {
   color: var(--text-3);

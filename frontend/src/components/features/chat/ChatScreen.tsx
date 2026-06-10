@@ -141,13 +141,15 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
 
   /** Resolve the other participant's id + display name for a conversation. */
   const otherParticipant = useCallback(
-    (conv: ChatConversation): { id: string; name: string } => {
+    (conv: ChatConversation): { id: string; name: string; subscribed: boolean } => {
       const id = conv.participants.find((p) => p !== self.id) ?? "";
+      const contact = contactById.get(id);
+      // Prefer the contact-list name: it's role-appropriate (a workspace name for
+      // a freelancer, "owner - workspace" for an admin), unlike the personal name
+      // stored on the Firestore conversation.
       const name =
-        conv.participantNames[id] ??
-        contactById.get(id)?.name ??
-        t("unknownContact");
-      return { id, name };
+        contact?.name ?? conv.participantNames[id] ?? t("unknownContact");
+      return { id, name, subscribed: contact?.subscribed ?? false };
     },
     [self.id, contactById, t],
   );
@@ -319,6 +321,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                     key={conv.id}
                     name={other.name}
                     avatar={contactById.get(other.id)?.avatar ?? null}
+                    subscribed={other.subscribed}
                     preview={conv.lastMessage || t("noMessagesYet")}
                     time={relativeTime(conv.updatedAt, locale)}
                     active={other.id === activeContactId}
@@ -335,6 +338,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
                       key={c.id}
                       name={c.name}
                       avatar={c.avatar}
+                      subscribed={c.subscribed}
                       preview={t("tapToStart")}
                       active={c.id === activeContactId}
                       onSelect={() => setActiveContactId(c.id)}
@@ -381,6 +385,7 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
 function ContactRow({
   name,
   avatar,
+  subscribed,
   preview,
   time,
   active,
@@ -388,6 +393,7 @@ function ContactRow({
 }: {
   name: string;
   avatar?: string | null;
+  subscribed?: boolean;
   preview: string;
   time?: string;
   active: boolean;
@@ -400,8 +406,15 @@ function ContactRow({
       onClick={onSelect}
     >
       <Avatar initial={avatarInitial(name)} src={avatar} alt={name} round />
-      <div className="grow">
-        <div className="chat-name">{name}</div>
+      <div className="grow" style={{ minWidth: 0 }}>
+        <div className="chat-name">
+          <span>{name}</span>
+          {subscribed ? (
+            <span className="chat-sub-badge">
+              <Icon name="checkCircle" size={12} />
+            </span>
+          ) : null}
+        </div>
         <div className="chat-preview">{preview}</div>
       </div>
       {time ? <span className="chat-time">{time}</span> : null}

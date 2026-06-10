@@ -17,13 +17,14 @@ use App\Support\MediaUrl;
  *
  *  - A workspace **owner** chats with their members (freelancers subscribed to
  *    their workspace).
- *  - A **freelancer** chats with the owner of every active workspace, the
- *    owner(s) of workspaces they subscribe(d) to (kept reachable even when the
- *    workspace is no longer active), and the platform admin(s).
- *  - An **admin** chats with any active owner or freelancer (platform support).
+ *  - A **freelancer** chats with workspaces — shown by WORKSPACE name, not the
+ *    owner's personal name — covering every active workspace plus any they
+ *    subscribe(d) to (flagged `subscribed`). Freelancers do NOT chat with admins.
+ *  - An **admin** chats with any active owner or freelancer; owners are labelled
+ *    "owner name - workspace name" so the space is clear.
  *
- * Each contact carries `{ id, name, workspace_id, role }`; `role` lets the SPA
- * offer a by-type filter. Contacts are de-duplicated by user id.
+ * Each contact carries `{ id, name, workspace_id, role, subscribed }`; `role`
+ * lets the SPA filter by type. Contacts are de-duplicated by user id.
  */
 class ChatContactService
 {
@@ -49,18 +50,25 @@ class ChatContactService
 
     /**
      * Shape a single contact row. `role` is the contact's own role, so the SPA
-     * can group/filter the list by user type.
+     * can group/filter the list by user type. `name` may be overridden with a
+     * role-appropriate display label (workspace name, or "owner - workspace").
+     * `subscribed` flags a workspace the viewer is a member of (for a badge).
      *
-     * @return array{id: string, name: string, avatar: ?string, workspace_id: string, role: string}
+     * @return array{id: string, name: string, avatar: ?string, workspace_id: string, role: string, subscribed: bool}
      */
-    private function contact(User $user, string $workspaceId): array
-    {
+    private function contact(
+        User $user,
+        string $workspaceId,
+        ?string $displayName = null,
+        bool $subscribed = false,
+    ): array {
         return [
             'id' => (string) $user->id,
-            'name' => (string) $user->name,
+            'name' => $displayName ?? (string) $user->name,
             'avatar' => MediaUrl::resolve($user->avatar),
             'workspace_id' => $workspaceId,
             'role' => $user->role->value,
+            'subscribed' => $subscribed,
         ];
     }
 
@@ -89,44 +97,48 @@ class ChatContactService
     }
 
     /**
-     * A freelancer chats with: the owner of every active workspace, the owner(s)
-     * of workspaces they subscribe(d) to, and the platform admin(s).
+     * A freelancer chats with workspaces — every active workspace plus any they
+     * subscribe(d) to (kept reachable even when inactive). Each is shown by the
+     * WORKSPACE name (not the owner's personal name), flagged `subscribed` when
+     * the freelancer is a member. Freelancers do NOT chat with admins.
      *
-     * @return list<array{id: string, name: string, workspace_id: string, role: string}>
+     * @return list<array{id: string, name: string, workspace_id: string, role: string, subscribed: bool}>
      */
     private function freelancerContacts(User $freelancer): array
     {
+        // Workspaces this freelancer is a member of — drives the "subscribed"
+        // badge and keeps their owners reachable even if a space goes inactive.
+        $subscribedIds = Subscription::query()
+            ->where('member_id', $freelancer->id)
+            ->pluck('workspace_id')
+            ->map(static fn ($id): string => (string) $id)
+            ->all();
+        $subscribedSet = array_flip($subscribedIds);
+
         $contacts = [];
 
-        // 1. Owners of every active workspace — reach out to any open space.
         Workspace::query()
-            ->where('status', WorkspaceStatus::Active->value)
+            ->where(function ($query) use ($subscribedIds): void {
+                $query->where('status', WorkspaceStatus::Active->value);
+                if ($subscribedIds !== []) {
+                    $query->orWhereIn('id', $subscribedIds);
+                }
+            })
             ->with('owner:id,name,role,avatar')
-            ->get(['id', 'owner_id'])
-            ->each(function (Workspace $workspace) use (&$contacts): void {
-                if ($workspace->owner !== null) {
-                    $contacts[(string) $workspace->owner->id] =
-                        $this->contact($workspace->owner, (string) $workspace->id);
+            ->get(['id', 'name', 'owner_id'])
+            ->each(function (Workspace $workspace) use (&$contacts, $subscribedSet): void {
+                if ($workspace->owner === null) {
+                    return;
                 }
+
+                // Keyed by owner id (the chat counterpart), labelled by workspace.
+                $contacts[(string) $workspace->owner->id] = $this->contact(
+                    $workspace->owner,
+                    (string) $workspace->id,
+                    (string) $workspace->name,
+                    isset($subscribedSet[(string) $workspace->id]),
+                );
             });
-
-        // 2. Owners of subscribed workspaces (even if not active), so an existing
-        //    conversation stays reachable after a workspace is suspended/closed.
-        Subscription::query()
-            ->with('workspace.owner:id,name,role,avatar')
-            ->where('member_id', $freelancer->id)
-            ->get(['id', 'workspace_id'])
-            ->each(function (Subscription $subscription) use (&$contacts): void {
-                $owner = $subscription->workspace?->owner;
-
-                if ($owner !== null && ! isset($contacts[(string) $owner->id])) {
-                    $contacts[(string) $owner->id] =
-                        $this->contact($owner, (string) $subscription->workspace_id);
-                }
-            });
-
-        // 3. Platform admins (support). `+` keeps any already-collected entry.
-        $contacts += $this->adminsKeyedById();
 
         // Never list yourself.
         unset($contacts[(string) $freelancer->id]);
@@ -136,10 +148,11 @@ class ChatContactService
 
     /**
      * Platform-wide contacts for an admin: every active owner and freelancer
-     * (excluding the admin themselves), ordered by name. The SPA searches/filters
-     * this list client-side.
+     * (excluding the admin themselves), ordered by name. Owners are labelled
+     * "owner name - workspace name" so the admin sees which space they manage.
+     * The SPA searches/filters this list client-side.
      *
-     * @return list<array{id: string, name: string, workspace_id: string, role: string}>
+     * @return list<array{id: string, name: string, workspace_id: string, role: string, subscribed: bool}>
      */
     private function adminContacts(User $admin): array
     {
@@ -147,26 +160,21 @@ class ChatContactService
             ->whereIn('role', [UserRole::WorkspaceOwner->value, UserRole::Freelancer->value])
             ->where('status', UserStatus::Active->value)
             ->whereKeyNot($admin->id)
+            ->with('workspace:id,name,owner_id')
             ->orderBy('name')
             ->get(['id', 'name', 'role', 'avatar'])
-            ->map(fn (User $user): array => $this->contact($user, ''))
-            ->all();
-    }
+            ->map(function (User $user): array {
+                // Owners → "name - workspace"; freelancers keep their own name.
+                if ($user->isOwner() && $user->workspace !== null) {
+                    return $this->contact(
+                        $user,
+                        (string) $user->workspace->id,
+                        $user->name.' - '.$user->workspace->name,
+                    );
+                }
 
-    /**
-     * Active platform admins keyed by id — a support contact for every member.
-     *
-     * @return array<string, array{id: string, name: string, workspace_id: string, role: string}>
-     */
-    private function adminsKeyedById(): array
-    {
-        return User::query()
-            ->where('role', UserRole::Admin->value)
-            ->where('status', UserStatus::Active->value)
-            ->get(['id', 'name', 'role', 'avatar'])
-            ->mapWithKeys(fn (User $admin): array => [
-                (string) $admin->id => $this->contact($admin, ''),
-            ])
+                return $this->contact($user, '');
+            })
             ->all();
     }
 }
