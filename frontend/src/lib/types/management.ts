@@ -73,10 +73,18 @@ export interface Expense {
 /** Per-category breakdown keyed by the category value (decimal strings). */
 export type ExpenseCategoryBreakdown = Partial<Record<ExpenseCategory, string>>;
 
+/** A single point in the trailing monthly-spend series (`amount` is a decimal string). */
+export interface ExpenseMonthlyPoint {
+  /** `YYYY-MM`. */
+  month: string;
+  total: string;
+}
+
 export interface ExpenseSummary {
   total: string;
   this_month: string;
   by_category: ExpenseCategoryBreakdown;
+  by_month: ExpenseMonthlyPoint[];
 }
 
 export interface ExpensesResult {

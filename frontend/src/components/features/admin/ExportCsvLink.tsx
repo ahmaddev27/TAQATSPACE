@@ -1,12 +1,13 @@
 import { Icon } from "@/components/ui/Icon";
 
-/** Datasets exposed by the admin CSV export route handler. */
+/** Datasets exposed by the admin + owner CSV export route handlers. */
 export type ExportType =
   | "invoices"
   | "subscriptions"
   | "users"
   | "workspaces"
-  | "members";
+  | "members"
+  | "expenses";
 
 export interface ExportCsvLinkProps {
   type: ExportType;

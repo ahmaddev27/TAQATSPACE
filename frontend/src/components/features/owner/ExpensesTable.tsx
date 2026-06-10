@@ -21,6 +21,8 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Textarea } from "@/components/ui/Textarea";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
+import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
+import { ExpensesChart } from "./ExpensesChart";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import {
   createExpense,
@@ -247,6 +249,8 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
         />
       </div>
 
+      <ExpensesChart data={summary.by_month} />
+
       <div className="dt">
         <div className="dt-toolbar">
           <div className="dt-tools">
@@ -285,6 +289,16 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
             />
           </div>
           <div className="spacer" />
+          <ExportCsvLink
+            type="expenses"
+            label={t("export")}
+            basePath="/api/owner/exports"
+            query={{
+              category: category === "all" ? undefined : category,
+              from: from || undefined,
+              to: to || undefined,
+            }}
+          />
           <Button
             variant="primary"
             icon="plus"
