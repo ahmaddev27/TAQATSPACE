@@ -23,6 +23,18 @@
       "qaSubscriptions": "Subscriptions",
       "qaInvoices": "Invoices"
     },
+    "contact": {
+      "title": "Inbox",
+      "subtitle": "Messages from the public \"Contact us\" form.",
+      "reply": "Reply by email",
+      "markRead": "Mark read",
+      "markedRead": "Marked as read.",
+      "delete": "Delete",
+      "deleted": "Message deleted.",
+      "failed": "Couldn't complete the action.",
+      "emptyTitle": "No messages",
+      "emptyBody": "Contact-form messages will appear here when they arrive."
+    },
     "workspaces": {
       "title": "Workspaces",
       "subtitle": "Review workspaces and approve, suspend or reactivate them.",

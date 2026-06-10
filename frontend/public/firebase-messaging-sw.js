@@ -55,9 +55,11 @@ if (firebaseConfig) {
     const notification = payload.notification || {};
     const title = notification.title || "TaqatSpace";
     const options = {
+      // Brand icon (the app icon exists at /icon.svg); the backend may override
+      // it via data.icon. badge is the small monochrome status-bar glyph.
       body: notification.body || "",
-      icon: "/images/icon-192.png",
-      badge: "/images/badge-72.png",
+      icon: (payload.data && payload.data.icon) || "/icon.svg",
+      badge: "/icon.svg",
       data: payload.data || {},
     };
     self.registration.showNotification(title, options);

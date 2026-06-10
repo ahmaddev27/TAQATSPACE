@@ -147,6 +147,9 @@ return [
     'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',
     'cannot_modify_admin' => 'لا يمكن تعديل حالة حساب إداري من هنا.',
+    'contact_sent' => 'تم إرسال رسالتك، سنتواصل معك قريباً.',
+    'contact_marked_read' => 'تم تعليم الرسالة كمقروءة.',
+    'contact_deleted' => 'تم حذف الرسالة.',
     'messaging_settings_updated' => 'تم تحديث إعدادات المراسلة.',
 
     // إدارة المشرفين (للمشرف الأعلى فقط)
