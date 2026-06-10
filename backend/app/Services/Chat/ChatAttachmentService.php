@@ -64,11 +64,13 @@ class ChatAttachmentService
     }
 
     /**
-     * S3 when it is the default disk (servers), otherwise the local public disk
-     * so attachments are web-accessible in development too.
+     * The shared media disk — the SAME one used for avatars, workspace photos and
+     * invoice receipts (`filesystems.media`, S3 on servers / public locally). Using
+     * it keeps every uploaded file on one web-served disk; resolving `default`
+     * here instead could land chat files on a private disk that 404s when opened.
      */
     private function disk(): string
     {
-        return config('filesystems.default') === 's3' ? 's3' : 'public';
+        return (string) config('filesystems.media', 'public');
     }
 }
