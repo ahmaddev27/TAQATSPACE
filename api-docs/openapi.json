@@ -1573,6 +1573,78 @@
                 }
             }
         },
+        "/chat/notify": {
+            "post": {
+                "operationId": "chat.notify",
+                "summary": "POST /api/chat/notify \u2014 raise an in-app + push alert for a chat message\nthe caller just delivered over Firestore, so the recipient is notified\neven with their chat page closed. The recipient must be one of the\ncaller's chat-able contacts (prevents notifying arbitrary users)",
+                "tags": [
+                    "Chat"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "recipient_id": {
+                                        "type": "string"
+                                    },
+                                    "preview": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 140
+                                    }
+                                },
+                                "required": [
+                                    "recipient_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "notified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "notified"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/chat/attachments": {
             "post": {
                 "operationId": "chat.uploadAttachment",
@@ -1709,6 +1781,230 @@
                 }
             }
         },
+        "/contact": {
+            "post": {
+                "operationId": "contact.store",
+                "summary": "POST /api/contact \u2014 store a public contact-form message and notify admins",
+                "tags": [
+                    "Contact"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreContactRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0633\u0627\u0644\u062a\u0643\u060c \u0633\u0646\u062a\u0648\u0627\u0635\u0644 \u0645\u0639\u0643 \u0642\u0631\u064a\u0628\u0627\u064b."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/contact-messages": {
+            "get": {
+                "operationId": "contactMessage.index",
+                "tags": [
+                    "ContactMessage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ContactMessageResource"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "unread": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "last_page",
+                                                        "per_page",
+                                                        "total",
+                                                        "unread"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "messages",
+                                                "meta"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/contact-messages/{contactMessage}/read": {
+            "put": {
+                "operationId": "contactMessage.markRead",
+                "tags": [
+                    "ContactMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactMessage",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact message ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ContactMessageResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0639\u0644\u064a\u0645 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0643\u0645\u0642\u0631\u0648\u0621\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/contact-messages/{contactMessage}": {
+            "delete": {
+                "operationId": "contactMessage.destroy",
+                "tags": [
+                    "ContactMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactMessage",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact message ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0631\u0633\u0627\u0644\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/stats": {
             "get": {
                 "operationId": "dashboard.stats",
@@ -1763,7 +2059,8 @@
                                                             "type": "integer"
                                                         },
                                                         "total": {
-                                                            "type": "integer"
+                                                            "type": "string",
+                                                            "description": "Platform members only \u2014 staff (admins) are not counted as users."
                                                         },
                                                         "pending": {
                                                             "type": "integer"
@@ -2991,6 +3288,7 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "multipart/form-data": {
                             "schema": {
@@ -3089,7 +3387,7 @@
         },
         "/admin/invoices/{invoice}/receipt": {
             "post": {
-                "operationId": "invoice.uploadReceipt",
+                "operationId": "admin.invoice.uploadReceipt",
                 "summary": "POST /api/admin/invoices/{invoice}/receipt \u2014 upload a payment receipt",
                 "tags": [
                     "Invoice"
@@ -3634,6 +3932,71 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/member/invoices/{invoice}/receipt": {
+            "post": {
+                "operationId": "member.invoice.uploadReceipt",
+                "summary": "POST /api/member/invoices/{invoice}/receipt \u2014 upload proof of payment.\nMoves the invoice to \"under review\" for the owner to confirm. Allowed only\nfor the member's own, still-unpaid (pending/overdue) invoices",
+                "tags": [
+                    "Invoice"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invoice ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitReceiptRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoiceResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0648\u0635\u0644 \u0627\u0644\u062f\u0641\u0639\u060c \u0648\u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u0622\u0646 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -5483,6 +5846,70 @@
                 }
             }
         },
+        "/auth/onboarding/seats": {
+            "post": {
+                "operationId": "onboarding.seats",
+                "summary": "Generate the workspace's physical seats during onboarding, from the\nper-type counts the (still pending) owner chooses. Runs outside the active\nowner seat API so the owner can lay out their space before approval",
+                "tags": [
+                    "Onboarding"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OnboardingSeatsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "seats": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SeatResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "seats"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0628\u0646\u062c\u0627\u062d."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
         "/workspace/packages": {
             "get": {
                 "operationId": "package.index",
@@ -7038,6 +7465,70 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    }
+                }
+            }
+        },
+        "/reviews/mine": {
+            "get": {
+                "operationId": "review.mine",
+                "summary": "The authenticated freelancer's own review of a workspace (or null), so the\nUI can show the read-only review instead of the submission form",
+                "tags": [
+                    "Review"
+                ],
+                "parameters": [
+                    {
+                        "name": "workspace_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "review": {
+                                                    "anyOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/ReviewResource"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "review"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -8647,6 +9138,29 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0639\u062f\u064a\u0644 \u062d\u0627\u0644\u0629 \u062d\u0633\u0627\u0628 \u0625\u062f\u0627\u0631\u064a \u0645\u0646 \u0647\u0646\u0627."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
@@ -9271,6 +9785,12 @@
                     "email": {
                         "type": "string"
                     },
+                    "avatar": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -9297,6 +9817,7 @@
                     "id",
                     "name",
                     "email",
+                    "avatar",
                     "status",
                     "roles",
                     "is_super_admin",
@@ -9518,6 +10039,42 @@
                     "role"
                 ],
                 "title": "CompleteOnboardingRequest"
+            },
+            "ContactMessageResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "subject": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "is_read": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "subject",
+                    "message",
+                    "is_read",
+                    "created_at"
+                ],
+                "title": "ContactMessageResource"
             },
             "ExpenseResource": {
                 "type": "object",
@@ -9857,25 +10414,23 @@
             },
             "MarkInvoicePaidRequest": {
                 "type": "object",
-                "description": "Validates the manual mark-paid action: an optional payment timestamp and an\noptional payment receipt attached in the same step (pdf/jpg/png, max 5MB \u2014\nthe same rules as a standalone receipt upload). Authorization is enforced by\nthe route middleware (auth:sanctum + role.admin).",
+                "description": "Validates the manual mark-paid action: the payment date is required, and a\npayment receipt (pdf/jpg/png, max 5MB) must be attached in the same step \u2014\nUNLESS the invoice already carries a receipt (e.g. one the member uploaded for\nreview). Authorization is enforced by the route middleware (auth:sanctum +\nrole.admin).",
                 "properties": {
                     "paid_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "format": "date-time"
                     },
                     "receipt": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "format": "binary",
                         "contentMediaType": "application/octet-stream",
                         "maxLength": 5120
                     }
                 },
+                "required": [
+                    "paid_at",
+                    "receipt"
+                ],
                 "title": "MarkInvoicePaidRequest"
             },
             "MarkPaidRequest": {
@@ -9919,7 +10474,10 @@
                                 "type": "string"
                             },
                             "avatar": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
@@ -10045,7 +10603,10 @@
                                 "type": "string"
                             },
                             "avatar": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "specialty": {
                                 "type": "string"
@@ -10129,6 +10690,42 @@
                     "created_at"
                 ],
                 "title": "NotificationResource"
+            },
+            "OnboardingSeatsRequest": {
+                "type": "object",
+                "description": "Validates the onboarding seat-setup payload: a per-type seat count the\npending workspace owner chooses right after registering. Only a workspace\nowner who already has a workspace may submit it.",
+                "properties": {
+                    "seats": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "fixed",
+                                        "flexible",
+                                        "private_office"
+                                    ]
+                                },
+                                "count": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 200
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "count"
+                            ]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "seats"
+                ],
+                "title": "OnboardingSeatsRequest"
             },
             "OwnerBroadcastRequest": {
                 "type": "object",
@@ -10222,7 +10819,10 @@
                                 "type": "string"
                             },
                             "avatar": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
@@ -10733,6 +11333,36 @@
                 ],
                 "title": "StoreChatAttachmentRequest"
             },
+            "StoreContactRequest": {
+                "type": "object",
+                "description": "Public \"Contact us\" submission. Unauthenticated \u2014 anyone may send a message.",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 160
+                    },
+                    "subject": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "message": {
+                        "type": "string",
+                        "maxLength": 4000
+                    }
+                },
+                "required": [
+                    "name",
+                    "email",
+                    "subject",
+                    "message"
+                ],
+                "title": "StoreContactRequest"
+            },
             "StoreDeviceTokenRequest": {
                 "type": "object",
                 "description": "Validates registration of an FCM device token for the authenticated user.",
@@ -11131,6 +11761,22 @@
                     "price_per_month"
                 ],
                 "title": "StoreWorkspaceRequest"
+            },
+            "SubmitReceiptRequest": {
+                "type": "object",
+                "description": "A member uploads proof of payment for an invoice. Ownership of the invoice is\nverified in the controller against the authenticated member.",
+                "properties": {
+                    "receipt": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 5120
+                    }
+                },
+                "required": [
+                    "receipt"
+                ],
+                "title": "SubmitReceiptRequest"
             },
             "SubscriptionResource": {
                 "type": "object",
