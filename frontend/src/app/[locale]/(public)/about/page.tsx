@@ -4,7 +4,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { getPublicDict } from "@/components/features/public/i18n";
-import { getContent } from "@/lib/api/content";
+import { getAboutContent } from "@/lib/api/about";
 import { cmsText } from "@/lib/cms";
 import type { AboutContent } from "@/lib/types";
 
@@ -30,23 +30,42 @@ export default async function AboutPage({
   const dict = getPublicDict(locale);
   const a = dict.about;
 
-  // Admin-managed About content overrides the lead and adds extra sections.
-  const about: AboutContent = await getContent("about").catch(() => ({}));
-  const lead = cmsText(about.lead, locale, a.lead);
-  const aboutSections = (about.sections ?? [])
-    .map((s) => ({ heading: cmsText(s.heading, locale), body: cmsText(s.body, locale) }))
-    .filter((s) => s.heading || s.body);
+  // Admin-managed About content drives every visible string + image, falling
+  // back to the i18n dictionary (and striped placeholders) for anything unset.
+  const about: AboutContent = await getAboutContent().catch(() => ({}));
 
+  const eyebrow = cmsText(about.eyebrow, locale, a.eyebrow);
+  const title1 = cmsText(about.title1, locale, a.title1);
+  const title2 = cmsText(about.title2, locale, a.title2);
+  const lead = cmsText(about.lead, locale, a.lead);
+
+  const missionTitle = cmsText(about.mission?.title, locale, a.missionTitle);
+  const missionBody = cmsText(about.mission?.body, locale, a.missionBody);
+  const visionTitle = cmsText(about.vision?.title, locale, a.visionTitle);
+  const visionBody = cmsText(about.vision?.body, locale, a.visionBody);
+  const valuesTitle = cmsText(about.valuesTitle, locale, a.valuesTitle);
+  const ctaTitle = cmsText(about.cta?.title, locale, a.ctaTitle);
+  const ctaBody = cmsText(about.cta?.body, locale, a.ctaBody);
+
+  const aboutSections = (about.sections ?? [])
+    .map((s) => ({
+      heading: cmsText(s.heading, locale),
+      body: cmsText(s.body, locale),
+      imageUrl: s.imageUrl,
+    }))
+    .filter((s) => s.heading || s.body || s.imageUrl);
+
+  // Values keep their FIXED icons (by index); copy comes from the CMS.
   const values: Array<{ ico: IconName; title: string; body: string }> = [
-    { ico: "shield", title: a.value1, body: a.value1d },
-    { ico: "users", title: a.value2, body: a.value2d },
-    { ico: "checkCircle", title: a.value3, body: a.value3d },
-    { ico: "zap", title: a.value4, body: a.value4d },
+    { ico: "shield", title: cmsText(about.values?.[0]?.title, locale, a.value1), body: cmsText(about.values?.[0]?.body, locale, a.value1d) },
+    { ico: "users", title: cmsText(about.values?.[1]?.title, locale, a.value2), body: cmsText(about.values?.[1]?.body, locale, a.value2d) },
+    { ico: "checkCircle", title: cmsText(about.values?.[2]?.title, locale, a.value3), body: cmsText(about.values?.[2]?.body, locale, a.value3d) },
+    { ico: "zap", title: cmsText(about.values?.[3]?.title, locale, a.value4), body: cmsText(about.values?.[3]?.body, locale, a.value4d) },
   ];
   const stats = [
-    { n: "+128", l: a.statSpaces },
-    { n: "3,400", l: a.statMembers },
-    { n: "9", l: a.statCities },
+    { n: about.stats?.[0]?.value || "+128", l: cmsText(about.stats?.[0]?.label, locale, a.statSpaces) },
+    { n: about.stats?.[1]?.value || "3,400", l: cmsText(about.stats?.[1]?.label, locale, a.statMembers) },
+    { n: about.stats?.[2]?.value || "9", l: cmsText(about.stats?.[2]?.label, locale, a.statCities) },
   ];
 
   return (
@@ -54,9 +73,9 @@ export default async function AboutPage({
       <section className="container section">
         <div className="why-grid">
           <div className="why-copy">
-            <span className="eyebrow">{a.eyebrow}</span>
+            <span className="eyebrow">{eyebrow}</span>
             <h1 className="ed-title" style={{ fontSize: "clamp(2.2rem, 4vw, 3.2rem)" }}>
-              {a.title1} <span className="hl">{a.title2}</span>
+              {title1} <span className="hl">{title2}</span>
             </h1>
             <p className="muted" style={{ fontSize: "var(--fs-lg)", lineHeight: 1.8, marginTop: 16 }}>
               {lead}
@@ -71,8 +90,28 @@ export default async function AboutPage({
             </div>
           </div>
           <div className="why-collage">
-            <ImgPlaceholder label={a.eyebrow} color="#cfe0ee" h={300} radius="var(--r-2xl)" className="why-img-1" />
-            <ImgPlaceholder label="" color="#e7ddd2" h={190} radius="var(--r-2xl)" className="why-img-2" />
+            {about.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="why-img-1"
+                src={about.imageUrl}
+                alt={title1 || eyebrow}
+                style={{ height: 300, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
+              />
+            ) : (
+              <ImgPlaceholder label={eyebrow} color="#cfe0ee" h={300} radius="var(--r-2xl)" className="why-img-1" />
+            )}
+            {about.imageSecondaryUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="why-img-2"
+                src={about.imageSecondaryUrl}
+                alt={title2 || eyebrow}
+                style={{ height: 190, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
+              />
+            ) : (
+              <ImgPlaceholder label="" color="#e7ddd2" h={190} radius="var(--r-2xl)" className="why-img-2" />
+            )}
             <div className="why-blob">
               <Icon name="bulb" size={22} />
               <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>
@@ -91,10 +130,10 @@ export default async function AboutPage({
                 <Icon name="flag" size={22} />
               </span>
               <h3 className="h3" style={{ marginTop: 18 }}>
-                {a.missionTitle}
+                {missionTitle}
               </h3>
               <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
-                {a.missionBody}
+                {missionBody}
               </p>
             </div>
             <div className="cap-card">
@@ -102,10 +141,10 @@ export default async function AboutPage({
                 <Icon name="eye" size={22} />
               </span>
               <h3 className="h3" style={{ marginTop: 18 }}>
-                {a.visionTitle}
+                {visionTitle}
               </h3>
               <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
-                {a.visionBody}
+                {visionBody}
               </p>
             </div>
           </div>
@@ -114,7 +153,7 @@ export default async function AboutPage({
 
       <section className="container section">
         <div className="caps-head" style={{ maxWidth: 560, marginBottom: 32 }}>
-          <h2 className="ed-h2">{a.valuesTitle}</h2>
+          <h2 className="ed-h2">{valuesTitle}</h2>
         </div>
         <div className="caps-grid">
           {values.map((v) => (
@@ -138,6 +177,20 @@ export default async function AboutPage({
           <div className="stack" style={{ gap: 28, maxWidth: 760, margin: "0 auto" }}>
             {aboutSections.map((s, i) => (
               <div key={i}>
+                {s.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.imageUrl}
+                    alt={s.heading || ""}
+                    style={{
+                      width: "100%",
+                      borderRadius: "var(--r-lg)",
+                      objectFit: "cover",
+                      display: "block",
+                      marginBottom: 14,
+                    }}
+                  />
+                )}
                 {s.heading && (
                   <h2 className="ed-h2" style={{ marginBottom: 10 }}>
                     {s.heading}
@@ -160,9 +213,9 @@ export default async function AboutPage({
             <Icon name="bulb" size={30} />
           </div>
           <h2 className="h1" style={{ maxWidth: 600, color: "#fff" }}>
-            {a.ctaTitle}
+            {ctaTitle}
           </h2>
-          <p style={{ maxWidth: 480, opacity: 0.85 }}>{a.ctaBody}</p>
+          <p style={{ maxWidth: 480, opacity: 0.85 }}>{ctaBody}</p>
           <div className="row wrap" style={{ gap: 12, justifyContent: "center", marginTop: 8 }}>
             <Link href="/login">
               <Button variant="accent" size="lg">

@@ -10,6 +10,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { updateContent } from "@/lib/actions/admin";
+import { AboutEditor } from "./AboutEditor";
 import { BrandingEditor } from "./BrandingEditor";
 import type {
   AboutContent,
@@ -22,7 +23,6 @@ import type {
 } from "@/lib/types";
 
 const MAX_FAQ = 30;
-const MAX_SECTIONS = 20;
 const MAX_STEPS = 12;
 
 export interface ContentManagerProps {
@@ -62,11 +62,6 @@ interface FaqItemState {
   answer: TextPair;
 }
 
-interface AboutSectionState {
-  heading: TextPair;
-  body: TextPair;
-}
-
 interface StepState {
   title: TextPair;
   description: TextPair;
@@ -95,17 +90,6 @@ function buildFaq(c: FaqContent): FaqItemState[] {
   return (c.items ?? []).slice(0, MAX_FAQ).map((item) => ({
     question: toPair(item.question),
     answer: toPair(item.answer),
-  }));
-}
-
-function buildAboutLead(c: AboutContent): TextPair {
-  return toPair(c.lead);
-}
-
-function buildAboutSections(c: AboutContent): AboutSectionState[] {
-  return (c.sections ?? []).slice(0, MAX_SECTIONS).map((s) => ({
-    heading: toPair(s.heading),
-    body: toPair(s.body),
   }));
 }
 
@@ -171,26 +155,6 @@ function buildFaqPayload(items: FaqItemState[]): FaqContent {
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return out.length ? { items: out } : {};
-}
-
-function buildAboutPayload(
-  lead: TextPair,
-  sections: AboutSectionState[],
-): AboutContent {
-  const leadText = pairToText(lead);
-  const out = sections
-    .map((s) => {
-      const heading = pairToText(s.heading);
-      const body = pairToText(s.body);
-      if (!heading && !body) return undefined;
-      return compact({ heading, body });
-    })
-    .filter((s): s is NonNullable<typeof s> => s !== undefined);
-
-  return compact({
-    lead: leadText,
-    sections: out.length ? out : undefined,
-  }) ?? {};
 }
 
 function buildStepsPayload(steps: StepState[]): HowItWorksContent {
@@ -294,12 +258,6 @@ export function ContentManager({
 
   const [siteForm, setSiteForm] = useState<SiteState>(() => buildSite(site));
   const [faqItems, setFaqItems] = useState<FaqItemState[]>(() => buildFaq(faq));
-  const [aboutLead, setAboutLead] = useState<TextPair>(() =>
-    buildAboutLead(about),
-  );
-  const [aboutSections, setAboutSections] = useState<AboutSectionState[]>(() =>
-    buildAboutSections(about),
-  );
   const [steps, setSteps] = useState<StepState[]>(() => buildSteps(howItWorks));
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -342,20 +300,6 @@ export function ContentManager({
     );
   const removeFaqItem = (index: number) =>
     setFaqItems((items) => items.filter((_, i) => i !== index));
-
-  /* ----- about helpers -------------------------------------------------- */
-  const setAboutSection = (index: number, patch: Partial<AboutSectionState>) =>
-    setAboutSections((s) =>
-      s.map((sec, i) => (i === index ? { ...sec, ...patch } : sec)),
-    );
-  const addAboutSection = () =>
-    setAboutSections((s) =>
-      s.length >= MAX_SECTIONS
-        ? s
-        : [...s, { heading: emptyPair(), body: emptyPair() }],
-    );
-  const removeAboutSection = (index: number) =>
-    setAboutSections((s) => s.filter((_, i) => i !== index));
 
   /* ----- how-it-works helpers ------------------------------------------- */
   const setStep = (index: number, patch: Partial<StepState>) =>
@@ -536,76 +480,8 @@ export function ContentManager({
         </div>
       )}
 
-      {/* ABOUT -------------------------------------------------------------- */}
-      {tab === "about" && (
-        <div className="card card-pad stack" style={{ gap: 16 }}>
-          <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
-            {t("about.hint")}
-          </p>
-          <BilingualField
-            labels={labels}
-            label={t("about.lead")}
-            value={aboutLead}
-            onChange={setAboutLead}
-            multiline
-          />
-          <span className="label">{t("about.sections")}</span>
-          {aboutSections.length === 0 && (
-            <p className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-              {t("about.empty")}
-            </p>
-          )}
-          {aboutSections.map((sec, i) => (
-            <div key={i} className="card card-pad stack" style={{ gap: 12 }}>
-              <div className="between">
-                <span className="label">#{i + 1}</span>
-                <Button
-                  variant="ghost"
-                  icon="trash"
-                  onClick={() => removeAboutSection(i)}
-                  aria-label={t("remove")}
-                />
-              </div>
-              <BilingualField
-                labels={labels}
-                label={t("about.heading")}
-                value={sec.heading}
-                onChange={(p) => setAboutSection(i, { heading: p })}
-              />
-              <BilingualField
-                labels={labels}
-                label={t("about.body")}
-                value={sec.body}
-                onChange={(p) => setAboutSection(i, { body: p })}
-                multiline
-              />
-            </div>
-          ))}
-          {aboutSections.length < MAX_SECTIONS && (
-            <Button
-              variant="secondary"
-              icon="plus"
-              onClick={addAboutSection}
-              style={{ alignSelf: "flex-start" }}
-            >
-              {t("about.add")}
-            </Button>
-          )}
-
-          <ErrorList errors={errors} />
-          <Button
-            variant="primary"
-            icon="check"
-            loading={isSaving("about")}
-            onClick={() =>
-              save("about", buildAboutPayload(aboutLead, aboutSections))
-            }
-            style={{ alignSelf: "flex-start" }}
-          >
-            {isSaving("about") ? t("saving") : t("save")}
-          </Button>
-        </div>
-      )}
+      {/* ABOUT — full editor (hero/images/stats/mission/vision/values/CTA) -- */}
+      {tab === "about" && <AboutEditor initial={about} />}
 
       {/* HOW IT WORKS ------------------------------------------------------- */}
       {tab === "how" && (
