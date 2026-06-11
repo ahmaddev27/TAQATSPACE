@@ -151,6 +151,8 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const [tab, setTab] = useState("basic");
   const [form, setForm] = useState<FormState>(() => buildInitial(workspace));
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  // Draft text for a free-text amenity not in the preset list.
+  const [customAmenity, setCustomAmenity] = useState("");
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -162,6 +164,22 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
         ? f.amenities.filter((a) => a !== key)
         : [...f.amenities, key],
     }));
+
+  // Append a custom amenity (deduped, length-capped to the backend's max:60).
+  const addCustomAmenity = () => {
+    const value = customAmenity.trim().slice(0, 60);
+    if (value === "") return;
+    setForm((f) =>
+      f.amenities.includes(value)
+        ? f
+        : { ...f, amenities: [...f.amenities, value] },
+    );
+    setCustomAmenity("");
+  };
+
+  // Amenities the owner typed themselves (everything outside the preset grid).
+  const presetAmenities = new Set<string>(AMENITY_KEYS);
+  const customAmenities = form.amenities.filter((a) => !presetAmenities.has(a));
 
   const setDay = (day: string, patch: Partial<DayHours>) =>
     setForm((f) => ({
@@ -428,6 +446,51 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="stack" style={{ gap: 8 }}>
+              <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+                {t("settings.customAmenitiesHint")}
+              </p>
+              <div className="row" style={{ gap: 8 }}>
+                <Input
+                  value={customAmenity}
+                  onChange={(e) => setCustomAmenity(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomAmenity();
+                    }
+                  }}
+                  maxLength={60}
+                  placeholder={t("settings.customAmenityPlaceholder")}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon="plus"
+                  onClick={addCustomAmenity}
+                  disabled={customAmenity.trim() === ""}
+                >
+                  {t("settings.customAmenityAdd")}
+                </Button>
+              </div>
+              {customAmenities.length > 0 && (
+                <div className="row wrap" style={{ gap: 8 }}>
+                  {customAmenities.map((a) => (
+                    <span key={a} className="chip">
+                      {a}
+                      <button
+                        type="button"
+                        onClick={() => toggleAmenity(a)}
+                        aria-label={t("settings.removeAmenity")}
+                      >
+                        <Icon name="x" size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
