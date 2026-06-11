@@ -146,6 +146,8 @@ return [
     'content_updated' => 'تم تحديث المحتوى.',
     'landing_content_updated' => 'تم تحديث محتوى الصفحة الرئيسية.',
     'landing_image_uploaded' => 'تم رفع الصورة.',
+    'about_content_updated' => 'تم تحديث محتوى صفحة من نحن.',
+    'about_image_uploaded' => 'تم رفع الصورة.',
     'branding_updated' => 'تم تحديث الهوية.',
     'branding_image_uploaded' => 'تم رفع الصورة.',
     'user_status_updated' => 'تم تحديث حالة المستخدم.',

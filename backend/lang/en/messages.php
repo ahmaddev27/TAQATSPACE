@@ -146,6 +146,8 @@ return [
     'content_updated' => 'Content updated.',
     'landing_content_updated' => 'Landing content updated.',
     'landing_image_uploaded' => 'Image uploaded.',
+    'about_content_updated' => 'About content updated.',
+    'about_image_uploaded' => 'Image uploaded.',
     'branding_updated' => 'Branding updated.',
     'branding_image_uploaded' => 'Image uploaded.',
     'user_status_updated' => 'User status updated.',
