@@ -35,8 +35,15 @@ service cloud.firestore {
     }
 
     match /conversations/{convId} {
-      // Reads require existing membership.
-      allow read: if isParticipant(resource.data);
+      // Reads (get + list): the caller must be a participant. This MUST be the
+      // inlined `request.auth.uid in resource.data.participants` form — Firestore's
+      // LIST-query analyzer matches it against the
+      // `where("participants","array-contains",uid)` query and allows the list.
+      // Wrapping it in a helper or adding a `participants is list` guard makes the
+      // analyzer reject the query (PERMISSION_DENIED on list) even though a direct
+      // get of the same document succeeds.
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.participants;
 
       // On create, the author must include themselves in `participants`.
       allow create: if isParticipant(request.resource.data);
