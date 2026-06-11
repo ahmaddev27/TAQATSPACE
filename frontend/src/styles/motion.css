@@ -1,0 +1,133 @@
+/* TAQAT — motion vocabulary: easing tokens + composable utilities.
+   All effects are transform/opacity only (GPU-friendly, no layout/CLS) and are
+   neutralized under prefers-reduced-motion. Builds on the --t-* tokens. */
+
+:root {
+  /* Entrances/reveals: decelerate into place. */
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Gentle overshoot for occasional delight accents (used sparingly). */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Stagger step for .u-reveal (capped in the rule). */
+  --u-stagger-step: 40ms;
+}
+
+/* Tactile press feedback for buttons/clickable rows. */
+.u-press {
+  transition: transform var(--t-fast);
+}
+.u-press:active {
+  transform: scale(0.97);
+}
+
+/* Hover lift for cards/tiles. */
+.u-lift {
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base);
+}
+.u-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-md);
+}
+
+/* Reveal: hidden until `.is-in` is added (by <Reveal> or a template). Wraps a
+   single child; `display: grid` makes that child stretch to fill the wrapper so
+   the reveal box doesn't break grid-cell/flex stretch at the call site (e.g. a
+   stat tile equalising its row height). */
+.u-reveal {
+  display: grid;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--t-slow) var(--ease-emphasized),
+    transform var(--t-slow) var(--ease-emphasized);
+  /* Stagger: consumers set style="--i: <n>"; capped at 6 steps (240ms). */
+  transition-delay: calc(min(var(--i, 0), 6) * var(--u-stagger-step));
+}
+.u-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Primitive polish: refine existing classes, transform/opacity only ---- */
+
+/* Buttons: tactile press (the spinner / disabled states are untouched). */
+.btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Cards & stat tiles: a subtle hover lift for the interactive ones. */
+.card-hover,
+.stat-tile {
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base),
+    border-color var(--t-base);
+}
+.card-hover:hover,
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-md);
+}
+
+/* Inputs: smooth the focus ring/border instead of snapping. */
+.input {
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    background var(--t-fast);
+}
+
+/* A very subtle one-shot nudge for a field flagged invalid. */
+@keyframes u-field-nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.field.is-error .input {
+  animation: u-field-nudge 220ms var(--ease-emphasized);
+}
+
+/* Tabs: animate the active state transition. */
+.tabs button {
+  transition:
+    color var(--t-fast),
+    background var(--t-fast);
+}
+
+/* ---- Per-route entrance (App Router template.tsx). One-shot fade-rise. ---- */
+@keyframes u-route-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.u-route {
+  animation: u-route-in var(--t-base) var(--ease-emphasized) both;
+}
+
+/* ---- Reduced-motion: neutralize all of the above (static transforms/opacity
+       are NOT covered by the global `* { transition:none }` rule). ---- */
+@media (prefers-reduced-motion: reduce) {
+  .u-press,
+  .u-lift,
+  .u-reveal {
+    transition: none;
+    transition-delay: 0ms;
+  }
+  .u-press:active,
+  .u-lift:hover,
+  .btn:not(:disabled):active,
+  .card-hover:hover,
+  .stat-tile:hover {
+    transform: none;
+  }
+  .u-reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .field.is-error .input {
+    animation: none;
+  }
+  .u-route {
+    animation: none;
+  }
+}
