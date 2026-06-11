@@ -29,6 +29,7 @@
         "invoice_reminder": "Invoice payment reminder",
         "new_announcement": "New announcement",
         "new_message": "New message",
+        "new_chat_message": "New chat message",
         "new_workspace_registration": "New workspace registration",
         "seat_assigned": "Your seat is confirmed",
         "invoice_receipt_submitted": "Payment receipt to review",

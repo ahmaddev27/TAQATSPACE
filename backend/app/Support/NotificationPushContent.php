@@ -61,6 +61,7 @@ final class NotificationPushContent
     {
         $body = match ($type) {
             'new_message' => self::stringField($payload, 'preview'),
+            'new_chat_message' => self::stringField($payload, 'preview'),
             'invoice_created', 'invoice_paid', 'invoice_overdue', 'invoice_reminder' => self::invoiceBody($type, $payload),
             'seat_assigned' => self::translatedBody('seat_assigned', [
                 'seat' => self::stringField($payload, 'seat_number'),

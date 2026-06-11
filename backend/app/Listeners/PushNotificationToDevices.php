@@ -139,6 +139,7 @@ class PushNotificationToDevices
             'new_review' => $user->isOwner() ? '/reports' : '',
             'new_contact_message' => $user->isAdmin() ? '/messages' : '',
             'new_message' => $user->isOwner() ? '/messages' : '/chat',
+            'new_chat_message' => '/chat',
             default => '',
         };
 

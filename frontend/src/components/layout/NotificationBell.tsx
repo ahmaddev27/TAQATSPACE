@@ -12,6 +12,7 @@ import { Icon } from "@/components/ui/Icon";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "@/i18n/navigation";
 import { notifHref } from "@/components/features/messaging/notif";
+import { playNotificationSound } from "@/lib/sound";
 import {
   markNotificationsRead,
 } from "@/lib/actions/messaging";
@@ -45,6 +46,9 @@ export function NotificationBell() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const mounted = useRef(true);
+  // Tracks the last unread count so we chime only when NEW notifications arrive
+  // (a rise in the count), not on the initial load or when clearing them.
+  const prevUnread = useRef<number | null>(null);
 
   const hrefRole: "owner" | "freelancer" =
     role === "workspace_owner" ? "owner" : "freelancer";
@@ -78,6 +82,15 @@ export function NotificationBell() {
       window.clearInterval(id);
     };
   }, [refresh]);
+
+  // Chime whenever the unread count rises (a new notification arrived). The
+  // first run only seeds the baseline, so there's no sound on initial load.
+  useEffect(() => {
+    if (prevUnread.current !== null && unread > prevUnread.current) {
+      playNotificationSound();
+    }
+    prevUnread.current = unread;
+  }, [unread]);
 
   // Close on outside click / Escape.
   useEffect(() => {

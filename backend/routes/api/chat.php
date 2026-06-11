@@ -20,6 +20,10 @@ Route::middleware('auth:sanctum')
         Route::post('/token', [ChatController::class, 'token']);
         Route::get('/contacts', [ChatController::class, 'contacts']);
 
+        // Raise a bell + push alert for a just-sent Firestore message.
+        Route::post('/notify', [ChatController::class, 'notify'])
+            ->middleware('throttle:120,1');
+
         // Attachments: upload to S3, then resolve a fresh signed URL on demand.
         Route::post('/attachments', [ChatController::class, 'uploadAttachment']);
         Route::get('/attachments/url', [ChatController::class, 'attachmentUrl']);
