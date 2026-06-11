@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
-import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { getAboutContent } from "@/lib/api/about";
 import { cmsText } from "@/lib/cms";
@@ -90,28 +89,20 @@ export default async function AboutPage({
             </div>
           </div>
           <div className="why-collage">
-            {about.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className="why-img-1"
-                src={about.imageUrl}
-                alt={title1 || eyebrow}
-                style={{ height: 300, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
-              />
-            ) : (
-              <ImgPlaceholder label={eyebrow} color="#cfe0ee" h={300} radius="var(--r-2xl)" className="why-img-1" />
-            )}
-            {about.imageSecondaryUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className="why-img-2"
-                src={about.imageSecondaryUrl}
-                alt={title2 || eyebrow}
-                style={{ height: 190, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
-              />
-            ) : (
-              <ImgPlaceholder label="" color="#e7ddd2" h={190} radius="var(--r-2xl)" className="why-img-2" />
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="why-img-1"
+              src={about.imageUrl || "/images/workspaces/cowork-open.jpg"}
+              alt={title1 || eyebrow}
+              style={{ height: 300, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="why-img-2"
+              src={about.imageSecondaryUrl || "/images/workspaces/cowork-lounge.jpg"}
+              alt={title2 || eyebrow}
+              style={{ height: 190, borderRadius: "var(--r-2xl)", objectFit: "cover" }}
+            />
             <div className="why-blob">
               <Icon name="bulb" size={22} />
               <div className="ed-badge-n tnum" style={{ marginTop: 6 }}>

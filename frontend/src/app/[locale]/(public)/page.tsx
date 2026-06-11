@@ -145,10 +145,10 @@ export default async function HomePage({
 
   // Section illustrations: the admin-chosen image (resolved URL) when set,
   // otherwise the built-in default — so an unset image renders exactly as before.
-  const HERO_IMG_DEFAULT = "/images/workspaces/placeholder-1.svg";
-  const HERO_SECONDARY_DEFAULT = "/images/workspaces/placeholder-3.svg";
-  const WHY_IMG_DEFAULT = "/images/workspaces/placeholder-2.svg";
-  const WHY_SECONDARY_DEFAULT = "/images/workspaces/placeholder-1.svg";
+  const HERO_IMG_DEFAULT = "/images/workspaces/cowork-open.jpg";
+  const HERO_SECONDARY_DEFAULT = "/images/workspaces/cowork-meeting.jpg";
+  const WHY_IMG_DEFAULT = "/images/workspaces/cowork-lounge.jpg";
+  const WHY_SECONDARY_DEFAULT = "/images/workspaces/cowork-team.jpg";
   const heroImage = pick(cms.hero?.imageUrl, HERO_IMG_DEFAULT);
   const heroImageSecondary = pick(cms.hero?.imageSecondaryUrl, HERO_SECONDARY_DEFAULT);
   const whyImage = pick(sections.why?.imageUrl, WHY_IMG_DEFAULT);

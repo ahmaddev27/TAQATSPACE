@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const DEFAULT_FALLBACK = "/images/workspaces/placeholder-1.svg";
+const DEFAULT_FALLBACK = "/images/workspaces/cowork-open.jpg";
 
 export interface CoverImageProps {
   src: string;
