@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/DataTable";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
+import { Icon } from "@/components/ui/Icon";
 import type { Invoice } from "@/lib/api/invoices";
 import type { InvoiceStatus } from "@/lib/types";
 import {
@@ -158,6 +159,17 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
               <MarkPaidButton invoiceId={inv.id} />
               <RemindButton invoiceId={inv.id} />
             </>
+          )}
+          {inv.receipt_url && (
+            <a
+              href={inv.receipt_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ghost btn-sm"
+            >
+              <Icon name="receipt" size={15} />
+              {t("actions.viewReceipt")}
+            </a>
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
         </div>

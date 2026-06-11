@@ -36,7 +36,8 @@
       "actions": {
         "markPaid": "تحديد كمدفوعة",
         "remind": "تذكير",
-        "downloadPdf": "PDF"
+        "downloadPdf": "PDF",
+        "viewReceipt": "عرض الوصل"
       },
       "empty": {
         "title": "لا توجد فواتير بعد",
