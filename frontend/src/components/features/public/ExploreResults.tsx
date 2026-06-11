@@ -8,6 +8,7 @@ import { Rating } from "@/components/ui/Rating";
 import { Amenity } from "@/components/ui/Amenity";
 import { ImgPlaceholder } from "@/components/ui/ImgPlaceholder";
 import { CoverImage } from "@/components/ui/CoverImage";
+import { Reveal } from "@/components/ui/Reveal";
 import type { Workspace } from "@/lib/types";
 import type { WorkspaceFilters } from "@/lib/api/workspaces";
 import { fetchMoreWorkspaces } from "@/lib/actions/workspaces";
@@ -93,67 +94,68 @@ export function ExploreResults({
   return (
     <div className="container explore-split">
       <div className="explore-list">
-        {items.map((w) => {
+        {items.map((w, i) => {
           const price = toNumber(w.price_per_month);
           const rating = toNumber(w.avg_rating);
           const amenities = w.amenities ?? [];
           const occ = occupancyPct(w.seats_summary?.occupied ?? 0, w.total_seats);
           return (
-            <div
-              key={w.id}
-              className={`card card-hover explore-row ${activeId === w.id ? "is-active" : ""}`}
-              onMouseEnter={() => setActiveId(w.id)}
-              onClick={() => router.push(`/workspaces/${w.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") router.push(`/workspaces/${w.id}`);
-              }}
-            >
-              <div className="explore-row-img">
-                <CoverImage
-                  src={coverImage(w.photos, w.id)}
-                  fallbackSrc={placeholderCover(w.id)}
-                  alt={w.name}
-                  h="100%"
-                  radius="0"
-                />
-              </div>
-              <div className="grow stack" style={{ gap: 6 }}>
-                <div className="between">
-                  <h3 className="h3" style={{ fontSize: "var(--fs-lg)" }}>
-                    {w.name}
-                  </h3>
-                  {rating > 0 && <Rating value={rating} />}
+            <Reveal key={w.id} index={i}>
+              <div
+                className={`card card-hover explore-row ${activeId === w.id ? "is-active" : ""}`}
+                onMouseEnter={() => setActiveId(w.id)}
+                onClick={() => router.push(`/workspaces/${w.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter") router.push(`/workspaces/${w.id}`);
+                }}
+              >
+                <div className="explore-row-img">
+                  <CoverImage
+                    src={coverImage(w.photos, w.id)}
+                    fallbackSrc={placeholderCover(w.id)}
+                    alt={w.name}
+                    h="100%"
+                    radius="0"
+                  />
                 </div>
-                <div className="row muted" style={{ gap: 6, fontSize: "var(--fs-sm)" }}>
-                  <Icon name="pin" size={15} />
-                  {w.city}
-                  {w.address ? ` · ${w.address}` : ""}
-                </div>
-                <div className="ws-amen">
-                  {amenities.map((a) => (
-                    <Amenity key={a} code={a} label={amenityLabel(a, locale)} />
-                  ))}
-                </div>
-                <div className="between" style={{ marginTop: 2 }}>
-                  <div>
-                    <span className="ws-price tnum">
-                      {c.currency}
-                      {price}
-                    </span>
-                    <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
-                      {c.perMonth}
-                    </span>
+                <div className="grow stack" style={{ gap: 6 }}>
+                  <div className="between">
+                    <h3 className="h3" style={{ fontSize: "var(--fs-lg)" }}>
+                      {w.name}
+                    </h3>
+                    {rating > 0 && <Rating value={rating} />}
                   </div>
-                  {w.seats_summary && (
-                    <span className="badge badge-info">
-                      {occ}% {c.occupancy}
-                    </span>
-                  )}
+                  <div className="row muted" style={{ gap: 6, fontSize: "var(--fs-sm)" }}>
+                    <Icon name="pin" size={15} />
+                    {w.city}
+                    {w.address ? ` · ${w.address}` : ""}
+                  </div>
+                  <div className="ws-amen">
+                    {amenities.map((a) => (
+                      <Amenity key={a} code={a} label={amenityLabel(a, locale)} />
+                    ))}
+                  </div>
+                  <div className="between" style={{ marginTop: 2 }}>
+                    <div>
+                      <span className="ws-price tnum">
+                        {c.currency}
+                        {price}
+                      </span>
+                      <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+                        {c.perMonth}
+                      </span>
+                    </div>
+                    {w.seats_summary && (
+                      <span className="badge badge-info">
+                        {occ}% {c.occupancy}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </Reveal>
           );
         })}
 
