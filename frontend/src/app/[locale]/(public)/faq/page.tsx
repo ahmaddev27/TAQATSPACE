@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getPublicDict } from "@/components/features/public/i18n";
+import { Reveal } from "@/components/ui/Reveal";
 import { FaqAccordion } from "@/components/features/public/FaqAccordion";
 import { getContent } from "@/lib/api/content";
 import { cmsText } from "@/lib/cms";
@@ -35,15 +36,17 @@ export default async function FaqPage({
 
   return (
     <section className="container section">
-      <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 40px" }}>
-        <span className="eyebrow">{f.eyebrow}</span>
-        <h1 className="ed-h2" style={{ marginTop: 8 }}>
-          {f.title}
-        </h1>
-        <p className="muted" style={{ marginTop: 10 }}>
-          {f.subtitle}
-        </p>
-      </div>
+      <Reveal>
+        <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto 40px" }}>
+          <span className="eyebrow">{f.eyebrow}</span>
+          <h1 className="ed-h2" style={{ marginTop: 8 }}>
+            {f.title}
+          </h1>
+          <p className="muted" style={{ marginTop: 10 }}>
+            {f.subtitle}
+          </p>
+        </div>
+      </Reveal>
 
       {cmsItems.length > 0 ? (
         <FaqAccordion dict={dict} flat={cmsItems} />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { getAboutContent } from "@/lib/api/about";
 import { cmsText } from "@/lib/cms";
@@ -70,6 +71,7 @@ export default async function AboutPage({
   return (
     <>
       <section className="container section">
+        <Reveal>
         <div className="why-grid">
           <div className="why-copy">
             <span className="eyebrow">{eyebrow}</span>
@@ -111,10 +113,12 @@ export default async function AboutPage({
             </div>
           </div>
         </div>
+        </Reveal>
       </section>
 
       <section className="caps-band">
         <div className="container">
+          <Reveal>
           <div className="caps-grid" style={{ gridTemplateColumns: "repeat(2,1fr)" }}>
             <div className="cap-card">
               <span className="cap-ico">
@@ -139,16 +143,19 @@ export default async function AboutPage({
               </p>
             </div>
           </div>
+          </Reveal>
         </div>
       </section>
 
       <section className="container section">
-        <div className="caps-head" style={{ maxWidth: 560, marginBottom: 32 }}>
-          <h2 className="ed-h2">{valuesTitle}</h2>
-        </div>
+        <Reveal>
+          <div className="caps-head" style={{ maxWidth: 560, marginBottom: 32 }}>
+            <h2 className="ed-h2">{valuesTitle}</h2>
+          </div>
+        </Reveal>
         <div className="caps-grid">
-          {values.map((v) => (
-            <div key={v.title} className="cap-card">
+          {values.map((v, i) => (
+            <Reveal as="div" index={i} key={v.title} className="cap-card">
               <span className="cap-ico">
                 <Icon name={v.ico} size={22} />
               </span>
@@ -158,7 +165,7 @@ export default async function AboutPage({
               <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
                 {v.body}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -167,7 +174,7 @@ export default async function AboutPage({
         <section className="container section">
           <div className="stack" style={{ gap: 28, maxWidth: 760, margin: "0 auto" }}>
             {aboutSections.map((s, i) => (
-              <div key={i}>
+              <Reveal as="div" index={i} key={i}>
                 {s.imageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -192,13 +199,14 @@ export default async function AboutPage({
                     {s.body}
                   </p>
                 )}
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
       )}
 
       <section className="container">
+        <Reveal>
         <div className="cta-band">
           <div className="cta-bulb">
             <Icon name="bulb" size={30} />
@@ -220,6 +228,7 @@ export default async function AboutPage({
             </Link>
           </div>
         </div>
+        </Reveal>
       </section>
     </>
   );
