@@ -33,6 +33,7 @@ export function notifPresentation(type: string): NotifPresentation {
     case "new_announcement":
       return { icon: "megaphone", tone: "warn" };
     case "new_message":
+    case "new_chat_message":
       return { icon: "chat", tone: "info" };
     case "new_review":
       return { icon: "checkCircle", tone: "ok" };
@@ -80,6 +81,8 @@ export function notifHref(
       return role === "owner" && data.sender_id
         ? `${base}/messages`
         : `${base}`;
+    case "new_chat_message":
+      return `${base}/chat`;
     case "seat_assigned":
       return role === "owner" ? `${base}/seats` : `${base}`;
     default:

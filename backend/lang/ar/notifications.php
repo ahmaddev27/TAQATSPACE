@@ -18,6 +18,9 @@ return [
         'new_message' => [
             'title' => 'رسالة جديدة',
         ],
+        'new_chat_message' => [
+            'title' => 'رسالة محادثة جديدة',
+        ],
         'new_announcement' => [
             'title' => 'إعلان جديد',
         ],

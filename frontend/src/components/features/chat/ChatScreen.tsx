@@ -268,7 +268,18 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
         workspaceId,
         attachment,
       );
-      if (!ok) {
+      if (ok) {
+        // Best-effort: raise the recipient's bell + push so they're alerted when
+        // their chat page is closed. The Firestore write already delivered the
+        // message, so a failure here is non-fatal and silently ignored.
+        const preview = text.trim() || attachment?.name || "";
+        void fetch("/api/chat/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipient_id: activeContactId, preview }),
+        }).catch(() => {});
+      } else {
         toast({ tone: "err", title: t("sendFailed") });
       }
       return ok;

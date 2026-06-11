@@ -19,6 +19,9 @@ return [
         'new_message' => [
             'title' => 'New message',
         ],
+        'new_chat_message' => [
+            'title' => 'New chat message',
+        ],
         'new_announcement' => [
             'title' => 'New announcement',
         ],
