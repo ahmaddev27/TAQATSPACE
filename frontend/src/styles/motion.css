@@ -30,8 +30,12 @@
   box-shadow: var(--sh-md);
 }
 
-/* Reveal: hidden until `.is-in` is added (by <Reveal> or a template). */
+/* Reveal: hidden until `.is-in` is added (by <Reveal> or a template). Wraps a
+   single child; `display: grid` makes that child stretch to fill the wrapper so
+   the reveal box doesn't break grid-cell/flex stretch at the call site (e.g. a
+   stat tile equalising its row height). */
 .u-reveal {
+  display: grid;
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -80,7 +84,7 @@
   25% { transform: translateX(-3px); }
   75% { transform: translateX(3px); }
 }
-.input[aria-invalid="true"] {
+.field.is-error .input {
   animation: u-field-nudge 220ms var(--ease-emphasized);
 }
 
@@ -120,7 +124,7 @@
     opacity: 1;
     transform: none;
   }
-  .input[aria-invalid="true"] {
+  .field.is-error .input {
     animation: none;
   }
   .u-route {
