@@ -131,6 +131,29 @@ export async function signInForChat(): Promise<ChatSession | null> {
   return sessionPromise;
 }
 
+/**
+ * Sign out of Firebase Auth and drop the cached chat session. MUST run on app
+ * logout: otherwise the previous user's Firebase identity (persisted in
+ * IndexedDB + the cached `sessionPromise`) lingers, so when a different account
+ * signs in within the same browser, `request.auth.uid` stays the OLD user —
+ * Firestore then denies reads of the new user's conversations (they aren't a
+ * participant) and the chat list shows empty. Best-effort: never blocks logout.
+ */
+export async function signOutFromChat(): Promise<void> {
+  sessionPromise = null;
+
+  if (!isFirebaseConfigured()) return;
+
+  try {
+    const auth = await getFirebaseAuth();
+    if (!auth) return;
+    const { signOut } = await import("firebase/auth");
+    await signOut(auth);
+  } catch {
+    // Sign-out is a cleanup nicety — never surface or block on failure.
+  }
+}
+
 /** Coerce a Firestore Timestamp (or null) to epoch millis. */
 function toMillis(value: unknown): number | null {
   if (value && typeof (value as Timestamp).toMillis === "function") {

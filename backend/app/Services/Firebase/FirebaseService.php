@@ -174,6 +174,17 @@ class FirebaseService
                             'body' => $body,
                         ],
                         'data' => $data,
+                        // Web push only honours an icon set in the webpush block
+                        // (the bare `notification` shows the browser default).
+                        // Repeat title/body so the web notification is complete,
+                        // and point the icon at the app's brand mark (absolute).
+                        'webpush' => [
+                            'notification' => [
+                                'title' => $title,
+                                'body' => $body,
+                                'icon' => rtrim((string) config('app.frontend_url'), '/').'/icon.svg',
+                            ],
+                        ],
                     ],
                 ]);
 
