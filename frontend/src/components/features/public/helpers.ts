@@ -20,16 +20,22 @@ export function photoUrl(path: string): string {
   return `${STORAGE_ORIGIN}/storage/${clean}`;
 }
 
-/** Bundled on-brand cover placeholders (used until real photos are uploaded). */
-const PLACEHOLDER_COVERS = 3;
+/** Bundled real coworking cover photos (shown until a workspace uploads its own). */
+const COVER_PHOTOS = [
+  "/images/workspaces/cowork-open.jpg",
+  "/images/workspaces/cowork-lounge.jpg",
+  "/images/workspaces/cowork-meeting.jpg",
+  "/images/workspaces/cowork-team.jpg",
+  "/images/workspaces/cowork-space.jpg",
+];
 
-/** Pick a stable placeholder cover from any id string (so cards vary, not repeat). */
+/** Pick a stable cover photo from any id string (so cards vary, not repeat). */
 export function placeholderCover(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
   }
-  return `/images/workspaces/placeholder-${(hash % PLACEHOLDER_COVERS) + 1}.svg`;
+  return COVER_PHOTOS[hash % COVER_PHOTOS.length];
 }
 
 /** Cover image for a workspace: first real photo if any, else a placeholder. */

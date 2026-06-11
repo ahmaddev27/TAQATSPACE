@@ -70,17 +70,42 @@ export interface FaqContent {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  about — a lead paragraph plus titled sections                              */
+/*  about — hero, stats, mission/vision, values, sections, CTA                */
 /* -------------------------------------------------------------------------- */
+
+export interface AboutStat {
+  value?: string;            // locale-neutral number, e.g. "+128"
+  label?: LocalizedText;
+}
+
+export interface AboutValue {
+  title?: LocalizedText;
+  body?: LocalizedText;
+}
 
 export interface AboutSection {
   heading?: LocalizedText;
   body?: LocalizedText;
+  image?: string;            // stored path
+  imageUrl?: string;         // resolved on read (read-only)
 }
 
 export interface AboutContent {
+  eyebrow?: LocalizedText;
+  title1?: LocalizedText;
+  title2?: LocalizedText;    // the highlighted span of the title
   lead?: LocalizedText;
+  stats?: AboutStat[];
+  mission?: { title?: LocalizedText; body?: LocalizedText };
+  vision?: { title?: LocalizedText; body?: LocalizedText };
+  valuesTitle?: LocalizedText;
+  values?: AboutValue[];
   sections?: AboutSection[];
+  cta?: { title?: LocalizedText; body?: LocalizedText };
+  image?: string;            // hero collage main image (stored path)
+  imageUrl?: string;         // resolved (read-only)
+  imageSecondary?: string;   // hero collage secondary image (stored path)
+  imageSecondaryUrl?: string;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { getPublicDict } from "@/components/features/public/i18n";
+import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/features/public/ContactForm";
 import { getContent } from "@/lib/api/content";
 import { cmsText } from "@/lib/cms";
@@ -43,6 +44,7 @@ export default async function ContactPage({
   return (
     <section className="container section">
       <div className="why-grid" style={{ alignItems: "start" }}>
+        <Reveal>
         <div className="why-copy">
           <span className="eyebrow">{t.eyebrow}</span>
           <h1 className="ed-h2" style={{ marginTop: 8 }}>
@@ -86,8 +88,11 @@ export default async function ContactPage({
             )}
           </div>
         </div>
+        </Reveal>
 
-        <ContactForm dict={dict} />
+        <Reveal index={1}>
+          <ContactForm dict={dict} />
+        </Reveal>
       </div>
     </section>
   );

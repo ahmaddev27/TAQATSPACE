@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { Reveal } from "@/components/ui/Reveal";
 import { Segmented } from "@/components/ui/Segmented";
 import type { PublicDict } from "./i18n";
 
@@ -50,7 +51,8 @@ export function FaqAccordion({ dict, freelancer = [], owner = [], flat }: FaqAcc
         {items.map((item, i) => {
           const isOpen = open === i;
           return (
-            <div key={`${flat ? "cms" : segment}-${i}`} className="card" style={{ overflow: "hidden" }}>
+            <Reveal as="div" index={i} key={`${flat ? "cms" : segment}-${i}`}>
+            <div className="card" style={{ overflow: "hidden" }}>
               <button
                 type="button"
                 className="between"
@@ -84,6 +86,7 @@ export function FaqAccordion({ dict, freelancer = [], owner = [], flat }: FaqAcc
                 </p>
               )}
             </div>
+            </Reveal>
           );
         })}
       </div>

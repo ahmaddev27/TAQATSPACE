@@ -7,7 +7,7 @@ export interface GalleryProps {
   alt: string;
 }
 
-const PLACEHOLDER = "/images/workspaces/placeholder-1.svg";
+const PLACEHOLDER = "/images/workspaces/cowork-open.jpg";
 
 interface PhotoSlotProps {
   src: string;
