@@ -5,6 +5,8 @@
    ============================================================ */
 
 :root {
+  /* Theme native form controls (select popup, scrollbars, etc.) for light. */
+  color-scheme: light;
   /* ---- Brand: TAQAT Blue ---- */
   --blue-50:  #EAF4FB;
   --blue-100: #D2E8F6;
@@ -125,6 +127,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg:           #0B0E12;
   --surface:      #14181E;
   --surface-2:    #0F1318;
