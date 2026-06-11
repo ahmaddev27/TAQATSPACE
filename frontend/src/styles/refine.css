@@ -116,9 +116,13 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
 .field.is-ok .input { border-color: var(--success); }
 
 .input, .select, .textarea { height: 44px; }
-.input, .select, .textarea, .input-group .input { color: var(--text); -webkit-text-fill-color: var(--text); }
+.input, .select, .textarea, .input-group .input { color: var(--text); }
+/* `-webkit-text-fill-color` is the autofill text-colour fix for text fields. It
+   must NOT touch `.select`: it inherits into the native <option> popup and there
+   renders the option labels invisible. Keep it on inputs/textarea only. */
+.input, .textarea, .input-group .input { -webkit-text-fill-color: var(--text); }
 .input::placeholder, .textarea::placeholder { color: var(--text-3); -webkit-text-fill-color: var(--text-3); }
-.select option { color: var(--text); background: var(--surface); }
+.select option { color: var(--text); background: var(--surface); -webkit-text-fill-color: var(--text); }
 .input:hover:not(:focus):not(:disabled), .select:hover:not(:focus), .textarea:hover:not(:focus) { border-color: var(--n-400); }
 
 /* input with trailing addon (e.g. currency, unit) */
