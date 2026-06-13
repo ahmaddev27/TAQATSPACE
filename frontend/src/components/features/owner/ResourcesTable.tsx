@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { StatTile } from "@/components/ui/StatTile";
+import { Reveal } from "@/components/ui/Reveal";
 import { Textarea } from "@/components/ui/Textarea";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -207,14 +208,17 @@ export function ResourcesTable({ resources, summary }: ResourcesTableProps) {
   return (
     <div className="stack" style={{ gap: 18 }}>
       <div className="grid-stats grid-stats--5">
-        <StatTile icon="layers" label={t("summaryTotal")} value={summary.total} />
-        {RESOURCE_STATUSES.map((s) => (
-          <StatTile
-            key={s}
-            icon={STATUS_ICON[s]}
-            label={statusLabel(s)}
-            value={summary.by_status[s] ?? 0}
-          />
+        <Reveal index={0}>
+          <StatTile icon="layers" label={t("summaryTotal")} value={summary.total} />
+        </Reveal>
+        {RESOURCE_STATUSES.map((s, i) => (
+          <Reveal key={s} index={i + 1}>
+            <StatTile
+              icon={STATUS_ICON[s]}
+              label={statusLabel(s)}
+              value={summary.by_status[s] ?? 0}
+            />
+          </Reveal>
         ))}
       </div>
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Chat\StoreChatAttachmentRequest;
+use App\Models\User;
+use App\Notifications\NewChatMessageNotification;
 use App\Services\Chat\ChatAttachmentService;
 use App\Services\Chat\ChatContactService;
 use App\Services\Firebase\FirebaseService;
@@ -63,6 +65,44 @@ class ChatController extends Controller
         $contacts = $this->contacts->contactsFor($request->user());
 
         return ApiResponse::success(['contacts' => $contacts]);
+    }
+
+    /**
+     * POST /api/chat/notify — raise an in-app + push alert for a chat message
+     * the caller just delivered over Firestore, so the recipient is notified
+     * even with their chat page closed. The recipient must be one of the
+     * caller's chat-able contacts (prevents notifying arbitrary users).
+     */
+    public function notify(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'recipient_id' => ['required', 'string'],
+            'preview' => ['nullable', 'string', 'max:140'],
+        ]);
+
+        $sender = $request->user();
+        $recipientId = $validated['recipient_id'];
+
+        $recipient = User::query()->find($recipientId);
+
+        if ($recipient === null) {
+            return ApiResponse::success(['notified' => false]);
+        }
+
+        // Notify only a genuine counterpart: a contact of the sender, or an admin
+        // (whom owners/freelancers don't list but may legitimately reply to).
+        $isContact = collect($this->contacts->contactsFor($sender))
+            ->contains(static fn (array $c): bool => $c['id'] === $recipientId);
+
+        if (! $isContact && ! $recipient->isAdmin()) {
+            return ApiResponse::success(['notified' => false]);
+        }
+
+        $recipient->notify(
+            new NewChatMessageNotification($sender, (string) ($validated['preview'] ?? '')),
+        );
+
+        return ApiResponse::success(['notified' => true]);
     }
 
     /**

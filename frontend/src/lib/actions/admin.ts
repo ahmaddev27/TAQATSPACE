@@ -18,6 +18,7 @@ import type {
   Workspace,
   WorkspaceStatus,
 } from "@/lib/types";
+import type { AboutContent } from "@/lib/types/content";
 import type { ContentByKey } from "@/lib/api/content";
 import type { AdminInvoice, ManagedAdmin } from "@/lib/api/admin";
 
@@ -64,6 +65,58 @@ export async function uploadLandingImage(
   formData.append("image", file);
 
   return authedMutate<LandingImageUpload>("/admin/landing/images", {
+    method: "POST",
+    formData,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  About page CMS (PUT /admin/about, POST /admin/about/images)                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist the public about page content (`PUT /admin/about`).
+ *
+ * On success, revalidate both the admin editor page and the public about
+ * page (across locales via the `[locale]` layout segment) so the new copy is
+ * served immediately.
+ */
+export async function updateAbout(
+  content: AboutContent,
+): Promise<ActionResult<AboutContent>> {
+  const result = await authedMutate<AboutContent>("/admin/about", {
+    method: "PUT",
+    body: content,
+  });
+
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/about", "page");
+    revalidatePath("/[locale]/(public)/about", "page");
+  }
+
+  return result;
+}
+
+/** A stored about-page image: canonical path (saved) + display URL. */
+export interface AboutImageUpload {
+  path: string;
+  url: string;
+}
+
+/**
+ * Upload a single about-page image (`POST /admin/about/images`).
+ *
+ * Returns the canonical storage `path` (persisted into the content's `image`
+ * field via {@link updateAbout}) and a resolved `url` for immediate preview.
+ * Uploading does not itself publish anything — the admin must still save.
+ */
+export async function uploadAboutImage(
+  file: File,
+): Promise<ActionResult<AboutImageUpload>> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  return authedMutate<AboutImageUpload>("/admin/about/images", {
     method: "POST",
     formData,
   });

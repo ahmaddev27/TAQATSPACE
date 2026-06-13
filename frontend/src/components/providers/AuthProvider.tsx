@@ -12,6 +12,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { dashboardFor } from "@/lib/auth";
 import { unregisterPush } from "@/lib/firebase/messaging";
+import { signOutFromChat } from "@/lib/firebase/chat";
 import type { ClientAuthResult, User, UserRole } from "@/lib/types/auth";
 
 interface AuthContextValue {
@@ -91,6 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //    device-token DELETE needs the bearer cookie that step 1 clears, so
     //    doing it afterwards would 401. unregisterPush is idempotent + silent.
     await unregisterPush();
+
+    // Drop the Firebase Auth identity + cached chat session, so the NEXT account
+    // to sign in this browser gets its own uid (else Firestore denies its chat
+    // reads and the conversation list shows empty). Best-effort.
+    await signOutFromChat();
 
     // 1) Clear the local session (delete the Sanctum token + httpOnly cookies).
     //    Also capture the backend-built SSO logout URL as a fallback.

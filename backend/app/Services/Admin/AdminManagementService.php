@@ -132,14 +132,39 @@ class AdminManagementService
     }
 
     /**
-     * The admin-management module only operates on staff accounts. Reject (404)
-     * any attempt to manage a freelancer/owner reached through the route binding.
+     * The admin-management module operates on staff accounts. Reject (404) a
+     * freelancer/owner reached through the route binding, and the platform's
+     * ORIGINAL super-admin — the protected owner is hidden + untouchable here,
+     * while OTHER super-admins stay fully manageable.
      */
     private function ensureManageableAdmin(User $admin): void
     {
         if ($admin->role !== UserRole::Admin) {
             abort(404, __('messages.admin_not_found'));
         }
+
+        if ((string) $admin->id === (string) $this->protectedSuperAdminId()) {
+            abort(404, __('messages.admin_not_found'));
+        }
+    }
+
+    /**
+     * The id of the platform's PROTECTED super-admin: the first/oldest super-admin
+     * account — the original platform owner (e.g. the seeded admin). It is hidden
+     * from the directory and can't be edited/deactivated here; every other
+     * super-admin remains listed + manageable. Null when none exists.
+     */
+    private function protectedSuperAdminId(): ?string
+    {
+        $id = User::query()
+            ->where('role', UserRole::Admin->value)
+            ->whereHas('roles', fn (Builder $query) => $query
+                ->where('name', AdminRole::SuperAdmin->value))
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->value('id');
+
+        return $id !== null ? (string) $id : null;
     }
 
     /**
@@ -251,6 +276,13 @@ class AdminManagementService
         $query = User::query()
             ->where('role', UserRole::Admin->value)
             ->with(['roles:id,name', 'permissions:id,name']);
+
+        // Hide ONLY the platform's original super-admin; other super-admins and
+        // standard admins are listed normally.
+        $protectedId = $this->protectedSuperAdminId();
+        if ($protectedId !== null) {
+            $query->whereKeyNot($protectedId);
+        }
 
         if (! empty($filters['status']) && UserStatus::tryFrom((string) $filters['status']) !== null) {
             $query->where('status', $filters['status']);

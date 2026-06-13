@@ -245,6 +245,10 @@
         "private_office": "مكتب خاص"
       },
       "amenitiesHint": "اختر المرافق المتوفرة في مساحتك.",
+      "customAmenitiesHint": "أضف مرافق غير موجودة في القائمة أعلاه.",
+      "customAmenityPlaceholder": "مثال: غرفة هاتف",
+      "customAmenityAdd": "إضافة",
+      "removeAmenity": "إزالة",
       "photosHint": "اسحب الصور وأفلتها هنا أو انقر للاختيار.",
       "addPhotos": "إضافة صور",
       "deletePhoto": "حذف الصورة",

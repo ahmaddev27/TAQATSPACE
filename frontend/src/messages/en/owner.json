@@ -245,6 +245,10 @@
         "private_office": "Private office"
       },
       "amenitiesHint": "Select the amenities available in your space.",
+      "customAmenitiesHint": "Add amenities that aren't in the list above.",
+      "customAmenityPlaceholder": "e.g. Phone booth",
+      "customAmenityAdd": "Add",
+      "removeAmenity": "Remove",
       "photosHint": "Drag and drop photos here, or click to browse.",
       "addPhotos": "Add photos",
       "deletePhoto": "Delete photo",

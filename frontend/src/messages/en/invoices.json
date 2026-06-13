@@ -36,7 +36,8 @@
       "actions": {
         "markPaid": "Mark paid",
         "remind": "Remind",
-        "downloadPdf": "PDF"
+        "downloadPdf": "PDF",
+        "viewReceipt": "View receipt"
       },
       "empty": {
         "title": "No invoices yet",

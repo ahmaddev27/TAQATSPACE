@@ -16,7 +16,19 @@
         'under_review' => 'قيد المراجعة',
         'pending' => 'غير مدفوعة',
     ];
-    $statusLabel = $statusLabels[$statusValue] ?? $statusLabels['pending'];
+
+    // When a receipt has been uploaded but the stored status is still pending or
+    // overdue (e.g. a lag before the status transition completed), the PDF should
+    // display the truthful "under review" label instead of the stale one.
+    $displayStatusValue = $statusValue;
+    if (
+        $invoice->receipt_path !== null
+        && in_array($statusValue, ['pending', 'overdue'], true)
+    ) {
+        $displayStatusValue = 'under_review';
+    }
+
+    $statusLabel = $statusLabels[$displayStatusValue] ?? $statusLabels['pending'];
 
     $startDate = $subscription?->start_date?->format('Y-m-d') ?? '—';
     $endDate = $subscription?->end_date?->format('Y-m-d') ?? '—';
@@ -138,10 +150,21 @@
             font-size: 11px;
             font-weight: bold;
             color: #1F82C7;
-            margin-bottom: 10px;
+            line-height: 1.6;
+            margin-bottom: 4px;
         }
-        .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; }
-        .party-line { color: #667085; font-size: 11px; line-height: 1.9; margin-top: 6px; }
+        .party-label-en {
+            display: block;
+            font-size: 8.5px;
+            font-weight: normal;
+            color: #98A2B3;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; margin-bottom: 6px; }
+        .party-line { color: #667085; font-size: 11px; line-height: 1.9; }
 
         /* ---------- Meta strip ---------- */
         .meta {
@@ -157,7 +180,8 @@
             vertical-align: top;
         }
         .meta td + td { border-right: 1px solid #E4E9F0; }
-        .meta .meta-label { font-size: 10.5px; color: #667085; font-weight: bold; }
+        .meta .meta-label { font-size: 10.5px; color: #667085; font-weight: bold; line-height: 1.6; }
+        .meta .meta-label-en { font-size: 8.5px; color: #98A2B3; font-weight: normal; letter-spacing: 0.6px; text-transform: uppercase; line-height: 1.6; display: block; }
         .meta .meta-value { font-size: 13px; font-weight: bold; color: #0E1726; margin-top: 8px; }
 
         /* ---------- Line items ---------- */
@@ -230,7 +254,7 @@
                     رقم <span class="num">{{ $invoice->invoice_number }}</span>
                 </div>
                 <div style="margin-top: 12px;">
-                    <span class="badge badge-{{ $statusValue }}">{{ $statusLabel }}</span>
+                    <span class="badge badge-{{ $displayStatusValue }}">{{ $statusLabel }}</span>
                 </div>
             </td>
         </tr>
@@ -243,7 +267,8 @@
         <tr>
             <td class="party-cell">
                 <div class="party-card">
-                    <div class="party-label">المُصدِر<br><span class="en">From</span></div>
+                    <div class="party-label">المُصدِر</div>
+                    <div class="party-label-en">From</div>
                     <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
                     @if ($workspace?->address)
                         <div class="party-line">{{ $workspace->address }}</div>
@@ -259,7 +284,8 @@
             <td class="party-gap"></td>
             <td class="party-cell">
                 <div class="party-card">
-                    <div class="party-label">العميل<br><span class="en">Bill to</span></div>
+                    <div class="party-label">العميل</div>
+                    <div class="party-label-en">Bill to</div>
                     <div class="party-name">{{ $member?->name ?? '—' }}</div>
                     @if ($member?->email)
                         <div class="party-line"><span class="num">{{ $member->email }}</span></div>
@@ -276,15 +302,18 @@
     <table class="meta">
         <tr>
             <td>
-                <div class="meta-label">رقم الفاتورة<br><span class="en">Invoice no.</span></div>
+                <div class="meta-label">رقم الفاتورة</div>
+                <div class="meta-label-en">Invoice no.</div>
                 <div class="meta-value"><span class="num">{{ $invoice->invoice_number }}</span></div>
             </td>
             <td>
-                <div class="meta-label">تاريخ الإصدار<br><span class="en">Issue date</span></div>
+                <div class="meta-label">تاريخ الإصدار</div>
+                <div class="meta-label-en">Issue date</div>
                 <div class="meta-value"><span class="num">{{ $invoice->created_at?->format('Y-m-d') ?? '—' }}</span></div>
             </td>
             <td>
-                <div class="meta-label">تاريخ الاستحقاق<br><span class="en">Due date</span></div>
+                <div class="meta-label">تاريخ الاستحقاق</div>
+                <div class="meta-label-en">Due date</div>
                 <div class="meta-value"><span class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</span></div>
             </td>
         </tr>
@@ -294,9 +323,9 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width: 46%;">الوصف<br><span class="en">Description</span></th>
-                <th style="width: 30%;">الفترة<br><span class="en">Period</span></th>
-                <th style="width: 24%;">المبلغ<br><span class="en">Amount</span></th>
+                <th style="width: 46%;">الوصف<div class="en">Description</div></th>
+                <th style="width: 30%;">الفترة<div class="en">Period</div></th>
+                <th style="width: 24%;">المبلغ<div class="en">Amount</div></th>
             </tr>
         </thead>
         <tbody>
@@ -334,15 +363,18 @@
         <table class="meta" style="margin-top: 30px;">
             <tr>
                 <td>
-                    <div class="meta-label">حالة الدفع<br><span class="en">Payment status</span></div>
+                    <div class="meta-label">حالة الدفع</div>
+                    <div class="meta-label-en">Payment status</div>
                     <div class="meta-value">{{ $statusLabel }}</div>
                 </td>
                 <td>
-                    <div class="meta-label">تاريخ الدفع<br><span class="en">Paid on</span></div>
+                    <div class="meta-label">تاريخ الدفع</div>
+                    <div class="meta-label-en">Paid on</div>
                     <div class="meta-value"><span class="num">{{ $invoice->paid_at?->format('Y-m-d') ?? '—' }}</span></div>
                 </td>
                 <td>
-                    <div class="meta-label">إيصال الدفع<br><span class="en">Receipt</span></div>
+                    <div class="meta-label">إيصال الدفع</div>
+                    <div class="meta-label-en">Receipt</div>
                     <div class="meta-value">{{ $invoice->receipt_path ? 'مُرفق' : '—' }}</div>
                 </td>
             </tr>

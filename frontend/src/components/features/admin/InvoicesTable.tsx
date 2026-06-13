@@ -186,10 +186,10 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
       id: "actions",
       header: "",
       cell: (inv) => {
-        // Uploading a receipt is only meaningful while there's still something
-        // to settle. Once the invoice is paid AND a receipt is attached, the
-        // upload action is hidden — the PDF + "view receipt" are shown instead.
-        const isSettled = inv.status === "paid" && Boolean(inv.receipt_url);
+        // Show "upload receipt" only when there is no receipt yet, and the
+        // invoice is not cancelled. Once a receipt exists, show "view receipt"
+        // instead so the admin cannot accidentally overwrite the member's proof.
+        const hasReceipt = Boolean(inv.receipt_url);
         return (
         <div className="row-actions">
           {inv.status === "paid" ? (
@@ -218,7 +218,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               </Button>
             )
           )}
-          {!isSettled && (
+          {!hasReceipt && inv.status !== "paid" && inv.status !== "cancelled" && (
             <Button
               variant="ghost"
               size="sm"
