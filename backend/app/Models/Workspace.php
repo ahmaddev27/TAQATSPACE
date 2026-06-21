@@ -25,6 +25,7 @@ class Workspace extends Model
         'description',
         'address',
         'city',
+        'city_id',
         'phone',
         'latitude',
         'longitude',
@@ -63,6 +64,17 @@ class Workspace extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * The related city record. Named `cityModel` (not `city`) to avoid colliding
+     * with the denormalized `city` string column/attribute.
+     *
+     * @return BelongsTo<City, $this>
+     */
+    public function cityModel(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'city_id');
     }
 
     /** @return HasMany<Seat, $this> */

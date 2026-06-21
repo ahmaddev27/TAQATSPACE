@@ -182,6 +182,45 @@
         "deactivateFailed": "Could not deactivate the admin"
       }
     },
+    "cities": {
+      "title": "Cities",
+      "subtitle": "Manage the cities workspaces can be located in.",
+      "add": "Add city",
+      "createTitle": "New city",
+      "editTitle": "Edit city",
+      "colNameAr": "Name (Arabic)",
+      "colNameEn": "Name (English)",
+      "colStatus": "Status",
+      "colWorkspaces": "Workspaces",
+      "active": "Active",
+      "inactive": "Inactive",
+      "edit": "Edit",
+      "delete": "Delete",
+      "create": "Create city",
+      "save": "Save changes",
+      "cancel": "Cancel",
+      "count": "Total",
+      "searchPlaceholder": "Search cities…",
+      "emptyTitle": "No cities",
+      "emptyBody": "Add the first city to make it selectable on workspaces.",
+      "deleteTitle": "Delete city",
+      "deleteConfirm": "Delete {name}? A city already used by a workspace is deactivated instead of removed.",
+      "form": {
+        "nameAr": "Name (Arabic)",
+        "nameArPlaceholder": "e.g. غزة",
+        "nameEn": "Name (English)",
+        "nameEnPlaceholder": "e.g. Gaza",
+        "status": "Status",
+        "activeLabel": "Active (selectable on workspaces)"
+      },
+      "toast": {
+        "created": "City created",
+        "updated": "City updated",
+        "deleted": "City removed",
+        "saveFailed": "Could not save the city",
+        "deleteFailed": "Could not delete the city"
+      }
+    },
     "userDetail": {
       "back": "Back to users",
       "joined": "Joined",

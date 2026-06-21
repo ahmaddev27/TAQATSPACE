@@ -28,7 +28,7 @@ class UpdateWorkspaceRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'min:2', 'max:150'],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'address' => ['sometimes', 'required', 'string', 'max:255'],
-            'city' => ['sometimes', 'required', 'string', 'max:120'],
+            'city_id' => ['sometimes', 'required', 'string', 'exists:cities,id'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],

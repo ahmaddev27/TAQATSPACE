@@ -232,6 +232,7 @@
       "phone": "Phone number",
       "address": "Address",
       "city": "City",
+      "cityPlaceholder": "Select a city…",
       "latitude": "Latitude",
       "longitude": "Longitude",
       "mapHint": "Enter coordinates manually or drag the pin on the map.",

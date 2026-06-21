@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceStatus;
+use App\Models\City;
 use App\Models\Review;
 use App\Models\Seat;
 use App\Models\Subscription;
@@ -84,6 +85,7 @@ class WorkspaceService
 
         $data['owner_id'] = $ownerId;
         $data['status'] = WorkspaceStatus::Pending->value;
+        $this->denormalizeCity($data);
 
         return DB::transaction(function () use ($data, $seatTypes): Workspace {
             $workspace = $this->workspaces->create($data);
@@ -108,7 +110,30 @@ class WorkspaceService
     {
         unset($data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month']);
 
+        $this->denormalizeCity($data);
+
         return $this->workspaces->update($workspace, $data);
+    }
+
+    /**
+     * Keep the denormalized `city` display string in sync with the chosen
+     * `city_id`: when a city is provided, copy its Arabic name into `city` so
+     * the many existing readers of the string column stay correct. A blank/
+     * unknown `city_id` is left untouched (partial updates omit it).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function denormalizeCity(array &$data): void
+    {
+        if (! array_key_exists('city_id', $data) || blank($data['city_id'])) {
+            return;
+        }
+
+        $city = City::find($data['city_id']);
+
+        if ($city !== null) {
+            $data['city'] = $city->name_ar;
+        }
     }
 
     /**

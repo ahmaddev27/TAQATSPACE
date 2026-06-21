@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
@@ -18,9 +19,12 @@ import {
   type SeatTypeInput,
   type WorkspaceSettingsInput,
 } from "@/lib/actions/owner";
-import type { SeatType, Workspace } from "@/lib/types";
+import type { City, SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
 import { MessagingTab } from "./MessagingTab";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 export interface SettingsTabsProps {
   workspace: Workspace;
@@ -86,7 +90,7 @@ interface FormState {
   description: string;
   phone: string;
   address: string;
-  city: string;
+  cityId: string;
   latitude: string;
   longitude: string;
   amenities: string[];
@@ -132,7 +136,7 @@ function buildInitial(ws: Workspace): FormState {
     description: ws.description ?? "",
     phone: ws.phone ?? "",
     address: ws.address ?? "",
-    city: ws.city ?? "",
+    cityId: ws.city_id ?? "",
     latitude: ws.latitude != null ? String(ws.latitude) : "",
     longitude: ws.longitude != null ? String(ws.longitude) : "",
     amenities: ws.amenities ?? [],
@@ -145,8 +149,31 @@ function buildInitial(ws: Workspace): FormState {
 export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const t = useTranslations("owner");
   const tm = useTranslations("messaging.settings.owner");
+  const localeTag = useLocale();
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
+
+  // Active cities for the dynamic city select; fetched client-side from the
+  // public endpoint. Seeded against the workspace's current `city_id`.
+  const [cities, setCities] = useState<City[]>([]);
+  const cityName = (c: City) => (localeTag === "ar" ? c.name_ar : c.name_en);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_BASE.replace(/\/$/, "")}/cities`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((body: { data?: City[] }) => {
+        if (active) setCities(body.data ?? []);
+      })
+      .catch(() => {
+        if (active) setCities([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [tab, setTab] = useState("basic");
   const [form, setForm] = useState<FormState>(() => buildInitial(workspace));
@@ -201,7 +228,7 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
       description: form.description.trim() || null,
       phone: form.phone.trim() || null,
       address: form.address.trim(),
-      city: form.city.trim(),
+      city_id: form.cityId,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
       amenities: form.amenities,
@@ -316,8 +343,29 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 onChange={(e) => set("address", e.target.value)}
               />
             </Field>
-            <Field label={t("settings.city")} error={errors.city?.[0]}>
-              <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
+            <Field
+              label={t("settings.city")}
+              error={errors.city_id?.[0] ?? errors.city?.[0]}
+            >
+              <Select
+                value={form.cityId}
+                onChange={(e) => set("cityId", e.target.value)}
+              >
+                <option value="" disabled>
+                  {t("settings.cityPlaceholder")}
+                </option>
+                {/* Keep the saved city visible until the list resolves (or if it
+                    became inactive and is absent from the active list). */}
+                {form.cityId &&
+                  !cities.some((c) => c.id === form.cityId) && (
+                    <option value={form.cityId}>{workspace.city}</option>
+                  )}
+                {cities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {cityName(c)}
+                  </option>
+                ))}
+              </Select>
             </Field>
             <LocationPicker
               lat={Number(form.latitude)}

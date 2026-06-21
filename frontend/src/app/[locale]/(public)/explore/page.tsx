@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { listCities, listWorkspaces, type WorkspaceFilters } from "@/lib/api/workspaces";
+import { listWorkspaces, type WorkspaceFilters } from "@/lib/api/workspaces";
+import { getCities } from "@/lib/api/cities";
 import type { Workspace } from "@/lib/types";
 import { getPublicDict, interpolate } from "@/components/features/public/i18n";
 import { FilterBar } from "@/components/features/public/FilterBar";
@@ -68,10 +69,12 @@ export default async function ExplorePage({
   let cities: string[] = [];
   let hasMore = false;
   try {
-    const [page, cityList] = await Promise.all([listWorkspaces(filters), listCities()]);
+    const [page, cityList] = await Promise.all([listWorkspaces(filters), getCities()]);
     workspaces = page.data;
     hasMore = page.meta.current_page < page.meta.last_page;
-    cities = cityList;
+    // The backend filters by the workspace's denormalised `city` display name,
+    // so the filter options are the cities' localised names (not their ids).
+    cities = cityList.map((c) => (locale === "ar" ? c.name_ar : c.name_en));
   } catch {
     workspaces = [];
     cities = [];

@@ -168,6 +168,7 @@
       "hours": "Working hours",
       "hoursPlaceholder": "8am – 10pm",
       "city": "City",
+      "cityPlaceholder": "Select a city…",
       "area": "Area / district",
       "areaPlaceholder": "Al-Rimal",
       "address": "Street address",
