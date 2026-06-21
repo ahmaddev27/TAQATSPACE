@@ -116,7 +116,7 @@ export function workspaceRegisterSchema(t: Translate) {
       capacity: z.number({ message: t("required") }).min(1, t("required")),
       hours: z.string().min(1, t("required")),
       // Step 2 — location
-      city: z.string().min(1, t("required")),
+      city_id: z.string().min(1, t("required")),
       area: z.string().min(1, t("required")),
       address: z.string().min(1, t("required")),
       lat: z.number(),
@@ -143,7 +143,7 @@ export type WorkspaceRegisterValues = z.infer<
 export const WORKSPACE_STEP_FIELDS: (keyof WorkspaceRegisterValues)[][] = [
   ["name", "email", "phone", "password", "password_confirmation"],
   ["workspace_name", "description", "capacity", "hours"],
-  ["city", "area", "address"],
+  ["city_id", "area", "address"],
   ["seat_types", "amenities"],
   ["license_file", "id_document", "terms"],
 ];
@@ -196,7 +196,7 @@ export function ownerOnboardingSchema(t: Translate) {
     description: z.string().min(1, t("required")),
     capacity: z.number({ message: t("required") }).min(1, t("required")),
     hours: z.string().min(1, t("required")),
-    city: z.string().min(1, t("required")),
+    city_id: z.string().min(1, t("required")),
     area: z.string().min(1, t("required")),
     address: z.string().min(1, t("required")),
     lat: z.number(),
