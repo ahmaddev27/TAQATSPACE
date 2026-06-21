@@ -276,7 +276,8 @@ export interface WorkspaceSettingsInput {
   name?: string;
   description?: string | null;
   address?: string;
-  city?: string;
+  /** Id of an existing {@link City}; the backend resolves the display name. */
+  city_id?: string;
   phone?: string | null;
   latitude?: number | null;
   longitude?: number | null;

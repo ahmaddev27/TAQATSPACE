@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Stepper } from "@/components/ui/Stepper";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
@@ -21,10 +21,14 @@ import {
   SEAT_TYPE_CODES,
   type OwnerOnboardingValues,
 } from "@/lib/validations/auth";
+import type { City } from "@/lib/types";
 import type { OnboardingResult } from "./OnboardingFlow";
 import { OwnerSeatSetup } from "./OwnerSeatSetup";
 
 const GAZA_CENTER = { lat: 31.5, lng: 34.47 };
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 const LocationPicker = dynamic(
   () =>
@@ -39,8 +43,6 @@ const LocationPicker = dynamic(
   },
 );
 
-const CITY_KEYS = ["gaza", "khanyounis", "rafah", "jabalia", "deirelbalah"] as const;
-
 const AMENITY_ICONS: Record<string, IconName> = {
   wifi: "wifi",
   printer: "printer",
@@ -54,7 +56,7 @@ const AMENITY_ICONS: Record<string, IconName> = {
 /** Field groups per step — scopes RHF `trigger()` and back-navigation on errors. */
 const STEP_FIELDS: (keyof OwnerOnboardingValues)[][] = [
   ["phone", "gender", "workspace_name", "description", "capacity", "hours"],
-  ["city", "area", "address"],
+  ["city_id", "area", "address"],
   ["seat_types", "amenities"],
 ];
 
@@ -83,6 +85,13 @@ export function OwnerOnboardingForm({
   const tv = useTranslations("validation");
   const tCommon = useTranslations("common");
   const tg = useTranslations("common.gender");
+  const locale = useLocale();
+
+  // Active cities for the dynamic location select. Fetched client-side from the
+  // public (unauthenticated) endpoint; the select shows the locale name and the
+  // form submits the chosen city's id.
+  const [cities, setCities] = useState<City[]>([]);
+  const cityName = (c: City) => (locale === "ar" ? c.name_ar : c.name_en);
 
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -114,7 +123,7 @@ export function OwnerOnboardingForm({
       description: "",
       capacity: 1,
       hours: "",
-      city: CITY_KEYS[0],
+      city_id: "",
       area: "",
       address: "",
       lat: GAZA_CENTER.lat,
@@ -134,6 +143,23 @@ export function OwnerOnboardingForm({
   const amenities = useWatch({ control, name: "amenities" }) ?? [];
   const lat = useWatch({ control, name: "lat" }) ?? GAZA_CENTER.lat;
   const lng = useWatch({ control, name: "lng" }) ?? GAZA_CENTER.lng;
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_BASE.replace(/\/$/, "")}/cities`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((body: { data?: City[] }) => {
+        if (active) setCities(body.data ?? []);
+      })
+      .catch(() => {
+        if (active) setCities([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function toggleAmenity(code: string) {
     const set = new Set(amenities);
@@ -162,7 +188,7 @@ export function OwnerOnboardingForm({
       description: values.description,
       capacity: values.capacity,
       hours: values.hours,
-      city: values.city,
+      city_id: values.city_id,
       area: values.area,
       address: values.address,
       lat: values.lat,
@@ -303,11 +329,14 @@ export function OwnerOnboardingForm({
         {step === 1 && (
           <div className="stack" style={{ gap: 16 }}>
             <div className="grid2">
-              <Field label={tw("city")} error={errors.city?.message}>
-                <Select {...register("city")}>
-                  {CITY_KEYS.map((key) => (
-                    <option key={key} value={key}>
-                      {tCommon(`city.${key}`)}
+              <Field label={tw("city")} error={errors.city_id?.message}>
+                <Select defaultValue="" {...register("city_id")}>
+                  <option value="" disabled>
+                    {tw("cityPlaceholder")}
+                  </option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {cityName(city)}
                     </option>
                   ))}
                 </Select>

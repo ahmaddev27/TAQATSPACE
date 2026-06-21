@@ -182,6 +182,45 @@
         "deactivateFailed": "تعذّر إيقاف المشرف"
       }
     },
+    "cities": {
+      "title": "المدن",
+      "subtitle": "إدارة المدن التي يمكن أن تقع فيها المساحات.",
+      "add": "إضافة مدينة",
+      "createTitle": "مدينة جديدة",
+      "editTitle": "تعديل المدينة",
+      "colNameAr": "الاسم (عربي)",
+      "colNameEn": "الاسم (إنجليزي)",
+      "colStatus": "الحالة",
+      "colWorkspaces": "المساحات",
+      "active": "مُفعّلة",
+      "inactive": "غير مُفعّلة",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "create": "إنشاء مدينة",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "count": "الإجمالي",
+      "searchPlaceholder": "ابحث عن مدينة…",
+      "emptyTitle": "لا توجد مدن",
+      "emptyBody": "أضِف أول مدينة لتصبح متاحة للاختيار في المساحات.",
+      "deleteTitle": "حذف المدينة",
+      "deleteConfirm": "حذف {name}؟ المدينة المستخدمة في إحدى المساحات يتم إيقافها بدلاً من حذفها.",
+      "form": {
+        "nameAr": "الاسم (عربي)",
+        "nameArPlaceholder": "مثال: غزة",
+        "nameEn": "الاسم (إنجليزي)",
+        "nameEnPlaceholder": "مثال: Gaza",
+        "status": "الحالة",
+        "activeLabel": "مُفعّلة (متاحة للاختيار في المساحات)"
+      },
+      "toast": {
+        "created": "تم إنشاء المدينة",
+        "updated": "تم تحديث المدينة",
+        "deleted": "تمت إزالة المدينة",
+        "saveFailed": "تعذّر حفظ المدينة",
+        "deleteFailed": "تعذّر حذف المدينة"
+      }
+    },
     "userDetail": {
       "back": "العودة إلى المستخدمين",
       "joined": "تاريخ الانضمام",

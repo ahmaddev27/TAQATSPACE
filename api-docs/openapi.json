@@ -10,6 +10,401 @@
         }
     ],
     "paths": {
+        "/about-content": {
+            "get": {
+                "operationId": "about.show",
+                "summary": "GET /api/about-content \u2014 public About page content (or {} when unset)",
+                "tags": [
+                    "About"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/about": {
+            "get": {
+                "operationId": "adminAbout.show",
+                "summary": "GET /api/admin/about \u2014 current about content (or {} when unset)",
+                "tags": [
+                    "AdminAbout"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "adminAbout.update",
+                "summary": "PUT /api/admin/about \u2014 upsert the about content (free-form bilingual blob,\npartial overrides). The frontend may send the blob directly or wrapped in\na `content` key; either is accepted and persisted as-is",
+                "tags": [
+                    "AdminAbout"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u062d\u062a\u0648\u0649 \u0635\u0641\u062d\u0629 \u0645\u0646 \u0646\u062d\u0646."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/about/images": {
+            "post": {
+                "operationId": "adminAbout.uploadImage",
+                "summary": "POST /api/admin/about/images \u2014 store a section image and return its\ncanonical path (for round-tripping into the content) plus a display URL",
+                "tags": [
+                    "AdminAbout"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadAboutImageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "url"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0631\u0641\u0639 \u0627\u0644\u0635\u0648\u0631\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/cities": {
+            "get": {
+                "operationId": "adminCity.index",
+                "summary": "GET /api/admin/cities \u2014 all cities with their workspace counts",
+                "tags": [
+                    "AdminCity"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CityResource"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "adminCity.store",
+                "summary": "POST /api/admin/cities \u2014 create a city",
+                "tags": [
+                    "AdminCity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCityRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CityResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0645\u062f\u064a\u0646\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/cities/{city}": {
+            "put": {
+                "operationId": "adminCity.update",
+                "summary": "PUT /api/admin/cities/{city} \u2014 update a city (renames propagate to the\ndenormalized workspace display string)",
+                "tags": [
+                    "AdminCity"
+                ],
+                "parameters": [
+                    {
+                        "name": "city",
+                        "in": "path",
+                        "required": true,
+                        "description": "The city ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCityRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CityResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u062f\u064a\u0646\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "adminCity.destroy",
+                "summary": "DELETE /api/admin/cities/{city} \u2014 remove an unused city, or deactivate it\nwhen workspaces still reference it (delete-protection)",
+                "tags": [
+                    "AdminCity"
+                ],
+                "parameters": [
+                    {
+                        "name": "city",
+                        "in": "path",
+                        "required": true,
+                        "description": "The city ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "deleted"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "enum": [
+                                                "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0645\u062f\u064a\u0646\u0629.",
+                                                "\u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0645\u0633\u062a\u062e\u062f\u0645\u0629\u060c \u0641\u062a\u0645 \u062a\u0639\u0637\u064a\u0644\u0647\u0627 \u0628\u062f\u0644\u0627\u064b \u0645\u0646 \u062d\u0630\u0641\u0647\u0627."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/admins": {
             "get": {
                 "operationId": "adminManagement.index",
@@ -1777,6 +2172,42 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/cities": {
+            "get": {
+                "operationId": "city.index",
+                "summary": "GET /api/cities \u2014 the public list of active cities",
+                "tags": [
+                    "City"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CityResource"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -10005,6 +10436,34 @@
                 ],
                 "title": "BroadcastMessageRequest"
             },
+            "CityResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name_ar": {
+                        "type": "string"
+                    },
+                    "name_en": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "workspaces_count": {
+                        "type": "integer",
+                        "description": "Present only on the admin listing (withCount('workspaces'))."
+                    }
+                },
+                "required": [
+                    "id",
+                    "name_ar",
+                    "name_en",
+                    "is_active"
+                ],
+                "title": "CityResource"
+            },
             "CompleteOnboardingRequest": {
                 "type": "object",
                 "description": "Role-selection + completion for a freshly-provisioned SSO account.\n\nAccount identity (name/email/password) already exists from the SSO provision,\nso only the role choice and its role-specific profile are accepted here.",
@@ -10059,7 +10518,7 @@
                         "type": "string"
                     },
                     "is_read": {
-                        "type": "string"
+                        "type": "boolean"
                     },
                     "created_at": {
                         "type": "string"
@@ -11333,6 +11792,27 @@
                 ],
                 "title": "StoreChatAttachmentRequest"
             },
+            "StoreCityRequest": {
+                "type": "object",
+                "properties": {
+                    "name_ar": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "name_en": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name_ar",
+                    "name_en"
+                ],
+                "title": "StoreCityRequest"
+            },
             "StoreContactRequest": {
                 "type": "object",
                 "description": "Public \"Contact us\" submission. Unauthenticated \u2014 anyone may send a message.",
@@ -11650,9 +12130,8 @@
                         "type": "string",
                         "maxLength": 255
                     },
-                    "city": {
-                        "type": "string",
-                        "maxLength": 120
+                    "city_id": {
+                        "type": "string"
                     },
                     "phone": {
                         "type": [
@@ -11756,7 +12235,7 @@
                 "required": [
                     "name",
                     "address",
-                    "city",
+                    "city_id",
                     "total_seats",
                     "price_per_month"
                 ],
@@ -12043,6 +12522,23 @@
                     }
                 },
                 "title": "UpdateBrandingRequest"
+            },
+            "UpdateCityRequest": {
+                "type": "object",
+                "properties": {
+                    "name_ar": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "name_en": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "title": "UpdateCityRequest"
             },
             "UpdateExpenseRequest": {
                 "type": "object",
@@ -13104,9 +13600,8 @@
                         "type": "string",
                         "maxLength": 255
                     },
-                    "city": {
-                        "type": "string",
-                        "maxLength": 120
+                    "city_id": {
+                        "type": "string"
                     },
                     "phone": {
                         "type": [
@@ -13152,6 +13647,22 @@
                     }
                 },
                 "title": "UpdateWorkspaceRequest"
+            },
+            "UploadAboutImageRequest": {
+                "type": "object",
+                "description": "Validates a single About-section image upload. Authorization is handled by\nthe route middleware (auth:sanctum + role.admin).",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 4096
+                    }
+                },
+                "required": [
+                    "image"
+                ],
+                "title": "UploadAboutImageRequest"
             },
             "UploadBrandingImageRequest": {
                 "type": "object",
@@ -13352,6 +13863,12 @@
                     "city": {
                         "type": "string"
                     },
+                    "city_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "phone": {
                         "type": [
                             "string",
@@ -13458,6 +13975,7 @@
                     "description",
                     "address",
                     "city",
+                    "city_id",
                     "phone",
                     "latitude",
                     "longitude",

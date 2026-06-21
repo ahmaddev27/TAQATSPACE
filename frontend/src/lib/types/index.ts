@@ -127,6 +127,18 @@ export interface SimpleMeta {
 /*  Workspace                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * A coworking city, mirroring `CityResource`. The public list returns active
+ * cities only; the admin list additionally carries `workspaces_count`.
+ */
+export interface City {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  is_active: boolean;
+  workspaces_count?: number;
+}
+
 export interface WorkspaceOwnerSummary {
   id: string;
   name: string;
@@ -169,6 +181,12 @@ export interface Workspace {
   description: string | null;
   address: string;
   city: string;
+  /**
+   * The id of the linked {@link City}. Present alongside the denormalised `city`
+   * display name on requests that may manage the workspace; used to seed the
+   * dynamic city `<Select>` in the owner forms.
+   */
+  city_id?: string;
   phone: string | null;
   latitude: number | null;
   longitude: number | null;

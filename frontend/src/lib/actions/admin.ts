@@ -6,6 +6,7 @@ import type {
   AdminPermission,
   AdminRole,
   Branding,
+  City,
   BroadcastInput,
   BroadcastResult,
   ContentKey,
@@ -474,5 +475,58 @@ export async function deactivateAdmin(
     method: "DELETE",
   });
   if (result.ok) revalidatePath(ADMINS_PATH, "page");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Cities (POST/PUT/DELETE /admin/cities) — gated manage_content              */
+/* -------------------------------------------------------------------------- */
+
+const CITIES_PATH = "/[locale]/(dashboard)/admin/cities";
+
+/** Payload for creating or updating a city. */
+export interface CityInput {
+  name_ar: string;
+  name_en: string;
+  is_active: boolean;
+}
+
+/** Create a new city (`POST /admin/cities`). */
+export async function createCity(
+  input: CityInput,
+): Promise<ActionResult<City>> {
+  const result = await authedMutate<City>("/admin/cities", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidatePath(CITIES_PATH, "page");
+  return result;
+}
+
+/** Update an existing city (`PUT /admin/cities/{id}`). */
+export async function updateCity(
+  cityId: string,
+  input: CityInput,
+): Promise<ActionResult<City>> {
+  const result = await authedMutate<City>(`/admin/cities/${cityId}`, {
+    method: "PUT",
+    body: input,
+  });
+  if (result.ok) revalidatePath(CITIES_PATH, "page");
+  return result;
+}
+
+/**
+ * Delete a city (`DELETE /admin/cities/{id}`). A city that is in use by any
+ * workspace is deactivated rather than removed; the backend conveys which
+ * happened in the response message.
+ */
+export async function deleteCity(
+  cityId: string,
+): Promise<ActionResult<City>> {
+  const result = await authedMutate<City>(`/admin/cities/${cityId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidatePath(CITIES_PATH, "page");
   return result;
 }

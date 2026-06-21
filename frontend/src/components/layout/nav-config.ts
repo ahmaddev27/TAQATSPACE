@@ -237,6 +237,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             icon: "settings",
             permission: "manage_content",
           },
+          {
+            key: "cities",
+            href: "/admin/cities",
+            icon: "pin",
+            permission: "manage_content",
+          },
         ],
       },
       {

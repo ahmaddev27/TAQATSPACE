@@ -41,7 +41,7 @@ class RegisterRequest extends FormRequest
             // space's own name is submitted as `workspace_name`.
             $rules['workspace_name'] = ['required', 'string', 'min:2', 'max:150'];
             $rules['description'] = ['nullable', 'string', 'max:5000'];
-            $rules['city'] = ['required', 'string', 'max:120'];
+            $rules['city_id'] = ['required', 'string', 'exists:cities,id'];
             $rules['area'] = ['nullable', 'string', 'max:120'];
             $rules['address'] = ['required', 'string', 'max:255'];
             $rules['lat'] = ['nullable', 'numeric', 'between:-90,90'];
