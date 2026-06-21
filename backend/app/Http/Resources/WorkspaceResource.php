@@ -29,6 +29,7 @@ class WorkspaceResource extends JsonResource
             'description' => $this->description,
             'address' => $this->address,
             'city' => $this->city,
+            'city_id' => $this->city_id,
             'phone' => $this->phone,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

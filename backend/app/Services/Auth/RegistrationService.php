@@ -161,7 +161,9 @@ class RegistrationService
             'name' => $data['workspace_name'],
             'description' => $data['description'] ?? null,
             'address' => $data['address'],
-            'city' => $data['city'],
+            // The denormalized `city` string is filled by WorkspaceService from
+            // the chosen city; onboarding submits the FK only.
+            'city_id' => $data['city_id'],
             'phone' => $data['phone'] ?? null,
             'latitude' => $data['lat'] ?? null,
             'longitude' => $data['lng'] ?? null,

@@ -25,7 +25,7 @@ class StoreWorkspaceRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'description' => ['nullable', 'string', 'max:5000'],
             'address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:120'],
+            'city_id' => ['required', 'string', 'exists:cities,id'],
             'phone' => ['nullable', 'string', 'max:30'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
