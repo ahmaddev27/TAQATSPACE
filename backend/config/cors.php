@@ -21,6 +21,8 @@ return [
 
     'allowed_origins' => array_filter([
         env('FRONTEND_URL', 'http://localhost:3000'),
+        // Academy platform origin — lets it call the public catalog from the browser.
+        env('ACADEMY_URL'),
         'http://localhost:3000',
         'http://127.0.0.1:3000',
     ]),

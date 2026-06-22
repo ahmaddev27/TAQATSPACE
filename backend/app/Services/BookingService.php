@@ -18,6 +18,7 @@ use App\Models\Workspace;
 use App\Notifications\BookingApprovedNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Notifications\NewBookingRequestNotification;
+use App\Services\Partner\WebhookDispatcher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,6 +28,8 @@ use Illuminate\Support\Facades\DB;
  */
 class BookingService
 {
+    public function __construct(private readonly WebhookDispatcher $webhooks) {}
+
     /**
      * Submit a booking request on behalf of a freelancer.
      *
@@ -90,7 +93,9 @@ class BookingService
     {
         $this->assertPending($booking);
 
-        return DB::transaction(function () use ($booking, $reviewer, $seatId): BookingRequest {
+        $subscription = null;
+
+        $approved = DB::transaction(function () use ($booking, $reviewer, $seatId, &$subscription): BookingRequest {
             $seat = null;
 
             if ($seatId !== null) {
@@ -151,8 +156,14 @@ class BookingService
 
             $booking->member->notify(new BookingApprovedNotification($booking, $workspace->name));
 
-            return $booking->refresh()->load('member');
+            return $booking->refresh()->load('member', 'workspace');
         });
+
+        // Notify integrated partners (e.g. Academy) after the subscription is
+        // committed, so they only ever see a booking that truly landed.
+        $this->webhooks->bookingApproved($approved, $subscription);
+
+        return $approved;
     }
 
     /**
@@ -171,7 +182,11 @@ class BookingService
 
         $booking->member->notify(new BookingRejectedNotification($booking, $booking->workspace->name));
 
-        return $booking->refresh()->load('member');
+        $rejected = $booking->refresh()->load('member', 'workspace');
+
+        $this->webhooks->bookingRejected($rejected);
+
+        return $rejected;
     }
 
     /**
