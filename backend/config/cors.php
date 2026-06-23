@@ -1,5 +1,9 @@
 <?php
 
+// Academy platform origins allowed to call the public catalog from the browser.
+// Supports multiple comma-separated values (e.g. staging + production).
+$academyOrigins = array_filter(array_map('trim', explode(',', (string) env('ACADEMY_URL', ''))));
+
 return [
 
     /*
@@ -19,13 +23,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter([
+    'allowed_origins' => array_values(array_filter(array_merge([
         env('FRONTEND_URL', 'http://localhost:3000'),
-        // Academy platform origin — lets it call the public catalog from the browser.
-        env('ACADEMY_URL'),
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-    ]),
+    ], $academyOrigins))),
 
     'allowed_origins_patterns' => [],
 
