@@ -11,6 +11,7 @@ use App\Models\Announcement;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\MediaUrl;
 
 class MemberDashboardService
 {
@@ -18,7 +19,7 @@ class MemberDashboardService
      * Build the freelancer dashboard summary.
      *
      * @return array{
-     *     subscription: array{status: string, workspace_name: string, plan_type: string, end_date: ?string}|null,
+     *     subscription: array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null,
      *     seat: array{seat_number: string, type: string}|null,
      *     next_invoice: array{amount: string, due_date: ?string}|null,
      *     unread_notifications: int,
@@ -82,14 +83,14 @@ class MemberDashboardService
     private function activeSubscription(User $member): ?Subscription
     {
         return $member->subscriptions()
-            ->with(['workspace:id,name', 'seat:id,seat_number,type'])
+            ->with(['workspace:id,name', 'workspace.owner:id,avatar', 'seat:id,seat_number,type'])
             ->where('status', SubscriptionStatus::Active->value)
             ->latest('start_date')
             ->first();
     }
 
     /**
-     * @return array{status: string, workspace_name: string, plan_type: string, end_date: ?string}|null
+     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null
      */
     private function subscriptionSummary(?Subscription $subscription): ?array
     {
@@ -100,6 +101,8 @@ class MemberDashboardService
         return [
             'status' => $subscription->status->value,
             'workspace_name' => (string) $subscription->workspace?->name,
+            // The workspace "logo" = its owner's avatar, shown beside the name.
+            'workspace_logo' => MediaUrl::resolve($subscription->workspace?->owner?->avatar),
             'plan_type' => $subscription->plan_type->value,
             'end_date' => $subscription->end_date?->toDateString(),
         ];

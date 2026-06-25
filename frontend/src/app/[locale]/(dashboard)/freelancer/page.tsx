@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { getMemberSummary } from "@/lib/api/memberDashboard";
 import { Icon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatusBadge } from "@/components/ui/Badge";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
@@ -51,12 +52,22 @@ export default async function FreelancerHomePage() {
               <div className="card card-pad stack" style={{ gap: 0 }}>
                 <div className="between">
                   <span className="row" style={{ gap: 12 }}>
-                    <span
-                      className="st-ico"
-                      style={{ width: 48, height: 48 }}
-                    >
-                      <Icon name="card" size={22} />
-                    </span>
+                    {sub.workspace_logo ? (
+                      <Avatar
+                        initial={sub.workspace_name.charAt(0)}
+                        src={sub.workspace_logo}
+                        alt={sub.workspace_name}
+                        size="lg"
+                        round
+                      />
+                    ) : (
+                      <span
+                        className="st-ico"
+                        style={{ width: 48, height: 48 }}
+                      >
+                        <Icon name="card" size={22} />
+                      </span>
+                    )}
                     <span className="stack" style={{ gap: 2 }}>
                       <span
                         className="muted-3"
