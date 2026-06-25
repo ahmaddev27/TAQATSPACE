@@ -29,7 +29,7 @@ export default async function OwnerInvoicesPage({
     avatar: m.user.avatar,
     planType: m.plan_type,
     seatNumber: m.seat_number,
-    monthlyPrice: m.monthly_price,
+    monthlyPrice: Number(m.monthly_price) || 0,
     package: m.package,
     packagePrice: Number(m.package_price) || 0,
   }));
