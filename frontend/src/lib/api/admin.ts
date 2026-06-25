@@ -149,6 +149,25 @@ export async function getAdminWorkspaceDetail(
   return res.data;
 }
 
+/** One workspace's broadcast messaging usage (platform = Taqat quota, own = its accounts). */
+export interface AdminMessagingUsageRow {
+  workspace_id: string;
+  workspace_name: string;
+  platform_email: number;
+  platform_sms: number;
+  own_email: number;
+  own_sms: number;
+  platform_total: number;
+}
+
+/** Per-workspace messaging usage, heaviest platform-quota consumers first. */
+export async function getAdminMessagingUsage(): Promise<AdminMessagingUsageRow[]> {
+  const res = await serverFetch<ApiEnvelope<AdminMessagingUsageRow[]>>(
+    "/admin/messaging/usage",
+  );
+  return res.data;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Users (GET /admin/users)                                                   */
 /* -------------------------------------------------------------------------- */

@@ -100,7 +100,8 @@
       "crm": "Content (CRM)",
       "cities": "Cities",
       "messaging": "Messaging",
-      "broadcast": "Broadcast"
+      "broadcast": "Broadcast",
+      "messagingUsage": "Message usage"
     },
     "sectionCrm": "Content"
   },

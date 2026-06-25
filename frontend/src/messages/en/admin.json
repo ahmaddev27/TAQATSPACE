@@ -120,6 +120,18 @@
       "noReviews": "No reviews yet",
       "profile": "Profile"
     },
+    "messagingUsage": {
+      "title": "Message usage",
+      "subtitle": "Who sends broadcasts through Taqat's shared accounts vs their own.",
+      "empty": "No broadcasts sent yet",
+      "emptyBody": "Usage appears once workspaces send email or SMS broadcasts.",
+      "workspace": "Workspace",
+      "platformEmail": "Taqat email",
+      "platformSms": "Taqat SMS",
+      "ownEmail": "Own email",
+      "ownSms": "Own SMS",
+      "platformTotal": "Taqat total"
+    },
     "users": {
       "title": "Users",
       "subtitle": "Browse platform accounts and activate or suspend them.",
