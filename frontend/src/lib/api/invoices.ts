@@ -46,6 +46,9 @@ export interface Invoice {
   subscription_id: string;
   invoice_number: string;
   amount: string;
+  /** Running total paid + remaining balance (decimal strings) for partial payments. */
+  amount_paid: string;
+  remaining_amount: string;
   amount_formatted: string;
   currency: string;
   status: InvoiceStatus;
