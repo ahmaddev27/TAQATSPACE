@@ -25,9 +25,17 @@ export interface InvoiceMemberOption {
   packagePrice: number;
 }
 
+/** Decimal money fields can arrive as strings ("200.00") — coerce before math. */
+function num(value: number | string): number {
+  return Number(value) || 0;
+}
+
+const subPrice = (m: InvoiceMemberOption): number => num(m.monthlyPrice);
+const pkgPrice = (m: InvoiceMemberOption): number => num(m.packagePrice);
+
 /** Subscription price + internet-package add-on price = total owed this period. */
 function memberTotal(m: InvoiceMemberOption): number {
-  return m.monthlyPrice + m.packagePrice;
+  return subPrice(m) + pkgPrice(m);
 }
 
 export interface IssueInvoiceModalProps {
@@ -123,8 +131,8 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
               meta={(m) =>
                 [
                   m.package
-                    ? m.packagePrice > 0
-                      ? `${m.package} (+${m.packagePrice} ${tc("currency")})`
+                    ? pkgPrice(m) > 0
+                      ? `${m.package} (+${pkgPrice(m)} ${tc("currency")})`
                       : m.package
                     : null,
                   m.seatNumber ? `#${m.seatNumber}` : null,
@@ -146,14 +154,14 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
                 value={form.amount}
                 onChange={(e) => set("amount", e.target.value)}
               />
-              {selectedMember && selectedMember.packagePrice > 0 && (
+              {selectedMember && pkgPrice(selectedMember) > 0 && (
                 <div
                   className="muted-3"
                   style={{ marginTop: 5, fontSize: "var(--fs-xs)" }}
                 >
                   {t("issueModal.amountBreakdown", {
-                    base: selectedMember.monthlyPrice,
-                    pkg: selectedMember.packagePrice,
+                    base: subPrice(selectedMember),
+                    pkg: pkgPrice(selectedMember),
                     total: memberTotal(selectedMember),
                   })}
                 </div>
