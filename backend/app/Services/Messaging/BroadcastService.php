@@ -7,6 +7,7 @@ namespace App\Services\Messaging;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Jobs\SendBroadcastMessage;
+use App\Models\MessageUsage;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -63,7 +64,37 @@ class BroadcastService
 
         $this->guardChannels($data, $config, 'workspace');
 
-        return $this->dispatch($data, $config, $this->workspaceRecipients($workspace, $data));
+        $result = $this->dispatch($data, $config, $this->workspaceRecipients($workspace, $data));
+
+        $this->recordUsage($workspace, $result);
+
+        return $result;
+    }
+
+    /**
+     * Log this broadcast's per-channel message counts, tagged by whether each
+     * channel was sent through the workspace's own account or Taqat's platform
+     * quota — so the admin can track shared-quota usage per workspace.
+     */
+    private function recordUsage(Workspace $workspace, BroadcastResult $result): void
+    {
+        $channels = [
+            ['channel' => 'email', 'config' => 'smtp', 'count' => $result->queuedEmail],
+            ['channel' => 'sms', 'config' => 'sms', 'count' => $result->queuedSms],
+        ];
+
+        foreach ($channels as $entry) {
+            if ($entry['count'] <= 0) {
+                continue;
+            }
+
+            MessageUsage::query()->create([
+                'workspace_id' => $workspace->id,
+                'channel' => $entry['channel'],
+                'source' => $this->settings->channelSource($workspace, $entry['config']),
+                'count' => $entry['count'],
+            ]);
+        }
     }
 
     // ---- Recipient resolution ----------------------------------------------

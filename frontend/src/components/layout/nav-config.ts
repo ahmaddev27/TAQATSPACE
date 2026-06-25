@@ -267,6 +267,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             permission: "manage_messaging",
           },
           {
+            key: "messagingUsage",
+            href: "/admin/messaging-usage",
+            icon: "chart",
+            permission: "manage_messaging",
+          },
+          {
             key: "inbox",
             href: "/admin/messages",
             icon: "mail",
