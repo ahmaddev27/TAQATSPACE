@@ -81,6 +81,7 @@ export type InvoiceStatus =
   | "pending"
   | "under_review"
   | "payment_rejected"
+  | "partially_paid"
   | "paid"
   | "overdue"
   | "cancelled";

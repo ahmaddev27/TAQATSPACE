@@ -23,6 +23,7 @@ import {
   type InvoiceMemberOption,
 } from "./IssueInvoiceModal";
 import { MarkPaidButton } from "./MarkPaidButton";
+import { PartialPaymentButton } from "./PartialPaymentButton";
 import { OwnerReceiptButton } from "./OwnerReceiptButton";
 import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
@@ -140,8 +141,20 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       num: true,
       sortable: true,
       cell: (inv) => (
-        <span className="cell-num" style={{ fontWeight: 600 }}>
-          {invoiceMoney(inv.amount, inv.currency)}
+        <span className="cell-num stack" style={{ gap: 2 }}>
+          <span style={{ fontWeight: 600 }}>
+            {invoiceMoney(inv.amount, inv.currency)}
+          </span>
+          {inv.status === "partially_paid" && (
+            <span
+              className="muted-3"
+              style={{ fontSize: "var(--fs-xs)", color: "var(--amber-600)" }}
+            >
+              {t("table.remaining", {
+                amount: invoiceMoney(inv.remaining_amount, inv.currency),
+              })}
+            </span>
+          )}
         </span>
       ),
     },
@@ -167,6 +180,12 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             inv.status !== "cancelled" && (
               <>
                 <MarkPaidButton invoiceId={inv.id} />
+                <PartialPaymentButton
+                  invoiceId={inv.id}
+                  invoiceNumber={inv.invoice_number}
+                  remaining={inv.remaining_amount}
+                  currency={inv.currency}
+                />
                 <OwnerReceiptButton
                   invoiceId={inv.id}
                   invoiceNumber={inv.invoice_number}

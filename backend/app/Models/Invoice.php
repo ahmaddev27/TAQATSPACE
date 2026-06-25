@@ -21,6 +21,7 @@ class Invoice extends Model
     protected $fillable = [
         'subscription_id',
         'amount',
+        'amount_paid',
         'due_date',
         'paid_at',
         'status',
@@ -43,6 +44,7 @@ class Invoice extends Model
             'paid_at' => 'datetime',
             'receipt_reviewed_at' => 'datetime',
             'amount' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
         ];
     }
 

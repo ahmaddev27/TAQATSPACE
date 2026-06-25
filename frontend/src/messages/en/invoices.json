@@ -32,7 +32,8 @@
         "due": "Due date",
         "amount": "Amount",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "remaining": "{amount} remaining"
       },
       "actions": {
         "markPaid": "Mark paid",
@@ -40,6 +41,20 @@
         "downloadPdf": "PDF",
         "viewReceipt": "View receipt",
         "uploadReceipt": "Upload receipt"
+      },
+      "partial": {
+        "action": "Partial payment",
+        "title": "Record a payment",
+        "body": "Record a partial or full payment for invoice {invoice}. The invoice is marked paid once the balance reaches zero.",
+        "remaining": "Outstanding balance",
+        "amount": "Payment amount",
+        "paidAt": "Payment date",
+        "optional": "optional",
+        "amountRequired": "Enter an amount greater than zero.",
+        "recorded": "Payment recorded",
+        "failed": "Could not record the payment",
+        "cancel": "Cancel",
+        "confirm": "Record payment"
       },
       "receipt": {
         "uploaded": "Receipt uploaded and payment recorded",
