@@ -23,6 +23,7 @@ class BookingRequestResource extends JsonResource
             'id' => $this->id,
             'workspace_id' => $this->workspace_id,
             'preferred_seat_type' => $this->preferred_seat_type?->value,
+            'plan_type' => $this->plan_type?->value,
             'message' => $this->message,
             'status' => $this->status->value,
             'rejection_reason' => $this->rejection_reason,
