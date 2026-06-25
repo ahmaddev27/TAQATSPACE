@@ -478,6 +478,16 @@ export interface MemberSummaryInvoice {
   due_date: string | null;
 }
 
+/** A live announcement from a workspace the member is subscribed to. */
+export interface MemberSummaryAnnouncement {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  workspace_name: string;
+  published_at: string | null;
+}
+
 /** Freelancer dashboard summary (`GET /member/dashboard`). */
 export interface MemberSummary {
   subscription: MemberSummarySubscription | null;
@@ -485,4 +495,5 @@ export interface MemberSummary {
   next_invoice: MemberSummaryInvoice | null;
   unread_notifications: number;
   pending_booking_requests: number;
+  announcements: MemberSummaryAnnouncement[];
 }

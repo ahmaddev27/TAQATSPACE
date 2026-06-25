@@ -21,6 +21,8 @@
       "statusLabel": "Status",
       "notificationsTitle": "Latest notifications",
       "notificationsEmpty": "No new notifications",
+      "announcementsTitle": "Space announcements",
+      "announcementsEmpty": "No announcements yet",
       "unreadBell": "{count} unread",
       "quickActions": "Quick actions",
       "manageSubscription": "Manage subscription",
