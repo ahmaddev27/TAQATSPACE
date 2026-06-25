@@ -8,6 +8,7 @@ use App\Models\InternetPackage;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class PackageService
 {
@@ -55,9 +56,23 @@ class PackageService
      */
     public function assignMember(InternetPackage $package, string $memberId): InternetPackage
     {
-        $package->members()->syncWithoutDetaching([
-            $memberId => ['assigned_at' => Carbon::now()],
-        ]);
+        $alreadyAssigned = $package->members()
+            ->where('member_id', $memberId)
+            ->exists();
+
+        if ($alreadyAssigned) {
+            $package->members()->updateExistingPivot($memberId, [
+                'assigned_at' => Carbon::now(),
+            ]);
+        } else {
+            // The member_package pivot has a UUID primary key with no DB default,
+            // and attach() inserts via the query builder (no model events), so the
+            // id must be supplied explicitly or MySQL rejects the row.
+            $package->members()->attach($memberId, [
+                'id' => (string) Str::uuid(),
+                'assigned_at' => Carbon::now(),
+            ]);
+        }
 
         return $package->load('members');
     }
