@@ -36,6 +36,32 @@ class SeatService
             ->orderBy('seat_number')
             ->get();
 
+        // Fallback: an occupied seat that predates `assigned_member_id` (or was
+        // occupied through another path) can lack the relation. Resolve the
+        // occupant from the active subscription holding the seat so the map still
+        // shows their photo and name.
+        $missing = $seats->filter(
+            static fn (Seat $seat): bool => $seat->status === SeatStatus::Occupied
+                && $seat->assignedMember === null,
+        );
+
+        if ($missing->isNotEmpty()) {
+            $bySeat = Subscription::query()
+                ->whereIn('seat_id', $missing->pluck('id'))
+                ->where('status', SubscriptionStatus::Active->value)
+                ->with('member:id,name,avatar')
+                ->get()
+                ->keyBy('seat_id');
+
+            foreach ($missing as $seat) {
+                $member = $bySeat->get($seat->id)?->member;
+
+                if ($member !== null) {
+                    $seat->setRelation('assignedMember', $member);
+                }
+            }
+        }
+
         $summary = [
             'total' => $seats->count(),
             'available' => $seats->where('status', SeatStatus::Available)->count(),

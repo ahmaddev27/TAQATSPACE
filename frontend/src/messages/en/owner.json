@@ -75,6 +75,7 @@
       "seat": "Seat",
       "plan": "Plan",
       "monthlyPrice": "Monthly price",
+      "internetPackage": "Internet package",
       "memberSince": "Member since",
       "bio": "Bio",
       "invoiceHistory": "Invoice history",

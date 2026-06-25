@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Avatar } from "@/components/ui/Avatar";
 import { requireAdminPermission } from "@/lib/admin-guard";
 import { getAdminMessagingUsage } from "@/lib/api/admin";
 
@@ -56,7 +57,20 @@ export default async function AdminMessagingUsagePage({
             <tbody>
               {rows.map((r) => (
                 <tr key={r.workspace_id}>
-                  <td style={{ fontWeight: 600 }}>{r.workspace_name}</td>
+                  <td style={{ fontWeight: 600 }}>
+                    <span
+                      className="row"
+                      style={{ gap: 10, alignItems: "center" }}
+                    >
+                      <Avatar
+                        initial={r.workspace_name.charAt(0)}
+                        src={r.workspace_logo}
+                        alt={r.workspace_name}
+                        round
+                      />
+                      {r.workspace_name}
+                    </span>
+                  </td>
                   <td className="cell-num">{r.platform_email}</td>
                   <td className="cell-num">{r.platform_sms}</td>
                   <td className="cell-num">{r.own_email}</td>

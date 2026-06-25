@@ -31,6 +31,7 @@ export default async function OwnerInvoicesPage({
     seatNumber: m.seat_number,
     monthlyPrice: m.monthly_price,
     package: m.package,
+    packagePrice: Number(m.package_price) || 0,
   }));
 
   return (
