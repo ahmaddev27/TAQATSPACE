@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\AccountStatusChangedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Super-admin user administration: a filtered, paginated directory plus a
@@ -74,7 +75,18 @@ class AdminUserService
      */
     public function changeStatus(User $user, UserStatus $status): User
     {
-        $user->forceFill(['status' => $status->value])->save();
+        DB::transaction(function () use ($user, $status): void {
+            $user->forceFill(['status' => $status->value])->save();
+
+            // Suspending an owner also pulls their space off public discovery —
+            // a hidden owner shouldn't keep a live public listing. (Re-publishing
+            // stays a deliberate, separate admin action.)
+            if ($status === UserStatus::Suspended && $user->isOwner()) {
+                $user->workspace()
+                    ->whereNotNull('published_at')
+                    ->update(['published_at' => null]);
+            }
+        });
 
         // Tell the user when they are suspended or reactivated — never silently.
         if (in_array($status, [UserStatus::Suspended, UserStatus::Active], true)) {

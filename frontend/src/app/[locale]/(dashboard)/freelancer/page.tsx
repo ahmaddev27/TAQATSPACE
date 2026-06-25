@@ -160,14 +160,52 @@ export default async function FreelancerHomePage() {
             <div className="dash-2col">
               <div className="card card-pad">
                 <div className="between" style={{ marginBottom: 16 }}>
-                  <h3 className="h3">{t("notificationsTitle")}</h3>
+                  <h3 className="h3">{t("announcementsTitle")}</h3>
                 </div>
-                <p
-                  className="muted"
-                  style={{ padding: "16px 0", textAlign: "center" }}
-                >
-                  {t("notificationsEmpty")}
-                </p>
+                {summary.announcements.length === 0 ? (
+                  <p
+                    className="muted"
+                    style={{ padding: "16px 0", textAlign: "center" }}
+                  >
+                    {t("announcementsEmpty")}
+                  </p>
+                ) : (
+                  <div className="stack" style={{ gap: 16 }}>
+                    {summary.announcements.map((a) => (
+                      <div key={a.id} className="stack" style={{ gap: 4 }}>
+                        <div className="between" style={{ gap: 8 }}>
+                          <span
+                            className="row"
+                            style={{ gap: 8, fontWeight: 600 }}
+                          >
+                            <Icon name="megaphone" size={15} />
+                            {a.title}
+                          </span>
+                          <span
+                            className="muted-3 ltr"
+                            style={{ fontSize: "var(--fs-xs)", flex: "none" }}
+                          >
+                            {formatDate(a.published_at)}
+                          </span>
+                        </div>
+                        {a.body && (
+                          <p
+                            className="muted"
+                            style={{ fontSize: "var(--fs-sm)", lineHeight: 1.7 }}
+                          >
+                            {a.body}
+                          </p>
+                        )}
+                        <span
+                          className="muted-3"
+                          style={{ fontSize: "var(--fs-xs)" }}
+                        >
+                          {a.workspace_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <QuickLinks hasSubscription={isActive} />
             </div>

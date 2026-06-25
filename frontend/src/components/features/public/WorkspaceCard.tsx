@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Rating } from "@/components/ui/Rating";
 import { Amenity } from "@/components/ui/Amenity";
+import { Avatar } from "@/components/ui/Avatar";
 import { CoverImage } from "@/components/ui/CoverImage";
 import type { Workspace } from "@/lib/types";
 import type { PublicDict } from "./i18n";
@@ -35,9 +36,18 @@ export function WorkspaceCard({ workspace, dict, locale }: WorkspaceCardProps) {
       </div>
       <div className="ws-card-body">
         <div className="between">
-          <h3 className="h3" style={{ fontSize: "var(--fs-lg)" }}>
-            {workspace.name}
-          </h3>
+          <div className="row" style={{ gap: 8, minWidth: 0 }}>
+            <Avatar
+              initial={workspace.name.charAt(0)}
+              src={workspace.logo}
+              alt={workspace.name}
+              size="sm"
+              round
+            />
+            <h3 className="h3" style={{ fontSize: "var(--fs-lg)" }}>
+              {workspace.name}
+            </h3>
+          </div>
           {rating > 0 && <Rating value={rating} />}
         </div>
         <div className="row muted" style={{ gap: 6, fontSize: "var(--fs-sm)" }}>

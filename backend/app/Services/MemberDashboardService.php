@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
+use App\Models\Announcement;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
@@ -21,7 +22,8 @@ class MemberDashboardService
      *     seat: array{seat_number: string, type: string}|null,
      *     next_invoice: array{amount: string, due_date: ?string}|null,
      *     unread_notifications: int,
-     *     pending_booking_requests: int
+     *     pending_booking_requests: int,
+     *     announcements: list<array{id: string, type: string, title: string, body: string, workspace_name: string, published_at: ?string}>
      * }
      */
     public function summary(User $member): array
@@ -36,7 +38,45 @@ class MemberDashboardService
             'pending_booking_requests' => $member->bookingRequests()
                 ->where('status', BookingStatus::Pending->value)
                 ->count(),
+            'announcements' => $this->recentAnnouncements($member),
         ];
+    }
+
+    /**
+     * Live announcements from the workspaces the member is actively subscribed
+     * to — so an owner's posted announcement actually reaches the member on their
+     * dashboard, not only as a (queued) notification.
+     *
+     * @return list<array{id: string, type: string, title: string, body: string, workspace_name: string, published_at: ?string}>
+     */
+    private function recentAnnouncements(User $member): array
+    {
+        $workspaceIds = $member->subscriptions()
+            ->where('status', SubscriptionStatus::Active->value)
+            ->pluck('workspace_id')
+            ->unique()
+            ->all();
+
+        if ($workspaceIds === []) {
+            return [];
+        }
+
+        return Announcement::query()
+            ->active()
+            ->whereIn('workspace_id', $workspaceIds)
+            ->with('workspace:id,name')
+            ->latest('published_at')
+            ->limit(5)
+            ->get()
+            ->map(static fn (Announcement $announcement): array => [
+                'id' => $announcement->id,
+                'type' => $announcement->type->value,
+                'title' => $announcement->title,
+                'body' => $announcement->body,
+                'workspace_name' => (string) $announcement->workspace?->name,
+                'published_at' => $announcement->published_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     private function activeSubscription(User $member): ?Subscription

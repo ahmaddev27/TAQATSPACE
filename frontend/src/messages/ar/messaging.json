@@ -17,6 +17,8 @@
       "allReadToast": "تم تعليم كل الإشعارات كمقروءة.",
       "deletedToast": "تم حذف الإشعار.",
       "actionFailed": "تعذّر تحديث الإشعارات.",
+      "loadMore": "تحميل المزيد",
+      "loadingMore": "جارٍ التحميل…",
       "panelTitle": "الإشعارات",
       "bellLabel": "الإشعارات",
       "types": {

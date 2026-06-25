@@ -133,19 +133,25 @@
         .badge-cancelled { background: #EEF1F5; color: #667085; }
 
         /* ---------- Party cards ----------
-           A plain collapsed table with explicit column widths + a spacer column
-           (the same pattern as the .meta strip, which mPDF renders reliably).
-           The previous border-spacing + negative-margin hack overflowed 100%
-           width in mPDF, so the two cells overlapped and the text ran together. */
-        .parties { width: 100%; border-collapse: collapse; margin: 0 0 28px; }
-        .party-cell { width: 48%; vertical-align: top; }
-        .party-gap { width: 4%; }
-        .party-card {
-            background: #F7FAFC;
+           One bordered, rounded strip with two equal cells + a divider — the
+           SAME td-styled pattern as the .meta strip below, which mPDF renders
+           reliably. A background+border inner <div> inside each <td> collapsed
+           in mPDF (no box drawn, and the stacked lines overlapped), so the box
+           now lives on the table + cells, never on an inner div. */
+        .parties {
+            width: 100%;
+            border-collapse: collapse;
             border: 1px solid #E4E9F0;
             border-radius: 10px;
-            padding: 18px 20px;
+            background: #F7FAFC;
+            margin: 0 0 28px;
         }
+        .parties td {
+            width: 50%;
+            padding: 18px 20px;
+            vertical-align: top;
+        }
+        .parties td + td { border-right: 1px solid #E4E9F0; }
         .party-label {
             font-size: 11px;
             font-weight: bold;
@@ -265,35 +271,30 @@
     {{-- Issuer vs. recipient --}}
     <table class="parties">
         <tr>
-            <td class="party-cell">
-                <div class="party-card">
-                    <div class="party-label">المُصدِر</div>
-                    <div class="party-label-en">From</div>
-                    <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
-                    @if ($workspace?->address)
-                        <div class="party-line">{{ $workspace->address }}</div>
-                    @endif
-                    @if ($workspace?->city)
-                        <div class="party-line">{{ $workspace->city }}</div>
-                    @endif
-                    @if ($workspace?->phone)
-                        <div class="party-line"><span class="num">{{ $workspace->phone }}</span></div>
-                    @endif
-                </div>
+            <td>
+                <div class="party-label">المُصدِر</div>
+                <div class="party-label-en">From</div>
+                <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
+                @if ($workspace?->address)
+                    <div class="party-line">{{ $workspace->address }}</div>
+                @endif
+                @if ($workspace?->city)
+                    <div class="party-line">{{ $workspace->city }}</div>
+                @endif
+                @if ($workspace?->phone)
+                    <div class="party-line"><span class="num">{{ $workspace->phone }}</span></div>
+                @endif
             </td>
-            <td class="party-gap"></td>
-            <td class="party-cell">
-                <div class="party-card">
-                    <div class="party-label">العميل</div>
-                    <div class="party-label-en">Bill to</div>
-                    <div class="party-name">{{ $member?->name ?? '—' }}</div>
-                    @if ($member?->email)
-                        <div class="party-line"><span class="num">{{ $member->email }}</span></div>
-                    @endif
-                    @if ($member?->phone)
-                        <div class="party-line"><span class="num">{{ $member->phone }}</span></div>
-                    @endif
-                </div>
+            <td>
+                <div class="party-label">العميل</div>
+                <div class="party-label-en">Bill to</div>
+                <div class="party-name">{{ $member?->name ?? '—' }}</div>
+                @if ($member?->email)
+                    <div class="party-line"><span class="num">{{ $member->email }}</span></div>
+                @endif
+                @if ($member?->phone)
+                    <div class="party-line"><span class="num">{{ $member->phone }}</span></div>
+                @endif
             </td>
         </tr>
     </table>

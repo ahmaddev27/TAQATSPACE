@@ -194,6 +194,8 @@ export interface Workspace {
   price_per_month: number;
   amenities: string[];
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
   /**
@@ -264,6 +266,8 @@ export interface SubscriptionWorkspaceSummary {
   city: string;
   address: string;
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
 }
 
 export interface SubscriptionSeatSummary {
@@ -478,6 +482,16 @@ export interface MemberSummaryInvoice {
   due_date: string | null;
 }
 
+/** A live announcement from a workspace the member is subscribed to. */
+export interface MemberSummaryAnnouncement {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  workspace_name: string;
+  published_at: string | null;
+}
+
 /** Freelancer dashboard summary (`GET /member/dashboard`). */
 export interface MemberSummary {
   subscription: MemberSummarySubscription | null;
@@ -485,4 +499,5 @@ export interface MemberSummary {
   next_invoice: MemberSummaryInvoice | null;
   unread_notifications: number;
   pending_booking_requests: number;
+  announcements: MemberSummaryAnnouncement[];
 }

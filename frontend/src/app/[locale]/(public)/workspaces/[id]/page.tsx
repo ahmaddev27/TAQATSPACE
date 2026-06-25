@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Rating } from "@/components/ui/Rating";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/api";
 import { showWorkspace } from "@/lib/api/workspaces";
@@ -176,7 +177,16 @@ export default async function WorkspaceDetailPage({
         <div className="detail-main">
           <div className="between" style={{ alignItems: "flex-start" }}>
             <div>
-              <h1 className="h1">{workspace.name}</h1>
+              <div className="row" style={{ gap: 12, alignItems: "center" }}>
+                <Avatar
+                  initial={workspace.name.charAt(0)}
+                  src={workspace.logo}
+                  alt={workspace.name}
+                  size="lg"
+                  round
+                />
+                <h1 className="h1">{workspace.name}</h1>
+              </div>
               <div className="row muted" style={{ gap: 8, marginTop: 8 }}>
                 <span className="row" style={{ gap: 5 }}>
                   <Icon name="pin" size={16} />

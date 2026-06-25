@@ -24,7 +24,7 @@ class AdminSubscriptionService
     public function paginate(array $filters): LengthAwarePaginator
     {
         return $this->filteredQuery($filters)
-            ->with(['member:id,name,email', 'workspace:id,name,city'])
+            ->with(['member:id,name,email,avatar', 'workspace:id,name,city'])
             ->latest()
             ->paginate($this->perPage($filters))
             ->withQueryString();
