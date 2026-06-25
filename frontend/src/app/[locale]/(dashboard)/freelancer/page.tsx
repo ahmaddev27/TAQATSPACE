@@ -99,6 +99,13 @@ export default async function FreelancerHomePage() {
                     value={formatDate(sub.end_date)}
                     numeric
                   />
+                  {sub.package && (
+                    <SummaryItem
+                      icon="wifi"
+                      label={t("internetPackage")}
+                      value={sub.package}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -233,7 +240,7 @@ function SummaryItem({
   value,
   numeric,
 }: {
-  icon: "pin" | "calendar";
+  icon: "pin" | "calendar" | "wifi";
   label: string;
   value: string;
   numeric?: boolean;
