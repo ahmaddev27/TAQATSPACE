@@ -26,6 +26,10 @@ import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
 import { ChatComposer } from "./ChatComposer";
 import { relativeTime } from "./time";
+// The widget reuses the chat list/thread/composer classes — load their styles
+// (chat.css is otherwise only imported by the full ChatScreen) so the panel is
+// styled and usable on any page, not just /chat.
+import "./chat.css";
 import "./chat-widget.css";
 
 /** Full chat surface route for the current role (for the "open all" link). */
