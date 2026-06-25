@@ -245,7 +245,7 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
           icon="filter"
           label={t("summaryTopCategory")}
           value={topCategory ? categoryLabel(topCategory[0]) : t("noneCategory")}
-          foot={topCategory ? money(String(topCategory[1])) : t("summaryTopCategoryFoot")}
+          foot={topCategory ? money(String(topCategory[1])) : "—"}
         />
       </div>
 

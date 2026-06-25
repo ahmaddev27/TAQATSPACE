@@ -291,7 +291,7 @@ export interface AdminSubscription {
   end_date: string | null;
   cancelled_at: string | null;
   created_at: string | null;
-  member: { id: string; name: string; email: string } | null;
+  member: { id: string; name: string; email: string; avatar: string | null } | null;
   workspace: { id: string; name: string; city: string } | null;
 }
 

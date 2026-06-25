@@ -146,7 +146,6 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
           { key: "broadcast", href: "/owner/messaging", icon: "send" },
           { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
-          { key: "reports", href: "/owner/reports", icon: "chart" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
         ],
       },

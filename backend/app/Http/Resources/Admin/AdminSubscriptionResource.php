@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Admin;
 
 use App\Models\Subscription;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -38,6 +39,7 @@ class AdminSubscriptionResource extends JsonResource
                 'id' => $this->member->id,
                 'name' => $this->member->name,
                 'email' => $this->member->email,
+                'avatar' => MediaUrl::resolve($this->member->avatar),
             ]),
             'workspace' => $this->whenLoaded('workspace', fn (): ?array => $this->workspace === null ? null : [
                 'id' => $this->workspace->id,
