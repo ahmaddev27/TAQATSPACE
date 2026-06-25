@@ -58,6 +58,7 @@ class WorkspaceResource extends JsonResource
                 'name' => $this->owner->name,
                 'email' => $this->owner->email,
                 'phone' => $this->owner->phone,
+                'avatar' => MediaUrl::resolve($this->owner->avatar),
             ]),
 
             // Owner/Admin-only: publish state + masked messaging config (never

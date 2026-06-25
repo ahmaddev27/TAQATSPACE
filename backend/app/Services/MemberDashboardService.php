@@ -8,6 +8,7 @@ use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\Announcement;
+use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
@@ -105,7 +106,23 @@ class MemberDashboardService
             'workspace_logo' => MediaUrl::resolve($subscription->workspace?->owner?->avatar),
             'plan_type' => $subscription->plan_type->value,
             'end_date' => $subscription->end_date?->toDateString(),
+            // The member's internet package in this workspace, if assigned.
+            'package' => $this->packageName($subscription),
         ];
+    }
+
+    /**
+     * Comma-joined internet package name(s) assigned to this subscription's member
+     * within its workspace — null when none.
+     */
+    private function packageName(Subscription $subscription): ?string
+    {
+        $names = InternetPackage::query()
+            ->where('workspace_id', $subscription->workspace_id)
+            ->whereHas('members', static fn ($query) => $query->where('users.id', $subscription->member_id))
+            ->pluck('name');
+
+        return $names->isEmpty() ? null : $names->implode('، ');
     }
 
     /**

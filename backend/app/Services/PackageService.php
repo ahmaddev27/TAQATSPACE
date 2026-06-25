@@ -21,6 +21,16 @@ class PackageService
     {
         return $workspace->internetPackages()
             ->withCount('members')
+            // Eager-load the assigned members (and their seat in THIS workspace)
+            // so the "assigned members" list renders names, avatars and seats —
+            // not just the count.
+            ->with(['members' => function ($query) use ($workspace): void {
+                $query->select('users.id', 'users.name', 'users.avatar')
+                    ->with(['subscriptions' => function ($sub) use ($workspace): void {
+                        $sub->where('workspace_id', $workspace->id)
+                            ->with('seat:id,seat_number');
+                    }]);
+            }])
             ->latest()
             ->get();
     }

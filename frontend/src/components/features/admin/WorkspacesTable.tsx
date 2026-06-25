@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Icon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import {
@@ -154,20 +155,38 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
       id: "name",
       header: t("colName"),
       sortable: true,
-      cell: (w) => <span style={{ fontWeight: 600 }}>{w.name}</span>,
+      cell: (w) => (
+        <div className="row" style={{ gap: 10, alignItems: "center" }}>
+          <Avatar
+            initial={w.name.charAt(0)}
+            src={w.logo ?? null}
+            alt={w.name}
+            round
+          />
+          <span style={{ fontWeight: 600 }}>{w.name}</span>
+        </div>
+      ),
     },
     {
       id: "owner",
       header: t("colOwner"),
       sortable: true,
       cell: (w) => (
-        <div>
-          <div>{w.owner?.name ?? "—"}</div>
-          {w.owner?.email && (
-            <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>
-              {w.owner.email}
-            </div>
-          )}
+        <div className="row" style={{ gap: 8, alignItems: "center" }}>
+          <Avatar
+            initial={(w.owner?.name ?? "—").charAt(0)}
+            src={w.owner?.avatar ?? null}
+            alt={w.owner?.name ?? ""}
+            round
+          />
+          <div style={{ minWidth: 0 }}>
+            <div>{w.owner?.name ?? "—"}</div>
+            {w.owner?.email && (
+              <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>
+                {w.owner.email}
+              </div>
+            )}
+          </div>
         </div>
       ),
     },

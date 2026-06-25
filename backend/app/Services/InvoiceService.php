@@ -127,6 +127,7 @@ class InvoiceService
                 'public',
             ),
             'status' => InvoiceStatus::Paid->value,
+            'amount_paid' => $invoice->amount,
             'paid_at' => $paidAt ?? Carbon::now(),
         ])->save();
 
@@ -282,12 +283,57 @@ class InvoiceService
 
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid->value,
+            'amount_paid' => $invoice->amount,
             'paid_at' => $paidAt ?? Carbon::now(),
         ])->save();
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace');
 
         $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
+    }
+
+    /**
+     * Record a partial (or final) manual payment against an invoice: add to the
+     * running total and move the invoice to "partially paid", or "paid" once the
+     * full amount is reached. Notifies the member only on full settlement.
+     *
+     * @throws RuntimeException when the invoice is already paid or the amount is invalid
+     */
+    public function recordPartialPayment(Invoice $invoice, float $amount, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        if ($amount <= 0) {
+            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
+        }
+
+        $total = (float) $invoice->amount;
+        $newPaid = (float) $invoice->amount_paid + $amount;
+        $fullyPaid = $newPaid >= $total;
+
+        $invoice->forceFill([
+            'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+            'status' => $fullyPaid
+                ? InvoiceStatus::Paid->value
+                : InvoiceStatus::PartiallyPaid->value,
+            'paid_at' => $fullyPaid ? ($paidAt ?? Carbon::now()) : null,
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        if ($fullyPaid) {
+            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+        }
 
         $workspaceId = $invoice->subscription?->workspace_id;
 

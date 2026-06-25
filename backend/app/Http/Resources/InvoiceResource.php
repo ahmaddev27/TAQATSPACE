@@ -26,6 +26,13 @@ class InvoiceResource extends JsonResource
             'subscription_id' => $this->subscription_id,
             'invoice_number' => $this->invoice_number,
             'amount' => $this->amount,
+            'amount_paid' => $this->amount_paid,
+            'remaining_amount' => number_format(
+                max(0, (float) $this->amount - (float) $this->amount_paid),
+                2,
+                '.',
+                '',
+            ),
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,

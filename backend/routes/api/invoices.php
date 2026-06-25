@@ -25,6 +25,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::post('/{invoice}/receipt', [InvoiceController::class, 'uploadReceipt']);
         Route::put('/{invoice}/approve-receipt', [InvoiceController::class, 'approveReceipt']);
         Route::put('/{invoice}/reject-receipt', [InvoiceController::class, 'rejectReceipt']);
+        Route::put('/{invoice}/partial-payment', [InvoiceController::class, 'partialPayment']);
         Route::post('/{invoice}/remind', [InvoiceController::class, 'remind']);
     });
 

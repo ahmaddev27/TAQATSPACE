@@ -252,7 +252,8 @@ function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
             maxHeight: 280,
             overflowY: "auto",
             padding: 6,
-            boxShadow: "var(--shadow-lg, 0 8px 24px rgba(0,0,0,.12))",
+            border: "1.5px solid var(--border)",
+            boxShadow: "var(--shadow-lg, 0 12px 28px rgba(0,0,0,.16))",
           }}
         >
           {members.map((m) => (

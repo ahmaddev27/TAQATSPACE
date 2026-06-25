@@ -64,6 +64,27 @@ export async function markPaid(
 }
 
 /**
+ * Owner: record a partial (or final) payment against an invoice. The amount is
+ * added to the running total; the invoice becomes partially paid, or paid once
+ * the full amount is reached.
+ */
+export async function recordPartialPayment(
+  invoiceId: string,
+  amount: number,
+  paidAt?: string | null,
+): Promise<ActionResult<Invoice>> {
+  const body: Record<string, unknown> = { amount };
+  if (paidAt) body.paid_at = paidAt;
+
+  const result = await authedMutate<Invoice>(
+    `/workspace/invoices/${invoiceId}/partial-payment`,
+    { method: "PUT", body },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
+/**
  * Freelancer: upload proof of payment for one of their own invoices. Moves the
  * invoice to "under review" for the owner to confirm.
  */

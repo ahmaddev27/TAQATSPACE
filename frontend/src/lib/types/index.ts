@@ -81,6 +81,7 @@ export type InvoiceStatus =
   | "pending"
   | "under_review"
   | "payment_rejected"
+  | "partially_paid"
   | "paid"
   | "overdue"
   | "cancelled";
@@ -145,6 +146,7 @@ export interface WorkspaceOwnerSummary {
   name: string;
   email: string;
   phone: string | null;
+  avatar?: string | null;
 }
 
 export interface SeatsSummary {
@@ -341,6 +343,8 @@ export interface MemberDetailSubscription {
   start_date: string | null;
   end_date: string | null;
   cancelled_at: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberDetailInvoice {
@@ -368,6 +372,7 @@ export interface PackageMember {
   id: string;
   name: string;
   avatar: string | null;
+  seat_number: string | null;
   assigned_at: string | null;
 }
 
@@ -477,6 +482,8 @@ export interface MemberSummarySubscription {
   workspace_logo: string | null;
   plan_type: PlanType;
   end_date: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberSummarySeat {
