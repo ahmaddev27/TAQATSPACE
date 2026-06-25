@@ -83,6 +83,25 @@ export async function submitReceipt(
 }
 
 /**
+ * Owner: attach a payment receipt and record the invoice as paid in one step
+ * (logging a payment received in person, with proof).
+ */
+export async function uploadOwnerReceipt(
+  invoiceId: string,
+  receipt: File,
+): Promise<ActionResult<Invoice>> {
+  const formData = new FormData();
+  formData.set("receipt", receipt);
+
+  const result = await authedMutate<Invoice>(
+    `/workspace/invoices/${invoiceId}/receipt`,
+    { method: "POST", formData },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
+/**
  * Owner: send a payment reminder. The backend rate-limits to one per 24h and
  * answers 429 when called too soon — surfaced to the caller via `ActionResult`.
  */

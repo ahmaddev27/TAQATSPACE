@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Invoice\MarkPaidRequest;
 use App\Http\Requests\Invoice\StoreInvoiceRequest;
+use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Services\InvoicePdfService;
@@ -104,6 +105,27 @@ class InvoiceController extends Controller
                 $invoice,
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * POST /api/workspace/invoices/{invoice}/receipt — the owner attaches a
+     * payment receipt and records the invoice as paid in one step.
+     */
+    public function uploadReceipt(SubmitReceiptRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        try {
+            $updated = $this->invoices->recordPaymentWithReceipt($invoice, $request->file('receipt'));
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
