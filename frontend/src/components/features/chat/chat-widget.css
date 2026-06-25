@@ -141,10 +141,30 @@
 }
 
 @media (max-width: 480px) {
+  .chat-fab {
+    inset-block-end: 16px;
+    inset-inline-end: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Near-fullscreen sheet on phones: anchor by top + bottom so it always fits
+     the visible viewport (no 100vh address-bar overflow), and clear the FAB. */
   .chat-widget {
-    inset-block-end: 86px;
-    inset-inline: 16px;
+    inset-block: 12px 78px;
+    inset-inline: 10px;
     width: auto;
-    height: calc(100vh - 110px);
+    max-width: none;
+    height: auto;
+    max-height: none;
+    border-radius: 14px;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 480px) {
+    .chat-widget {
+      max-height: calc(100dvh - 90px);
+    }
   }
 }
