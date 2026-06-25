@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { PushRegistrar } from "@/components/providers/PushRegistrar";
+import { ChatPopupListener } from "@/components/providers/ChatPopupListener";
 import type { UserRole } from "@/lib/types/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/app";
 import { useChatUnread } from "@/lib/firebase/useChatUnread";
@@ -164,6 +165,9 @@ export function DashShell({
 
       {/* FCM web-push lifecycle (no-op until Firebase env is configured). */}
       <PushRegistrar />
+
+      {/* Site-wide "new message" popup (no-op until Firebase env is configured). */}
+      <ChatPopupListener />
 
       {mobileOpen && (
         <div className="nav-backdrop" onClick={closeMobile} aria-hidden="true" />

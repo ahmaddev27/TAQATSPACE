@@ -17,6 +17,8 @@
     "loading": "جارٍ تحميل الرسائل…",
     "connecting": "جارٍ الاتصال بالمحادثة…",
     "sendFailed": "تعذّر إرسال رسالتك. حاول مرة أخرى.",
+    "popupTitle": "رسالة جديدة",
+    "popupBody": "لديك رسالة جديدة",
     "searchPlaceholder": "ابحث عن جهة اتصال…",
     "noResults": "لا توجد نتائج مطابقة",
     "filterByType": "النوع",
