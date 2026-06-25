@@ -9,7 +9,13 @@ import { submitReceipt } from "@/lib/actions/invoices";
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 /** Freelancer: pick a payment receipt and upload it for an unpaid invoice. */
-export function SubmitReceiptButton({ invoiceId }: { invoiceId: string }) {
+export function SubmitReceiptButton({
+  invoiceId,
+  rejected = false,
+}: {
+  invoiceId: string;
+  rejected?: boolean;
+}) {
   const t = useTranslations("invoices.member");
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,13 +53,13 @@ export function SubmitReceiptButton({ invoiceId }: { invoiceId: string }) {
         tabIndex={-1}
       />
       <Button
-        variant="secondary"
+        variant={rejected ? "danger" : "secondary"}
         size="sm"
         icon="upload"
         loading={pending}
         onClick={() => inputRef.current?.click()}
       >
-        {t("receipt.upload")}
+        {rejected ? t("receipt.reupload") : t("receipt.upload")}
       </Button>
     </>
   );

@@ -70,11 +70,33 @@ export async function MemberInvoicesList({ invoices }: MemberInvoicesListProps) 
                 </td>
                 <td>
                   <InvoiceStatusBadge status={inv.status} locale={locale} />
+                  {inv.status === "payment_rejected" &&
+                    inv.receipt_rejected_reason && (
+                      <div
+                        className="ltr"
+                        style={{
+                          marginTop: 4,
+                          fontSize: "var(--fs-xs)",
+                          color: "var(--danger)",
+                          maxWidth: 220,
+                          whiteSpace: "normal",
+                        }}
+                      >
+                        {t("rejectedReason", {
+                          reason: inv.receipt_rejected_reason,
+                        })}
+                      </div>
+                    )}
                 </td>
                 <td>
                   <div className="row-actions">
-                    {(inv.status === "pending" || inv.status === "overdue") && (
-                      <SubmitReceiptButton invoiceId={inv.id} />
+                    {(inv.status === "pending" ||
+                      inv.status === "overdue" ||
+                      inv.status === "payment_rejected") && (
+                      <SubmitReceiptButton
+                        invoiceId={inv.id}
+                        rejected={inv.status === "payment_rejected"}
+                      />
                     )}
                     {inv.receipt_url && (
                       <a

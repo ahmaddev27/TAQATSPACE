@@ -61,7 +61,13 @@ class InvoiceController extends Controller
             return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
-        if (! in_array($invoice->status, [InvoiceStatus::Pending, InvoiceStatus::Overdue], true)) {
+        $canSubmit = [
+            InvoiceStatus::Pending,
+            InvoiceStatus::Overdue,
+            InvoiceStatus::PaymentRejected,
+        ];
+
+        if (! in_array($invoice->status, $canSubmit, true)) {
             return ApiResponse::error(__('messages.invoice_receipt_not_allowed'), 422);
         }
 

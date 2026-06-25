@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Invoice\MarkPaidRequest;
+use App\Http\Requests\Invoice\RejectReceiptRequest;
 use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
@@ -133,6 +134,48 @@ class InvoiceController extends Controller
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
         return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * PUT /api/workspace/invoices/{invoice}/approve-receipt — the owner approves
+     * a member-submitted receipt and confirms the invoice as paid.
+     */
+    public function approveReceipt(Request $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        try {
+            $updated = $this->invoices->approveReceipt($invoice);
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * PUT /api/workspace/invoices/{invoice}/reject-receipt — the owner rejects a
+     * member-submitted receipt with a reason; the member can then re-upload.
+     */
+    public function rejectReceipt(RejectReceiptRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        try {
+            $updated = $this->invoices->rejectReceipt($invoice, $request->validated()['reason']);
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_receipt_rejected'));
     }
 
     /**

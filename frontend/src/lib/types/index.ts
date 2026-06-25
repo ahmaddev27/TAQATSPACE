@@ -80,6 +80,7 @@ export type BookingStatus = "pending" | "approved" | "rejected";
 export type InvoiceStatus =
   | "pending"
   | "under_review"
+  | "payment_rejected"
   | "paid"
   | "overdue"
   | "cancelled";

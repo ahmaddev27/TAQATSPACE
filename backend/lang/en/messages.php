@@ -119,6 +119,8 @@ return [
     'invoice_already_paid' => 'This invoice has already been paid.',
     'invoice_receipt_submitted' => 'Payment receipt uploaded; the invoice is now under review.',
     'invoice_receipt_not_allowed' => 'A receipt cannot be uploaded for this invoice in its current state.',
+    'invoice_receipt_not_under_review' => 'This invoice is not awaiting receipt review.',
+    'invoice_receipt_rejected' => 'Payment receipt rejected and the member was notified.',
     'invoice_reminder_recently_sent' => 'A reminder was already sent for this invoice in the last 24 hours.',
 
     // Announcements

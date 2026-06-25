@@ -14,6 +14,7 @@
       },
       "filters": {
         "all": "All",
+        "under_review": "Under review",
         "paid": "Paid",
         "pending": "Pending",
         "overdue": "Overdue",
@@ -44,6 +45,24 @@
         "uploaded": "Receipt uploaded and payment recorded",
         "uploadFailed": "Could not upload the receipt",
         "tooLarge": "File too large (5MB max)"
+      },
+      "review": {
+        "viewReceipt": "View receipt",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approved": "Receipt approved — invoice marked paid",
+        "approveFailed": "Could not approve the receipt",
+        "rejected": "Receipt rejected — the member was notified",
+        "rejectFailed": "Could not reject the receipt",
+        "reasonRequired": "Please enter a reason (min 3 characters).",
+        "rejectModal": {
+          "title": "Reject payment receipt",
+          "body": "Tell the member why the receipt for invoice {invoice} was rejected so they can fix it and re-upload.",
+          "reason": "Reason",
+          "reasonPlaceholder": "e.g. The amount on the receipt doesn't match the invoice.",
+          "cancel": "Cancel",
+          "confirm": "Reject receipt"
+        }
       },
       "empty": {
         "title": "No invoices yet",
@@ -91,8 +110,10 @@
         "status": "Status"
       },
       "downloadPdf": "PDF",
+      "rejectedReason": "Rejected: {reason}",
       "receipt": {
         "upload": "Upload receipt",
+        "reupload": "Re-upload receipt",
         "view": "View receipt",
         "submitted": "Receipt uploaded; the invoice is now under review.",
         "failed": "Couldn't upload the receipt.",
