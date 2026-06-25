@@ -48,6 +48,11 @@ export function MemberDrawer({
     [t("members.phone"), member.user.phone ?? "—", "ltr"],
     [t("members.seat"), member.seat_number ?? t("members.noSeat"), "tnum"],
     [t("members.plan"), tc(`planType.${member.plan_type}` as never)],
+    ...(member.package
+      ? ([[t("members.internetPackage"), member.package]] as Array<
+          [string, string, string?]
+        >)
+      : []),
     [t("members.monthlyPrice"), money(member.monthly_price), "tnum"],
     [t("members.memberSince"), shortDate(member.join_date), "tnum ltr"],
   ];

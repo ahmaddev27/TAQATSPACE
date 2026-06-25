@@ -153,6 +153,7 @@ export async function getAdminWorkspaceDetail(
 export interface AdminMessagingUsageRow {
   workspace_id: string;
   workspace_name: string;
+  workspace_logo: string | null;
   platform_email: number;
   platform_sms: number;
   own_email: number;

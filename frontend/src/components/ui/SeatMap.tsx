@@ -36,7 +36,10 @@ export function SeatMap({ seats, selected, onSelect, cols = 8 }: SeatMapProps) {
   return (
     <div
       className="seatmap"
-      style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+      style={{
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 84px))`,
+        justifyContent: "start",
+      }}
     >
       {seats.map((s) => {
         const isSelected = selected === s.id;

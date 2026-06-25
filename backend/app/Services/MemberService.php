@@ -65,7 +65,7 @@ class MemberService
     private function rosterQuery(Workspace $workspace, array $filters): Builder
     {
         $query = Subscription::query()
-            ->with(['member.internetPackages:id,name', 'seat'])
+            ->with(['member.internetPackages:id,name,price', 'seat'])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
             ->where('subscriptions.workspace_id', $workspace->id)
             ->select('subscriptions.*');

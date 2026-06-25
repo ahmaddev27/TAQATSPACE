@@ -22,6 +22,12 @@ export interface InvoiceMemberOption {
   seatNumber: string | null;
   monthlyPrice: number;
   package: string | null;
+  packagePrice: number;
+}
+
+/** Subscription price + internet-package add-on price = total owed this period. */
+function memberTotal(m: InvoiceMemberOption): number {
+  return m.monthlyPrice + m.packagePrice;
 }
 
 export interface IssueInvoiceModalProps {
@@ -45,7 +51,7 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
 
   const [form, setForm] = useState<FormState>({
     memberId: members[0]?.id ?? "",
-    amount: members[0] ? String(members[0].monthlyPrice) : "",
+    amount: members[0] ? String(memberTotal(members[0])) : "",
     dueDate: "",
     notes: "",
   });
@@ -54,9 +60,11 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  /** Selecting a member pre-fills the amount with their subscription price. */
+  const selectedMember = members.find((m) => m.id === form.memberId) ?? null;
+
+  /** Selecting a member pre-fills the amount with subscription + package price. */
   const selectMember = (m: InvoiceMemberOption) =>
-    setForm((f) => ({ ...f, memberId: m.id, amount: String(m.monthlyPrice) }));
+    setForm((f) => ({ ...f, memberId: m.id, amount: String(memberTotal(m)) }));
 
   const submit = () => {
     startTransition(async () => {
@@ -114,10 +122,14 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
               onChange={selectMember}
               meta={(m) =>
                 [
-                  m.package,
+                  m.package
+                    ? m.packagePrice > 0
+                      ? `${m.package} (+${m.packagePrice} ${tc("currency")})`
+                      : m.package
+                    : null,
                   m.seatNumber ? `#${m.seatNumber}` : null,
                   tc(`planType.${m.planType}`),
-                  `${m.monthlyPrice} ${tc("currency")}`,
+                  `${memberTotal(m)} ${tc("currency")}`,
                 ]
                   .filter(Boolean)
                   .join(" · ")
@@ -134,6 +146,18 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
                 value={form.amount}
                 onChange={(e) => set("amount", e.target.value)}
               />
+              {selectedMember && selectedMember.packagePrice > 0 && (
+                <div
+                  className="muted-3"
+                  style={{ marginTop: 5, fontSize: "var(--fs-xs)" }}
+                >
+                  {t("issueModal.amountBreakdown", {
+                    base: selectedMember.monthlyPrice,
+                    pkg: selectedMember.packagePrice,
+                    total: memberTotal(selectedMember),
+                  })}
+                </div>
+              )}
             </Field>
             <Field label={t("issueModal.dueDate")} error={errors.due_date?.[0]}>
               <Input
@@ -195,7 +219,20 @@ function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
       <button
         type="button"
         className="input row between"
-        style={{ width: "100%", gap: 10, cursor: "pointer" }}
+        style={{
+          width: "100%",
+          gap: 10,
+          cursor: "pointer",
+          minHeight: 58,
+          height: "auto",
+          paddingBlock: 8,
+          border: open
+            ? "1.5px solid var(--primary)"
+            : "1.5px solid var(--border)",
+          boxShadow: open
+            ? "0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent)"
+            : undefined,
+        }}
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -221,7 +258,8 @@ function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
             maxHeight: 280,
             overflowY: "auto",
             padding: 6,
-            boxShadow: "var(--shadow-lg, 0 8px 24px rgba(0,0,0,.12))",
+            border: "1.5px solid var(--border)",
+            boxShadow: "var(--shadow-lg, 0 12px 28px rgba(0,0,0,.16))",
           }}
         >
           {members.map((m) => (
@@ -234,7 +272,7 @@ function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
               style={{
                 width: "100%",
                 gap: 10,
-                padding: "8px 10px",
+                padding: "11px 12px",
                 borderRadius: 8,
                 cursor: "pointer",
                 background:
