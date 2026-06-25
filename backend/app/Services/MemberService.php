@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\InvoiceStatus;
 use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
+use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Seat;
 use App\Models\Subscription;
@@ -127,6 +128,7 @@ class MemberService
                 'start_date' => $subscription->start_date?->toDateString(),
                 'end_date' => $subscription->end_date?->toDateString(),
                 'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
+                'package' => $this->memberPackageName($workspace, $member),
             ],
             'seat' => $subscription->seat === null ? null : [
                 'id' => $subscription->seat->id,
@@ -180,6 +182,20 @@ class MemberService
         Cache::forget("workspace:{$workspace->id}:dashboard_stats");
 
         return $subscription->refresh()->load(['member', 'seat']);
+    }
+
+    /**
+     * Comma-joined internet package name(s) assigned to a member within a
+     * workspace — null when none.
+     */
+    private function memberPackageName(Workspace $workspace, User $member): ?string
+    {
+        $names = InternetPackage::query()
+            ->where('workspace_id', $workspace->id)
+            ->whereHas('members', static fn ($query) => $query->where('users.id', $member->id))
+            ->pluck('name');
+
+        return $names->isEmpty() ? null : $names->implode('، ');
     }
 
     private function freeSeat(Workspace $workspace, Subscription $subscription): void

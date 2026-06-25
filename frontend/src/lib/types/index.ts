@@ -339,6 +339,8 @@ export interface MemberDetailSubscription {
   start_date: string | null;
   end_date: string | null;
   cancelled_at: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberDetailInvoice {
@@ -476,6 +478,8 @@ export interface MemberSummarySubscription {
   workspace_logo: string | null;
   plan_type: PlanType;
   end_date: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberSummarySeat {
