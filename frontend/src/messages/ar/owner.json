@@ -33,6 +33,15 @@
       "byStatusTitle": "الأعضاء حسب الحالة",
       "noData": "لا يوجد أعضاء بعد"
     },
+    "reports": {
+      "title": "التقارير",
+      "subtitle": "نظرة على الإيرادات والأعضاء، وتنزيل بياناتك.",
+      "exportsTitle": "تنزيل البيانات",
+      "exportsSubtitle": "صدّر بيانات مساحتك بصيغة CSV.",
+      "exportMembers": "تصدير الأعضاء",
+      "exportInvoices": "تصدير الفواتير",
+      "exportExpenses": "تصدير المصاريف"
+    },
     "memberStatus": {
       "active": "نشط",
       "pending": "قيد الانتظار",
