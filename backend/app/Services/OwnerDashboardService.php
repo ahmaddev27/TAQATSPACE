@@ -16,16 +16,18 @@ use App\Models\Subscription;
 use App\Models\Workspace;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 
 class OwnerDashboardService
 {
-    private const CACHE_TTL_SECONDS = 300;
-
     private const REVENUE_MONTHS = 6;
 
     /**
-     * Build (and cache) the owner's dashboard snapshot.
+     * Build the owner's dashboard snapshot.
+     *
+     * Computed fresh on every load (a handful of cheap aggregate queries): the
+     * counts must reflect the live state immediately — a previous 5-minute cache
+     * showed stale figures (e.g. a just-cancelled subscription still counted as
+     * an active member, or a new pending request still reading 0).
      *
      * Returns a zeroed payload when the owner has no workspace yet, so the
      * caller can always respond 200 with a predictable shape.
@@ -38,11 +40,7 @@ class OwnerDashboardService
             return $this->emptyStats();
         }
 
-        return Cache::remember(
-            "workspace:{$workspace->id}:dashboard_stats",
-            self::CACHE_TTL_SECONDS,
-            fn (): array => $this->buildStats($workspace),
-        );
+        return $this->buildStats($workspace);
     }
 
     /**
