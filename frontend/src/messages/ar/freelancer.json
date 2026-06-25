@@ -21,6 +21,8 @@
       "statusLabel": "الحالة",
       "notificationsTitle": "أحدث الإشعارات",
       "notificationsEmpty": "لا توجد إشعارات جديدة",
+      "announcementsTitle": "إعلانات المساحة",
+      "announcementsEmpty": "لا توجد إعلانات حالياً",
       "unreadBell": "{count} غير مقروء",
       "quickActions": "إجراءات سريعة",
       "manageSubscription": "إدارة الاشتراك",
