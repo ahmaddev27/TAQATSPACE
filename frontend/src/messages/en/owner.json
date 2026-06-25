@@ -214,6 +214,7 @@
       "assignPrompt": "Pick a member to assign the package to:",
       "assignedMembers": "Assigned members",
       "noAssigned": "No members assigned yet",
+      "seatLabel": "Seat {seat}",
       "assign": "Assign",
       "unassign": "Unassign",
       "created": "Package created",
