@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Icon } from "@/components/ui/Icon";
+import { Link } from "@/i18n/navigation";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import {
   DataTable,
@@ -39,6 +40,7 @@ export interface WorkspacesTableProps {
 /** Super-admin workspace moderation: filter, search, approve/suspend/reactivate. */
 export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
   const t = useTranslations("admin.workspaces");
+  const td = useTranslations("admin.workspaceDetail");
   const locale = useLocale();
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -207,6 +209,14 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
       header: "",
       cell: (w) => (
         <div className="row-actions">
+          <Link
+            href={`/admin/workspaces/${w.id}`}
+            className="icon-btn"
+            aria-label={td("viewDetails")}
+            title={td("viewDetails")}
+          >
+            <Icon name="eye" />
+          </Link>
           {(w.status === "pending" || w.status === "suspended" || w.status === "rejected") && (
             <Button
               variant="primary"

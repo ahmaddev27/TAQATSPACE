@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_workspac
     ->prefix('admin/workspaces')
     ->group(function (): void {
         Route::get('/', [WorkspaceController::class, 'adminIndex']);
+        Route::get('/{workspace}', [WorkspaceController::class, 'adminShow']);
         Route::put('/{workspace}/status', [WorkspaceController::class, 'adminUpdateStatus']);
         Route::put('/{workspace}/publish', [WorkspaceController::class, 'adminPublish']);
         Route::put('/{workspace}/unpublish', [WorkspaceController::class, 'adminUnpublish']);
