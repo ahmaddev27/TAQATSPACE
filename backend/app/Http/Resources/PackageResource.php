@@ -34,6 +34,9 @@ class PackageResource extends JsonResource
                 'id' => $member->id,
                 'name' => $member->name,
                 'avatar' => MediaUrl::resolve($member->avatar),
+                'seat_number' => $member->relationLoaded('subscriptions')
+                    ? $member->subscriptions->firstWhere(fn ($s) => $s->seat !== null)?->seat?->seat_number
+                    : null,
                 'assigned_at' => $member->pivot?->assigned_at,
             ])->all()),
             'created_at' => $this->created_at?->toIso8601String(),

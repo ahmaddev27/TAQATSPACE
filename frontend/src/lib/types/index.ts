@@ -364,6 +364,7 @@ export interface PackageMember {
   id: string;
   name: string;
   avatar: string | null;
+  seat_number: string | null;
   assigned_at: string | null;
 }
 

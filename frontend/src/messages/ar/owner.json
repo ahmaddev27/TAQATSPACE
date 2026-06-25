@@ -214,6 +214,7 @@
       "assignPrompt": "اختر عضواً لتعيين الباقة له:",
       "assignedMembers": "الأعضاء المعيّنون",
       "noAssigned": "لم يتم تعيين أي عضو بعد",
+      "seatLabel": "مقعد {seat}",
       "assign": "تعيين",
       "unassign": "إلغاء التعيين",
       "created": "تم إنشاء الباقة",
