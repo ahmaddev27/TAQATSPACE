@@ -124,8 +124,14 @@ class InvoiceController extends Controller
             return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
+        $paidAt = $request->validated()['paid_at'] ?? null;
+
         try {
-            $updated = $this->invoices->recordPaymentWithReceipt($invoice, $request->file('receipt'));
+            $updated = $this->invoices->recordPaymentWithReceipt(
+                $invoice,
+                $request->file('receipt'),
+                $paidAt !== null ? Carbon::parse($paidAt) : null,
+            );
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }

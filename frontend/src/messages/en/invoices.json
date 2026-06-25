@@ -45,6 +45,19 @@
         "uploadFailed": "Could not upload the receipt",
         "tooLarge": "File too large (5MB max)"
       },
+      "receiptModal": {
+        "title": "Mark invoice as paid",
+        "body": "Record a manual payment for invoice {invoice} and attach the payment receipt.",
+        "paidAt": "Payment date",
+        "optional": "optional",
+        "file": "Payment receipt",
+        "dropLabel": "Drop a file here or click to select",
+        "dropHint": "PDF, PNG or JPG · up to 5MB",
+        "remove": "Remove",
+        "fileRequired": "Attach the payment receipt.",
+        "cancel": "Cancel",
+        "submit": "Confirm payment"
+      },
       "empty": {
         "title": "No invoices yet",
         "body": "Issue your first invoice to start tracking payments."

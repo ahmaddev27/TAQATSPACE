@@ -89,9 +89,11 @@ export async function submitReceipt(
 export async function uploadOwnerReceipt(
   invoiceId: string,
   receipt: File,
+  paidAt?: string | null,
 ): Promise<ActionResult<Invoice>> {
   const formData = new FormData();
   formData.set("receipt", receipt);
+  if (paidAt) formData.set("paid_at", paidAt);
 
   const result = await authedMutate<Invoice>(
     `/workspace/invoices/${invoiceId}/receipt`,

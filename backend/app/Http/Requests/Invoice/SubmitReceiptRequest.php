@@ -24,6 +24,9 @@ class SubmitReceiptRequest extends FormRequest
     {
         return [
             'receipt' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            // Optional payment date when an owner records the payment; the member
+            // submit flow omits it (the service defaults to now()).
+            'paid_at' => ['nullable', 'date', 'before_or_equal:tomorrow'],
         ];
     }
 }
