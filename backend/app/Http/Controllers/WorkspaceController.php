@@ -9,6 +9,7 @@ use App\Http\Requests\Workspace\StoreWorkspaceRequest;
 use App\Http\Requests\Workspace\UpdateWorkspaceRequest;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
+use App\Services\Admin\AdminWorkspaceService;
 use App\Services\WorkspaceService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,17 @@ class WorkspaceController extends Controller
 {
     public function __construct(
         private readonly WorkspaceService $workspaces,
+        private readonly AdminWorkspaceService $adminWorkspaces,
     ) {}
+
+    /**
+     * GET /api/admin/workspaces/{workspace} — full detail for the admin: profile,
+     * owner, seat types + occupancy, members, invoices + dues, and reviews.
+     */
+    public function adminShow(Workspace $workspace): JsonResponse
+    {
+        return ApiResponse::success($this->adminWorkspaces->detailFor($workspace));
+    }
 
     /**
      * GET /api/workspaces — public, active-only, filtered & paginated.

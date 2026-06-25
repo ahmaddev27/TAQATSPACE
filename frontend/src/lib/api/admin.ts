@@ -75,6 +75,80 @@ export async function getAllAdminWorkspaces(
   return collectPages((page) => getAdminWorkspaces({ ...filters, page }));
 }
 
+/** Full admin detail for one workspace (profile, owner, seats, members, invoices, reviews). */
+export interface AdminWorkspaceDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string;
+  city: string;
+  phone: string | null;
+  status: WorkspaceStatus;
+  is_published: boolean;
+  published_at: string | null;
+  avg_rating: string | null;
+  amenities: string[];
+  photos: string[];
+  logo: string | null;
+  created_at: string | null;
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    avatar: string | null;
+  } | null;
+  seat_types: Array<{
+    type: SeatType;
+    price_monthly: string | null;
+    price_daily: string | null;
+    capacity: number;
+    enabled: boolean;
+  }>;
+  seats: { total: number; available: number; occupied: number; maintenance: number };
+  subscriptions: Array<{
+    id: string;
+    plan_type: PlanType;
+    monthly_price: string;
+    status: SubscriptionStatus;
+    start_date: string | null;
+    end_date: string | null;
+    seat_number: string | null;
+    member: { id: string; name: string; email: string; avatar: string | null } | null;
+  }>;
+  invoices: Array<{
+    id: string;
+    invoice_number: string;
+    amount: string;
+    status: InvoiceStatus;
+    due_date: string | null;
+    paid_at: string | null;
+  }>;
+  invoices_summary: {
+    total_count: number;
+    pending_count: number;
+    overdue_count: number;
+    total_unpaid: string;
+    total_overdue: string;
+  };
+  reviews: Array<{
+    rating: number;
+    comment: string | null;
+    reviewer: string;
+    created_at: string | null;
+  }>;
+}
+
+/** Fetch the full admin detail for one workspace. */
+export async function getAdminWorkspaceDetail(
+  id: string,
+): Promise<AdminWorkspaceDetail> {
+  const res = await serverFetch<ApiEnvelope<AdminWorkspaceDetail>>(
+    `/admin/workspaces/${id}`,
+  );
+  return res.data;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Users (GET /admin/users)                                                   */
 /* -------------------------------------------------------------------------- */
