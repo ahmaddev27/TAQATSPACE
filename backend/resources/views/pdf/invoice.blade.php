@@ -36,10 +36,10 @@
 
     $lineAmount = $subscription?->monthly_price ?? $invoice->amount;
 
-    // Cairo ships full Arabic + Latin coverage but lacks the ₪ glyph (U+20AA),
-    // so the shekel is written as the Arabic abbreviation "ش.ج" to avoid tofu.
+    // Cairo lacks the ₪ glyph (U+20AA), so the shekel sign is rendered in DejaVu
+    // Sans (bundled with mPDF, has the glyph) — shows ₪ correctly, not tofu.
     $money = static fn ($value): string =>
-        '<span class="num">' . number_format((float) $value, 2) . '</span> ش.ج';
+        '<span class="num">' . number_format((float) $value, 2) . '</span> <span class="shekel">₪</span>';
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -82,12 +82,15 @@
         .header { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .header td { vertical-align: top; }
 
+        /* Render the shekel sign in a font that has the glyph (Cairo lacks it). */
+        .shekel { font-family: dejavusans, sans-serif; }
+
         .wordmark {
             font-size: 30px;
             font-weight: bold;
             letter-spacing: 1px;
             color: #1F82C7;
-            line-height: 1.1;
+            line-height: 1.45;
         }
         .wordmark .dot { color: #F6A91B; }
         .tagline {
@@ -101,12 +104,14 @@
             font-size: 22px;
             font-weight: bold;
             color: #0E1726;
-            line-height: 1.2;
+            line-height: 1.6;
+            margin-bottom: 4px;
         }
         .doc-number {
-            margin-top: 6px;
+            margin-top: 8px;
             font-size: 11.5px;
             color: #667085;
+            line-height: 1.6;
         }
 
         .rule {
