@@ -33,6 +33,15 @@
       "byStatusTitle": "Members by status",
       "noData": "No members yet"
     },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "An overview of revenue and members, and your data downloads.",
+      "exportsTitle": "Data downloads",
+      "exportsSubtitle": "Export your space's data as CSV.",
+      "exportMembers": "Export members",
+      "exportInvoices": "Export invoices",
+      "exportExpenses": "Export expenses"
+    },
     "memberStatus": {
       "active": "Active",
       "pending": "Pending",
