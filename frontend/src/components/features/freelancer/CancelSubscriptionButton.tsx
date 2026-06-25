@@ -50,7 +50,12 @@ export function CancelSubscriptionButton({
 
   return (
     <>
-      <Button variant="ghost" onClick={() => setOpen(true)}>
+      <Button
+        variant="danger"
+        size="sm"
+        icon="x"
+        onClick={() => setOpen(true)}
+      >
         {t("cancelCta")}
       </Button>
 
