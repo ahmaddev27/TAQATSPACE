@@ -13,11 +13,12 @@ import {
   type DataTableColumn,
   type SortState,
 } from "@/components/ui/DataTable";
+import { Avatar } from "@/components/ui/Avatar";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import type { AdminSubscription } from "@/lib/api/admin";
 import type { SubscriptionStatus } from "@/lib/types";
 import { invoiceMoney } from "@/components/features/invoices/format";
-import { adminDate } from "./format";
+import { adminDate, nameInitial } from "./format";
 import { ExportCsvLink } from "./ExportCsvLink";
 
 type StatusTab = "all" | SubscriptionStatus;
@@ -91,13 +92,21 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
       header: t("colMember"),
       sortable: true,
       cell: (s) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{s.member?.name ?? "—"}</div>
-          {s.member?.email && (
-            <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>
-              {s.member.email}
-            </div>
-          )}
+        <div className="row" style={{ gap: 10, alignItems: "center" }}>
+          <Avatar
+            initial={nameInitial(s.member?.name ?? "—")}
+            src={s.member?.avatar}
+            alt={s.member?.name ?? ""}
+            round
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 600 }}>{s.member?.name ?? "—"}</div>
+            {s.member?.email && (
+              <div className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>
+                {s.member.email}
+              </div>
+            )}
+          </div>
         </div>
       ),
     },
