@@ -107,9 +107,12 @@ export default async function LocaleLayout({
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   // Theme is persisted in a cookie so the server renders the correct
-  // [data-theme] up-front — no flash, and no inline <script> in the tree.
-  const theme =
-    (await cookies()).get("taqat_theme")?.value === "dark" ? "dark" : undefined;
+  // [data-theme] up-front — no flash. When the user has NOT chosen a theme (no
+  // cookie), a tiny pre-paint script (below) falls back to the device's
+  // prefers-color-scheme, so the app honours the OS dark/light setting.
+  const themeCookie = (await cookies()).get("taqat_theme")?.value;
+  const theme = themeCookie === "dark" ? "dark" : undefined;
+  const themeChosen = themeCookie === "dark" || themeCookie === "light";
 
   // Admin-set branding, fetched once on the server. The light/dark logo URLs
   // are exposed to client components via BrandingProvider so every brand spot
@@ -126,6 +129,16 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
+        {/* When the user hasn't picked a theme, honour the device's dark/light
+            setting before paint (no flash). An explicit choice (cookie) wins. */}
+        {!themeChosen && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "(function(){try{if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark')}}catch(e){}})();",
+            }}
+          />
+        )}
         <NextIntlClientProvider>
           <BrandingProvider branding={branding}>
             <Providers>{children}</Providers>
