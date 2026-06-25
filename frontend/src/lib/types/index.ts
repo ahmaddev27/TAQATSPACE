@@ -468,6 +468,8 @@ export interface OwnerStats {
 export interface MemberSummarySubscription {
   status: SubscriptionStatus;
   workspace_name: string;
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  workspace_logo: string | null;
   plan_type: PlanType;
   end_date: string | null;
 }
