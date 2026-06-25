@@ -56,6 +56,9 @@ export interface Invoice {
   /** Stored payment-receipt path + a resolved (presigned) URL, when uploaded. */
   receipt_path: string | null;
   receipt_url: string | null;
+  /** Owner's reason when a submitted receipt was rejected (status payment_rejected). */
+  receipt_rejected_reason: string | null;
+  receipt_reviewed_at: string | null;
   notes: string | null;
   created_at: string | null;
   subscription?: InvoiceSubscription;

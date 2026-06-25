@@ -24,13 +24,14 @@ import {
 } from "./IssueInvoiceModal";
 import { MarkPaidButton } from "./MarkPaidButton";
 import { OwnerReceiptButton } from "./OwnerReceiptButton";
+import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
 type StatusTab = "all" | InvoiceStatus;
 
-const TABS: StatusTab[] = ["all", "paid", "pending", "overdue"];
+const TABS: StatusTab[] = ["all", "under_review", "pending", "overdue", "paid"];
 const FILTER_KEYS = ["status", "month"] as const;
 const PAGE_SIZE = 8;
 
@@ -155,17 +156,23 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       header: "",
       cell: (inv) => (
         <div className="row-actions">
-          {inv.status !== "paid" && inv.status !== "cancelled" && (
-            <>
-              <MarkPaidButton invoiceId={inv.id} />
-              <OwnerReceiptButton
-                invoiceId={inv.id}
-                invoiceNumber={inv.invoice_number}
-              />
-              <RemindButton invoiceId={inv.id} />
-            </>
+          {inv.status === "under_review" ? (
+            <ReceiptReviewActions
+              invoiceId={inv.id}
+              invoiceNumber={inv.invoice_number}
+              receiptUrl={inv.receipt_url}
+            />
+          ) : (
+            inv.status !== "paid" &&
+            inv.status !== "cancelled" && (
+              <>
+                <MarkPaidButton invoiceId={inv.id} />
+                <OwnerReceiptButton invoiceId={inv.id} />
+                <RemindButton invoiceId={inv.id} />
+              </>
+            )
           )}
-          {inv.receipt_url && (
+          {inv.receipt_url && inv.status !== "under_review" && (
             <a
               href={inv.receipt_url}
               target="_blank"

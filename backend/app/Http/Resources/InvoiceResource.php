@@ -36,6 +36,8 @@ class InvoiceResource extends JsonResource
             'pdf_url' => MediaUrl::resolve($this->invoice_pdf_path),
             'receipt_path' => $this->receipt_path,
             'receipt_url' => MediaUrl::resolve($this->receipt_path),
+            'receipt_rejected_reason' => $this->receipt_rejected_reason,
+            'receipt_reviewed_at' => $this->receipt_reviewed_at?->toIso8601String(),
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toIso8601String(),
 

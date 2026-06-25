@@ -23,6 +23,8 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::get('/{invoice}', [InvoiceController::class, 'show']);
         Route::put('/{invoice}/pay', [InvoiceController::class, 'pay']);
         Route::post('/{invoice}/receipt', [InvoiceController::class, 'uploadReceipt']);
+        Route::put('/{invoice}/approve-receipt', [InvoiceController::class, 'approveReceipt']);
+        Route::put('/{invoice}/reject-receipt', [InvoiceController::class, 'rejectReceipt']);
         Route::post('/{invoice}/remind', [InvoiceController::class, 'remind']);
     });
 

@@ -27,6 +27,8 @@ class Invoice extends Model
         'invoice_number',
         'invoice_pdf_path',
         'receipt_path',
+        'receipt_rejected_reason',
+        'receipt_reviewed_at',
         'notes',
     ];
 
@@ -39,6 +41,7 @@ class Invoice extends Model
             'status' => InvoiceStatus::class,
             'due_date' => 'date',
             'paid_at' => 'datetime',
+            'receipt_reviewed_at' => 'datetime',
             'amount' => 'decimal:2',
         ];
     }

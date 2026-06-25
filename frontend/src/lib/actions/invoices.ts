@@ -114,3 +114,33 @@ export async function sendReminder(
     method: "POST",
   });
 }
+
+/**
+ * Owner: approve a member-submitted receipt and confirm the invoice as paid.
+ */
+export async function approveReceipt(
+  invoiceId: string,
+): Promise<ActionResult<Invoice>> {
+  const result = await authedMutate<Invoice>(
+    `/workspace/invoices/${invoiceId}/approve-receipt`,
+    { method: "PUT" },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
+/**
+ * Owner: reject a member-submitted receipt with a reason; the member is notified
+ * and can upload a corrected receipt.
+ */
+export async function rejectReceipt(
+  invoiceId: string,
+  reason: string,
+): Promise<ActionResult<Invoice>> {
+  const result = await authedMutate<Invoice>(
+    `/workspace/invoices/${invoiceId}/reject-receipt`,
+    { method: "PUT", body: { reason } },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}

@@ -13,6 +13,7 @@ use App\Models\Workspace;
 use App\Notifications\InvoiceCreatedNotification;
 use App\Notifications\InvoiceOverdueNotification;
 use App\Notifications\InvoicePaidNotification;
+use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -46,12 +47,60 @@ class InvoiceService
                 'public',
             ),
             'status' => InvoiceStatus::UnderReview->value,
+            // Clear any prior rejection so a re-submission starts a fresh review.
+            'receipt_rejected_reason' => null,
+            'receipt_reviewed_at' => null,
         ])->save();
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace.owner');
 
         $invoice->subscription?->workspace?->owner?->notify(
             new InvoiceReceiptSubmittedNotification($invoice),
+        );
+
+        return $invoice;
+    }
+
+    /**
+     * Owner approves a member-submitted receipt: the invoice is confirmed paid
+     * (keeping the member's receipt as proof) and the member is notified.
+     *
+     * @throws RuntimeException when the invoice is not awaiting review
+     */
+    public function approveReceipt(Invoice $invoice, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::UnderReview) {
+            throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
+        }
+
+        $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
+
+        return $this->markPaid($invoice, $paidAt);
+    }
+
+    /**
+     * Owner rejects a member-submitted receipt: the invoice moves to
+     * "payment rejected" with the reason, and the member is notified so they can
+     * fix it and upload a new receipt.
+     *
+     * @throws RuntimeException when the invoice is not awaiting review
+     */
+    public function rejectReceipt(Invoice $invoice, string $reason): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::UnderReview) {
+            throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
+        }
+
+        $invoice->forceFill([
+            'status' => InvoiceStatus::PaymentRejected->value,
+            'receipt_rejected_reason' => $reason,
+            'receipt_reviewed_at' => Carbon::now(),
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        $invoice->subscription?->member?->notify(
+            new InvoiceReceiptRejectedNotification($invoice),
         );
 
         return $invoice;
