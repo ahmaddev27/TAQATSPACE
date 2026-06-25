@@ -8,6 +8,8 @@ import type { BookingRequest, SeatType } from "@/lib/types";
 export interface BookingActionInput {
   workspace_id: string;
   preferred_seat_type?: SeatType | null;
+  /** Monthly (default) or daily plan. */
+  plan_type?: "monthly" | "daily";
   message?: string | null;
 }
 
@@ -30,6 +32,7 @@ export async function submitBookingAction(
     body: {
       workspace_id: input.workspace_id,
       preferred_seat_type: input.preferred_seat_type ?? null,
+      plan_type: input.plan_type ?? "monthly",
       message: input.message?.trim() || null,
     },
   });

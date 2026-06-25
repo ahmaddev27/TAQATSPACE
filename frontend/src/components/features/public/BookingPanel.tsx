@@ -55,14 +55,27 @@ export function BookingPanel({
       : ["flexible", "fixed", "private_office"];
 
   const [seatType, setSeatType] = useState<SeatType>(options[0]);
+  const [plan, setPlan] = useState<"monthly" | "daily">("monthly");
   const [message, setMessage] = useState("");
 
-  // Price shown reflects the selected type's monthly price when available.
+  // Price shown reflects the selected type + plan. Daily is offered only when the
+  // selected seat type has a daily price configured.
   const selectedRow = bookable.find((row) => row.type === seatType);
-  const displayPrice =
+  const monthlyPrice =
     selectedRow?.price_monthly != null
       ? toNumber(selectedRow.price_monthly)
       : price;
+  const dailyPrice =
+    selectedRow?.price_daily != null ? toNumber(selectedRow.price_daily) : null;
+  const hasDaily = dailyPrice != null;
+
+  // If the chosen seat type has no daily price, fall back to monthly.
+  useEffect(() => {
+    if (!hasDaily && plan === "daily") setPlan("monthly");
+  }, [hasDaily, plan]);
+
+  const displayPrice = plan === "daily" && dailyPrice != null ? dailyPrice : monthlyPrice;
+  const perLabel = plan === "daily" ? c.perDay : c.perMonth;
 
   // Preserve the booking intent across login so the user returns booking-ready.
   const redirectTarget = `/workspaces/${workspaceId}?book=1`;
@@ -78,6 +91,7 @@ export function BookingPanel({
       const result = await submitBookingAction({
         workspace_id: workspaceId,
         preferred_seat_type: seatType,
+        plan_type: plan,
         message,
       });
       if (result.ok) {
@@ -99,7 +113,7 @@ export function BookingPanel({
             {c.currency}
             {displayPrice}
           </span>
-          <span className="muted">{c.perMonth}</span>
+          <span className="muted">{perLabel}</span>
         </div>
 
         <div className="divider" style={{ margin: "16px 0" }} />
@@ -116,6 +130,30 @@ export function BookingPanel({
             ))}
           </Select>
         </Field>
+
+        {hasDaily && (
+          <>
+            <div style={{ height: 12 }} />
+            <Field label={d.planLabel}>
+              <div className="seg" role="group">
+                <button
+                  type="button"
+                  className={plan === "monthly" ? "active" : ""}
+                  onClick={() => setPlan("monthly")}
+                >
+                  {d.planMonthly}
+                </button>
+                <button
+                  type="button"
+                  className={plan === "daily" ? "active" : ""}
+                  onClick={() => setPlan("daily")}
+                >
+                  {d.planDaily}
+                </button>
+              </div>
+            </Field>
+          </>
+        )}
 
         <div style={{ height: 12 }} />
 
