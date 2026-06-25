@@ -167,7 +167,10 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             inv.status !== "cancelled" && (
               <>
                 <MarkPaidButton invoiceId={inv.id} />
-                <OwnerReceiptButton invoiceId={inv.id} />
+                <OwnerReceiptButton
+                  invoiceId={inv.id}
+                  invoiceNumber={inv.invoice_number}
+                />
                 <RemindButton invoiceId={inv.id} />
               </>
             )

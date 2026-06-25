@@ -42,6 +42,9 @@ class MemberResource extends JsonResource
             'plan_type' => $this->plan_type->value,
             'seat_number' => $this->seat?->seat_number,
             'monthly_price' => $this->monthly_price,
+            'package' => $member?->relationLoaded('internetPackages')
+                ? $member->internetPackages->pluck('name')->implode('، ')
+                : null,
             'join_date' => $this->start_date?->toDateString(),
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
         ];

@@ -26,6 +26,11 @@ export default async function OwnerInvoicesPage({
   const memberOptions: InvoiceMemberOption[] = memberList.members.map((m) => ({
     id: String(m.user.id),
     name: m.user.name,
+    avatar: m.user.avatar,
+    planType: m.plan_type,
+    seatNumber: m.seat_number,
+    monthlyPrice: m.monthly_price,
+    package: m.package,
   }));
 
   return (

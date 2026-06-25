@@ -315,6 +315,8 @@ export interface Member {
   plan_type: PlanType;
   seat_number: string | null;
   monthly_price: number;
+  /** Comma-joined internet package names assigned to the member, if any. */
+  package: string | null;
   join_date: string | null;
   cancelled_at: string | null;
 }
