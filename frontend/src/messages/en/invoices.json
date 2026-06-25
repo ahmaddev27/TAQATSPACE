@@ -86,6 +86,7 @@
         "member": "Member",
         "memberPlaceholder": "Select a member",
         "amount": "Amount",
+        "amountBreakdown": "Subscription {base} + internet package {pkg} = {total} ₪",
         "dueDate": "Due date",
         "notes": "Notes",
         "notesPlaceholder": "Optional description shown on the invoice",

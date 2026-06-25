@@ -317,6 +317,8 @@ export interface Member {
   monthly_price: number;
   /** Comma-joined internet package names assigned to the member, if any. */
   package: string | null;
+  /** Total monthly add-on price of the member's internet packages (decimal string). */
+  package_price: string;
   join_date: string | null;
   cancelled_at: string | null;
 }

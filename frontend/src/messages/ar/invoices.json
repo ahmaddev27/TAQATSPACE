@@ -86,6 +86,7 @@
         "member": "العضو",
         "memberPlaceholder": "اختر عضواً",
         "amount": "المبلغ",
+        "amountBreakdown": "الاشتراك {base} + باقة الإنترنت {pkg} = {total} ₪",
         "dueDate": "تاريخ الاستحقاق",
         "notes": "ملاحظات",
         "notesPlaceholder": "وصف اختياري يظهر على الفاتورة",

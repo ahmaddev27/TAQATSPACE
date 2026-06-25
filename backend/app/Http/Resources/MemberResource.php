@@ -45,6 +45,11 @@ class MemberResource extends JsonResource
             'package' => $member?->relationLoaded('internetPackages')
                 ? $member->internetPackages->pluck('name')->implode('، ')
                 : null,
+            // Total monthly add-on price of the member's internet packages, so
+            // the issue-invoice amount can default to subscription + packages.
+            'package_price' => $member?->relationLoaded('internetPackages')
+                ? (string) $member->internetPackages->sum(static fn ($p): float => (float) $p->price)
+                : '0',
             'join_date' => $this->start_date?->toDateString(),
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
         ];
