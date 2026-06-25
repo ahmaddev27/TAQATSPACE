@@ -69,6 +69,21 @@ class MemberService
             ->where('subscriptions.workspace_id', $workspace->id)
             ->select('subscriptions.*');
 
+        // One row per member: when a member re-subscribed (an old cancelled/
+        // expired subscription plus a current one), keep only their primary
+        // subscription — the active one, else the most recent — so the roster
+        // never shows the same person twice.
+        $query->whereRaw(
+            'subscriptions.id = (
+                select s2.id from subscriptions as s2
+                where s2.member_id = subscriptions.member_id
+                  and s2.workspace_id = subscriptions.workspace_id
+                order by (s2.status = ?) desc, s2.start_date desc, s2.id desc
+                limit 1
+            )',
+            [SubscriptionStatus::Active->value],
+        );
+
         $this->applyStatusFilter($query, $filters['status'] ?? null);
         $this->applySearch($query, $filters['search'] ?? null);
         $this->applySort($query, $filters['sort'] ?? null, $filters['direction'] ?? null);
