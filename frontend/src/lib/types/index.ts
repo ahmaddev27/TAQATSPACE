@@ -194,6 +194,8 @@ export interface Workspace {
   price_per_month: number;
   amenities: string[];
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
   /**
@@ -264,6 +266,8 @@ export interface SubscriptionWorkspaceSummary {
   city: string;
   address: string;
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
 }
 
 export interface SubscriptionSeatSummary {
