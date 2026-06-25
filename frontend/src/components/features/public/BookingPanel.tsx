@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
@@ -20,6 +20,8 @@ export interface BookingPanelProps {
   /** Per-seat-type pricing rows (only enabled rows are bookable). */
   seatTypes?: SeatTypePrice[];
   dict: PublicDict;
+  /** Deep-linked from a partner: scroll to + focus the booking action on mount. */
+  autoBook?: boolean;
 }
 
 /** Sticky booking panel — submits a request or routes guests to login. */
@@ -28,6 +30,7 @@ export function BookingPanel({
   price,
   seatTypes,
   dict,
+  autoBook = false,
 }: BookingPanelProps) {
   const d = dict.detail;
   const c = dict.common;
@@ -35,6 +38,14 @@ export function BookingPanel({
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  // Partner deep-link (`?book=1`): bring the booking action into view + focus it.
+  useEffect(() => {
+    if (!autoBook) return;
+    messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    messageRef.current?.focus({ preventScroll: true });
+  }, [autoBook]);
 
   // Only enabled types are bookable; fall back to the three defaults if none.
   const bookable = (seatTypes ?? []).filter((row) => row.enabled);
@@ -53,7 +64,8 @@ export function BookingPanel({
       ? toNumber(selectedRow.price_monthly)
       : price;
 
-  const redirectTarget = `/workspaces/${workspaceId}`;
+  // Preserve the booking intent across login so the user returns booking-ready.
+  const redirectTarget = `/workspaces/${workspaceId}?book=1`;
   // Only freelancers can book; treat any other authenticated role as a guest CTA.
   const canBook = isAuthenticated && role === "freelancer";
 
@@ -109,6 +121,7 @@ export function BookingPanel({
 
         <Field label={d.messageLabel}>
           <Textarea
+            ref={messageRef}
             rows={3}
             value={message}
             onChange={(ev) => setMessage(ev.target.value)}

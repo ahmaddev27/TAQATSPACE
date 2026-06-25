@@ -56,10 +56,15 @@ export async function generateMetadata({
 
 export default async function WorkspaceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale, id } = await params;
+  const sp = await searchParams;
+  // Deep-linked from a partner (e.g. Academy) with `?book=1` → open the booking action.
+  const autoBook = sp.book === "1";
   const dict = getPublicDict(locale);
   const d = dict.detail;
   const c = dict.common;
@@ -200,6 +205,7 @@ export default async function WorkspaceDetailPage({
           price={price}
           seatTypes={workspace.seat_types}
           dict={dict}
+          autoBook={autoBook}
         />
       </div>
     </div>

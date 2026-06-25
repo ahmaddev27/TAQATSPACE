@@ -5,6 +5,7 @@ import type { Workspace } from "@/lib/types";
 import { getPublicDict, interpolate } from "@/components/features/public/i18n";
 import { FilterBar } from "@/components/features/public/FilterBar";
 import { ExploreResults } from "@/components/features/public/ExploreResults";
+import { redirect } from "@/i18n/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,14 @@ export default async function ExplorePage({
   searchParams: Promise<RawSearchParams>;
 }) {
   const [{ locale }, sp] = await Promise.all([params, searchParams]);
+
+  // Partner deep-link: `?book={workspaceId}` lands the visitor straight on that
+  // workspace's booking-ready page (used by the Academy integration hand-off).
+  const bookId = first(sp.book);
+  if (bookId) {
+    redirect({ href: `/workspaces/${bookId}?book=1`, locale });
+  }
+
   const dict = getPublicDict(locale);
   const filters = toFilters(sp);
 

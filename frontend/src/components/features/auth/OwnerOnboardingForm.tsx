@@ -173,6 +173,20 @@ export function OwnerOnboardingForm({
     if (valid) setStep((s) => Math.min(s + 1, steps.length - 1));
   }
 
+  /**
+   * Block Enter from implicitly submitting the form. On the last step (Seats &
+   * pricing) the submit button is in the DOM, so pressing Enter while typing a
+   * price would submit early — with capacity still empty — skipping straight to
+   * the seat-setup screen with 0 seats. Submission must be a deliberate click.
+   * (Textarea keeps Enter for newlines.)
+   */
+  function blockEnterSubmit(e: React.KeyboardEvent<HTMLFormElement>) {
+    const target = e.target as HTMLElement;
+    if (e.key === "Enter" && target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  }
+
   async function onSubmit(values: OwnerOnboardingValues) {
     setServerError(null);
 
@@ -270,7 +284,7 @@ export function OwnerOnboardingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} onKeyDown={blockEnterSubmit} noValidate>
       <Stepper steps={steps} current={step} />
 
       <div className="card reg-card">

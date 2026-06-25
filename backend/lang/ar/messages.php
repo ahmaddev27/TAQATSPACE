@@ -97,6 +97,9 @@ return [
     'subscription_not_due_for_renewal' => 'لا يمكن تجديد الاشتراك قبل وصول تاريخ انتهائه.',
     'subscription_no_access' => 'ليس لديك صلاحية الوصول إلى هذا الاشتراك.',
 
+    // Partner integration
+    'partner_unauthorized' => 'مفتاح API غير صالح أو مفقود.',
+
     // الباقات
     'package_created' => 'تم إنشاء الباقة بنجاح.',
     'package_updated' => 'تم تحديث الباقة بنجاح.',

@@ -5112,6 +5112,119 @@
                 }
             }
         },
+        "/partner/students/{identifier}/membership": {
+            "get": {
+                "operationId": "membership.show",
+                "tags": [
+                    "Membership"
+                ],
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "exists": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "freelancer_active": {
+                                                            "type": "string"
+                                                        },
+                                                        "subscriptions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "pending_booking": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "workspace_id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "workspace_id",
+                                                                "status"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "exists",
+                                                        "freelancer_active",
+                                                        "subscriptions",
+                                                        "pending_booking"
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "exists": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "freelancer_active": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "subscriptions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "pending_booking": {
+                                                            "type": "null"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "exists",
+                                                        "freelancer_active",
+                                                        "subscriptions",
+                                                        "pending_booking"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/workspace/messages": {
             "get": {
                 "operationId": "message.index",

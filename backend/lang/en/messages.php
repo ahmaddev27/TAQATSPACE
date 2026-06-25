@@ -97,6 +97,9 @@ return [
     'subscription_not_due_for_renewal' => 'The subscription cannot be renewed before its end date is reached.',
     'subscription_no_access' => 'You do not have access to this subscription.',
 
+    // Partner integration
+    'partner_unauthorized' => 'Invalid or missing API key.',
+
     // Packages
     'package_created' => 'Package created successfully.',
     'package_updated' => 'Package updated successfully.',
