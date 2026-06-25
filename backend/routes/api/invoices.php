@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::post('/', [InvoiceController::class, 'store']);
         Route::get('/{invoice}', [InvoiceController::class, 'show']);
         Route::put('/{invoice}/pay', [InvoiceController::class, 'pay']);
+        Route::post('/{invoice}/receipt', [InvoiceController::class, 'uploadReceipt']);
         Route::post('/{invoice}/remind', [InvoiceController::class, 'remind']);
     });
 

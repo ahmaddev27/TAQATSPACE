@@ -37,7 +37,13 @@
         "markPaid": "تحديد كمدفوعة",
         "remind": "تذكير",
         "downloadPdf": "PDF",
-        "viewReceipt": "عرض الوصل"
+        "viewReceipt": "عرض الوصل",
+        "uploadReceipt": "رفع وصل"
+      },
+      "receipt": {
+        "uploaded": "تم رفع الوصل وتسجيل الدفع",
+        "uploadFailed": "تعذّر رفع الوصل",
+        "tooLarge": "حجم الملف كبير جداً (الحد 5 ميجابايت)"
       },
       "empty": {
         "title": "لا توجد فواتير بعد",

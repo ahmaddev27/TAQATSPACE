@@ -23,6 +23,7 @@ import {
   type InvoiceMemberOption,
 } from "./IssueInvoiceModal";
 import { MarkPaidButton } from "./MarkPaidButton";
+import { OwnerReceiptButton } from "./OwnerReceiptButton";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
@@ -157,6 +158,7 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
           {inv.status !== "paid" && inv.status !== "cancelled" && (
             <>
               <MarkPaidButton invoiceId={inv.id} />
+              <OwnerReceiptButton invoiceId={inv.id} />
               <RemindButton invoiceId={inv.id} />
             </>
           )}

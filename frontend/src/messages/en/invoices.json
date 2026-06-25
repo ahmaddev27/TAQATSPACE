@@ -37,7 +37,13 @@
         "markPaid": "Mark paid",
         "remind": "Remind",
         "downloadPdf": "PDF",
-        "viewReceipt": "View receipt"
+        "viewReceipt": "View receipt",
+        "uploadReceipt": "Upload receipt"
+      },
+      "receipt": {
+        "uploaded": "Receipt uploaded and payment recorded",
+        "uploadFailed": "Could not upload the receipt",
+        "tooLarge": "File too large (5MB max)"
       },
       "empty": {
         "title": "No invoices yet",

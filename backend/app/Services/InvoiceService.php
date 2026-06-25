@@ -58,6 +58,43 @@ class InvoiceService
     }
 
     /**
+     * Owner-side: attach a payment receipt AND record the invoice as paid in one
+     * step — the owner is logging a payment they received (cash/transfer) with
+     * proof. Stores the receipt, marks paid, and notifies the member.
+     *
+     * @throws RuntimeException when the invoice is already paid
+     */
+    public function recordPaymentWithReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        $invoice->forceFill([
+            'receipt_path' => $this->uploads->upload(
+                $receipt,
+                'receipts/'.$invoice->id,
+                (string) config('filesystems.media', 'public'),
+                'public',
+            ),
+            'status' => InvoiceStatus::Paid->value,
+            'paid_at' => $paidAt ?? Carbon::now(),
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
+    }
+
+    /**
      * Idempotently generate one invoice per active subscription for the current
      * billing month. Returns the number of invoices created.
      */
