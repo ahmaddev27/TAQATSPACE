@@ -223,15 +223,9 @@ function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
           width: "100%",
           gap: 10,
           cursor: "pointer",
-          minHeight: 58,
+          minHeight: 56,
           height: "auto",
           paddingBlock: 8,
-          border: open
-            ? "1.5px solid var(--primary)"
-            : "1.5px solid var(--border)",
-          boxShadow: open
-            ? "0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent)"
-            : undefined,
         }}
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
