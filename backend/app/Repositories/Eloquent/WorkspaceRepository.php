@@ -22,7 +22,7 @@ class WorkspaceRepository
      */
     public function paginatePublic(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Workspace::query()->public()->with('seatTypes');
+        $query = Workspace::query()->public()->with(['seatTypes', 'owner:id,avatar']);
 
         $this->applyFilters($query, $filters);
         $this->applySort($query, $filters['sort'] ?? null);
@@ -73,7 +73,7 @@ class WorkspaceRepository
 
     public function findActiveById(string $id): ?Workspace
     {
-        return Workspace::query()->public()->with('seatTypes')->find($id);
+        return Workspace::query()->public()->with(['seatTypes', 'owner:id,avatar'])->find($id);
     }
 
     public function findByOwnerId(string $ownerId): ?Workspace

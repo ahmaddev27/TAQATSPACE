@@ -2,6 +2,7 @@ import { getTranslations, getLocale, setRequestLocale } from "next-intl/server";
 import { listSubscriptions } from "@/lib/api/subscriptions";
 import { myReviewForWorkspace } from "@/lib/api/reviews";
 import { Icon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/Badge";
 import { CancelSubscriptionButton } from "@/components/features/freelancer/CancelSubscriptionButton";
 import { SubscriptionHistoryTable } from "@/components/features/freelancer/SubscriptionHistoryTable";
@@ -52,16 +53,26 @@ export default async function FreelancerSubscriptionPage({
           <div className="card card-pad">
             <div className="between wrap" style={{ gap: 16 }}>
               <div className="row" style={{ gap: 16 }}>
-                <span
-                  className="st-ico"
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: "var(--r-tile)",
-                  }}
-                >
-                  <Icon name="card" size={24} />
-                </span>
+                {active.workspace?.logo ? (
+                  <Avatar
+                    initial={active.workspace.name.charAt(0)}
+                    src={active.workspace.logo}
+                    alt={active.workspace.name}
+                    size="lg"
+                    round
+                  />
+                ) : (
+                  <span
+                    className="st-ico"
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: "var(--r-tile)",
+                    }}
+                  >
+                    <Icon name="card" size={24} />
+                  </span>
+                )}
                 <div>
                   <div className="h3">
                     {seatType ? tCommon(`seatType.${seatType}`) : t("activeTitle")}
