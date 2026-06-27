@@ -44,6 +44,27 @@ class SeatController extends Controller
         ]);
     }
 
+    /**
+     * GET /api/workspace/seats — the authenticated owner's own seat map, always
+     * including the assignee (name + avatar) so the seat board shows who sits
+     * where. Unlike the public index, this never strips the occupant.
+     */
+    public function ownerIndex(Request $request): JsonResponse
+    {
+        $workspace = $request->user()->workspace;
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 404);
+        }
+
+        $map = $this->seats->seatMap($workspace);
+
+        return ApiResponse::success([
+            'seats' => SeatResource::collection($map['seats']),
+            'summary' => $map['summary'],
+        ]);
+    }
+
     public function store(StoreSeatRequest $request): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
