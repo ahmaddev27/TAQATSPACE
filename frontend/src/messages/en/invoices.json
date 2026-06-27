@@ -54,6 +54,7 @@
         "dropLabel": "Drop a file here or click to select",
         "dropHint": "PDF, PNG or JPG · up to 5MB",
         "remove": "Remove",
+        "crop": "Crop image",
         "amountRequired": "Enter an amount greater than zero.",
         "receiptRequired": "Attach the payment receipt.",
         "recorded": "Payment recorded",
