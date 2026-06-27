@@ -6,11 +6,14 @@ namespace App\Models;
 
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
+use App\Observers\SeatObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([SeatObserver::class])]
 class Seat extends Model
 {
     /** @use HasFactory<\Database\Factories\SeatFactory> */
