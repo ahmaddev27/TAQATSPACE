@@ -345,6 +345,59 @@ class InvoiceService
     }
 
     /**
+     * Unified owner payment: record a payment (partial or full) WITH a receipt as
+     * proof and an optional date. Adds to the running total, stores the receipt,
+     * and moves the invoice to "partially paid" or "paid" — notifying the member
+     * once it is fully settled. The single owner-facing payment action.
+     *
+     * @throws RuntimeException when the invoice is already paid or the amount is invalid
+     */
+    public function recordPayment(Invoice $invoice, float $amount, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        if ($amount <= 0) {
+            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
+        }
+
+        $total = (float) $invoice->amount;
+        $newPaid = (float) $invoice->amount_paid + $amount;
+        $fullyPaid = $newPaid >= $total;
+
+        $invoice->forceFill([
+            'receipt_path' => $this->uploads->upload(
+                $receipt,
+                'receipts/'.$invoice->id,
+                (string) config('filesystems.media', 'public'),
+                'public',
+            ),
+            'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+            'status' => $fullyPaid
+                ? InvoiceStatus::Paid->value
+                : InvoiceStatus::PartiallyPaid->value,
+            'paid_at' => $fullyPaid ? ($paidAt ?? Carbon::now()) : null,
+            // An owner-recorded payment supersedes any prior receipt rejection.
+            'receipt_rejected_reason' => null,
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        if ($fullyPaid) {
+            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+        }
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
+    }
+
+    /**
      * Dispatch a payment reminder, rate-limited to once per 24h per invoice.
      *
      * @throws RuntimeException when a reminder was already sent in the window

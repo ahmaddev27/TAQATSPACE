@@ -85,6 +85,30 @@ export async function recordPartialPayment(
 }
 
 /**
+ * Owner: the single payment action — record a payment (partial or full) WITH a
+ * required receipt and an optional date. The invoice becomes partially paid, or
+ * paid once the balance reaches zero.
+ */
+export async function recordPayment(
+  invoiceId: string,
+  amount: number,
+  receipt: File,
+  paidAt?: string | null,
+): Promise<ActionResult<Invoice>> {
+  const formData = new FormData();
+  formData.set("amount", String(amount));
+  formData.set("receipt", receipt);
+  if (paidAt) formData.set("paid_at", paidAt);
+
+  const result = await authedMutate<Invoice>(
+    `/workspace/invoices/${invoiceId}/payment`,
+    { method: "POST", formData },
+  );
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
+/**
  * Freelancer: upload proof of payment for one of their own invoices. Moves the
  * invoice to "under review" for the owner to confirm.
  */
