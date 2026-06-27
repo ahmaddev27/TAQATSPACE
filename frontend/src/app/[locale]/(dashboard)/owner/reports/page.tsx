@@ -1,7 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOwnerStats } from "@/lib/api/ownerDashboard";
+import { getOwnerReports } from "@/lib/api/ownerReports";
 import { LineChart, type LineChartPoint } from "@/components/ui/LineChart";
 import { MemberAnalytics } from "@/components/features/owner/MemberAnalytics";
+import { OwnerReportsSections } from "@/components/features/owner/OwnerReportsSections";
 import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
 import { money } from "@/components/features/owner/format";
 
@@ -23,7 +25,10 @@ export default async function OwnerReportsPage({
   const ta = await getTranslations("owner.analytics");
   const td = await getTranslations("owner.dashboard");
 
-  const stats = await getOwnerStats();
+  const [stats, reports] = await Promise.all([
+    getOwnerStats(),
+    getOwnerReports(),
+  ]);
   const chart: LineChartPoint[] = stats.revenue_chart.map((p) => ({
     label: p.month,
     v: p.amount,
@@ -74,6 +79,9 @@ export default async function OwnerReportsPage({
           byGender={stats.members_by_gender}
           byStatus={stats.members_by_status}
         />
+
+        {/* Deeper reports: aging, P&L, package uptake */}
+        <OwnerReportsSections reports={reports} />
 
         {/* CSV exports */}
         <div className="card card-pad stack" style={{ gap: 14 }}>

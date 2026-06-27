@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Owner\ExportController;
 use App\Http\Controllers\Owner\MemberController;
+use App\Http\Controllers\Owner\ReportsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,3 +34,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
     ->group(function (): void {
         Route::get('/{type}', [ExportController::class, 'download']);
     });
+
+// Deeper owner reports: aging, profit-and-loss, package uptake.
+Route::middleware(['auth:sanctum', 'role.owner'])
+    ->get('/workspace/reports', [ReportsController::class, 'index']);
