@@ -19,7 +19,7 @@ class InvoicePdfService
      * previously-cached PDF — old invoices regenerate with the new template
      * instead of serving a stale render.
      */
-    private const TEMPLATE_VERSION = 3;
+    private const TEMPLATE_VERSION = 4;
 
     /**
      * Stream the invoice PDF as an attachment, generating + caching it on the
@@ -39,17 +39,25 @@ class InvoicePdfService
     public function ensureGenerated(Invoice $invoice): string
     {
         $prefix = 'invoices/v'.self::TEMPLATE_VERSION.'/';
-        $path = $prefix."{$invoice->id}.pdf";
+
+        // Fingerprint the payment-relevant state so a paid (or partially paid)
+        // invoice regenerates instead of serving a stale "unpaid" cached PDF.
+        $fingerprint = substr(md5(implode('|', [
+            $invoice->status->value,
+            (string) $invoice->amount,
+            (string) $invoice->amount_paid,
+            (string) ($invoice->paid_at?->getTimestamp() ?? ''),
+        ])), 0, 10);
+
+        $path = $prefix."{$invoice->id}-{$fingerprint}.pdf";
         $disk = Storage::disk();
 
-        // Reuse only a cache from the CURRENT template version; an older path
-        // falls through and regenerates with the new template.
+        // Reuse only the cache for this exact template version + payment state.
         if (
-            $invoice->invoice_pdf_path !== null
-            && str_starts_with($invoice->invoice_pdf_path, $prefix)
-            && $disk->exists($invoice->invoice_pdf_path)
+            $invoice->invoice_pdf_path === $path
+            && $disk->exists($path)
         ) {
-            return $invoice->invoice_pdf_path;
+            return $path;
         }
 
         $invoice->loadMissing('subscription.member', 'subscription.seat', 'subscription.workspace');

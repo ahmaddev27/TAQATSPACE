@@ -118,6 +118,7 @@ return [
     'invoice_member_no_subscription' => 'This member has no active subscription in your workspace.',
     'invoice_already_paid' => 'This invoice has already been paid.',
     'invoice_partial_amount_invalid' => 'The payment amount must be greater than zero.',
+    'invoice_payment_exceeds_remaining' => 'The amount exceeds the outstanding balance (:remaining).',
     'invoice_partial_recorded' => 'Payment recorded.',
     'invoice_receipt_submitted' => 'Payment receipt uploaded; the invoice is now under review.',
     'invoice_receipt_not_allowed' => 'A receipt cannot be uploaded for this invoice in its current state.',

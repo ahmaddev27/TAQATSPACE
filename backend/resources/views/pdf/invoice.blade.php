@@ -11,11 +11,17 @@
 
     $statusLabels = [
         'paid' => 'مدفوعة',
+        'partially_paid' => 'مدفوعة جزئياً',
         'overdue' => 'متأخرة',
         'cancelled' => 'ملغاة',
         'under_review' => 'قيد المراجعة',
+        'payment_rejected' => 'وصل مرفوض',
         'pending' => 'غير مدفوعة',
     ];
+
+    $isPartiallyPaid = $status === \App\Enums\InvoiceStatus::PartiallyPaid;
+    $amountPaid = (float) ($invoice->amount_paid ?? 0);
+    $remaining = max(0, (float) $invoice->amount - $amountPaid);
 
     // When a receipt has been uploaded but the stored status is still pending or
     // overdue (e.g. a lag before the status transition completed), the PDF should
@@ -132,8 +138,10 @@
             line-height: 1;
         }
         .badge-paid { background: #E6F6EC; color: #1B8A4B; }
+        .badge-partially_paid { background: #FEF3D6; color: #B5790B; }
         .badge-pending { background: #EEF1F5; color: #667085; }
         .badge-under_review { background: #FEF3D6; color: #B5790B; }
+        .badge-payment_rejected { background: #FDE7E7; color: #C0392B; }
         .badge-overdue { background: #FDE7E7; color: #C0392B; }
         .badge-cancelled { background: #EEF1F5; color: #667085; }
 
@@ -361,6 +369,18 @@
             <td class="t-label">الإجمالي المستحق</td>
             <td class="t-value">{!! $money($invoice->amount) !!}</td>
         </tr>
+        @if ($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001))
+            <tr>
+                <td class="spacer"></td>
+                <td class="t-label">المدفوع</td>
+                <td class="t-value">{!! $money($amountPaid) !!}</td>
+            </tr>
+            <tr>
+                <td class="spacer"></td>
+                <td class="t-label" style="color:#B54708;">المتبقّي</td>
+                <td class="t-value" style="color:#B54708;">{!! $money($remaining) !!}</td>
+            </tr>
+        @endif
     </table>
 
     {{-- Payment details: surfaced once a receipt is attached or the invoice is
