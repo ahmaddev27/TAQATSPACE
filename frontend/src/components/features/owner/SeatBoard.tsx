@@ -84,8 +84,10 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
   const selectedSeat = seats.find((s) => s.id === selectedId) ?? null;
   const isOccupiedSelected = selectedSeat?.status === "occupied";
 
+  // Only active members WITHOUT a seat can be assigned — a member holds at most
+  // one seat, so those already seated are hidden from the assignment picker.
   const activeMembers = useMemo(
-    () => members.filter((m) => m.status === "active"),
+    () => members.filter((m) => m.status === "active" && !m.seat_number),
     [members],
   );
 
