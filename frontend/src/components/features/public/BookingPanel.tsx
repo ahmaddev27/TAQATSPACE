@@ -69,13 +69,14 @@ export function BookingPanel({
     selectedRow?.price_daily != null ? toNumber(selectedRow.price_daily) : null;
   const hasDaily = dailyPrice != null;
 
-  // If the chosen seat type has no daily price, fall back to monthly.
-  useEffect(() => {
-    if (!hasDaily && plan === "daily") setPlan("monthly");
-  }, [hasDaily, plan]);
+  // If the chosen seat type has no daily price, treat the plan as monthly.
+  // Derived (not synced via an effect) so a stale "daily" choice never sticks
+  // and we never call setState inside an effect.
+  const effectivePlan: "monthly" | "daily" = hasDaily ? plan : "monthly";
 
-  const displayPrice = plan === "daily" && dailyPrice != null ? dailyPrice : monthlyPrice;
-  const perLabel = plan === "daily" ? c.perDay : c.perMonth;
+  const displayPrice =
+    effectivePlan === "daily" && dailyPrice != null ? dailyPrice : monthlyPrice;
+  const perLabel = effectivePlan === "daily" ? c.perDay : c.perMonth;
 
   // Preserve the booking intent across login so the user returns booking-ready.
   const redirectTarget = `/workspaces/${workspaceId}?book=1`;
@@ -91,7 +92,7 @@ export function BookingPanel({
       const result = await submitBookingAction({
         workspace_id: workspaceId,
         preferred_seat_type: seatType,
-        plan_type: plan,
+        plan_type: effectivePlan,
         message,
       });
       if (result.ok) {
@@ -138,14 +139,14 @@ export function BookingPanel({
               <div className="seg" role="group">
                 <button
                   type="button"
-                  className={plan === "monthly" ? "active" : ""}
+                  className={effectivePlan === "monthly" ? "active" : ""}
                   onClick={() => setPlan("monthly")}
                 >
                   {d.planMonthly}
                 </button>
                 <button
                   type="button"
-                  className={plan === "daily" ? "active" : ""}
+                  className={effectivePlan === "daily" ? "active" : ""}
                   onClick={() => setPlan("daily")}
                 >
                   {d.planDaily}
