@@ -42,15 +42,20 @@
         "viewReceipt": "View receipt",
         "uploadReceipt": "Upload receipt"
       },
-      "partial": {
-        "action": "Partial payment",
+      "payment": {
+        "action": "Record payment",
         "title": "Record a payment",
         "body": "Record a partial or full payment for invoice {invoice}. The invoice is marked paid once the balance reaches zero.",
         "remaining": "Outstanding balance",
         "amount": "Payment amount",
         "paidAt": "Payment date",
         "optional": "optional",
+        "receipt": "Payment receipt",
+        "dropLabel": "Drop a file here or click to select",
+        "dropHint": "PDF, PNG or JPG · up to 5MB",
+        "remove": "Remove",
         "amountRequired": "Enter an amount greater than zero.",
+        "receiptRequired": "Attach the payment receipt.",
         "recorded": "Payment recorded",
         "failed": "Could not record the payment",
         "cancel": "Cancel",

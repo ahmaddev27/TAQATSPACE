@@ -4,36 +4,41 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/providers/ToastProvider";
-import { recordPartialPayment } from "@/lib/actions/invoices";
+import { recordPayment } from "@/lib/actions/invoices";
 
-export interface PartialPaymentButtonProps {
+const ACCEPT = "application/pdf,image/png,image/jpeg,image/jpg";
+
+export interface RecordPaymentButtonProps {
   invoiceId: string;
   invoiceNumber: string;
-  /** Outstanding balance (decimal string) used to seed + cap the amount. */
+  /** Outstanding balance (decimal string) — seeds the amount and is shown. */
   remaining: string;
   currency: string;
 }
 
 /**
- * Owner: record a partial (or final) payment against an invoice. Opens a modal
- * showing the outstanding balance with an amount field (seeded to the balance)
- * and an optional payment date.
+ * The single owner payment action. Records a payment (partial or full) against an
+ * invoice with a required receipt and an optional date; the invoice becomes
+ * partially paid, or paid once the balance reaches zero.
  */
-export function PartialPaymentButton({
+export function RecordPaymentButton({
   invoiceId,
   invoiceNumber,
   remaining,
   currency,
-}: PartialPaymentButtonProps) {
-  const t = useTranslations("invoices.owner.partial");
+}: RecordPaymentButtonProps) {
+  const t = useTranslations("invoices.owner.payment");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(remaining);
   const [paidAt, setPaidAt] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const close = () => {
@@ -41,18 +46,30 @@ export function PartialPaymentButton({
     setOpen(false);
     setAmount(remaining);
     setPaidAt("");
+    setFile(null);
     setError(null);
+    setFileError(null);
   };
 
   const submit = () => {
     const value = Number(amount);
+    let ok = true;
     if (!value || value <= 0) {
       setError(t("amountRequired"));
-      return;
+      ok = false;
+    } else {
+      setError(null);
     }
-    setError(null);
+    if (!file) {
+      setFileError(t("receiptRequired"));
+      ok = false;
+    } else {
+      setFileError(null);
+    }
+    if (!ok || !file) return;
+
     startTransition(async () => {
-      const res = await recordPartialPayment(invoiceId, value, paidAt || null);
+      const res = await recordPayment(invoiceId, value, file, paidAt || null);
       if (res.ok) {
         toast({ tone: "ok", title: t("recorded") });
         close();
@@ -65,7 +82,7 @@ export function PartialPaymentButton({
   return (
     <>
       <Button
-        variant="secondary"
+        variant="primary"
         size="sm"
         icon="wallet"
         onClick={() => setOpen(true)}
@@ -95,9 +112,8 @@ export function PartialPaymentButton({
           }
         >
           <div className="stack" style={{ gap: 16 }}>
-            <p className="muted">
-              {t("body", { invoice: invoiceNumber })}
-            </p>
+            <p className="muted">{t("body", { invoice: invoiceNumber })}</p>
+
             <div className="between">
               <span className="muted">{t("remaining")}</span>
               <span className="cell-num" style={{ fontWeight: 700 }}>
@@ -105,22 +121,34 @@ export function PartialPaymentButton({
               </span>
             </div>
 
-            <Field label={t("amount")} error={error ?? undefined}>
-              <Input
-                className="tnum ltr"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </Field>
+            <div className="grid2">
+              <Field label={t("amount")} error={error ?? undefined}>
+                <Input
+                  className="tnum ltr"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </Field>
+              <Field label={t("paidAt")} optional optionalLabel={t("optional")}>
+                <Input
+                  className="ltr"
+                  type="date"
+                  value={paidAt}
+                  onChange={(e) => setPaidAt(e.target.value)}
+                />
+              </Field>
+            </div>
 
-            <Field label={t("paidAt")} optional optionalLabel={t("optional")}>
-              <Input
-                className="ltr"
-                type="date"
-                value={paidAt}
-                onChange={(e) => setPaidAt(e.target.value)}
+            <Field label={t("receipt")} error={fileError ?? undefined}>
+              <FileDropzone
+                value={file}
+                onChange={setFile}
+                accept={ACCEPT}
+                label={t("dropLabel")}
+                hint={t("dropHint")}
+                clearLabel={t("remove")}
               />
             </Field>
           </div>

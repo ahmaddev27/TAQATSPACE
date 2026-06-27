@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Invoice\MarkPaidRequest;
 use App\Http\Requests\Invoice\PartialPaymentRequest;
+use App\Http\Requests\Invoice\RecordPaymentRequest;
 use App\Http\Requests\Invoice\RejectReceiptRequest;
 use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\SubmitReceiptRequest;
@@ -202,6 +203,35 @@ class InvoiceController extends Controller
             $updated = $this->invoices->recordPartialPayment(
                 $invoice,
                 (float) $data['amount'],
+                $paidAt !== null ? Carbon::parse($paidAt) : null,
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_partial_recorded'));
+    }
+
+    /**
+     * POST /api/workspace/invoices/{invoice}/payment — the single owner payment
+     * action: record a payment (partial or full) with a receipt and optional date.
+     */
+    public function recordPayment(RecordPaymentRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        $data = $request->validated();
+        $paidAt = $data['paid_at'] ?? null;
+
+        try {
+            $updated = $this->invoices->recordPayment(
+                $invoice,
+                (float) $data['amount'],
+                $request->file('receipt'),
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
         } catch (RuntimeException $e) {
