@@ -301,10 +301,20 @@ class SeatService
             abort(422, __('messages.seat_member_already_holds'));
         }
 
-        $seat->update([
-            'status' => SeatStatus::Occupied->value,
-            'assigned_member_id' => $member->id,
-        ]);
+        DB::transaction(function () use ($seat, $member): void {
+            $seat->update([
+                'status' => SeatStatus::Occupied->value,
+                'assigned_member_id' => $member->id,
+            ]);
+
+            // Keep the member's active subscription pointed at this seat, so the
+            // members roster and the seat map stay in sync.
+            Subscription::query()
+                ->where('member_id', $member->id)
+                ->where('workspace_id', $seat->workspace_id)
+                ->where('status', SubscriptionStatus::Active->value)
+                ->update(['seat_id' => $seat->id]);
+        });
 
         $member->notify(new SeatAssignedNotification($seat, $seat->workspace->name));
 
@@ -316,10 +326,23 @@ class SeatService
      */
     public function unassign(Seat $seat): Seat
     {
-        $seat->update([
-            'status' => SeatStatus::Available->value,
-            'assigned_member_id' => null,
-        ]);
+        $memberId = $seat->assigned_member_id;
+
+        DB::transaction(function () use ($seat, $memberId): void {
+            $seat->update([
+                'status' => SeatStatus::Available->value,
+                'assigned_member_id' => null,
+            ]);
+
+            // Release the seat from the member's subscription too, so they free up
+            // for a new seat and the roster no longer shows the old one.
+            if ($memberId !== null) {
+                Subscription::query()
+                    ->where('workspace_id', $seat->workspace_id)
+                    ->where('seat_id', $seat->id)
+                    ->update(['seat_id' => null]);
+            }
+        });
 
         return $seat->refresh();
     }
