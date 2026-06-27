@@ -19,7 +19,7 @@ class InvoicePdfService
      * previously-cached PDF — old invoices regenerate with the new template
      * instead of serving a stale render.
      */
-    private const TEMPLATE_VERSION = 5;
+    private const TEMPLATE_VERSION = 6;
 
     /**
      * Stream the invoice PDF as an attachment, generating + caching it on the

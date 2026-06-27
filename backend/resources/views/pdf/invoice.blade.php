@@ -140,16 +140,17 @@
         }
 
         /* ---------- Status badge ---------- */
-        .badge {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 14px;
-            font-size: 11px;
+        /* Status pill — a 1-cell table so mPDF reserves real vertical space and
+           never overlaps the invoice number above it. */
+        .status-tbl { width: auto; margin-top: 16px; }
+        .status-pill {
+            padding: 9px 30px;
+            border-radius: 16px;
+            font-size: 12px;
             font-weight: bold;
-            /* mPDF renders inline-block backgrounds tightly with line-height:1,
-               which made the longer "قيد المراجعة" label overlap the number
-               above — a normal line-height reserves the vertical space. */
-            line-height: 1.7;
+            text-align: center;
+            white-space: nowrap;
+            line-height: 1.4;
         }
         .badge-paid { background: #E6F6EC; color: #1B8A4B; }
         .badge-partially_paid { background: #FEF3D6; color: #B5790B; }
@@ -286,9 +287,13 @@
                 <div class="doc-number">
                     رقم <span class="num">{{ $invoice->invoice_number }}</span>
                 </div>
-                <div style="margin-top: 16px; line-height: 1;">
-                    <span class="badge badge-{{ $displayStatusValue }}">{{ $statusLabel }}</span>
-                </div>
+                {{-- Status as a 1-cell table: mPDF renders cell backgrounds
+                     reliably (inline-block pills overlapped the line above). --}}
+                <table class="status-tbl" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="status-pill badge-{{ $displayStatusValue }}">{{ $statusLabel }}</td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
