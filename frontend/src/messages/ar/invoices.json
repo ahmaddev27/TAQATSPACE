@@ -67,6 +67,15 @@
         "uploadFailed": "تعذّر رفع الوصل",
         "tooLarge": "حجم الملف كبير جداً (الحد 5 ميجابايت)"
       },
+      "history": {
+        "action": "الدفعات ({count})",
+        "title": "دفعات الفاتورة — {invoice}",
+        "date": "التاريخ",
+        "amount": "المبلغ",
+        "receipt": "الوصل",
+        "view": "عرض",
+        "close": "إغلاق"
+      },
       "review": {
         "viewReceipt": "عرض الوصل",
         "approve": "قبول",
