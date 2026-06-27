@@ -266,7 +266,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 }
 .seat svg { width: 16px; height: 16px; opacity: .8; }
 .seat:hover:not(.is-disabled):not(.is-occupied) { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--sh-sm); }
-.seat.is-occupied { background: var(--seat-occupied); border-color: var(--seat-occupied-bd); color: var(--text-3); cursor: not-allowed; }
+.seat.is-occupied { background: var(--seat-occupied); border-color: var(--seat-occupied-bd); color: var(--text-3); cursor: pointer; }
+.seat.is-occupied:hover { filter: brightness(0.97); }
 .seat.is-reserved { background: var(--seat-reserved); border-color: var(--seat-reserved-bd); color: var(--amber-600); }
 .seat.is-selected { background: var(--seat-selected); border-color: var(--seat-selected-bd); color: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent); }
 .seat.is-disabled { background: var(--seat-disabled); border-color: var(--seat-disabled-bd); color: var(--text-disabled); cursor: not-allowed; border-style: dashed; }
