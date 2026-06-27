@@ -120,9 +120,13 @@ export function ChatWidget() {
     : null;
 
   const otherOf = useCallback(
-    (conv: ChatConversation): { id: string; name: string } => {
+    (conv: ChatConversation): { id: string; name: string; avatar: string | null } => {
       const id = conv.participants.find((p) => p !== uid) ?? "";
-      return { id, name: conv.participantNames[id] ?? t("unknownContact") };
+      return {
+        id,
+        name: conv.participantNames[id] ?? t("unknownContact"),
+        avatar: conv.participantAvatars?.[id] ?? null,
+      };
     },
     [uid, t],
   );
@@ -207,7 +211,7 @@ export function ChatWidget() {
               <>
                 <ChatThread
                   contactName={otherOf(activeConv).name}
-                  contactAvatar={null}
+                  contactAvatar={otherOf(activeConv).avatar}
                   selfName={self.name}
                   selfAvatar={self.avatar ?? null}
                   messages={messages}
@@ -233,7 +237,11 @@ export function ChatWidget() {
                       className={`chat-item ${isUnread(conv) ? "is-unread" : ""}`.trim()}
                       onClick={() => setActiveConvId(conv.id)}
                     >
-                      <Avatar initial={avatarInitial(other.name)} round />
+                      <Avatar
+                        initial={avatarInitial(other.name)}
+                        src={other.avatar}
+                        round
+                      />
                       <div className="grow" style={{ minWidth: 0 }}>
                         <div className="chat-name">
                           <span>{other.name}</span>

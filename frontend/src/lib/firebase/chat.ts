@@ -38,6 +38,8 @@ export interface ChatConversation {
   id: string;
   participants: string[];
   participantNames: Record<string, string>;
+  /** Resolved avatar URL per participant id, when known. */
+  participantAvatars: Record<string, string | null>;
   workspaceId: string | null;
   lastMessage: string;
   lastSenderId: string | null;
@@ -172,6 +174,10 @@ function mapConversation(
     participantNames:
       data.participantNames && typeof data.participantNames === "object"
         ? data.participantNames
+        : {},
+    participantAvatars:
+      data.participantAvatars && typeof data.participantAvatars === "object"
+        ? data.participantAvatars
         : {},
     workspaceId: data.workspaceId ?? null,
     lastMessage: typeof data.lastMessage === "string" ? data.lastMessage : "",
@@ -359,6 +365,9 @@ async function writeMessage(
   const participantNames = Object.fromEntries(
     participants.map((p) => [p.id, p.name]),
   );
+  const participantAvatars = Object.fromEntries(
+    participants.map((p) => [p.id, p.avatar ?? null]),
+  );
 
   // Conversation preview: the text, or the attachment name for an image/file.
   const preview = text || attachment?.name || "";
@@ -370,6 +379,7 @@ async function writeMessage(
     {
       participants: participants.map((p) => p.id),
       participantNames,
+      participantAvatars,
       workspaceId,
       lastMessage: preview,
       lastSenderId: sender.id,

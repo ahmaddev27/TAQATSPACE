@@ -270,7 +270,11 @@ export function ChatScreen({ self, contacts, initialContactId }: ChatScreenProps
       const workspaceId = contactById.get(activeContactId)?.workspace_id ?? null;
       const participants: ChatParticipant[] = [
         self,
-        { id: activeContactId, name: contactName },
+        {
+          id: activeContactId,
+          name: contactName,
+          avatar: contactById.get(activeContactId)?.avatar ?? null,
+        },
       ];
       const ok = await sendMessage(
         activeConvId,
