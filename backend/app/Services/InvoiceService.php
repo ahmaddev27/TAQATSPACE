@@ -446,6 +446,46 @@ class InvoiceService
     }
 
     /**
+     * Re-remind members about invoices that are STILL unpaid past their due date
+     * (overdue, or partially paid). `markOverdue` only notifies once at the
+     * transition; this chases the lingering balance on a recurring basis,
+     * throttled to one reminder per invoice per `$cooldownDays`.
+     */
+    public function remindOverdue(int $cooldownDays = 7): int
+    {
+        $sent = 0;
+
+        Invoice::query()
+            ->whereIn('status', [
+                InvoiceStatus::Overdue->value,
+                InvoiceStatus::PartiallyPaid->value,
+            ])
+            ->whereDate('due_date', '<', Carbon::today()->toDateString())
+            ->with('subscription.member')
+            ->chunkById(100, function ($invoices) use (&$sent, $cooldownDays): void {
+                foreach ($invoices as $invoice) {
+                    $member = $invoice->subscription?->member;
+
+                    if ($member === null) {
+                        continue;
+                    }
+
+                    $key = "invoice:{$invoice->id}:overdue_reminder";
+
+                    if (Cache::has($key)) {
+                        continue;
+                    }
+
+                    $member->notify(new InvoiceOverdueNotification($invoice, 'member'));
+                    Cache::put($key, true, Carbon::now()->addDays($cooldownDays));
+                    $sent++;
+                }
+            });
+
+        return $sent;
+    }
+
+    /**
      * Paginated invoices for an owner's workspace, filterable by status/month.
      *
      * @param  array<string, mixed>  $filters
