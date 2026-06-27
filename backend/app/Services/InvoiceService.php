@@ -320,14 +320,23 @@ class InvoiceService
         $total = (float) $invoice->amount;
         $newPaid = (float) $invoice->amount_paid + $amount;
         $fullyPaid = $newPaid >= $total;
+        $paymentDate = $paidAt ?? Carbon::now();
 
-        $invoice->forceFill([
-            'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
-            'status' => $fullyPaid
-                ? InvoiceStatus::Paid->value
-                : InvoiceStatus::PartiallyPaid->value,
-            'paid_at' => $fullyPaid ? ($paidAt ?? Carbon::now()) : null,
-        ])->save();
+        DB::transaction(function () use ($invoice, $amount, $paymentDate, $fullyPaid, $newPaid): void {
+            $invoice->forceFill([
+                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'status' => $fullyPaid
+                    ? InvoiceStatus::Paid->value
+                    : InvoiceStatus::PartiallyPaid->value,
+                'paid_at' => $fullyPaid ? $paymentDate : null,
+            ])->save();
+
+            $invoice->payments()->create([
+                'amount' => round($amount, 2),
+                'receipt_path' => null,
+                'paid_at' => $paymentDate,
+            ]);
+        });
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace');
 
@@ -365,22 +374,33 @@ class InvoiceService
         $total = (float) $invoice->amount;
         $newPaid = (float) $invoice->amount_paid + $amount;
         $fullyPaid = $newPaid >= $total;
+        $paymentDate = $paidAt ?? Carbon::now();
 
-        $invoice->forceFill([
-            'receipt_path' => $this->uploads->upload(
-                $receipt,
-                'receipts/'.$invoice->id,
-                (string) config('filesystems.media', 'public'),
-                'public',
-            ),
-            'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
-            'status' => $fullyPaid
-                ? InvoiceStatus::Paid->value
-                : InvoiceStatus::PartiallyPaid->value,
-            'paid_at' => $fullyPaid ? ($paidAt ?? Carbon::now()) : null,
-            // An owner-recorded payment supersedes any prior receipt rejection.
-            'receipt_rejected_reason' => null,
-        ])->save();
+        $receiptPath = $this->uploads->upload(
+            $receipt,
+            'receipts/'.$invoice->id,
+            (string) config('filesystems.media', 'public'),
+            'public',
+        );
+
+        DB::transaction(function () use ($invoice, $amount, $receiptPath, $paymentDate, $fullyPaid, $newPaid): void {
+            $invoice->forceFill([
+                'receipt_path' => $receiptPath,
+                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'status' => $fullyPaid
+                    ? InvoiceStatus::Paid->value
+                    : InvoiceStatus::PartiallyPaid->value,
+                'paid_at' => $fullyPaid ? $paymentDate : null,
+                // An owner-recorded payment supersedes any prior receipt rejection.
+                'receipt_rejected_reason' => null,
+            ])->save();
+
+            $invoice->payments()->create([
+                'amount' => round($amount, 2),
+                'receipt_path' => $receiptPath,
+                'paid_at' => $paymentDate,
+            ]);
+        });
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace');
 
@@ -455,7 +475,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forWorkspace($workspace->id)
-            ->with(['subscription.member', 'subscription.seat'])
+            ->with(['subscription.member', 'subscription.seat', 'payments'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();

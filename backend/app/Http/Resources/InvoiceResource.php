@@ -43,6 +43,12 @@ class InvoiceResource extends JsonResource
             'pdf_url' => MediaUrl::resolve($this->invoice_pdf_path),
             'receipt_path' => $this->receipt_path,
             'receipt_url' => MediaUrl::resolve($this->receipt_path),
+            'payments' => $this->whenLoaded('payments', fn () => $this->payments->map(static fn ($p): array => [
+                'id' => $p->id,
+                'amount' => $p->amount,
+                'paid_at' => $p->paid_at?->toIso8601String(),
+                'receipt_url' => MediaUrl::resolve($p->receipt_path),
+            ])->all()),
             'receipt_rejected_reason' => $this->receipt_rejected_reason,
             'receipt_reviewed_at' => $this->receipt_reviewed_at?->toIso8601String(),
             'notes' => $this->notes,

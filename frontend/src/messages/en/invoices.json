@@ -66,6 +66,15 @@
         "uploadFailed": "Could not upload the receipt",
         "tooLarge": "File too large (5MB max)"
       },
+      "history": {
+        "action": "Payments ({count})",
+        "title": "Payments — {invoice}",
+        "date": "Date",
+        "amount": "Amount",
+        "receipt": "Receipt",
+        "view": "View",
+        "close": "Close"
+      },
       "review": {
         "viewReceipt": "View receipt",
         "approve": "Approve",

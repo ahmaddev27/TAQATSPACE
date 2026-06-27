@@ -26,6 +26,7 @@ import { RecordPaymentButton } from "./RecordPaymentButton";
 import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
+import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
 type StatusTab = "all" | InvoiceStatus;
@@ -197,6 +198,13 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
               <Icon name="receipt" size={15} />
               {t("actions.viewReceipt")}
             </a>
+          )}
+          {inv.payments && inv.payments.length > 0 && (
+            <PaymentsHistoryButton
+              invoiceNumber={inv.invoice_number}
+              payments={inv.payments}
+              currency={inv.currency}
+            />
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
         </div>
