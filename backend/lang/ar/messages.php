@@ -118,6 +118,7 @@ return [
     'invoice_member_no_subscription' => 'هذا العضو ليس لديه اشتراك نشط في مساحة عملك.',
     'invoice_already_paid' => 'تم دفع هذه الفاتورة بالفعل.',
     'invoice_partial_amount_invalid' => 'يجب أن يكون مبلغ الدفعة أكبر من صفر.',
+    'invoice_payment_exceeds_remaining' => 'المبلغ يتجاوز الرصيد المتبقّي (:remaining).',
     'invoice_partial_recorded' => 'تم تسجيل الدفعة.',
     'invoice_receipt_submitted' => 'تم رفع وصل الدفع، والفاتورة الآن قيد المراجعة.',
     'invoice_receipt_not_allowed' => 'لا يمكن رفع وصل دفع لهذه الفاتورة في حالتها الحالية.',

@@ -318,6 +318,14 @@ class InvoiceService
         }
 
         $total = (float) $invoice->amount;
+        $remaining = round($total - (float) $invoice->amount_paid, 2);
+
+        if ($amount > $remaining + 0.001) {
+            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
+                'remaining' => number_format($remaining, 2),
+            ]));
+        }
+
         $newPaid = (float) $invoice->amount_paid + $amount;
         $fullyPaid = $newPaid >= $total;
 
@@ -363,6 +371,14 @@ class InvoiceService
         }
 
         $total = (float) $invoice->amount;
+        $remaining = round($total - (float) $invoice->amount_paid, 2);
+
+        if ($amount > $remaining + 0.001) {
+            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
+                'remaining' => number_format($remaining, 2),
+            ]));
+        }
+
         $newPaid = (float) $invoice->amount_paid + $amount;
         $fullyPaid = $newPaid >= $total;
 

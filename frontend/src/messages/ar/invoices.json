@@ -54,6 +54,7 @@
         "dropLabel": "أسقط ملفاً هنا أو انقر للاختيار",
         "dropHint": "PDF أو PNG أو JPG · حتى 5 ميجابايت",
         "remove": "إزالة",
+        "crop": "قص الصورة",
         "amountRequired": "أدخل مبلغاً أكبر من صفر.",
         "receiptRequired": "أرفِق وصل الدفع.",
         "recorded": "تم تسجيل الدفعة",
