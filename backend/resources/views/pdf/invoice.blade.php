@@ -42,6 +42,17 @@
 
     $lineAmount = $subscription?->monthly_price ?? $invoice->amount;
 
+    // Internet package add-ons assigned to this member in the workspace, priced
+    // above zero — listed as their own invoice line(s) under the subscription.
+    $packageLines = ($member && $workspace)
+        ? $member->internetPackages()
+            ->where('internet_packages.workspace_id', $workspace->id)
+            ->where('internet_packages.price', '>', 0)
+            ->get(['internet_packages.id', 'internet_packages.name', 'internet_packages.price', 'internet_packages.speed_mbps'])
+        : collect();
+    $packagesTotal = (float) $packageLines->sum('price');
+    $subtotal = (float) $lineAmount + $packagesTotal;
+
     // Cairo lacks the ₪ glyph (U+20AA), so the shekel sign is rendered in DejaVu
     // Sans (bundled with mPDF, has the glyph) — shows ₪ correctly, not tofu.
     $money = static fn ($value): string =>
@@ -131,11 +142,14 @@
         /* ---------- Status badge ---------- */
         .badge {
             display: inline-block;
-            padding: 6px 18px;
-            border-radius: 16px;
+            padding: 4px 16px;
+            border-radius: 14px;
             font-size: 11px;
             font-weight: bold;
-            line-height: 1;
+            /* mPDF renders inline-block backgrounds tightly with line-height:1,
+               which made the longer "قيد المراجعة" label overlap the number
+               above — a normal line-height reserves the vertical space. */
+            line-height: 1.7;
         }
         .badge-paid { background: #E6F6EC; color: #1B8A4B; }
         .badge-partially_paid { background: #FEF3D6; color: #B5790B; }
@@ -272,7 +286,7 @@
                 <div class="doc-number">
                     رقم <span class="num">{{ $invoice->invoice_number }}</span>
                 </div>
-                <div style="margin-top: 12px;">
+                <div style="margin-top: 16px; line-height: 1;">
                     <span class="badge badge-{{ $displayStatusValue }}">{{ $statusLabel }}</span>
                 </div>
             </td>
@@ -354,6 +368,19 @@
                 <td><span class="num">{{ $period }}</span></td>
                 <td>{!! $money($lineAmount) !!}</td>
             </tr>
+            @foreach ($packageLines as $pkg)
+                <tr>
+                    <td>
+                        <div class="desc-title">باقة الإنترنت: {{ $pkg->name }}</div>
+                        <div class="desc-sub">Internet package</div>
+                        @if ($pkg->speed_mbps)
+                            <div class="desc-sub"><span class="num">{{ $pkg->speed_mbps }}</span> Mbps</div>
+                        @endif
+                    </td>
+                    <td><span class="num">{{ $period }}</span></td>
+                    <td>{!! $money($pkg->price) !!}</td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
 
@@ -362,7 +389,7 @@
         <tr>
             <td class="spacer"></td>
             <td class="t-label">المجموع الفرعي</td>
-            <td class="t-value">{!! $money($lineAmount) !!}</td>
+            <td class="t-value">{!! $money($subtotal) !!}</td>
         </tr>
         <tr class="grand">
             <td class="spacer"></td>
