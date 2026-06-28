@@ -65,4 +65,29 @@ class RecordPaymentTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->service()->recordPartialPayment($invoice->refresh(), 10);
     }
+
+    public function test_a_payment_above_the_remaining_balance_is_rejected(): void
+    {
+        Notification::fake();
+        $invoice = $this->invoice('100.00');
+        $this->service()->recordPartialPayment($invoice, 70);
+
+        // Only 30 remains; a 40 payment must not be accepted.
+        $this->expectException(RuntimeException::class);
+        $this->service()->recordPartialPayment($invoice->refresh(), 40);
+    }
+
+    public function test_each_installment_appends_one_row_to_the_ledger(): void
+    {
+        Notification::fake();
+        $invoice = $this->invoice('100.00');
+
+        $this->service()->recordPartialPayment($invoice, 60);
+        $this->service()->recordPartialPayment($invoice->refresh(), 40);
+
+        $payments = $invoice->refresh()->payments()->orderBy('id')->get();
+        $this->assertCount(2, $payments);
+        $this->assertSame('60.00', (string) $payments[0]->amount);
+        $this->assertSame('40.00', (string) $payments[1]->amount);
+    }
 }
