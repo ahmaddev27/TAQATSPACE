@@ -1,6 +1,12 @@
 {
   "common": {
     "currency": "₪",
+    "receipt": {
+      "title": "Payment receipt",
+      "openOriginal": "Open original",
+      "download": "Download",
+      "unsupported": "This receipt can't be previewed here."
+    },
     "save": "Save",
     "saving": "Saving…",
     "delete": "Delete",

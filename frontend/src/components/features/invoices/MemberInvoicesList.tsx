@@ -4,6 +4,7 @@ import type { Invoice } from "@/lib/api/invoices";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { SubmitReceiptButton } from "./SubmitReceiptButton";
+import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
 import { invoiceDate, invoiceMoney, sumAmounts } from "./format";
 
 export interface MemberInvoicesListProps {
@@ -98,16 +99,12 @@ export async function MemberInvoicesList({ invoices }: MemberInvoicesListProps) 
                         rejected={inv.status === "payment_rejected"}
                       />
                     )}
-                    {inv.receipt_url && (
-                      <a
-                        href={inv.receipt_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-ghost btn-sm"
-                      >
-                        <Icon name="receipt" size={15} />
-                        {t("receipt.view")}
-                      </a>
+                    {inv.payments && inv.payments.length > 0 && (
+                      <PaymentsHistoryButton
+                        invoiceNumber={inv.invoice_number}
+                        payments={inv.payments}
+                        currency={inv.currency}
+                      />
                     )}
                     <DownloadPdfLink
                       invoiceId={inv.id}

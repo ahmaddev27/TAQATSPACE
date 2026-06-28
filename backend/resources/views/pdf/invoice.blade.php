@@ -57,6 +57,17 @@
     // Sans (bundled with mPDF, has the glyph) — shows ₪ correctly, not tofu.
     $money = static fn ($value): string =>
         '<span class="num">' . number_format((float) $value, 2) . '</span> <span class="shekel">₪</span>';
+
+    // Workspace logo embedded as a data URI — mPDF can't reach the storage disk
+    // by URL, so we inline the bytes. Falls back silently when there's no logo.
+    $logoSrc = null;
+    if ($workspace?->logo_path) {
+        $logoDisk = \Illuminate\Support\Facades\Storage::disk((string) config('filesystems.media', 'public'));
+        if ($logoDisk->exists($workspace->logo_path)) {
+            $logoSrc = 'data:' . $logoDisk->mimeType($workspace->logo_path)
+                . ';base64,' . base64_encode($logoDisk->get($workspace->logo_path));
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -198,6 +209,7 @@
             margin-bottom: 8px;
         }
         .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; margin-bottom: 6px; }
+        .brand-logo { max-height: 60px; max-width: 220px; margin-bottom: 8px; }
         .party-line { color: #667085; font-size: 11px; line-height: 1.9; }
 
         /* ---------- Meta strip ---------- */
@@ -275,12 +287,17 @@
 </head>
 <body>
 
-    {{-- Header: brand wordmark vs. document title + status --}}
+    {{-- Header: the WORKSPACE's brand (logo + name) vs. document title + status --}}
     <table class="header">
         <tr>
             <td style="text-align: right;">
-                <div class="wordmark">TAQAT<span class="dot">.</span></div>
-                <div class="tagline">طاقة لمساحات العمل المشتركة</div>
+                @if ($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="" class="brand-logo">
+                @endif
+                <div class="wordmark">{{ $workspace?->name ?? 'TAQAT' }}</div>
+                @if ($workspace?->city)
+                    <div class="tagline">{{ $workspace->city }}</div>
+                @endif
             </td>
             <td style="text-align: left;">
                 <div class="doc-title">فاتورة</div>

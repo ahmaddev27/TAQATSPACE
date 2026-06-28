@@ -6,7 +6,6 @@ namespace App\Services\Admin;
 
 use App\Models\MessageUsage;
 use App\Models\Workspace;
-use App\Support\MediaUrl;
 
 /**
  * Aggregates broadcast messaging usage per workspace, split by source (Taqat's
@@ -36,7 +35,7 @@ class AdminMessagingUsageService
         $workspaces = Workspace::query()
             ->with('owner:id,avatar')
             ->whereIn('id', $rows->pluck('workspace_id')->unique())
-            ->get(['id', 'name', 'owner_id'])
+            ->get(['id', 'name', 'owner_id', 'logo_path'])
             ->keyBy('id');
 
         $byWorkspace = [];
@@ -48,8 +47,8 @@ class AdminMessagingUsageService
             $byWorkspace[$id] ??= [
                 'workspace_id' => $id,
                 'workspace_name' => (string) ($workspace?->name ?? '—'),
-                // The workspace "logo" = its owner's avatar.
-                'workspace_logo' => MediaUrl::resolve($workspace?->owner?->avatar),
+                // Dedicated workspace logo, falling back to the owner avatar.
+                'workspace_logo' => $workspace?->logoUrl(),
                 'platform_email' => 0,
                 'platform_sms' => 0,
                 'own_email' => 0,

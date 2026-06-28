@@ -64,6 +64,8 @@ return [
     'photos_uploaded' => 'تم رفع الصور.',
     'photo_removed' => 'تمت إزالة الصورة.',
     'photos_max_reached' => 'يمكن أن تحتوي مساحة العمل على :max صورة كحد أقصى.',
+    'logo_uploaded' => 'تم رفع الشعار.',
+    'logo_removed' => 'تمت إزالة الشعار.',
     'photo_not_found' => 'الصورة غير موجودة في مساحة العمل هذه.',
 
     // المقاعد
@@ -111,7 +113,11 @@ return [
     // الفواتير
     'invoice_not_found' => 'الفاتورة غير موجودة.',
     'invoice_created' => 'تم إنشاء الفاتورة.',
+    'invoice_deleted' => 'تم حذف الفاتورة.',
     'invoice_marked_paid' => 'تم تعليم الفاتورة كمدفوعة.',
+    'internet_credentials_sent' => 'تم إنشاء بيانات الإنترنت وإرسالها للعضو.',
+    'internet_credentials_subject' => 'بيانات الدخول للإنترنت — :workspace',
+    'internet_credentials_body' => "مرحباً،\nبيانات الدخول لإنترنت :workspace:\nاسم المستخدم: :username\nكلمة المرور: :password\nيرجى الحفاظ عليها.",
     'invoice_reverted_pending' => 'تمت إعادة الفاتورة إلى حالة قيد الانتظار.',
     'receipt_uploaded' => 'تم رفع الإيصال وتعليم الفاتورة كمدفوعة.',
     'reminder_sent' => 'تم إرسال التذكير.',

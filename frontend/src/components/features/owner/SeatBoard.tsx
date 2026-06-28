@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { SeatMap, type SeatMapState } from "@/components/ui/SeatMap";
 import { useToast } from "@/components/providers/ToastProvider";
-import { assignSeat, unassignSeat } from "@/lib/actions/owner";
+import { Input } from "@/components/ui/Input";
+import { assignSeat, renameSeat, unassignSeat } from "@/lib/actions/owner";
 import type { Member, Seat, SeatType } from "@/lib/types";
 import { avatarInitial } from "./format";
 import { AssignSeatModal } from "./AssignSeatModal";
@@ -177,6 +178,10 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
               : t("seats.assignTitle")}
           </h3>
 
+          {selectedSeat && (
+            <SeatRename key={selectedSeat.id} seat={selectedSeat} />
+          )}
+
           {!selectedSeat ? (
             <div className="empty-state" style={{ padding: "28px 12px" }}>
               <div className="st-ico amber" style={{ width: 44, height: 44 }}>
@@ -277,6 +282,58 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
             </>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Inline editor for a seat's label. Keyed by seat id so it resets per seat. */
+function SeatRename({ seat }: { seat: Seat }) {
+  const t = useTranslations("owner");
+  const { toast } = useToast();
+  const [value, setValue] = useState(seat.seat_number);
+  const [pending, startTransition] = useTransition();
+
+  const trimmed = value.trim();
+  const dirty = trimmed !== "" && trimmed !== seat.seat_number;
+
+  const save = () => {
+    if (!dirty) return;
+    startTransition(async () => {
+      const res = await renameSeat(seat.id, trimmed);
+      toast(
+        res.ok
+          ? { tone: "ok", title: t("seats.renamed"), body: trimmed }
+          : { tone: "err", title: t("seats.renameFailed"), body: res.message },
+      );
+    });
+  };
+
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <label className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+        {t("seats.renameLabel")}
+      </label>
+      <div className="row" style={{ gap: 8 }}>
+        <Input
+          value={value}
+          maxLength={20}
+          disabled={pending}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+          }}
+          style={{ flex: 1 }}
+        />
+        <Button
+          variant="secondary"
+          icon="check"
+          loading={pending}
+          disabled={!dirty}
+          onClick={save}
+        >
+          {t("seats.renameSave")}
+        </Button>
       </div>
     </div>
   );

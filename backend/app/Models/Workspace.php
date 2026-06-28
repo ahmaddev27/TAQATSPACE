@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\WorkspaceStatus;
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,7 @@ class Workspace extends Model
         'price_per_month',
         'amenities',
         'photos',
+        'logo_path',
         'working_hours',
         'messaging',
         'status',
@@ -64,6 +66,19 @@ class Workspace extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * The workspace's display logo as a resolved URL. Prefers the dedicated
+     * logo; falls back to the owner's avatar (only when that relation is loaded,
+     * to stay N+1-free) so workspaces without a logo keep their prior image.
+     */
+    public function logoUrl(): ?string
+    {
+        $path = $this->logo_path
+            ?? ($this->relationLoaded('owner') ? $this->owner?->avatar : null);
+
+        return MediaUrl::resolve($path);
     }
 
     /**
@@ -183,7 +198,26 @@ class Workspace extends Model
      */
     public function scopeInCity(Builder $query, string $city): void
     {
-        $query->where('city', $city);
+        // The filter value may arrive as a city id, its Arabic name, or its
+        // English name (the public explore page sends the localized label). Resolve
+        // it to the city record, then match workspaces by id OR the denormalized
+        // Arabic `city` string (older rows may have the string but no city_id).
+        $cityModel = City::query()
+            ->where('id', $city)
+            ->orWhere('name_ar', $city)
+            ->orWhere('name_en', $city)
+            ->first();
+
+        if ($cityModel === null) {
+            $query->where('city', $city);
+
+            return;
+        }
+
+        $query->where(function (Builder $inner) use ($cityModel): void {
+            $inner->where('city_id', $cityModel->id)
+                ->orWhere('city', $cityModel->name_ar);
+        });
     }
 
     /**

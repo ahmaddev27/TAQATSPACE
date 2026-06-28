@@ -218,6 +218,10 @@
 /* responsive */
 @media (max-width: 960px) {
   .ed-hero-in, .why-grid, .explore-split, .detail-split, .ws-grid, .caps-grid, .tstm-grid, .plan-grid, .gallery, .amen-grid { grid-template-columns: 1fr; }
+  /* The highlighted heading run is kept on one line on desktop for the underline
+     flourish; on narrow screens it must wrap or it overflows the viewport
+     (English phrases are longer than Arabic, so the x-scroll shows there first). */
+  .ed-title .hl { white-space: normal; }
   .pub-footer-in { grid-template-columns: 1fr 1fr; }
   .pub-nav { display: none; }
   .auth-wrap { grid-template-columns: 1fr; }

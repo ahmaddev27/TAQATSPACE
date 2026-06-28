@@ -13,6 +13,16 @@
       "space": "Space",
       "renewsOn": "Renews on",
       "internetPackage": "Internet package",
+      "internet": {
+        "title": "Internet access",
+        "subtitle": "Your login for the workspace internet.",
+        "username": "Username",
+        "password": "Password",
+        "reveal": "Show password",
+        "hide": "Hide password",
+        "copy": "Copy",
+        "copied": "Copied"
+      },
       "yourSeat": "Your seat",
       "noSeat": "No seat assigned yet",
       "seatType": "Seat type",

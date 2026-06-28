@@ -169,6 +169,10 @@
    ============================================================ */
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/* Page-level guard against horizontal overflow on mobile: clip (not hidden) so
+   it never breaks position: sticky. Intentional horizontal scrolling lives in
+   dedicated wrappers (.table-wrap, tab strips), which set their own overflow. */
+html, body { overflow-x: clip; max-width: 100%; }
 
 body {
   font-family: var(--font-ui);

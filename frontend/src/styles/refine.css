@@ -56,6 +56,11 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   font-size: var(--fs-xs); letter-spacing: .03em; text-transform: uppercase;
 }
 .tbl thead th.num, .tbl td.num, .tbl td.cell-num { text-align: start; }
+/* Cells whose content is forced LTR (dates, numbers, emails) carry `.ltr`, which
+   flips their `start` to the LEFT — in an RTL table that pushes the value away
+   from its right-aligned header. Pin such cells (and matching headers) back to
+   the column start so the text sits directly under its heading. */
+[dir="rtl"] .tbl td.ltr { text-align: right; }
 .tbl thead th.sortable { cursor: pointer; user-select: none; transition: color var(--t-fast); }
 .tbl thead th.sortable:hover { color: var(--text-2); }
 .tbl thead th.sortable.active { color: var(--primary); }
@@ -128,7 +133,15 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
    renders the option labels invisible. Keep it on inputs/textarea only. */
 .input, .textarea, .input-group .input { -webkit-text-fill-color: var(--text); }
 .input::placeholder, .textarea::placeholder { color: var(--text-3); -webkit-text-fill-color: var(--text-3); }
-.select option { color: var(--text); background: var(--surface); -webkit-text-fill-color: var(--text); }
+/* Native <option> popups are OS-rendered: they do NOT resolve CSS custom
+   properties (var()), and `-webkit-text-fill-color` overrides the colour with an
+   unreliable value there — both left the labels invisible. Use literal colours
+   via `color`/`background-color` only, and pin the popup's scheme so the browser
+   picks readable defaults too. */
+.select { color-scheme: light; }
+[data-theme="dark"] .select { color-scheme: dark; }
+.select option { color: #0A0A0A; background-color: #FFFFFF; }
+[data-theme="dark"] .select option { color: #E7E9EC; background-color: #14181E; }
 .input:hover:not(:focus):not(:disabled), .select:hover:not(:focus), .textarea:hover:not(:focus) { border-color: var(--n-400); }
 
 /* input with trailing addon (e.g. currency, unit) */

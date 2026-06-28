@@ -64,6 +64,8 @@ return [
     'photos_uploaded' => 'Photos uploaded.',
     'photo_removed' => 'Photo removed.',
     'photos_max_reached' => 'A workspace may have at most :max photos.',
+    'logo_uploaded' => 'Logo uploaded.',
+    'logo_removed' => 'Logo removed.',
     'photo_not_found' => 'Photo not found on this workspace.',
 
     // Seats
@@ -111,7 +113,11 @@ return [
     // Invoices
     'invoice_not_found' => 'Invoice not found.',
     'invoice_created' => 'Invoice created.',
+    'invoice_deleted' => 'Invoice deleted.',
     'invoice_marked_paid' => 'Invoice marked as paid.',
+    'internet_credentials_sent' => 'Internet credentials created and sent to the member.',
+    'internet_credentials_subject' => 'Your internet login — :workspace',
+    'internet_credentials_body' => "Hello,\nYour internet login for :workspace:\nUsername: :username\nPassword: :password\nPlease keep these safe.",
     'invoice_reverted_pending' => 'Invoice reverted to pending.',
     'receipt_uploaded' => 'Receipt uploaded and invoice marked paid.',
     'reminder_sent' => 'Reminder sent.',

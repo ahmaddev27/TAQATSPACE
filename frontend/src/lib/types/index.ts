@@ -197,8 +197,10 @@ export interface Workspace {
   price_per_month: number;
   amenities: string[];
   photos: string[];
-  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  /** The workspace logo (or owner avatar fallback), resolved URL or null. */
   logo?: string | null;
+  /** True when a dedicated logo is set (vs the owner-avatar fallback). */
+  has_logo?: boolean;
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
   /**
@@ -484,6 +486,8 @@ export interface MemberSummarySubscription {
   end_date: string | null;
   /** The member's internet package in this workspace, if assigned. */
   package: string | null;
+  /** The member's internet login (their own), or null if not yet issued. */
+  internet: { username: string; password: string | null } | null;
 }
 
 export interface MemberSummarySeat {

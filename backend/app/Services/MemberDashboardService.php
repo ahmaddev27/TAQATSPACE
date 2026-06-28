@@ -12,7 +12,6 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Support\MediaUrl;
 
 class MemberDashboardService
 {
@@ -84,14 +83,14 @@ class MemberDashboardService
     private function activeSubscription(User $member): ?Subscription
     {
         return $member->subscriptions()
-            ->with(['workspace:id,name', 'workspace.owner:id,avatar', 'seat:id,seat_number,type'])
+            ->with(['workspace:id,name,owner_id,logo_path', 'workspace.owner:id,avatar', 'seat:id,seat_number,type'])
             ->where('status', SubscriptionStatus::Active->value)
             ->latest('start_date')
             ->first();
     }
 
     /**
-     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null
+     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string, package: ?string, internet: array{username: string, password: ?string}|null}|null
      */
     private function subscriptionSummary(?Subscription $subscription): ?array
     {
@@ -102,12 +101,18 @@ class MemberDashboardService
         return [
             'status' => $subscription->status->value,
             'workspace_name' => (string) $subscription->workspace?->name,
-            // The workspace "logo" = its owner's avatar, shown beside the name.
-            'workspace_logo' => MediaUrl::resolve($subscription->workspace?->owner?->avatar),
+            // Dedicated workspace logo, falling back to the owner avatar.
+            'workspace_logo' => $subscription->workspace?->logoUrl(),
             'plan_type' => $subscription->plan_type->value,
             'end_date' => $subscription->end_date?->toDateString(),
             // The member's internet package in this workspace, if assigned.
             'package' => $this->packageName($subscription),
+            // The member's own internet login (password decrypted via the cast).
+            // Only ever returned to the member themselves on their dashboard.
+            'internet' => $subscription->internet_username === null ? null : [
+                'username' => $subscription->internet_username,
+                'password' => $subscription->internet_password_enc,
+            ],
         ];
     }
 

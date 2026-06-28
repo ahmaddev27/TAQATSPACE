@@ -21,6 +21,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::get('/', [InvoiceController::class, 'index']);
         Route::post('/', [InvoiceController::class, 'store']);
         Route::get('/{invoice}', [InvoiceController::class, 'show']);
+        Route::delete('/{invoice}', [InvoiceController::class, 'destroy']);
         Route::put('/{invoice}/pay', [InvoiceController::class, 'pay']);
         Route::post('/{invoice}/receipt', [InvoiceController::class, 'uploadReceipt']);
         Route::put('/{invoice}/approve-receipt', [InvoiceController::class, 'approveReceipt']);
