@@ -26,7 +26,6 @@ import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
-import { ReceiptViewerButton } from "./ReceiptViewerButton";
 import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
@@ -188,13 +187,6 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
                 <RemindButton invoiceId={inv.id} />
               </>
             )
-          )}
-          {inv.receipt_url && inv.status !== "under_review" && (
-            <ReceiptViewerButton
-              url={inv.receipt_url}
-              label={t("actions.viewReceipt")}
-              icon="receipt"
-            />
           )}
           {inv.payments && inv.payments.length > 0 && (
             <PaymentsHistoryButton
