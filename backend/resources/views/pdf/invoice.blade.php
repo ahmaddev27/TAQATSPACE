@@ -292,12 +292,9 @@
         <tr>
             <td style="text-align: right;">
                 @if ($logoSrc)
-                    {{-- The logo already carries the brand name, so we don't
-                         repeat the workspace name beside it. --}}
                     <img src="{{ $logoSrc }}" alt="" class="brand-logo">
-                @else
-                    <div class="wordmark">{{ $workspace?->name ?? 'TAQAT' }}</div>
                 @endif
+                <div class="wordmark">{{ $workspace?->name ?? 'TAQAT' }}</div>
                 @if ($workspace?->city)
                     <div class="tagline">{{ $workspace->city }}</div>
                 @endif
