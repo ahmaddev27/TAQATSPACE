@@ -133,10 +133,15 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
    renders the option labels invisible. Keep it on inputs/textarea only. */
 .input, .textarea, .input-group .input { -webkit-text-fill-color: var(--text); }
 .input::placeholder, .textarea::placeholder { color: var(--text-3); -webkit-text-fill-color: var(--text-3); }
-/* Native <option> popups are OS-rendered and do NOT reliably resolve CSS custom
-   properties (var()), which left the labels invisible. Use literal colours. */
-.select option { color: #0A0A0A; background: #FFFFFF; -webkit-text-fill-color: #0A0A0A; }
-[data-theme="dark"] .select option { color: #E7E9EC; background: #14181E; -webkit-text-fill-color: #E7E9EC; }
+/* Native <option> popups are OS-rendered: they do NOT resolve CSS custom
+   properties (var()), and `-webkit-text-fill-color` overrides the colour with an
+   unreliable value there — both left the labels invisible. Use literal colours
+   via `color`/`background-color` only, and pin the popup's scheme so the browser
+   picks readable defaults too. */
+.select { color-scheme: light; }
+[data-theme="dark"] .select { color-scheme: dark; }
+.select option { color: #0A0A0A; background-color: #FFFFFF; }
+[data-theme="dark"] .select option { color: #E7E9EC; background-color: #14181E; }
 .input:hover:not(:focus):not(:disabled), .select:hover:not(:focus), .textarea:hover:not(:focus) { border-color: var(--n-400); }
 
 /* input with trailing addon (e.g. currency, unit) */
