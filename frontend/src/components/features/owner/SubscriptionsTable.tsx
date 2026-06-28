@@ -133,7 +133,7 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
     return sortRows(rows, sort, {
       member: (r) => r.sub.member.name,
       plan: (r) => r.sub.plan_type,
-      price: (r) => Number(r.sub.monthly_price),
+      price: (r) => Number(r.sub.total_price),
       seat: (r) => r.sub.seat_number ?? "",
       start: (r) => r.sub.start_date ?? "",
       end: (r) => r.sub.end_date ?? "",
@@ -223,15 +223,38 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
       cell: ({ sub }) => <span>{tc(`planType.${sub.plan_type}` as never)}</span>,
     },
     {
+      id: "package",
+      header: t("colPackage"),
+      cell: ({ sub }) =>
+        sub.internet_package ? (
+          <span className="badge badge-info">
+            <Icon name="wifi" size={13} />
+            {sub.internet_package}
+          </span>
+        ) : (
+          <span className="muted-3">{t("noPackage")}</span>
+        ),
+    },
+    {
       id: "price",
       header: t("colPrice"),
       num: true,
       sortable: true,
-      cell: ({ sub }) => (
-        <span className="cell-num" style={{ fontWeight: 600 }}>
-          {money(sub.monthly_price)}
-        </span>
-      ),
+      cell: ({ sub }) => {
+        // The package price is folded into the total; show the breakdown when
+        // a paid package is attached so the owner sees where the total comes from.
+        const hasPackagePrice = Number(sub.package_price) > 0;
+        return (
+          <div className="cell-num" style={{ fontWeight: 600 }}>
+            {money(sub.total_price)}
+            {hasPackagePrice && (
+              <div className="muted-3" style={{ fontSize: "var(--fs-xs)", fontWeight: 400 }}>
+                {money(sub.monthly_price)} + {money(sub.package_price)}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: "seat",

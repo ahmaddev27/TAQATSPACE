@@ -26,6 +26,12 @@ class OwnerSubscriptionResource extends JsonResource
     {
         $member = $this->member;
 
+        // Internet packages assigned to this member in the workspace (already
+        // scoped by the eager load). Their prices fold into the displayed total.
+        $packages = $member?->internetPackages ?? collect();
+        $packagePrice = (float) $packages->sum('price');
+        $planPrice = (float) $this->monthly_price;
+
         return [
             'id' => $this->id,
             'member' => [
@@ -38,6 +44,9 @@ class OwnerSubscriptionResource extends JsonResource
             ],
             'plan_type' => $this->plan_type->value,
             'monthly_price' => $this->monthly_price,
+            'internet_package' => $packages->isEmpty() ? null : $packages->pluck('name')->implode('، '),
+            'package_price' => number_format($packagePrice, 2, '.', ''),
+            'total_price' => number_format($planPrice + $packagePrice, 2, '.', ''),
             'seat_number' => $this->seat?->seat_number,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),

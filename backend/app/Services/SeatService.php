@@ -269,7 +269,7 @@ class SeatService
      */
     public function update(Seat $seat, array $data): Seat
     {
-        $seat->fill(array_intersect_key($data, array_flip(['type', 'status', 'notes'])));
+        $seat->fill(array_intersect_key($data, array_flip(['seat_number', 'type', 'status', 'notes'])));
         $seat->save();
 
         return $seat->refresh();

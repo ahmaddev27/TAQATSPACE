@@ -126,7 +126,14 @@ class OwnerSubscriptionService
     private function rosterQuery(Workspace $workspace, array $filters): Builder
     {
         $query = Subscription::query()
-            ->with(['member:id,name,email,phone,specialty,avatar', 'seat:id,seat_number,type,status'])
+            ->with([
+                'member:id,name,email,phone,specialty,avatar',
+                // The member's internet packages within THIS workspace, so the
+                // roster can show the package and fold its price into the total.
+                'member.internetPackages' => fn ($q) => $q
+                    ->where('internet_packages.workspace_id', $workspace->id),
+                'seat:id,seat_number,type,status',
+            ])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
             ->where('subscriptions.workspace_id', $workspace->id)
             ->select('subscriptions.*');
