@@ -33,6 +33,8 @@ export interface OwnerSubscription {
   package_price: string;
   /** Decimal string — monthly_price + package_price. */
   total_price: string;
+  /** True when the member has been issued internet credentials. */
+  has_internet: boolean;
   seat_number: string | null;
   start_date: string | null;
   end_date: string | null;

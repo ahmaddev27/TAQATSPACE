@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\PlanType;
 use App\Enums\SubscriptionStatus;
+use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
-    /** @use HasFactory<\Database\Factories\SubscriptionFactory> */
+    /** @use HasFactory<SubscriptionFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */
@@ -28,6 +29,9 @@ class Subscription extends Model
         'monthly_price',
         'status',
         'cancelled_at',
+        'internet_username',
+        'internet_password_enc',
+        'internet_provisioned_at',
     ];
 
     /**
@@ -42,6 +46,8 @@ class Subscription extends Model
             'end_date' => 'date',
             'cancelled_at' => 'datetime',
             'monthly_price' => 'decimal:2',
+            'internet_password_enc' => 'encrypted',
+            'internet_provisioned_at' => 'datetime',
         ];
     }
 

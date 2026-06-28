@@ -19,6 +19,7 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { cancelSubscription, renewSubscription } from "@/lib/actions/owner";
 import type { OwnerSubscription } from "@/lib/api/ownerSubscriptions";
+import { ProvisionInternetButton } from "./ProvisionInternetButton";
 import { avatarInitial, money, shortDate } from "./format";
 
 /* -------------------------------------------------------------------------- */
@@ -319,6 +320,13 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
             >
               {t("renew")}
             </Button>
+          )}
+          {display !== "cancelled" && (
+            <ProvisionInternetButton
+              subscriptionId={sub.id}
+              memberName={sub.member.name}
+              hasCredentials={sub.has_internet}
+            />
           )}
           {display !== "cancelled" && (
             <Button

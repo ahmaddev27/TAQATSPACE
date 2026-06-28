@@ -10,6 +10,7 @@ use App\Http\Resources\OwnerSubscriptionResource;
 use App\Models\Subscription;
 use App\Models\Workspace;
 use App\Services\BookingService;
+use App\Services\InternetAccessService;
 use App\Services\OwnerSubscriptionService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +96,28 @@ class SubscriptionController extends Controller
             new OwnerSubscriptionResource($cancelled),
             __('messages.subscription_cancelled'),
         );
+    }
+
+    /**
+     * POST /api/workspace/subscriptions/{subscription}/internet
+     *
+     * Issue (or regenerate) the member's internet credentials and send them by
+     * email and SMS. Returns the credentials and which channels were delivered.
+     */
+    public function provisionInternet(
+        Request $request,
+        Subscription $subscription,
+        InternetAccessService $internet,
+    ): JsonResponse {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null || $subscription->workspace_id !== $workspace->id) {
+            return ApiResponse::error(__('messages.subscription_no_access'), 403);
+        }
+
+        $result = $internet->provision($subscription);
+
+        return ApiResponse::success($result, __('messages.internet_credentials_sent'));
     }
 
     private function ownerWorkspace(Request $request): ?Workspace

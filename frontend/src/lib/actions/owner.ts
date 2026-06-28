@@ -128,6 +128,29 @@ export async function cancelSubscription(
   return result;
 }
 
+/** The credentials + delivery result returned by provisioning internet access. */
+export interface InternetCredentials {
+  username: string;
+  password: string;
+  sent_email: boolean;
+  sent_sms: boolean;
+}
+
+/**
+ * Issue (or regenerate) the member's internet credentials and send them by
+ * email + SMS. Returns the credentials so the owner can also share them directly.
+ */
+export async function provisionInternet(
+  subscriptionId: string,
+): Promise<ActionResult<InternetCredentials>> {
+  const result = await authedMutate<InternetCredentials>(
+    `/workspace/subscriptions/${subscriptionId}/internet`,
+    { method: "POST" },
+  );
+  if (result.ok) revalidateOwner("subscriptions");
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Seats                                                                     */
 /* -------------------------------------------------------------------------- */

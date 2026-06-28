@@ -19,4 +19,5 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::get('/', [SubscriptionController::class, 'index']);
         Route::put('/{subscription}/renew', [SubscriptionController::class, 'renew']);
         Route::put('/{subscription}/cancel', [SubscriptionController::class, 'cancel']);
+        Route::post('/{subscription}/internet', [SubscriptionController::class, 'provisionInternet']);
     });
