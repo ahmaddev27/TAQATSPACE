@@ -90,7 +90,7 @@ class MemberDashboardService
     }
 
     /**
-     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null
+     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string, package: ?string, internet: array{username: string, password: ?string}|null}|null
      */
     private function subscriptionSummary(?Subscription $subscription): ?array
     {
@@ -107,6 +107,12 @@ class MemberDashboardService
             'end_date' => $subscription->end_date?->toDateString(),
             // The member's internet package in this workspace, if assigned.
             'package' => $this->packageName($subscription),
+            // The member's own internet login (password decrypted via the cast).
+            // Only ever returned to the member themselves on their dashboard.
+            'internet' => $subscription->internet_username === null ? null : [
+                'username' => $subscription->internet_username,
+                'password' => $subscription->internet_password_enc,
+            ],
         ];
     }
 
