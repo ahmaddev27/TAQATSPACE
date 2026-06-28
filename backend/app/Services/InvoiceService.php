@@ -161,7 +161,7 @@ class InvoiceService
                 $query->whereNull('end_date')
                     ->orWhereDate('end_date', '>=', $month->toDateString());
             })
-            ->with('member')
+            ->with('member', 'workspace')
             ->chunkById(100, function ($subscriptions) use ($month, $dueDate, &$created): void {
                 foreach ($subscriptions as $subscription) {
                     $invoice = $this->createForBillingMonth($subscription, $month, $dueDate);
@@ -200,7 +200,7 @@ class InvoiceService
             'amount' => $subscription->monthly_price,
             'due_date' => $dueDate->toDateString(),
             'status' => InvoiceStatus::Pending->value,
-            'invoice_number' => $this->nextInvoiceNumber(),
+            'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
         ]);
     }
 
@@ -226,7 +226,7 @@ class InvoiceService
             'amount' => $subscription->monthly_price,
             'due_date' => $periodEnd->toDateString(),
             'status' => InvoiceStatus::Pending->value,
-            'invoice_number' => $this->nextInvoiceNumber(),
+            'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
         ]);
 
         $subscription->loadMissing('member');
@@ -260,7 +260,7 @@ class InvoiceService
             'amount' => $data['amount'],
             'due_date' => $data['due_date'],
             'status' => InvoiceStatus::Pending->value,
-            'invoice_number' => $this->nextInvoiceNumber(),
+            'invoice_number' => $this->nextInvoiceNumber($workspace),
             'notes' => $data['notes'] ?? null,
         ]);
 
@@ -680,14 +680,15 @@ class InvoiceService
     }
 
     /**
-     * Generate the next sequential invoice number: TAQAT-{YYYY}-{0001}.
-     * Locks the latest row for the year to keep the sequence collision-safe
-     * under concurrent generation.
+     * Generate the next sequential invoice number, prefixed by the workspace so
+     * the document reads in the space's own name (e.g. TEST-{YYYY}-{0001}) rather
+     * than the platform's. Locks the latest row for that prefix to keep the
+     * sequence collision-safe under concurrent generation.
      */
-    private function nextInvoiceNumber(): string
+    private function nextInvoiceNumber(Workspace $workspace): string
     {
         $year = Carbon::today()->year;
-        $prefix = "TAQAT-{$year}-";
+        $prefix = $this->invoicePrefixFor($workspace)."-{$year}-";
 
         return DB::transaction(function () use ($prefix): string {
             $latest = Invoice::query()
@@ -704,5 +705,23 @@ class InvoiceService
 
             return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
         });
+    }
+
+    /**
+     * A short, stable, file-safe prefix derived from the workspace name. Keeps
+     * ASCII letters/digits (upper-cased, capped); falls back to a code from the
+     * workspace id for names that are entirely non-Latin (e.g. Arabic only).
+     */
+    private function invoicePrefixFor(Workspace $workspace): string
+    {
+        $base = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', (string) $workspace->name));
+        $base = substr($base, 0, 6);
+
+        if ($base === '') {
+            $idPart = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', (string) $workspace->id));
+            $base = 'WS'.substr($idPart, 0, 4);
+        }
+
+        return $base;
     }
 }

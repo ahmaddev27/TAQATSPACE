@@ -7,8 +7,11 @@ import { ImageCropModal } from "./ImageCropModal";
 const PASSTHROUGH_TYPES = /^image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)$/;
 
 export interface UseImageCropperOptions {
-  /** Output aspect ratio (width / height) for the crop frame. */
-  aspect: number;
+  /**
+   * Output aspect ratio (width / height) for the crop frame. Omit to follow the
+   * image's own ratio (no forced crop — e.g. a full-width logo).
+   */
+  aspect?: number;
   /** Longest edge of the exported image, in pixels. Defaults to 1280. */
   maxSize?: number;
   /** Encoder quality for lossy formats (0..1). Defaults to 0.9. */
