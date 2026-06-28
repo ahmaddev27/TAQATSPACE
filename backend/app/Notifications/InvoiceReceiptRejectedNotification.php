@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Invoice;
+use App\Notifications\Concerns\RendersWorkspaceMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notification;
  */
 class InvoiceReceiptRejectedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, RendersWorkspaceMail;
 
     public function __construct(
         public readonly Invoice $invoice,
@@ -39,12 +40,18 @@ class InvoiceReceiptRejectedNotification extends Notification implements ShouldQ
         $number = $this->invoice->invoice_number;
         $reason = (string) $this->invoice->receipt_rejected_reason;
 
-        return (new MailMessage)
-            ->subject('وصل الدفع مرفوض / Payment receipt rejected')
-            ->line("تم رفض وصل الدفع للفاتورة {$number}. السبب: {$reason}")
-            ->line("يرجى رفع وصل جديد بعد التصحيح.")
-            ->line("Your payment receipt for invoice {$number} was rejected. Reason: {$reason}")
-            ->line('Please upload a corrected receipt.');
+        $this->invoice->loadMissing('subscription.workspace.owner');
+
+        return $this->workspaceMail(
+            $this->invoice->subscription?->workspace,
+            'وصل الدفع مرفوض / Payment receipt rejected',
+            [
+                "تم رفض وصل الدفع للفاتورة {$number}. السبب: {$reason}",
+                'يرجى رفع وصل جديد بعد التصحيح.',
+                "Your payment receipt for invoice {$number} was rejected. Reason: {$reason}",
+                'Please upload a corrected receipt.',
+            ],
+        );
     }
 
     /**
