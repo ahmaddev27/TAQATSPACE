@@ -10,11 +10,18 @@
         <tr>
             <td align="center">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background:#FFFFFF; border:1px solid #E4E9F0; border-radius:14px; overflow:hidden;">
-                    {{-- Branded header: the WORKSPACE's logo + name --}}
+                    {{-- Branded header: the WORKSPACE's logo + name. Prefer an
+                         inline (CID) image — embedded in the message so it always
+                         renders — and fall back to the resolved URL. --}}
+                    @php
+                        $logoSrc = (! empty($logo) && isset($message))
+                            ? $message->embedData($logo['data'], 'workspace-logo', $logo['mime'])
+                            : ($logoUrl ?? null);
+                    @endphp
                     <tr>
                         <td align="center" style="padding:28px 24px 14px;">
-                            @if (! empty($logoUrl))
-                                <img src="{{ $logoUrl }}" alt="{{ $workspaceName }}" style="max-height:56px; max-width:200px; display:block; margin:0 auto 8px;">
+                            @if (! empty($logoSrc))
+                                <img src="{{ $logoSrc }}" alt="{{ $workspaceName }}" style="max-height:56px; max-width:200px; display:block; margin:0 auto 8px;">
                             @endif
                             <div style="font-size:20px; font-weight:bold; color:#1F82C7;">{{ $workspaceName }}</div>
                         </td>
