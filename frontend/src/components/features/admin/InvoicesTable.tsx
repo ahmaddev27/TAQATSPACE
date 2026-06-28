@@ -26,6 +26,7 @@ import { invoiceMoney } from "@/components/features/invoices/format";
 import { adminDate } from "./format";
 import { ExportCsvLink } from "./ExportCsvLink";
 import { ReceiptUploadModal } from "./ReceiptUploadModal";
+import { ReceiptViewerButton } from "@/components/features/invoices/ReceiptViewerButton";
 
 type StatusTab = "all" | InvoiceStatus;
 
@@ -240,15 +241,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
             </a>
           )}
           {inv.receipt_url && (
-            <a
-              className="btn btn-ghost btn-sm"
-              href={inv.receipt_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon name="eye" size={15} />
-              {t("viewReceipt")}
-            </a>
+            <ReceiptViewerButton url={inv.receipt_url} label={t("viewReceipt")} />
           )}
         </div>
         );
@@ -396,15 +389,10 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               />
             </Field>
             {!payReceipt && payTarget.receipt_url && (
-              <a
-                className="btn btn-ghost btn-sm"
-                href={payTarget.receipt_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Icon name="eye" size={15} />
-                {tPay("viewAttached")}
-              </a>
+              <ReceiptViewerButton
+                url={payTarget.receipt_url}
+                label={tPay("viewAttached")}
+              />
             )}
           </div>
         </Modal>

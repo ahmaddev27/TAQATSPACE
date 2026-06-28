@@ -113,6 +113,7 @@ return [
     // الفواتير
     'invoice_not_found' => 'الفاتورة غير موجودة.',
     'invoice_created' => 'تم إنشاء الفاتورة.',
+    'invoice_deleted' => 'تم حذف الفاتورة.',
     'invoice_marked_paid' => 'تم تعليم الفاتورة كمدفوعة.',
     'invoice_reverted_pending' => 'تمت إعادة الفاتورة إلى حالة قيد الانتظار.',
     'receipt_uploaded' => 'تم رفع الإيصال وتعليم الفاتورة كمدفوعة.',

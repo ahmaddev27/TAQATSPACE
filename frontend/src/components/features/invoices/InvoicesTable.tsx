@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/DataTable";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { ExportCsvLink } from "@/components/features/admin/ExportCsvLink";
-import { Icon } from "@/components/ui/Icon";
 import type { Invoice } from "@/lib/api/invoices";
 import type { InvoiceStatus } from "@/lib/types";
 import {
@@ -27,6 +26,8 @@ import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
+import { ReceiptViewerButton } from "./ReceiptViewerButton";
+import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
 type StatusTab = "all" | InvoiceStatus;
@@ -189,15 +190,11 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             )
           )}
           {inv.receipt_url && inv.status !== "under_review" && (
-            <a
-              href={inv.receipt_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-ghost btn-sm"
-            >
-              <Icon name="receipt" size={15} />
-              {t("actions.viewReceipt")}
-            </a>
+            <ReceiptViewerButton
+              url={inv.receipt_url}
+              label={t("actions.viewReceipt")}
+              icon="receipt"
+            />
           )}
           {inv.payments && inv.payments.length > 0 && (
             <PaymentsHistoryButton
@@ -207,6 +204,10 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             />
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
+          <DeleteInvoiceButton
+            invoiceId={inv.id}
+            invoiceNumber={inv.invoice_number}
+          />
         </div>
       ),
     },

@@ -4,6 +4,7 @@ import type { Invoice } from "@/lib/api/invoices";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { SubmitReceiptButton } from "./SubmitReceiptButton";
+import { ReceiptViewerButton } from "./ReceiptViewerButton";
 import { invoiceDate, invoiceMoney, sumAmounts } from "./format";
 
 export interface MemberInvoicesListProps {
@@ -99,15 +100,11 @@ export async function MemberInvoicesList({ invoices }: MemberInvoicesListProps) 
                       />
                     )}
                     {inv.receipt_url && (
-                      <a
-                        href={inv.receipt_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-ghost btn-sm"
-                      >
-                        <Icon name="receipt" size={15} />
-                        {t("receipt.view")}
-                      </a>
+                      <ReceiptViewerButton
+                        url={inv.receipt_url}
+                        label={t("receipt.view")}
+                        icon="receipt"
+                      />
                     )}
                     <DownloadPdfLink
                       invoiceId={inv.id}
