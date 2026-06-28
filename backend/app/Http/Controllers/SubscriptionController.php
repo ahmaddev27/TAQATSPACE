@@ -25,7 +25,7 @@ class SubscriptionController extends Controller
         $subscriptions = Subscription::query()
             ->where('member_id', $request->user()->id)
             ->with([
-                'workspace:id,name,city,address,photos',
+                'workspace:id,name,city,address,photos,owner_id,logo_path',
                 // Owner avatar → the workspace "logo" shown beside the name.
                 'workspace.owner:id,avatar',
                 'seat:id,seat_number,type,status',
@@ -45,7 +45,8 @@ class SubscriptionController extends Controller
         $this->authorizeOwnership($request, $subscription);
 
         $subscription->load([
-            'workspace:id,name,city,address,photos',
+            'workspace:id,name,city,address,photos,owner_id,logo_path',
+            'workspace.owner:id,avatar',
             'seat:id,seat_number,type,status',
             'invoices',
         ]);

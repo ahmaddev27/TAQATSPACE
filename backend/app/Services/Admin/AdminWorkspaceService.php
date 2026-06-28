@@ -44,7 +44,7 @@ class AdminWorkspaceService
                 static fn (string $p): string => MediaUrl::resolve($p) ?? $p,
                 $workspace->photos ?? [],
             ),
-            'logo' => MediaUrl::resolve($workspace->owner?->avatar),
+            'logo' => $workspace->logoUrl(),
             'created_at' => $workspace->created_at?->toIso8601String(),
             'owner' => $workspace->owner === null ? null : [
                 'id' => $workspace->owner->id,

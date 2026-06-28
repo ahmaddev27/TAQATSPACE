@@ -64,6 +64,8 @@ return [
     'photos_uploaded' => 'تم رفع الصور.',
     'photo_removed' => 'تمت إزالة الصورة.',
     'photos_max_reached' => 'يمكن أن تحتوي مساحة العمل على :max صورة كحد أقصى.',
+    'logo_uploaded' => 'تم رفع الشعار.',
+    'logo_removed' => 'تمت إزالة الشعار.',
     'photo_not_found' => 'الصورة غير موجودة في مساحة العمل هذه.',
 
     // المقاعد

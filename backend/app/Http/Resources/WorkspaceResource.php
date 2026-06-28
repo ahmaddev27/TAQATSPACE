@@ -37,11 +37,10 @@ class WorkspaceResource extends JsonResource
             'price_per_month' => $this->price_per_month,
             'amenities' => $this->amenities ?? [],
             'photos' => $this->photoUrls(),
-            // The workspace "logo" is its owner's avatar (resolved). Present only
-            // when the owner relation is eager-loaded, so reads stay N+1-free.
-            'logo' => $this->relationLoaded('owner')
-                ? MediaUrl::resolve($this->owner?->avatar)
-                : null,
+            // The workspace's dedicated logo, falling back to the owner's avatar
+            // when none is set (see Workspace::logoUrl, which stays N+1-free).
+            'logo' => $this->logoUrl(),
+            'has_logo' => $this->logo_path !== null,
             'working_hours' => $this->working_hours,
             'status' => $this->status->value,
             'avg_rating' => $this->avg_rating,

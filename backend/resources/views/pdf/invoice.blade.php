@@ -57,6 +57,17 @@
     // Sans (bundled with mPDF, has the glyph) — shows ₪ correctly, not tofu.
     $money = static fn ($value): string =>
         '<span class="num">' . number_format((float) $value, 2) . '</span> <span class="shekel">₪</span>';
+
+    // Workspace logo embedded as a data URI — mPDF can't reach the storage disk
+    // by URL, so we inline the bytes. Falls back silently when there's no logo.
+    $logoSrc = null;
+    if ($workspace?->logo_path) {
+        $logoDisk = \Illuminate\Support\Facades\Storage::disk((string) config('filesystems.media', 'public'));
+        if ($logoDisk->exists($workspace->logo_path)) {
+            $logoSrc = 'data:' . $logoDisk->mimeType($workspace->logo_path)
+                . ';base64,' . base64_encode($logoDisk->get($workspace->logo_path));
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -198,6 +209,7 @@
             margin-bottom: 8px;
         }
         .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; margin-bottom: 6px; }
+        .workspace-logo { max-height: 46px; max-width: 150px; margin-bottom: 6px; }
         .party-line { color: #667085; font-size: 11px; line-height: 1.9; }
 
         /* ---------- Meta strip ---------- */
@@ -306,6 +318,9 @@
             <td>
                 <div class="party-label">المُصدِر</div>
                 <div class="party-label-en">From</div>
+                @if ($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="" class="workspace-logo">
+                @endif
                 <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
                 @if ($workspace?->address)
                     <div class="party-line">{{ $workspace->address }}</div>

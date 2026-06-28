@@ -392,6 +392,25 @@ export async function deletePhoto(
   return result;
 }
 
+export async function uploadLogo(
+  formData: FormData,
+): Promise<ActionResult<Workspace>> {
+  const result = await authedMutate<Workspace>("/workspace/logo", {
+    method: "POST",
+    formData,
+  });
+  if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
+export async function deleteLogo(): Promise<ActionResult<Workspace>> {
+  const result = await authedMutate<Workspace>("/workspace/logo", {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Management — Expenses                                                      */
 /* -------------------------------------------------------------------------- */
