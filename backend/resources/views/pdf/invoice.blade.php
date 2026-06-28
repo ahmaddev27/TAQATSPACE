@@ -209,7 +209,7 @@
             margin-bottom: 8px;
         }
         .party-name { font-size: 15px; font-weight: bold; color: #0E1726; line-height: 1.7; margin-bottom: 6px; }
-        .workspace-logo { max-height: 46px; max-width: 150px; margin-bottom: 6px; }
+        .brand-logo { max-height: 60px; max-width: 220px; margin-bottom: 8px; }
         .party-line { color: #667085; font-size: 11px; line-height: 1.9; }
 
         /* ---------- Meta strip ---------- */
@@ -287,12 +287,17 @@
 </head>
 <body>
 
-    {{-- Header: brand wordmark vs. document title + status --}}
+    {{-- Header: the WORKSPACE's brand (logo + name) vs. document title + status --}}
     <table class="header">
         <tr>
             <td style="text-align: right;">
-                <div class="wordmark">TAQAT<span class="dot">.</span></div>
-                <div class="tagline">طاقة لمساحات العمل المشتركة</div>
+                @if ($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="" class="brand-logo">
+                @endif
+                <div class="wordmark">{{ $workspace?->name ?? 'TAQAT' }}</div>
+                @if ($workspace?->city)
+                    <div class="tagline">{{ $workspace->city }}</div>
+                @endif
             </td>
             <td style="text-align: left;">
                 <div class="doc-title">فاتورة</div>
@@ -318,9 +323,6 @@
             <td>
                 <div class="party-label">المُصدِر</div>
                 <div class="party-label-en">From</div>
-                @if ($logoSrc)
-                    <img src="{{ $logoSrc }}" alt="" class="workspace-logo">
-                @endif
                 <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
                 @if ($workspace?->address)
                     <div class="party-line">{{ $workspace->address }}</div>

@@ -26,8 +26,9 @@ export function LogoManager({ logo, hasLogo }: LogoManagerProps) {
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  // A logo reads best as a square — crop each pick to 1:1.
-  const { cropFile, cropper } = useImageCropper({ aspect: 1, maxSize: 512 });
+  // No forced aspect — keep the logo's own ratio (full width); the owner can
+  // still reposition/zoom. Capped to a reasonable export size.
+  const { cropFile, cropper } = useImageCropper({ maxSize: 640 });
 
   const upload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -90,7 +91,7 @@ export function LogoManager({ logo, hasLogo }: LogoManagerProps) {
             <img
               src={logo}
               alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           </div>
         ) : (

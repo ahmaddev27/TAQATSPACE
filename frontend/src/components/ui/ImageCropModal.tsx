@@ -21,8 +21,12 @@ import {
 export interface ImageCropModalProps {
   /** The original file the user picked. The modal crops a copy of it. */
   file: File;
-  /** Output aspect ratio (width / height). 1 = square, 16/9 = landscape. */
-  aspect: number;
+  /**
+   * Output aspect ratio (width / height). 1 = square, 16/9 = landscape. When
+   * omitted, the crop frame matches the image's own ratio — no forced crop, so
+   * a wide logo keeps its full width.
+   */
+  aspect?: number;
   /** Longest edge of the exported image, in CSS pixels. Defaults to 1280. */
   maxSize?: number;
   /** JPEG/WebP quality 0..1 (PNG ignores it). Defaults to 0.9. */
@@ -255,7 +259,13 @@ export function ImageCropModal({
         <div
           ref={setFrameNode}
           className="cropper-frame"
-          style={{ aspectRatio: String(aspect) }}
+          style={{
+            // No fixed aspect → follow the image's own ratio (full image, no
+            // forced crop) once it has loaded; fall back to square until then.
+            aspectRatio: String(
+              aspect ?? (oriented.w && oriented.h ? oriented.w / oriented.h : 1),
+            ),
+          }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
