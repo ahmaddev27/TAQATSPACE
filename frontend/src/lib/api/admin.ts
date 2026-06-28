@@ -1,4 +1,5 @@
 import { serverFetch } from "@/lib/api";
+import type { InvoicePaymentRow } from "@/lib/api/invoices";
 import type {
   AdminPermission,
   AdminRole,
@@ -441,6 +442,8 @@ export interface AdminInvoice {
   /** Absolute, viewable URLs resolved server-side (presigned S3 or public). */
   pdf_url: string | null;
   receipt_url: string | null;
+  /** The invoice's payment ledger (one row per recorded payment). */
+  payments?: InvoicePaymentRow[];
   notes: string | null;
   created_at: string | null;
   member: AdminInvoiceParty | null;

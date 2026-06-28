@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
 class AdminInvoiceService
 {
     /** Eager-load chain that satisfies the admin invoice resource contract. */
-    private const RELATIONS = ['subscription.member:id,name,email,phone', 'subscription.workspace:id,name,city'];
+    private const RELATIONS = ['subscription.member:id,name,email,phone', 'subscription.workspace:id,name,city', 'payments'];
 
     public function __construct(
         private readonly InvoiceService $invoices,
