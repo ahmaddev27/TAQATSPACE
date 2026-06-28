@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
-import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/providers/ToastProvider";
 import { approveReceipt, rejectReceipt } from "@/lib/actions/invoices";
+import { ReceiptViewerButton } from "./ReceiptViewerButton";
 
 export interface ReceiptReviewActionsProps {
   invoiceId: string;
@@ -68,15 +68,11 @@ export function ReceiptReviewActions({
   return (
     <>
       {receiptUrl && (
-        <a
-          href={receiptUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-ghost btn-sm"
-        >
-          <Icon name="receipt" size={15} />
-          {t("viewReceipt")}
-        </a>
+        <ReceiptViewerButton
+          url={receiptUrl}
+          label={t("viewReceipt")}
+          icon="receipt"
+        />
       )}
       <Button
         variant="primary"

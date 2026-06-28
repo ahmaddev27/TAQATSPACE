@@ -128,6 +128,29 @@ export async function cancelSubscription(
   return result;
 }
 
+/** The credentials + delivery result returned by provisioning internet access. */
+export interface InternetCredentials {
+  username: string;
+  password: string;
+  sent_email: boolean;
+  sent_sms: boolean;
+}
+
+/**
+ * Issue (or regenerate) the member's internet credentials and send them by
+ * email + SMS. Returns the credentials so the owner can also share them directly.
+ */
+export async function provisionInternet(
+  subscriptionId: string,
+): Promise<ActionResult<InternetCredentials>> {
+  const result = await authedMutate<InternetCredentials>(
+    `/workspace/subscriptions/${subscriptionId}/internet`,
+    { method: "POST" },
+  );
+  if (result.ok) revalidateOwner("subscriptions");
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Seats                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -150,6 +173,22 @@ export async function assignSeat(
 export async function unassignSeat(seatId: string): Promise<ActionResult<Seat>> {
   const result = await authedMutate<Seat>(`/seats/${seatId}/unassign`, {
     method: "PUT",
+  });
+  if (result.ok) {
+    revalidateOwner("seats");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+/** Rename a seat (its label/number). Unique within the workspace. */
+export async function renameSeat(
+  seatId: string,
+  seatNumber: string,
+): Promise<ActionResult<Seat>> {
+  const result = await authedMutate<Seat>(`/seats/${seatId}`, {
+    method: "PUT",
+    body: { seat_number: seatNumber },
   });
   if (result.ok) {
     revalidateOwner("seats");

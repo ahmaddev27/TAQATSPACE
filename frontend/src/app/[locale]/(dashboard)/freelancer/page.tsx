@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatusBadge } from "@/components/ui/Badge";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
+import { InternetCredentialsCard } from "@/components/features/freelancer/InternetCredentialsCard";
 import { QuickLinks } from "@/components/features/freelancer/QuickLinks";
 import { formatDate, formatMoney } from "@/components/features/freelancer/format";
 import { MemberInvoiceAlert } from "@/components/features/invoices/MemberInvoiceAlert";
@@ -142,6 +143,13 @@ export default async function FreelancerHomePage() {
                 )}
               </div>
             </div>
+
+            {sub.internet && (
+              <InternetCredentialsCard
+                username={sub.internet.username}
+                password={sub.internet.password}
+              />
+            )}
 
             <div className="grid-stats grid-stats--3">
               <StatTile

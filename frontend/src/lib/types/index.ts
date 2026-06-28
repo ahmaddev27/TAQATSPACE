@@ -486,6 +486,8 @@ export interface MemberSummarySubscription {
   end_date: string | null;
   /** The member's internet package in this workspace, if assigned. */
   package: string | null;
+  /** The member's internet login (their own), or null if not yet issued. */
+  internet: { username: string; password: string | null } | null;
 }
 
 export interface MemberSummarySeat {

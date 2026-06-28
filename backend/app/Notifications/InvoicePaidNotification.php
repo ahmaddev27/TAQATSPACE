@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Invoice;
+use App\Notifications\Concerns\RendersWorkspaceMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
 
 class InvoicePaidNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, RendersWorkspaceMail;
 
     public function __construct(
         public readonly Invoice $invoice,
@@ -32,11 +33,17 @@ class InvoicePaidNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('تم استلام الدفعة / Payment received')
-            ->line("تم تسجيل دفع الفاتورة رقم {$this->invoice->invoice_number}.")
-            ->line("Payment for invoice {$this->invoice->invoice_number} has been recorded.")
-            ->line('شكراً لاشتراكك / Thank you.');
+        $this->invoice->loadMissing('subscription.workspace.owner');
+
+        return $this->workspaceMail(
+            $this->invoice->subscription?->workspace,
+            'تم استلام الدفعة / Payment received',
+            [
+                "تم تسجيل دفع الفاتورة رقم {$this->invoice->invoice_number}.",
+                "Payment for invoice {$this->invoice->invoice_number} has been recorded.",
+                'شكراً لاشتراكك / Thank you.',
+            ],
+        );
     }
 
     /**

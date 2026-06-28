@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Invoice;
+use App\Notifications\Concerns\RendersWorkspaceMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
 
 class InvoiceOverdueNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, RendersWorkspaceMail;
 
     /**
      * @param  'member'|'owner'  $audience
@@ -36,18 +37,21 @@ class InvoiceOverdueNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable): MailMessage
     {
-        $message = (new MailMessage)
-            ->subject('فاتورة متأخرة / Overdue invoice');
+        $this->invoice->loadMissing('subscription.workspace.owner');
+        $workspace = $this->invoice->subscription?->workspace;
+        $subject = 'فاتورة متأخرة / Overdue invoice';
 
         if ($this->audience === 'owner') {
-            return $message
-                ->line("الفاتورة رقم {$this->invoice->invoice_number} أصبحت متأخرة عن السداد.")
-                ->line("Invoice {$this->invoice->invoice_number} is now overdue.");
+            return $this->workspaceMail($workspace, $subject, [
+                "الفاتورة رقم {$this->invoice->invoice_number} أصبحت متأخرة عن السداد.",
+                "Invoice {$this->invoice->invoice_number} is now overdue.",
+            ]);
         }
 
-        return $message
-            ->line("فاتورتك رقم {$this->invoice->invoice_number} أصبحت متأخرة. يرجى السداد في أقرب وقت.")
-            ->line("Your invoice {$this->invoice->invoice_number} is overdue. Please pay as soon as possible.");
+        return $this->workspaceMail($workspace, $subject, [
+            "فاتورتك رقم {$this->invoice->invoice_number} أصبحت متأخرة. يرجى السداد في أقرب وقت.",
+            "Your invoice {$this->invoice->invoice_number} is overdue. Please pay as soon as possible.",
+        ]);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Invoice;
+use App\Notifications\Concerns\RendersWorkspaceMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
 
 class InvoiceCreatedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, RendersWorkspaceMail;
 
     public function __construct(
         public readonly Invoice $invoice,
@@ -32,12 +33,18 @@ class InvoiceCreatedNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('فاتورة جديدة / New invoice')
-            ->line("تم إصدار فاتورة جديدة رقم {$this->invoice->invoice_number}.")
-            ->line("A new invoice {$this->invoice->invoice_number} has been issued.")
-            ->line("المبلغ / Amount: ₪{$this->invoice->amount}")
-            ->line("تاريخ الاستحقاق / Due date: {$this->invoice->due_date?->toDateString()}");
+        $this->invoice->loadMissing('subscription.workspace.owner');
+
+        return $this->workspaceMail(
+            $this->invoice->subscription?->workspace,
+            'فاتورة جديدة / New invoice',
+            [
+                "تم إصدار فاتورة جديدة رقم {$this->invoice->invoice_number}.",
+                "A new invoice {$this->invoice->invoice_number} has been issued.",
+                "المبلغ / Amount: ₪{$this->invoice->amount}",
+                "تاريخ الاستحقاق / Due date: {$this->invoice->due_date?->toDateString()}",
+            ],
+        );
     }
 
     /**
