@@ -47,6 +47,7 @@ class OwnerSubscriptionResource extends JsonResource
             'internet_package' => $packages->isEmpty() ? null : $packages->pluck('name')->implode('، '),
             'package_price' => number_format($packagePrice, 2, '.', ''),
             'total_price' => number_format($planPrice + $packagePrice, 2, '.', ''),
+            'has_internet' => $this->internet_username !== null,
             'seat_number' => $this->seat?->seat_number,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
