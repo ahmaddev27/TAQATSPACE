@@ -56,6 +56,11 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size
   font-size: var(--fs-xs); letter-spacing: .03em; text-transform: uppercase;
 }
 .tbl thead th.num, .tbl td.num, .tbl td.cell-num { text-align: start; }
+/* Cells whose content is forced LTR (dates, numbers, emails) carry `.ltr`, which
+   flips their `start` to the LEFT — in an RTL table that pushes the value away
+   from its right-aligned header. Pin such cells (and matching headers) back to
+   the column start so the text sits directly under its heading. */
+[dir="rtl"] .tbl td.ltr { text-align: right; }
 .tbl thead th.sortable { cursor: pointer; user-select: none; transition: color var(--t-fast); }
 .tbl thead th.sortable:hover { color: var(--text-2); }
 .tbl thead th.sortable.active { color: var(--primary); }

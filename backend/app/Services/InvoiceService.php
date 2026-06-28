@@ -595,7 +595,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forMember($member->id)
-            ->with(['subscription.workspace', 'subscription.seat'])
+            ->with(['subscription.workspace', 'subscription.seat', 'payments'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();

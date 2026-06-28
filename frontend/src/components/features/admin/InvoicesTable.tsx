@@ -27,6 +27,7 @@ import { adminDate } from "./format";
 import { ExportCsvLink } from "./ExportCsvLink";
 import { ReceiptUploadModal } from "./ReceiptUploadModal";
 import { ReceiptViewerButton } from "@/components/features/invoices/ReceiptViewerButton";
+import { PaymentsHistoryButton } from "@/components/features/invoices/PaymentsHistoryButton";
 
 type StatusTab = "all" | InvoiceStatus;
 
@@ -240,8 +241,12 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
               {t("downloadPdf")}
             </a>
           )}
-          {inv.receipt_url && (
-            <ReceiptViewerButton url={inv.receipt_url} label={t("viewReceipt")} />
+          {inv.payments && inv.payments.length > 0 && (
+            <PaymentsHistoryButton
+              invoiceNumber={inv.invoice_number}
+              payments={inv.payments}
+              currency={inv.currency}
+            />
           )}
         </div>
         );
