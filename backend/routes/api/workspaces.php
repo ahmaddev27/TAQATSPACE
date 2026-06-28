@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\LogoController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,8 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::put('/settings', [WorkspaceController::class, 'update']);
         Route::post('/photos', [PhotoController::class, 'store']);
         Route::delete('/photos', [PhotoController::class, 'destroy']);
+        Route::post('/logo', [LogoController::class, 'store']);
+        Route::delete('/logo', [LogoController::class, 'destroy']);
     });
 
 // Admin moderation.

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Subscription;
-use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -37,10 +36,8 @@ class SubscriptionResource extends JsonResource
                 'city' => $this->workspace->city,
                 'address' => $this->workspace->address,
                 'photos' => $this->workspace->photos,
-                // Workspace "logo" = its owner's avatar (resolved when loaded).
-                'logo' => $this->workspace->relationLoaded('owner')
-                    ? MediaUrl::resolve($this->workspace->owner?->avatar)
-                    : null,
+                // Dedicated workspace logo, falling back to the owner avatar.
+                'logo' => $this->workspace->logoUrl(),
             ]),
             'seat' => $this->whenLoaded('seat', fn () => $this->seat === null ? null : [
                 'id' => $this->seat->id,

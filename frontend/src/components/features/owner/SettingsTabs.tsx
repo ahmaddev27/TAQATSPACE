@@ -21,6 +21,7 @@ import {
 } from "@/lib/actions/owner";
 import type { City, SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
+import { LogoManager } from "./LogoManager";
 import { MessagingTab } from "./MessagingTab";
 
 const API_BASE =
@@ -543,7 +544,21 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
           </div>
         )}
 
-        {tab === "photos" && <PhotoManager photos={workspace.photos ?? []} />}
+        {tab === "photos" && (
+          <div className="stack" style={{ gap: 28 }}>
+            <div className="stack" style={{ gap: 10 }}>
+              <h4 className="h4">{t("settings.logoTitle")}</h4>
+              <LogoManager
+                logo={workspace.logo ?? null}
+                hasLogo={workspace.has_logo ?? false}
+              />
+            </div>
+            <div className="stack" style={{ gap: 10 }}>
+              <h4 className="h4">{t("settings.photosTitle")}</h4>
+              <PhotoManager photos={workspace.photos ?? []} />
+            </div>
+          </div>
+        )}
 
         {tab === "hours" && (
           <div className="stack" style={{ gap: 12 }}>

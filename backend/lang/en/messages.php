@@ -64,6 +64,8 @@ return [
     'photos_uploaded' => 'Photos uploaded.',
     'photo_removed' => 'Photo removed.',
     'photos_max_reached' => 'A workspace may have at most :max photos.',
+    'logo_uploaded' => 'Logo uploaded.',
+    'logo_removed' => 'Logo removed.',
     'photo_not_found' => 'Photo not found on this workspace.',
 
     // Seats

@@ -393,6 +393,47 @@ class WorkspaceService
         ]);
     }
 
+    /**
+     * Store a new workspace logo and replace any previous one (deleting the old
+     * file so it doesn't orphan on disk).
+     */
+    public function setLogo(Workspace $workspace, UploadedFile $file): Workspace
+    {
+        $disk = Storage::disk($this->photoDisk());
+        $previous = $workspace->logo_path;
+
+        $extension = $file->guessExtension() ?: 'jpg';
+        $filename = Str::uuid()->toString().'.'.$extension;
+        $path = $file->storeAs('workspaces/'.$workspace->id.'/logo', $filename, ['disk' => $this->photoDisk()]);
+
+        $updated = $this->workspaces->update($workspace, ['logo_path' => $path]);
+
+        if ($previous !== null && $disk->exists($previous)) {
+            $disk->delete($previous);
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Remove the workspace logo (file + reference); readers then fall back to the
+     * owner's avatar again.
+     */
+    public function removeLogo(Workspace $workspace): Workspace
+    {
+        $previous = $workspace->logo_path;
+
+        if ($previous !== null) {
+            $disk = Storage::disk($this->photoDisk());
+
+            if ($disk->exists($previous)) {
+                $disk->delete($previous);
+            }
+        }
+
+        return $this->workspaces->update($workspace, ['logo_path' => null]);
+    }
+
     private static function firstName(?string $name): string
     {
         if ($name === null || $name === '') {

@@ -61,11 +61,14 @@ class ChatContactService
         string $workspaceId,
         ?string $displayName = null,
         bool $subscribed = false,
+        ?string $avatar = null,
     ): array {
         return [
             'id' => (string) $user->id,
             'name' => $displayName ?? (string) $user->name,
-            'avatar' => MediaUrl::resolve($user->avatar),
+            // When a contact stands in for a workspace, the caller passes the
+            // workspace logo; otherwise we show the user's own avatar.
+            'avatar' => $avatar ?? MediaUrl::resolve($user->avatar),
             'workspace_id' => $workspaceId,
             'role' => $user->role->value,
             'subscribed' => $subscribed,
@@ -125,18 +128,20 @@ class ChatContactService
                 }
             })
             ->with('owner:id,name,role,avatar')
-            ->get(['id', 'name', 'owner_id'])
+            ->get(['id', 'name', 'owner_id', 'logo_path'])
             ->each(function (Workspace $workspace) use (&$contacts, $subscribedSet): void {
                 if ($workspace->owner === null) {
                     return;
                 }
 
-                // Keyed by owner id (the chat counterpart), labelled by workspace.
+                // Keyed by owner id (the chat counterpart), labelled and pictured
+                // by the workspace (its logo, falling back to the owner avatar).
                 $contacts[(string) $workspace->owner->id] = $this->contact(
                     $workspace->owner,
                     (string) $workspace->id,
                     (string) $workspace->name,
                     isset($subscribedSet[(string) $workspace->id]),
+                    $workspace->logoUrl(),
                 );
             });
 
@@ -160,16 +165,19 @@ class ChatContactService
             ->whereIn('role', [UserRole::WorkspaceOwner->value, UserRole::Freelancer->value])
             ->where('status', UserStatus::Active->value)
             ->whereKeyNot($admin->id)
-            ->with('workspace:id,name,owner_id')
+            ->with('workspace:id,name,owner_id,logo_path')
             ->orderBy('name')
             ->get(['id', 'name', 'role', 'avatar'])
             ->map(function (User $user): array {
-                // Owners → "name - workspace"; freelancers keep their own name.
+                // Owners → "name - workspace" + workspace logo (fall back to the
+                // owner avatar); freelancers keep their own name and avatar.
                 if ($user->isOwner() && $user->workspace !== null) {
                     return $this->contact(
                         $user,
                         (string) $user->workspace->id,
                         $user->name.' - '.$user->workspace->name,
+                        false,
+                        MediaUrl::resolve($user->workspace->logo_path) ?? MediaUrl::resolve($user->avatar),
                     );
                 }
 
