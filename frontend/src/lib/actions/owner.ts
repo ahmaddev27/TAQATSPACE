@@ -158,6 +158,22 @@ export async function unassignSeat(seatId: string): Promise<ActionResult<Seat>> 
   return result;
 }
 
+/** Rename a seat (its label/number). Unique within the workspace. */
+export async function renameSeat(
+  seatId: string,
+  seatNumber: string,
+): Promise<ActionResult<Seat>> {
+  const result = await authedMutate<Seat>(`/seats/${seatId}`, {
+    method: "PUT",
+    body: { seat_number: seatNumber },
+  });
+  if (result.ok) {
+    revalidateOwner("seats");
+    revalidateOwner("");
+  }
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Booking requests                                                          */
 /* -------------------------------------------------------------------------- */
