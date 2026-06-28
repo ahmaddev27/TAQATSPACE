@@ -22,6 +22,7 @@ import {
   markConversationSeen,
   subscribeSeen,
 } from "@/lib/firebase/chatRead";
+import { setActiveConversation } from "@/lib/firebase/chatActive";
 import type { ChatContact } from "@/lib/api/chat";
 import type { ChatAttachmentMeta } from "@/lib/actions/chat";
 import { ChatThread } from "./ChatThread";
@@ -34,6 +35,8 @@ export interface ChatScreenProps {
   self: ChatParticipant;
   /** Role-scoped contacts the user may start a conversation with. */
   contacts: ChatContact[];
+  /** Contact id to open on mount (e.g. from a "new message" popup deep-link). */
+  initialContactId?: string | null;
 }
 
 /** Lifecycle of the Firebase auth bridge. */
@@ -45,7 +48,7 @@ type AuthState = "loading" | "ready" | "unavailable";
  * thread and a composer. All Firestore access is env-gated; when Firebase is
  * unconfigured the component renders a tidy "unavailable" state.
  */
-export function ChatScreen({ self, contacts }: ChatScreenProps) {
+export function ChatScreen({ self, contacts, initialContactId }: ChatScreenProps) {
   const t = useTranslations("chat");
   const locale = useLocale();
   const { toast } = useToast();
@@ -55,7 +58,9 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
   );
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [activeContactId, setActiveContactId] = useState<string | null>(
+    initialContactId ?? null,
+  );
   // Free-text filter over the left-pane list (contacts + live conversations).
   const [query, setQuery] = useState("");
   // Optional by-type filter (e.g. admin filtering owners vs freelancers). null = all.
@@ -141,6 +146,13 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
     const conv = conversations.find((c) => c.id === activeConvId);
     if (conv) markConversationSeen(conv.id, conv.updatedAt);
   }, [activeConvId, conversations]);
+
+  // Publish the open thread so the site-wide popup never pops for the
+  // conversation already on screen. Cleared when it closes or the screen leaves.
+  useEffect(() => {
+    setActiveConversation(activeConvId);
+    return () => setActiveConversation(null);
+  }, [activeConvId]);
 
   // ---- Build the left-pane list: live conversations first, then contacts
   //      that have no conversation yet (so a new chat can be started). ----
@@ -258,7 +270,11 @@ export function ChatScreen({ self, contacts }: ChatScreenProps) {
       const workspaceId = contactById.get(activeContactId)?.workspace_id ?? null;
       const participants: ChatParticipant[] = [
         self,
-        { id: activeContactId, name: contactName },
+        {
+          id: activeContactId,
+          name: contactName,
+          avatar: contactById.get(activeContactId)?.avatar ?? null,
+        },
       ];
       const ok = await sendMessage(
         activeConvId,

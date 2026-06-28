@@ -41,11 +41,21 @@ export interface InvoiceSubscription {
 }
 
 /** A single invoice as returned by `InvoiceResource`. */
+export interface InvoicePaymentRow {
+  id: string;
+  amount: string;
+  paid_at: string | null;
+  receipt_url: string | null;
+}
+
 export interface Invoice {
   id: string;
   subscription_id: string;
   invoice_number: string;
   amount: string;
+  /** Running total paid + remaining balance (decimal strings) for partial payments. */
+  amount_paid: string;
+  remaining_amount: string;
   amount_formatted: string;
   currency: string;
   status: InvoiceStatus;
@@ -56,6 +66,11 @@ export interface Invoice {
   /** Stored payment-receipt path + a resolved (presigned) URL, when uploaded. */
   receipt_path: string | null;
   receipt_url: string | null;
+  /** Owner's reason when a submitted receipt was rejected (status payment_rejected). */
+  receipt_rejected_reason: string | null;
+  receipt_reviewed_at: string | null;
+  /** Per-installment payment ledger (present on the owner invoice list). */
+  payments?: InvoicePaymentRow[];
   notes: string | null;
   created_at: string | null;
   subscription?: InvoiceSubscription;

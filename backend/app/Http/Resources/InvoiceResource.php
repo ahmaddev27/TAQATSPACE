@@ -26,6 +26,13 @@ class InvoiceResource extends JsonResource
             'subscription_id' => $this->subscription_id,
             'invoice_number' => $this->invoice_number,
             'amount' => $this->amount,
+            'amount_paid' => $this->amount_paid,
+            'remaining_amount' => number_format(
+                max(0, (float) $this->amount - (float) $this->amount_paid),
+                2,
+                '.',
+                '',
+            ),
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,
@@ -36,6 +43,14 @@ class InvoiceResource extends JsonResource
             'pdf_url' => MediaUrl::resolve($this->invoice_pdf_path),
             'receipt_path' => $this->receipt_path,
             'receipt_url' => MediaUrl::resolve($this->receipt_path),
+            'payments' => $this->whenLoaded('payments', fn () => $this->payments->map(static fn ($p): array => [
+                'id' => $p->id,
+                'amount' => $p->amount,
+                'paid_at' => $p->paid_at?->toIso8601String(),
+                'receipt_url' => MediaUrl::resolve($p->receipt_path),
+            ])->all()),
+            'receipt_rejected_reason' => $this->receipt_rejected_reason,
+            'receipt_reviewed_at' => $this->receipt_reviewed_at?->toIso8601String(),
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toIso8601String(),
 

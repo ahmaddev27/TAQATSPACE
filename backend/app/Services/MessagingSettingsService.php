@@ -162,6 +162,32 @@ class MessagingSettingsService
         ];
     }
 
+    /**
+     * Which accounts a workspace actually sends a given channel through:
+     * `own` when it uses its own configured account, else `platform` (Taqat's
+     * shared quota). Mirrors the resolution in {@see forWorkspace}.
+     *
+     * @param  'smtp'|'sms'  $channel
+     */
+    public function channelSource(Workspace $workspace, string $channel): string
+    {
+        $raw = $this->rawWorkspace($workspace);
+
+        if (($raw['use_platform'] ?? true) === true) {
+            return 'platform';
+        }
+
+        if ($channel === 'sms') {
+            $sms = $this->decryptSecrets($raw['sms'], self::SMS_SECRETS);
+
+            return $this->isSmsConfigured($sms) ? 'own' : 'platform';
+        }
+
+        $smtp = $this->decryptSecrets($raw['smtp'], self::SMTP_SECRETS);
+
+        return $this->isSmtpConfigured($smtp) ? 'own' : 'platform';
+    }
+
     // ---- Test sends (platform config) ---------------------------------------
 
     /**

@@ -4,6 +4,7 @@ import { PublicFooter } from "@/components/features/public/PublicFooter";
 import { getPublicDict } from "@/components/features/public/i18n";
 import { getContent } from "@/lib/api/content";
 import { NavProgress } from "@/components/layout/NavProgress";
+import { ChatWidget } from "@/components/features/chat/ChatWidget";
 
 export default async function PublicLayout({
   children,
@@ -25,6 +26,9 @@ export default async function PublicLayout({
       <PublicHeader dict={dict} />
       {children}
       <PublicFooter dict={dict} site={site} locale={locale} />
+      {/* Visible only to a signed-in user (members/owners browsing public pages);
+          renders nothing for anonymous visitors. */}
+      <ChatWidget />
     </div>
   );
 }

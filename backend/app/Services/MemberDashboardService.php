@@ -7,9 +7,12 @@ namespace App\Services;
 use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
+use App\Models\Announcement;
+use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\MediaUrl;
 
 class MemberDashboardService
 {
@@ -17,11 +20,12 @@ class MemberDashboardService
      * Build the freelancer dashboard summary.
      *
      * @return array{
-     *     subscription: array{status: string, workspace_name: string, plan_type: string, end_date: ?string}|null,
+     *     subscription: array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null,
      *     seat: array{seat_number: string, type: string}|null,
      *     next_invoice: array{amount: string, due_date: ?string}|null,
      *     unread_notifications: int,
-     *     pending_booking_requests: int
+     *     pending_booking_requests: int,
+     *     announcements: list<array{id: string, type: string, title: string, body: string, workspace_name: string, published_at: ?string}>
      * }
      */
     public function summary(User $member): array
@@ -36,20 +40,58 @@ class MemberDashboardService
             'pending_booking_requests' => $member->bookingRequests()
                 ->where('status', BookingStatus::Pending->value)
                 ->count(),
+            'announcements' => $this->recentAnnouncements($member),
         ];
+    }
+
+    /**
+     * Live announcements from the workspaces the member is actively subscribed
+     * to — so an owner's posted announcement actually reaches the member on their
+     * dashboard, not only as a (queued) notification.
+     *
+     * @return list<array{id: string, type: string, title: string, body: string, workspace_name: string, published_at: ?string}>
+     */
+    private function recentAnnouncements(User $member): array
+    {
+        $workspaceIds = $member->subscriptions()
+            ->where('status', SubscriptionStatus::Active->value)
+            ->pluck('workspace_id')
+            ->unique()
+            ->all();
+
+        if ($workspaceIds === []) {
+            return [];
+        }
+
+        return Announcement::query()
+            ->active()
+            ->whereIn('workspace_id', $workspaceIds)
+            ->with('workspace:id,name')
+            ->latest('published_at')
+            ->limit(5)
+            ->get()
+            ->map(static fn (Announcement $announcement): array => [
+                'id' => $announcement->id,
+                'type' => $announcement->type->value,
+                'title' => $announcement->title,
+                'body' => $announcement->body,
+                'workspace_name' => (string) $announcement->workspace?->name,
+                'published_at' => $announcement->published_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     private function activeSubscription(User $member): ?Subscription
     {
         return $member->subscriptions()
-            ->with(['workspace:id,name', 'seat:id,seat_number,type'])
+            ->with(['workspace:id,name', 'workspace.owner:id,avatar', 'seat:id,seat_number,type'])
             ->where('status', SubscriptionStatus::Active->value)
             ->latest('start_date')
             ->first();
     }
 
     /**
-     * @return array{status: string, workspace_name: string, plan_type: string, end_date: ?string}|null
+     * @return array{status: string, workspace_name: string, workspace_logo: ?string, plan_type: string, end_date: ?string}|null
      */
     private function subscriptionSummary(?Subscription $subscription): ?array
     {
@@ -60,9 +102,27 @@ class MemberDashboardService
         return [
             'status' => $subscription->status->value,
             'workspace_name' => (string) $subscription->workspace?->name,
+            // The workspace "logo" = its owner's avatar, shown beside the name.
+            'workspace_logo' => MediaUrl::resolve($subscription->workspace?->owner?->avatar),
             'plan_type' => $subscription->plan_type->value,
             'end_date' => $subscription->end_date?->toDateString(),
+            // The member's internet package in this workspace, if assigned.
+            'package' => $this->packageName($subscription),
         ];
+    }
+
+    /**
+     * Comma-joined internet package name(s) assigned to this subscription's member
+     * within its workspace — null when none.
+     */
+    private function packageName(Subscription $subscription): ?string
+    {
+        $names = InternetPackage::query()
+            ->where('workspace_id', $subscription->workspace_id)
+            ->whereHas('members', static fn ($query) => $query->where('users.id', $subscription->member_id))
+            ->pluck('name');
+
+        return $names->isEmpty() ? null : $names->implode('، ');
     }
 
     /**

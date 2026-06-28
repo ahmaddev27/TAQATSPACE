@@ -24,7 +24,12 @@ class SubscriptionController extends Controller
     {
         $subscriptions = Subscription::query()
             ->where('member_id', $request->user()->id)
-            ->with(['workspace:id,name,city,address,photos', 'seat:id,seat_number,type,status'])
+            ->with([
+                'workspace:id,name,city,address,photos',
+                // Owner avatar → the workspace "logo" shown beside the name.
+                'workspace.owner:id,avatar',
+                'seat:id,seat_number,type,status',
+            ])
             ->latest()
             ->get();
 

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
+use App\Enums\UserStatus;
 use App\Enums\WorkspaceStatus;
 use App\Models\City;
 use App\Models\Review;
@@ -221,6 +222,17 @@ class WorkspaceService
                     ->where('workspace_id', $workspace->id)
                     ->where('status', SubscriptionStatus::Active->value)
                     ->update(['status' => SubscriptionStatus::Suspended->value]);
+            }
+
+            // Approving the space also activates a still-pending owner account, so
+            // a single admin decision finishes onboarding — no separate trip to
+            // the Users page to flip the owner from pending to active.
+            if ($status === WorkspaceStatus::Active) {
+                $owner = $workspace->owner;
+
+                if ($owner !== null && $owner->status !== UserStatus::Active) {
+                    $owner->forceFill(['status' => UserStatus::Active->value])->save();
+                }
             }
 
             return $workspace;

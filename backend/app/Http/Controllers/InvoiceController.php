@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Invoice\MarkPaidRequest;
+use App\Http\Requests\Invoice\PartialPaymentRequest;
+use App\Http\Requests\Invoice\RecordPaymentRequest;
+use App\Http\Requests\Invoice\RejectReceiptRequest;
 use App\Http\Requests\Invoice\StoreInvoiceRequest;
+use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Services\InvoicePdfService;
@@ -111,6 +115,132 @@ class InvoiceController extends Controller
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
         return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * POST /api/workspace/invoices/{invoice}/receipt — the owner attaches a
+     * payment receipt and records the invoice as paid in one step.
+     */
+    public function uploadReceipt(SubmitReceiptRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        $paidAt = $request->validated()['paid_at'] ?? null;
+
+        try {
+            $updated = $this->invoices->recordPaymentWithReceipt(
+                $invoice,
+                $request->file('receipt'),
+                $paidAt !== null ? Carbon::parse($paidAt) : null,
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * PUT /api/workspace/invoices/{invoice}/approve-receipt — the owner approves
+     * a member-submitted receipt and confirms the invoice as paid.
+     */
+    public function approveReceipt(Request $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        try {
+            $updated = $this->invoices->approveReceipt($invoice);
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+    }
+
+    /**
+     * PUT /api/workspace/invoices/{invoice}/reject-receipt — the owner rejects a
+     * member-submitted receipt with a reason; the member can then re-upload.
+     */
+    public function rejectReceipt(RejectReceiptRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        try {
+            $updated = $this->invoices->rejectReceipt($invoice, $request->validated()['reason']);
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_receipt_rejected'));
+    }
+
+    /**
+     * PUT /api/workspace/invoices/{invoice}/partial-payment — record a partial
+     * (or final) manual payment against the invoice.
+     */
+    public function partialPayment(PartialPaymentRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        $data = $request->validated();
+        $paidAt = $data['paid_at'] ?? null;
+
+        try {
+            $updated = $this->invoices->recordPartialPayment(
+                $invoice,
+                (float) $data['amount'],
+                $paidAt !== null ? Carbon::parse($paidAt) : null,
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_partial_recorded'));
+    }
+
+    /**
+     * POST /api/workspace/invoices/{invoice}/payment — the single owner payment
+     * action: record a payment (partial or full) with a receipt and optional date.
+     */
+    public function recordPayment(RecordPaymentRequest $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        $data = $request->validated();
+        $paidAt = $data['paid_at'] ?? null;
+
+        try {
+            $updated = $this->invoices->recordPayment(
+                $invoice,
+                (float) $data['amount'],
+                $request->file('receipt'),
+                $paidAt !== null ? Carbon::parse($paidAt) : null,
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
+
+        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_partial_recorded'));
     }
 
     /**

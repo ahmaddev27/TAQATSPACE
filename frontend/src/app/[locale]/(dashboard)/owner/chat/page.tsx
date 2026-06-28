@@ -15,14 +15,17 @@ export const dynamic = "force-dynamic";
  */
 export default async function OwnerChatPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ c?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   const me = await serverFetch<ApiEnvelope<{ user: User }>>("/auth/me");
   const contacts = await safeContacts();
+  const { c } = await searchParams;
 
   return (
     <div className="page">
@@ -33,6 +36,7 @@ export default async function OwnerChatPage({
           avatar: me.data.user.avatar,
         }}
         contacts={contacts}
+        initialContactId={c ?? null}
       />
     </div>
   );

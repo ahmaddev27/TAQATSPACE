@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\BroadcastController as AdminBroadcastController;
 use App\Http\Controllers\Admin\MessagingSettingsController;
+use App\Http\Controllers\Admin\MessagingUsageController;
 use App\Http\Controllers\Owner\BroadcastController as OwnerBroadcastController;
 use App\Http\Controllers\Owner\MessagingController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,10 @@ Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messagin
 // sends through the platform accounts.
 Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messaging'])
     ->post('/admin/messaging/broadcast', [AdminBroadcastController::class, 'store']);
+
+// Platform-quota usage per workspace (who sends via Taqat's accounts) — Super Admin.
+Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messaging'])
+    ->get('/admin/messaging/usage', [MessagingUsageController::class, 'index']);
 
 // Per-workspace messaging — Workspace Owner.
 Route::middleware(['auth:sanctum', 'role.owner'])

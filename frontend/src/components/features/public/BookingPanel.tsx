@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
@@ -20,6 +20,8 @@ export interface BookingPanelProps {
   /** Per-seat-type pricing rows (only enabled rows are bookable). */
   seatTypes?: SeatTypePrice[];
   dict: PublicDict;
+  /** Deep-linked from a partner: scroll to + focus the booking action on mount. */
+  autoBook?: boolean;
 }
 
 /** Sticky booking panel — submits a request or routes guests to login. */
@@ -28,6 +30,7 @@ export function BookingPanel({
   price,
   seatTypes,
   dict,
+  autoBook = false,
 }: BookingPanelProps) {
   const d = dict.detail;
   const c = dict.common;
@@ -35,6 +38,14 @@ export function BookingPanel({
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  // Partner deep-link (`?book=1`): bring the booking action into view + focus it.
+  useEffect(() => {
+    if (!autoBook) return;
+    messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    messageRef.current?.focus({ preventScroll: true });
+  }, [autoBook]);
 
   // Only enabled types are bookable; fall back to the three defaults if none.
   const bookable = (seatTypes ?? []).filter((row) => row.enabled);
@@ -44,16 +55,31 @@ export function BookingPanel({
       : ["flexible", "fixed", "private_office"];
 
   const [seatType, setSeatType] = useState<SeatType>(options[0]);
+  const [plan, setPlan] = useState<"monthly" | "daily">("monthly");
   const [message, setMessage] = useState("");
 
-  // Price shown reflects the selected type's monthly price when available.
+  // Price shown reflects the selected type + plan. Daily is offered only when the
+  // selected seat type has a daily price configured.
   const selectedRow = bookable.find((row) => row.type === seatType);
-  const displayPrice =
+  const monthlyPrice =
     selectedRow?.price_monthly != null
       ? toNumber(selectedRow.price_monthly)
       : price;
+  const dailyPrice =
+    selectedRow?.price_daily != null ? toNumber(selectedRow.price_daily) : null;
+  const hasDaily = dailyPrice != null;
 
-  const redirectTarget = `/workspaces/${workspaceId}`;
+  // If the chosen seat type has no daily price, treat the plan as monthly.
+  // Derived (not synced via an effect) so a stale "daily" choice never sticks
+  // and we never call setState inside an effect.
+  const effectivePlan: "monthly" | "daily" = hasDaily ? plan : "monthly";
+
+  const displayPrice =
+    effectivePlan === "daily" && dailyPrice != null ? dailyPrice : monthlyPrice;
+  const perLabel = effectivePlan === "daily" ? c.perDay : c.perMonth;
+
+  // Preserve the booking intent across login so the user returns booking-ready.
+  const redirectTarget = `/workspaces/${workspaceId}?book=1`;
   // Only freelancers can book; treat any other authenticated role as a guest CTA.
   const canBook = isAuthenticated && role === "freelancer";
 
@@ -66,6 +92,7 @@ export function BookingPanel({
       const result = await submitBookingAction({
         workspace_id: workspaceId,
         preferred_seat_type: seatType,
+        plan_type: effectivePlan,
         message,
       });
       if (result.ok) {
@@ -87,7 +114,7 @@ export function BookingPanel({
             {c.currency}
             {displayPrice}
           </span>
-          <span className="muted">{c.perMonth}</span>
+          <span className="muted">{perLabel}</span>
         </div>
 
         <div className="divider" style={{ margin: "16px 0" }} />
@@ -105,10 +132,35 @@ export function BookingPanel({
           </Select>
         </Field>
 
+        {hasDaily && (
+          <>
+            <div style={{ height: 12 }} />
+            <Field label={d.planLabel}>
+              <div className="seg" role="group">
+                <button
+                  type="button"
+                  className={effectivePlan === "monthly" ? "active" : ""}
+                  onClick={() => setPlan("monthly")}
+                >
+                  {d.planMonthly}
+                </button>
+                <button
+                  type="button"
+                  className={effectivePlan === "daily" ? "active" : ""}
+                  onClick={() => setPlan("daily")}
+                >
+                  {d.planDaily}
+                </button>
+              </div>
+            </Field>
+          </>
+        )}
+
         <div style={{ height: 12 }} />
 
         <Field label={d.messageLabel}>
           <Textarea
+            ref={messageRef}
             rows={3}
             value={message}
             onChange={(ev) => setMessage(ev.target.value)}

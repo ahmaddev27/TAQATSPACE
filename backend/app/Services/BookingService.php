@@ -18,6 +18,7 @@ use App\Models\Workspace;
 use App\Notifications\BookingApprovedNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Notifications\NewBookingRequestNotification;
+use App\Services\Partner\WebhookDispatcher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,6 +28,8 @@ use Illuminate\Support\Facades\DB;
  */
 class BookingService
 {
+    public function __construct(private readonly WebhookDispatcher $webhooks) {}
+
     /**
      * Submit a booking request on behalf of a freelancer.
      *
@@ -66,6 +69,7 @@ class BookingService
         $bookingRequest = $workspace->bookingRequests()->create([
             'member_id' => $member->id,
             'preferred_seat_type' => $data['preferred_seat_type'] ?? null,
+            'plan_type' => $data['plan_type'] ?? PlanType::Monthly->value,
             'message' => $data['message'] ?? null,
             'status' => BookingStatus::Pending->value,
         ]);
@@ -90,7 +94,9 @@ class BookingService
     {
         $this->assertPending($booking);
 
-        return DB::transaction(function () use ($booking, $reviewer, $seatId): BookingRequest {
+        $subscription = null;
+
+        $approved = DB::transaction(function () use ($booking, $reviewer, $seatId, &$subscription): BookingRequest {
             $seat = null;
 
             if ($seatId !== null) {
@@ -121,18 +127,23 @@ class BookingService
 
             $workspace = $booking->workspace;
 
-            // A monthly plan runs for one month from today; set the expiry up front
-            // so the member (and renewal/expiry reminders) have a real end date.
+            // Term + price follow the plan the freelancer chose: a daily plan runs
+            // one day, a monthly plan one month. Set the expiry up front so the
+            // member (and renewal/expiry reminders) have a real end date.
+            $planType = $booking->plan_type ?? PlanType::Monthly;
             $startDate = Carbon::today();
+            $endDate = $planType === PlanType::Daily
+                ? $startDate->copy()->addDay()
+                : $startDate->copy()->addMonth();
 
             $subscription = Subscription::query()->create([
                 'member_id' => $booking->member_id,
                 'workspace_id' => $booking->workspace_id,
                 'seat_id' => $seat?->id,
-                'plan_type' => PlanType::Monthly->value,
+                'plan_type' => $planType->value,
                 'start_date' => $startDate->toDateString(),
-                'end_date' => $startDate->copy()->addMonth()->toDateString(),
-                'monthly_price' => $this->resolveMonthlyPrice($booking, $workspace),
+                'end_date' => $endDate->toDateString(),
+                'monthly_price' => $this->resolvePlanPrice($booking, $workspace, $planType),
                 'status' => SubscriptionStatus::Active->value,
             ]);
 
@@ -151,8 +162,14 @@ class BookingService
 
             $booking->member->notify(new BookingApprovedNotification($booking, $workspace->name));
 
-            return $booking->refresh()->load('member');
+            return $booking->refresh()->load('member', 'workspace');
         });
+
+        // Notify integrated partners (e.g. Academy) after the subscription is
+        // committed, so they only ever see a booking that truly landed.
+        $this->webhooks->bookingApproved($approved, $subscription);
+
+        return $approved;
     }
 
     /**
@@ -171,7 +188,11 @@ class BookingService
 
         $booking->member->notify(new BookingRejectedNotification($booking, $booking->workspace->name));
 
-        return $booking->refresh()->load('member');
+        $rejected = $booking->refresh()->load('member', 'workspace');
+
+        $this->webhooks->bookingRejected($rejected);
+
+        return $rejected;
     }
 
     /**
@@ -213,19 +234,21 @@ class BookingService
     }
 
     /**
-     * Resolve the subscription's monthly price from the requested seat type's
-     * pricing, falling back to the workspace base price when the type has no
-     * monthly price configured (or no preferred type was requested).
+     * Resolve the subscription's price for the chosen plan from the requested
+     * seat type's pricing — the daily price for a daily plan, the monthly price
+     * otherwise — falling back to the workspace base price when the type has no
+     * matching price configured (or no preferred type was requested).
      */
-    private function resolveMonthlyPrice(BookingRequest $booking, Workspace $workspace): string
+    private function resolvePlanPrice(BookingRequest $booking, Workspace $workspace, PlanType $planType): string
     {
         $seatType = $booking->preferred_seat_type;
+        $column = $planType === PlanType::Daily ? 'price_daily' : 'price_monthly';
 
         if ($seatType !== null) {
             $price = SeatTypePrice::query()
                 ->where('workspace_id', $workspace->id)
                 ->where('type', $seatType->value)
-                ->value('price_monthly');
+                ->value($column);
 
             if ($price !== null) {
                 return (string) $price;

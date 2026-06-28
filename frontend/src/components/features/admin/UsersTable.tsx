@@ -49,7 +49,7 @@ export function UsersTable({ users }: UsersTableProps) {
   const t = useTranslations("admin.users");
   const locale = useLocale();
   const { toast } = useToast();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Filters live in the URL so they are shareable and readable by the CSV
   // export link below (the download then matches the on-screen view).
@@ -87,13 +87,14 @@ export function UsersTable({ users }: UsersTableProps) {
   const curPage = Math.min(page, pages);
   const pageRows = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
-  // Id of the row whose status is updating, so only its buttons show a spinner
-  // (a shared `pending` would spin every row's action at once).
-  const [busyId, setBusyId] = useState<string | null>(null);
+  // The exact action in flight (row id + target status), so ONLY the clicked
+  // button spins — never every row's buttons, nor the sibling button in the
+  // same row. The whole row's actions are disabled while it updates.
+  const [busy, setBusy] = useState<{ id: string; status: UserStatus } | null>(null);
 
   const runStatus = (user: User, next: UserStatus) => {
     const id = String(user.id);
-    setBusyId(id);
+    setBusy({ id, status: next });
     startTransition(async () => {
       const res = await updateUserStatus(id, next);
       if (res.ok) {
@@ -105,7 +106,7 @@ export function UsersTable({ users }: UsersTableProps) {
       } else {
         toast({ tone: "err", title: t("toast.statusFailed"), body: res.message });
       }
-      setBusyId(null);
+      setBusy(null);
     });
   };
 
@@ -168,7 +169,8 @@ export function UsersTable({ users }: UsersTableProps) {
               variant="primary"
               size="sm"
               icon="check"
-              loading={pending && busyId === String(u.id)}
+              loading={busy?.id === String(u.id) && busy.status === "active"}
+              disabled={busy?.id === String(u.id)}
               onClick={() => runStatus(u, "active")}
             >
               {t("activate")}
@@ -179,7 +181,8 @@ export function UsersTable({ users }: UsersTableProps) {
               variant="danger"
               size="sm"
               icon="x"
-              loading={pending && busyId === String(u.id)}
+              loading={busy?.id === String(u.id) && busy.status === "suspended"}
+              disabled={busy?.id === String(u.id)}
               onClick={() => runStatus(u, "suspended")}
             >
               {t("suspend")}

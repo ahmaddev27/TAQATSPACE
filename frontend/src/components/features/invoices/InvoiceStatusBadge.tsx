@@ -8,6 +8,8 @@ import { STATUS_MAP } from "@/components/ui/Badge";
  */
 const INVOICE_OVERRIDES: Record<string, { cls: string; ar: string; en: string }> = {
   pending: { cls: "badge-neutral", ar: "غير مدفوعة", en: "Unpaid" },
+  payment_rejected: { cls: "badge-danger", ar: "وصل مرفوض", en: "Receipt rejected" },
+  partially_paid: { cls: "badge-warning", ar: "مدفوعة جزئياً", en: "Partially paid" },
 };
 
 export interface InvoiceStatusBadgeProps {

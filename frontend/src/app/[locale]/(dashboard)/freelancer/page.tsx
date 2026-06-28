@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { getMemberSummary } from "@/lib/api/memberDashboard";
 import { Icon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatusBadge } from "@/components/ui/Badge";
 import { NoSubscriptionPanel } from "@/components/features/freelancer/NoSubscriptionPanel";
@@ -51,12 +52,22 @@ export default async function FreelancerHomePage() {
               <div className="card card-pad stack" style={{ gap: 0 }}>
                 <div className="between">
                   <span className="row" style={{ gap: 12 }}>
-                    <span
-                      className="st-ico"
-                      style={{ width: 48, height: 48 }}
-                    >
-                      <Icon name="card" size={22} />
-                    </span>
+                    {sub.workspace_logo ? (
+                      <Avatar
+                        initial={sub.workspace_name.charAt(0)}
+                        src={sub.workspace_logo}
+                        alt={sub.workspace_name}
+                        size="lg"
+                        round
+                      />
+                    ) : (
+                      <span
+                        className="st-ico"
+                        style={{ width: 48, height: 48 }}
+                      >
+                        <Icon name="card" size={22} />
+                      </span>
+                    )}
                     <span className="stack" style={{ gap: 2 }}>
                       <span
                         className="muted-3"
@@ -88,6 +99,13 @@ export default async function FreelancerHomePage() {
                     value={formatDate(sub.end_date)}
                     numeric
                   />
+                  {sub.package && (
+                    <SummaryItem
+                      icon="wifi"
+                      label={t("internetPackage")}
+                      value={sub.package}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -160,14 +178,52 @@ export default async function FreelancerHomePage() {
             <div className="dash-2col">
               <div className="card card-pad">
                 <div className="between" style={{ marginBottom: 16 }}>
-                  <h3 className="h3">{t("notificationsTitle")}</h3>
+                  <h3 className="h3">{t("announcementsTitle")}</h3>
                 </div>
-                <p
-                  className="muted"
-                  style={{ padding: "16px 0", textAlign: "center" }}
-                >
-                  {t("notificationsEmpty")}
-                </p>
+                {summary.announcements.length === 0 ? (
+                  <p
+                    className="muted"
+                    style={{ padding: "16px 0", textAlign: "center" }}
+                  >
+                    {t("announcementsEmpty")}
+                  </p>
+                ) : (
+                  <div className="stack" style={{ gap: 16 }}>
+                    {summary.announcements.map((a) => (
+                      <div key={a.id} className="stack" style={{ gap: 4 }}>
+                        <div className="between" style={{ gap: 8 }}>
+                          <span
+                            className="row"
+                            style={{ gap: 8, fontWeight: 600 }}
+                          >
+                            <Icon name="megaphone" size={15} />
+                            {a.title}
+                          </span>
+                          <span
+                            className="muted-3 ltr"
+                            style={{ fontSize: "var(--fs-xs)", flex: "none" }}
+                          >
+                            {formatDate(a.published_at)}
+                          </span>
+                        </div>
+                        {a.body && (
+                          <p
+                            className="muted"
+                            style={{ fontSize: "var(--fs-sm)", lineHeight: 1.7 }}
+                          >
+                            {a.body}
+                          </p>
+                        )}
+                        <span
+                          className="muted-3"
+                          style={{ fontSize: "var(--fs-xs)" }}
+                        >
+                          {a.workspace_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <QuickLinks hasSubscription={isActive} />
             </div>
@@ -184,7 +240,7 @@ function SummaryItem({
   value,
   numeric,
 }: {
-  icon: "pin" | "calendar";
+  icon: "pin" | "calendar" | "wifi";
   label: string;
   value: string;
   numeric?: boolean;

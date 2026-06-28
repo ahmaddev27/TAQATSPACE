@@ -12,5 +12,9 @@ Artisan::command('inspire', function () {
 Schedule::command('invoices:generate-monthly')->monthlyOn(1, '08:00');
 Schedule::command('invoices:mark-overdue')->dailyAt('09:00');
 
+// Chase invoices that stay unpaid past due — markOverdue only notifies once at
+// the transition, so re-remind weekly (throttled per invoice in the service).
+Schedule::command('invoices:remind-overdue')->weeklyOn(1, '09:30');
+
 // Remind members 3 days before their subscription expires.
 Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');

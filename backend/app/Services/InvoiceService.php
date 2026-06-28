@@ -13,6 +13,7 @@ use App\Models\Workspace;
 use App\Notifications\InvoiceCreatedNotification;
 use App\Notifications\InvoiceOverdueNotification;
 use App\Notifications\InvoicePaidNotification;
+use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -46,6 +47,9 @@ class InvoiceService
                 'public',
             ),
             'status' => InvoiceStatus::UnderReview->value,
+            // Clear any prior rejection so a re-submission starts a fresh review.
+            'receipt_rejected_reason' => null,
+            'receipt_reviewed_at' => null,
         ])->save();
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace.owner');
@@ -53,6 +57,89 @@ class InvoiceService
         $invoice->subscription?->workspace?->owner?->notify(
             new InvoiceReceiptSubmittedNotification($invoice),
         );
+
+        return $invoice;
+    }
+
+    /**
+     * Owner approves a member-submitted receipt: the invoice is confirmed paid
+     * (keeping the member's receipt as proof) and the member is notified.
+     *
+     * @throws RuntimeException when the invoice is not awaiting review
+     */
+    public function approveReceipt(Invoice $invoice, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::UnderReview) {
+            throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
+        }
+
+        $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
+
+        return $this->markPaid($invoice, $paidAt);
+    }
+
+    /**
+     * Owner rejects a member-submitted receipt: the invoice moves to
+     * "payment rejected" with the reason, and the member is notified so they can
+     * fix it and upload a new receipt.
+     *
+     * @throws RuntimeException when the invoice is not awaiting review
+     */
+    public function rejectReceipt(Invoice $invoice, string $reason): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::UnderReview) {
+            throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
+        }
+
+        $invoice->forceFill([
+            'status' => InvoiceStatus::PaymentRejected->value,
+            'receipt_rejected_reason' => $reason,
+            'receipt_reviewed_at' => Carbon::now(),
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        $invoice->subscription?->member?->notify(
+            new InvoiceReceiptRejectedNotification($invoice),
+        );
+
+        return $invoice;
+    }
+
+    /**
+     * Owner-side: attach a payment receipt AND record the invoice as paid in one
+     * step — the owner is logging a payment they received (cash/transfer) with
+     * proof. Stores the receipt, marks paid, and notifies the member.
+     *
+     * @throws RuntimeException when the invoice is already paid
+     */
+    public function recordPaymentWithReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        $invoice->forceFill([
+            'receipt_path' => $this->uploads->upload(
+                $receipt,
+                'receipts/'.$invoice->id,
+                (string) config('filesystems.media', 'public'),
+                'public',
+            ),
+            'status' => InvoiceStatus::Paid->value,
+            'amount_paid' => $invoice->amount,
+            'paid_at' => $paidAt ?? Carbon::now(),
+        ])->save();
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
 
         return $invoice;
     }
@@ -196,12 +283,146 @@ class InvoiceService
 
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid->value,
+            'amount_paid' => $invoice->amount,
             'paid_at' => $paidAt ?? Carbon::now(),
         ])->save();
 
         $invoice->loadMissing('subscription.member', 'subscription.workspace');
 
         $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
+    }
+
+    /**
+     * Record a partial (or final) manual payment against an invoice: add to the
+     * running total and move the invoice to "partially paid", or "paid" once the
+     * full amount is reached. Notifies the member only on full settlement.
+     *
+     * @throws RuntimeException when the invoice is already paid or the amount is invalid
+     */
+    public function recordPartialPayment(Invoice $invoice, float $amount, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        if ($amount <= 0) {
+            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
+        }
+
+        $total = (float) $invoice->amount;
+        $remaining = round($total - (float) $invoice->amount_paid, 2);
+
+        if ($amount > $remaining + 0.001) {
+            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
+                'remaining' => number_format($remaining, 2),
+            ]));
+        }
+
+        $newPaid = (float) $invoice->amount_paid + $amount;
+        $fullyPaid = $newPaid >= $total;
+        $paymentDate = $paidAt ?? Carbon::now();
+
+        DB::transaction(function () use ($invoice, $amount, $paymentDate, $fullyPaid, $newPaid): void {
+            $invoice->forceFill([
+                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'status' => $fullyPaid
+                    ? InvoiceStatus::Paid->value
+                    : InvoiceStatus::PartiallyPaid->value,
+                'paid_at' => $fullyPaid ? $paymentDate : null,
+            ])->save();
+
+            $invoice->payments()->create([
+                'amount' => round($amount, 2),
+                'receipt_path' => null,
+                'paid_at' => $paymentDate,
+            ]);
+        });
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        if ($fullyPaid) {
+            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+        }
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
+    }
+
+    /**
+     * Unified owner payment: record a payment (partial or full) WITH a receipt as
+     * proof and an optional date. Adds to the running total, stores the receipt,
+     * and moves the invoice to "partially paid" or "paid" — notifying the member
+     * once it is fully settled. The single owner-facing payment action.
+     *
+     * @throws RuntimeException when the invoice is already paid or the amount is invalid
+     */
+    public function recordPayment(Invoice $invoice, float $amount, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
+    {
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        if ($amount <= 0) {
+            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
+        }
+
+        $total = (float) $invoice->amount;
+        $remaining = round($total - (float) $invoice->amount_paid, 2);
+
+        if ($amount > $remaining + 0.001) {
+            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
+                'remaining' => number_format($remaining, 2),
+            ]));
+        }
+
+        $newPaid = (float) $invoice->amount_paid + $amount;
+        $fullyPaid = $newPaid >= $total;
+        $paymentDate = $paidAt ?? Carbon::now();
+
+        $receiptPath = $this->uploads->upload(
+            $receipt,
+            'receipts/'.$invoice->id,
+            (string) config('filesystems.media', 'public'),
+            'public',
+        );
+
+        DB::transaction(function () use ($invoice, $amount, $receiptPath, $paymentDate, $fullyPaid, $newPaid): void {
+            $invoice->forceFill([
+                'receipt_path' => $receiptPath,
+                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'status' => $fullyPaid
+                    ? InvoiceStatus::Paid->value
+                    : InvoiceStatus::PartiallyPaid->value,
+                'paid_at' => $fullyPaid ? $paymentDate : null,
+                // An owner-recorded payment supersedes any prior receipt rejection.
+                'receipt_rejected_reason' => null,
+            ])->save();
+
+            $invoice->payments()->create([
+                'amount' => round($amount, 2),
+                'receipt_path' => $receiptPath,
+                'paid_at' => $paymentDate,
+            ]);
+        });
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        if ($fullyPaid) {
+            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+        }
 
         $workspaceId = $invoice->subscription?->workspace_id;
 
@@ -261,6 +482,46 @@ class InvoiceService
     }
 
     /**
+     * Re-remind members about invoices that are STILL unpaid past their due date
+     * (overdue, or partially paid). `markOverdue` only notifies once at the
+     * transition; this chases the lingering balance on a recurring basis,
+     * throttled to one reminder per invoice per `$cooldownDays`.
+     */
+    public function remindOverdue(int $cooldownDays = 7): int
+    {
+        $sent = 0;
+
+        Invoice::query()
+            ->whereIn('status', [
+                InvoiceStatus::Overdue->value,
+                InvoiceStatus::PartiallyPaid->value,
+            ])
+            ->whereDate('due_date', '<', Carbon::today()->toDateString())
+            ->with('subscription.member')
+            ->chunkById(100, function ($invoices) use (&$sent, $cooldownDays): void {
+                foreach ($invoices as $invoice) {
+                    $member = $invoice->subscription?->member;
+
+                    if ($member === null) {
+                        continue;
+                    }
+
+                    $key = "invoice:{$invoice->id}:overdue_reminder";
+
+                    if (Cache::has($key)) {
+                        continue;
+                    }
+
+                    $member->notify(new InvoiceOverdueNotification($invoice, 'member'));
+                    Cache::put($key, true, Carbon::now()->addDays($cooldownDays));
+                    $sent++;
+                }
+            });
+
+        return $sent;
+    }
+
+    /**
      * Paginated invoices for an owner's workspace, filterable by status/month.
      *
      * @param  array<string, mixed>  $filters
@@ -270,7 +531,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forWorkspace($workspace->id)
-            ->with(['subscription.member', 'subscription.seat'])
+            ->with(['subscription.member', 'subscription.seat', 'payments'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();

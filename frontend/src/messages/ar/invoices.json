@@ -14,6 +14,7 @@
       },
       "filters": {
         "all": "الكل",
+        "under_review": "قيد المراجعة",
         "paid": "مدفوعة",
         "pending": "قيد الانتظار",
         "overdue": "متأخرة",
@@ -31,13 +32,67 @@
         "due": "تاريخ الاستحقاق",
         "amount": "المبلغ",
         "status": "الحالة",
-        "actions": "إجراءات"
+        "actions": "إجراءات",
+        "remaining": "المتبقّي {amount}"
       },
       "actions": {
         "markPaid": "تحديد كمدفوعة",
         "remind": "تذكير",
         "downloadPdf": "PDF",
-        "viewReceipt": "عرض الوصل"
+        "viewReceipt": "عرض الوصل",
+        "uploadReceipt": "رفع وصل"
+      },
+      "payment": {
+        "action": "تسجيل دفعة",
+        "title": "تسجيل دفعة",
+        "body": "سجّل دفعة جزئية أو كاملة للفاتورة {invoice}. تُعلَّم الفاتورة كمدفوعة عند وصول الرصيد إلى صفر.",
+        "remaining": "الرصيد المتبقّي",
+        "amount": "مبلغ الدفعة",
+        "paidAt": "تاريخ الدفع",
+        "optional": "اختياري",
+        "receipt": "وصل الدفع",
+        "dropLabel": "أسقط ملفاً هنا أو انقر للاختيار",
+        "dropHint": "PDF أو PNG أو JPG · حتى 5 ميجابايت",
+        "remove": "إزالة",
+        "crop": "قص الصورة",
+        "amountRequired": "أدخل مبلغاً أكبر من صفر.",
+        "receiptRequired": "أرفِق وصل الدفع.",
+        "recorded": "تم تسجيل الدفعة",
+        "failed": "تعذّر تسجيل الدفعة",
+        "cancel": "إلغاء",
+        "confirm": "تسجيل الدفعة"
+      },
+      "receipt": {
+        "uploaded": "تم رفع الوصل وتسجيل الدفع",
+        "uploadFailed": "تعذّر رفع الوصل",
+        "tooLarge": "حجم الملف كبير جداً (الحد 5 ميجابايت)"
+      },
+      "history": {
+        "action": "الدفعات ({count})",
+        "title": "دفعات الفاتورة — {invoice}",
+        "date": "التاريخ",
+        "amount": "المبلغ",
+        "receipt": "الوصل",
+        "view": "عرض",
+        "close": "إغلاق"
+      },
+      "review": {
+        "viewReceipt": "عرض الوصل",
+        "approve": "قبول",
+        "reject": "رفض",
+        "approved": "تم قبول الوصل — وتعليم الفاتورة كمدفوعة",
+        "approveFailed": "تعذّر قبول الوصل",
+        "rejected": "تم رفض الوصل — وإبلاغ العضو",
+        "rejectFailed": "تعذّر رفض الوصل",
+        "reasonRequired": "يرجى إدخال سبب (3 أحرف على الأقل).",
+        "rejectModal": {
+          "title": "رفض وصل الدفع",
+          "body": "وضّح للعضو سبب رفض وصل الفاتورة {invoice} حتى يصحّحه ويعيد رفعه.",
+          "reason": "السبب",
+          "reasonPlaceholder": "مثال: المبلغ في الوصل لا يطابق الفاتورة.",
+          "cancel": "إلغاء",
+          "confirm": "رفض الوصل"
+        }
       },
       "empty": {
         "title": "لا توجد فواتير بعد",
@@ -61,6 +116,7 @@
         "member": "العضو",
         "memberPlaceholder": "اختر عضواً",
         "amount": "المبلغ",
+        "amountBreakdown": "الاشتراك {base} + باقة الإنترنت {pkg} = {total} ₪",
         "dueDate": "تاريخ الاستحقاق",
         "notes": "ملاحظات",
         "notesPlaceholder": "وصف اختياري يظهر على الفاتورة",
@@ -85,8 +141,10 @@
         "status": "الحالة"
       },
       "downloadPdf": "PDF",
+      "rejectedReason": "سبب الرفض: {reason}",
       "receipt": {
         "upload": "رفع وصل دفع",
+        "reupload": "إعادة رفع الوصل",
         "view": "عرض الوصل",
         "submitted": "تم رفع الوصل، الفاتورة الآن قيد المراجعة.",
         "failed": "تعذّر رفع الوصل.",

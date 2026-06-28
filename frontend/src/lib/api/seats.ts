@@ -13,6 +13,17 @@ export async function seatsForWorkspace(workspaceId: string): Promise<Seat[]> {
   return res.data.seats;
 }
 
+/**
+ * The authenticated owner's own seat map — always includes the assignee (name +
+ * avatar), so the owner seat board shows who sits in each occupied seat.
+ */
+export async function ownerSeats(): Promise<Seat[]> {
+  const res = await serverFetch<ApiEnvelope<{ seats: Seat[]; summary?: unknown }>>(
+    "/workspace/seats",
+  );
+  return res.data.seats;
+}
+
 export interface StoreSeatInput {
   seat_number: string;
   type: SeatType;

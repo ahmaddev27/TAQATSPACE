@@ -11,11 +11,17 @@
 
     $statusLabels = [
         'paid' => 'مدفوعة',
+        'partially_paid' => 'مدفوعة جزئياً',
         'overdue' => 'متأخرة',
         'cancelled' => 'ملغاة',
         'under_review' => 'قيد المراجعة',
+        'payment_rejected' => 'وصل مرفوض',
         'pending' => 'غير مدفوعة',
     ];
+
+    $isPartiallyPaid = $status === \App\Enums\InvoiceStatus::PartiallyPaid;
+    $amountPaid = (float) ($invoice->amount_paid ?? 0);
+    $remaining = max(0, (float) $invoice->amount - $amountPaid);
 
     // When a receipt has been uploaded but the stored status is still pending or
     // overdue (e.g. a lag before the status transition completed), the PDF should
@@ -36,10 +42,21 @@
 
     $lineAmount = $subscription?->monthly_price ?? $invoice->amount;
 
-    // Cairo ships full Arabic + Latin coverage but lacks the ₪ glyph (U+20AA),
-    // so the shekel is written as the Arabic abbreviation "ش.ج" to avoid tofu.
+    // Internet package add-ons assigned to this member in the workspace, priced
+    // above zero — listed as their own invoice line(s) under the subscription.
+    $packageLines = ($member && $workspace)
+        ? $member->internetPackages()
+            ->where('internet_packages.workspace_id', $workspace->id)
+            ->where('internet_packages.price', '>', 0)
+            ->get(['internet_packages.id', 'internet_packages.name', 'internet_packages.price', 'internet_packages.speed_mbps'])
+        : collect();
+    $packagesTotal = (float) $packageLines->sum('price');
+    $subtotal = (float) $lineAmount + $packagesTotal;
+
+    // Cairo lacks the ₪ glyph (U+20AA), so the shekel sign is rendered in DejaVu
+    // Sans (bundled with mPDF, has the glyph) — shows ₪ correctly, not tofu.
     $money = static fn ($value): string =>
-        '<span class="num">' . number_format((float) $value, 2) . '</span> ش.ج';
+        '<span class="num">' . number_format((float) $value, 2) . '</span> <span class="shekel">₪</span>';
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -82,12 +99,15 @@
         .header { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         .header td { vertical-align: top; }
 
+        /* Render the shekel sign in a font that has the glyph (Cairo lacks it). */
+        .shekel { font-family: dejavusans, sans-serif; }
+
         .wordmark {
             font-size: 30px;
             font-weight: bold;
             letter-spacing: 1px;
             color: #1F82C7;
-            line-height: 1.1;
+            line-height: 1.45;
         }
         .wordmark .dot { color: #F6A91B; }
         .tagline {
@@ -101,12 +121,14 @@
             font-size: 22px;
             font-weight: bold;
             color: #0E1726;
-            line-height: 1.2;
+            line-height: 1.6;
+            margin-bottom: 4px;
         }
         .doc-number {
-            margin-top: 6px;
+            margin-top: 8px;
             font-size: 11.5px;
             color: #667085;
+            line-height: 1.6;
         }
 
         .rule {
@@ -118,34 +140,46 @@
         }
 
         /* ---------- Status badge ---------- */
-        .badge {
-            display: inline-block;
-            padding: 6px 18px;
+        /* Status pill — a 1-cell table so mPDF reserves real vertical space and
+           never overlaps the invoice number above it. */
+        .status-tbl { width: auto; margin-top: 16px; }
+        .status-pill {
+            padding: 9px 30px;
             border-radius: 16px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
-            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            line-height: 1.4;
         }
         .badge-paid { background: #E6F6EC; color: #1B8A4B; }
+        .badge-partially_paid { background: #FEF3D6; color: #B5790B; }
         .badge-pending { background: #EEF1F5; color: #667085; }
         .badge-under_review { background: #FEF3D6; color: #B5790B; }
+        .badge-payment_rejected { background: #FDE7E7; color: #C0392B; }
         .badge-overdue { background: #FDE7E7; color: #C0392B; }
         .badge-cancelled { background: #EEF1F5; color: #667085; }
 
         /* ---------- Party cards ----------
-           A plain collapsed table with explicit column widths + a spacer column
-           (the same pattern as the .meta strip, which mPDF renders reliably).
-           The previous border-spacing + negative-margin hack overflowed 100%
-           width in mPDF, so the two cells overlapped and the text ran together. */
-        .parties { width: 100%; border-collapse: collapse; margin: 0 0 28px; }
-        .party-cell { width: 48%; vertical-align: top; }
-        .party-gap { width: 4%; }
-        .party-card {
-            background: #F7FAFC;
+           One bordered, rounded strip with two equal cells + a divider — the
+           SAME td-styled pattern as the .meta strip below, which mPDF renders
+           reliably. A background+border inner <div> inside each <td> collapsed
+           in mPDF (no box drawn, and the stacked lines overlapped), so the box
+           now lives on the table + cells, never on an inner div. */
+        .parties {
+            width: 100%;
+            border-collapse: collapse;
             border: 1px solid #E4E9F0;
             border-radius: 10px;
-            padding: 18px 20px;
+            background: #F7FAFC;
+            margin: 0 0 28px;
         }
+        .parties td {
+            width: 50%;
+            padding: 18px 20px;
+            vertical-align: top;
+        }
+        .parties td + td { border-right: 1px solid #E4E9F0; }
         .party-label {
             font-size: 11px;
             font-weight: bold;
@@ -253,9 +287,13 @@
                 <div class="doc-number">
                     رقم <span class="num">{{ $invoice->invoice_number }}</span>
                 </div>
-                <div style="margin-top: 12px;">
-                    <span class="badge badge-{{ $displayStatusValue }}">{{ $statusLabel }}</span>
-                </div>
+                {{-- Status as a 1-cell table: mPDF renders cell backgrounds
+                     reliably (inline-block pills overlapped the line above). --}}
+                <table class="status-tbl" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="status-pill badge-{{ $displayStatusValue }}">{{ $statusLabel }}</td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
@@ -265,35 +303,30 @@
     {{-- Issuer vs. recipient --}}
     <table class="parties">
         <tr>
-            <td class="party-cell">
-                <div class="party-card">
-                    <div class="party-label">المُصدِر</div>
-                    <div class="party-label-en">From</div>
-                    <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
-                    @if ($workspace?->address)
-                        <div class="party-line">{{ $workspace->address }}</div>
-                    @endif
-                    @if ($workspace?->city)
-                        <div class="party-line">{{ $workspace->city }}</div>
-                    @endif
-                    @if ($workspace?->phone)
-                        <div class="party-line"><span class="num">{{ $workspace->phone }}</span></div>
-                    @endif
-                </div>
+            <td>
+                <div class="party-label">المُصدِر</div>
+                <div class="party-label-en">From</div>
+                <div class="party-name">{{ $workspace?->name ?? 'TAQAT' }}</div>
+                @if ($workspace?->address)
+                    <div class="party-line">{{ $workspace->address }}</div>
+                @endif
+                @if ($workspace?->city)
+                    <div class="party-line">{{ $workspace->city }}</div>
+                @endif
+                @if ($workspace?->phone)
+                    <div class="party-line"><span class="num">{{ $workspace->phone }}</span></div>
+                @endif
             </td>
-            <td class="party-gap"></td>
-            <td class="party-cell">
-                <div class="party-card">
-                    <div class="party-label">العميل</div>
-                    <div class="party-label-en">Bill to</div>
-                    <div class="party-name">{{ $member?->name ?? '—' }}</div>
-                    @if ($member?->email)
-                        <div class="party-line"><span class="num">{{ $member->email }}</span></div>
-                    @endif
-                    @if ($member?->phone)
-                        <div class="party-line"><span class="num">{{ $member->phone }}</span></div>
-                    @endif
-                </div>
+            <td>
+                <div class="party-label">العميل</div>
+                <div class="party-label-en">Bill to</div>
+                <div class="party-name">{{ $member?->name ?? '—' }}</div>
+                @if ($member?->email)
+                    <div class="party-line"><span class="num">{{ $member->email }}</span></div>
+                @endif
+                @if ($member?->phone)
+                    <div class="party-line"><span class="num">{{ $member->phone }}</span></div>
+                @endif
             </td>
         </tr>
     </table>
@@ -340,6 +373,19 @@
                 <td><span class="num">{{ $period }}</span></td>
                 <td>{!! $money($lineAmount) !!}</td>
             </tr>
+            @foreach ($packageLines as $pkg)
+                <tr>
+                    <td>
+                        <div class="desc-title">باقة الإنترنت: {{ $pkg->name }}</div>
+                        <div class="desc-sub">Internet package</div>
+                        @if ($pkg->speed_mbps)
+                            <div class="desc-sub"><span class="num">{{ $pkg->speed_mbps }}</span> Mbps</div>
+                        @endif
+                    </td>
+                    <td><span class="num">{{ $period }}</span></td>
+                    <td>{!! $money($pkg->price) !!}</td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
 
@@ -348,13 +394,25 @@
         <tr>
             <td class="spacer"></td>
             <td class="t-label">المجموع الفرعي</td>
-            <td class="t-value">{!! $money($lineAmount) !!}</td>
+            <td class="t-value">{!! $money($subtotal) !!}</td>
         </tr>
         <tr class="grand">
             <td class="spacer"></td>
             <td class="t-label">الإجمالي المستحق</td>
             <td class="t-value">{!! $money($invoice->amount) !!}</td>
         </tr>
+        @if ($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001))
+            <tr>
+                <td class="spacer"></td>
+                <td class="t-label">المدفوع</td>
+                <td class="t-value">{!! $money($amountPaid) !!}</td>
+            </tr>
+            <tr>
+                <td class="spacer"></td>
+                <td class="t-label" style="color:#B54708;">المتبقّي</td>
+                <td class="t-value" style="color:#B54708;">{!! $money($remaining) !!}</td>
+            </tr>
+        @endif
     </table>
 
     {{-- Payment details: surfaced once a receipt is attached or the invoice is

@@ -17,6 +17,7 @@
     "loading": "Loading messages…",
     "connecting": "Connecting to chat…",
     "sendFailed": "Couldn't send your message. Please try again.",
+    "openFull": "Open all conversations",
     "searchPlaceholder": "Search contacts…",
     "noResults": "No matching results",
     "filterByType": "Type",

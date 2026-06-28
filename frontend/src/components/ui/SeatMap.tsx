@@ -36,7 +36,10 @@ export function SeatMap({ seats, selected, onSelect, cols = 8 }: SeatMapProps) {
   return (
     <div
       className="seatmap"
-      style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+      style={{
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 84px))`,
+        justifyContent: "start",
+      }}
     >
       {seats.map((s) => {
         const isSelected = selected === s.id;
@@ -50,14 +53,15 @@ export function SeatMap({ seats, selected, onSelect, cols = 8 }: SeatMapProps) {
                 : isSelected
                   ? "is-selected"
                   : "";
-        const locked = s.state === "disabled" || s.state === "occupied";
+        // Occupied seats stay selectable so the owner can open them and unassign;
+        // only maintenance ("disabled") seats are non-interactive.
         const occupiedWithMember = s.state === "occupied" && s.member != null;
         return (
           <button
             key={s.id}
             type="button"
             className={`seat ${cls}`.trim()}
-            disabled={locked}
+            disabled={s.state === "disabled"}
             onClick={() => onSelect?.(s.id)}
             title={s.member ? `${s.label} — ${s.member.name}` : s.label}
           >

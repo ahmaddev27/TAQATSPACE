@@ -1,20 +1,41 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
 import { issueInvoice } from "@/lib/actions/invoices";
+import type { PlanType } from "@/lib/types";
 
-/** Minimal member shape needed to populate the member <select>. */
+/** Member shape shown in the rich member picker. */
 export interface InvoiceMemberOption {
   id: string;
   name: string;
+  avatar: string | null;
+  planType: PlanType;
+  seatNumber: string | null;
+  monthlyPrice: number;
+  package: string | null;
+  packagePrice: number;
+}
+
+/** Decimal money fields can arrive as strings ("200.00") — coerce before math. */
+function num(value: number | string): number {
+  return Number(value) || 0;
+}
+
+const subPrice = (m: InvoiceMemberOption): number => num(m.monthlyPrice);
+const pkgPrice = (m: InvoiceMemberOption): number => num(m.packagePrice);
+
+/** Subscription price + internet-package add-on price = total owed this period. */
+function memberTotal(m: InvoiceMemberOption): number {
+  return subPrice(m) + pkgPrice(m);
 }
 
 export interface IssueInvoiceModalProps {
@@ -32,12 +53,13 @@ interface FormState {
 /** Owner: issue a manual invoice for an active member. */
 export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) {
   const t = useTranslations("invoices.owner");
+  const tc = useTranslations("common");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
   const [form, setForm] = useState<FormState>({
     memberId: members[0]?.id ?? "",
-    amount: "",
+    amount: members[0] ? String(memberTotal(members[0])) : "",
     dueDate: "",
     notes: "",
   });
@@ -45,6 +67,12 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const selectedMember = members.find((m) => m.id === form.memberId) ?? null;
+
+  /** Selecting a member pre-fills the amount with subscription + package price. */
+  const selectMember = (m: InvoiceMemberOption) =>
+    setForm((f) => ({ ...f, memberId: m.id, amount: String(memberTotal(m)) }));
 
   const submit = () => {
     startTransition(async () => {
@@ -96,16 +124,25 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
       {hasMembers ? (
         <div className="stack" style={{ gap: 16 }}>
           <Field label={t("issueModal.member")} error={errors.member_id?.[0]}>
-            <Select
+            <MemberPicker
+              members={members}
               value={form.memberId}
-              onChange={(e) => set("memberId", e.target.value)}
-            >
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </Select>
+              onChange={selectMember}
+              meta={(m) =>
+                [
+                  m.package
+                    ? pkgPrice(m) > 0
+                      ? `${m.package} (+${pkgPrice(m)} ${tc("currency")})`
+                      : m.package
+                    : null,
+                  m.seatNumber ? `#${m.seatNumber}` : null,
+                  tc(`planType.${m.planType}`),
+                  `${memberTotal(m)} ${tc("currency")}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+              }
+            />
           </Field>
 
           <div className="grid2">
@@ -117,6 +154,18 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
                 value={form.amount}
                 onChange={(e) => set("amount", e.target.value)}
               />
+              {selectedMember && pkgPrice(selectedMember) > 0 && (
+                <div
+                  className="muted-3"
+                  style={{ marginTop: 5, fontSize: "var(--fs-xs)" }}
+                >
+                  {t("issueModal.amountBreakdown", {
+                    base: subPrice(selectedMember),
+                    pkg: pkgPrice(selectedMember),
+                    total: memberTotal(selectedMember),
+                  })}
+                </div>
+              )}
             </Field>
             <Field label={t("issueModal.dueDate")} error={errors.due_date?.[0]}>
               <Input
@@ -145,5 +194,132 @@ export function IssueInvoiceModal({ members, onClose }: IssueInvoiceModalProps) 
         <p className="muted">{t("issueModal.noMembers")}</p>
       )}
     </Modal>
+  );
+}
+
+interface MemberPickerProps {
+  members: InvoiceMemberOption[];
+  value: string;
+  onChange: (member: InvoiceMemberOption) => void;
+  meta: (member: InvoiceMemberOption) => string;
+}
+
+/**
+ * Avatar-rich member dropdown: each option shows the member's photo, name, and a
+ * meta line (internet package · seat · plan · price). A native <select> can't
+ * render avatars, so this is a custom popover.
+ */
+function MemberPicker({ members, value, onChange, meta }: MemberPickerProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = members.find((m) => m.id === value) ?? null;
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        type="button"
+        className="input row between"
+        style={{
+          width: "100%",
+          gap: 10,
+          cursor: "pointer",
+          minHeight: 56,
+          height: "auto",
+          paddingBlock: 8,
+        }}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {selected ? (
+          <MemberRow member={selected} meta={meta(selected)} />
+        ) : (
+          <span className="muted">—</span>
+        )}
+        <Icon name="chevD" size={16} className="muted" />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="card"
+          style={{
+            position: "absolute",
+            insetInlineStart: 0,
+            insetInlineEnd: 0,
+            top: "calc(100% + 6px)",
+            zIndex: 30,
+            maxHeight: 280,
+            overflowY: "auto",
+            padding: 6,
+            border: "1.5px solid var(--border)",
+            boxShadow: "var(--shadow-lg, 0 12px 28px rgba(0,0,0,.16))",
+          }}
+        >
+          {members.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="option"
+              aria-selected={m.id === value}
+              className="row"
+              style={{
+                width: "100%",
+                gap: 10,
+                padding: "11px 12px",
+                borderRadius: 8,
+                cursor: "pointer",
+                background:
+                  m.id === value ? "var(--surface-2, rgba(0,0,0,.04))" : "transparent",
+              }}
+              onClick={() => {
+                onChange(m);
+                setOpen(false);
+              }}
+            >
+              <MemberRow member={m} meta={meta(m)} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MemberRow({
+  member,
+  meta,
+}: {
+  member: InvoiceMemberOption;
+  meta: string;
+}) {
+  return (
+    <span className="row" style={{ gap: 10, minWidth: 0, alignItems: "center" }}>
+      <Avatar initial={member.name.charAt(0)} src={member.avatar} alt={member.name} round />
+      <span className="stack" style={{ gap: 2, minWidth: 0, textAlign: "start" }}>
+        <span style={{ fontWeight: 600 }}>{member.name}</span>
+        {meta && (
+          <span
+            className="muted-3"
+            style={{
+              fontSize: "var(--fs-xs)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {meta}
+          </span>
+        )}
+      </span>
+    </span>
   );
 }

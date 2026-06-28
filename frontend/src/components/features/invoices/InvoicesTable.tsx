@@ -22,14 +22,16 @@ import {
   IssueInvoiceModal,
   type InvoiceMemberOption,
 } from "./IssueInvoiceModal";
-import { MarkPaidButton } from "./MarkPaidButton";
+import { RecordPaymentButton } from "./RecordPaymentButton";
+import { ReceiptReviewActions } from "./ReceiptReviewActions";
 import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
+import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
 type StatusTab = "all" | InvoiceStatus;
 
-const TABS: StatusTab[] = ["all", "paid", "pending", "overdue"];
+const TABS: StatusTab[] = ["all", "under_review", "pending", "overdue", "paid"];
 const FILTER_KEYS = ["status", "month"] as const;
 const PAGE_SIZE = 8;
 
@@ -138,8 +140,20 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       num: true,
       sortable: true,
       cell: (inv) => (
-        <span className="cell-num" style={{ fontWeight: 600 }}>
-          {invoiceMoney(inv.amount, inv.currency)}
+        <span className="cell-num stack" style={{ gap: 2 }}>
+          <span style={{ fontWeight: 600 }}>
+            {invoiceMoney(inv.amount, inv.currency)}
+          </span>
+          {inv.status === "partially_paid" && (
+            <span
+              className="muted-3"
+              style={{ fontSize: "var(--fs-xs)", color: "var(--amber-600)" }}
+            >
+              {t("table.remaining", {
+                amount: invoiceMoney(inv.remaining_amount, inv.currency),
+              })}
+            </span>
+          )}
         </span>
       ),
     },
@@ -154,13 +168,27 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       header: "",
       cell: (inv) => (
         <div className="row-actions">
-          {inv.status !== "paid" && inv.status !== "cancelled" && (
-            <>
-              <MarkPaidButton invoiceId={inv.id} />
-              <RemindButton invoiceId={inv.id} />
-            </>
+          {inv.status === "under_review" ? (
+            <ReceiptReviewActions
+              invoiceId={inv.id}
+              invoiceNumber={inv.invoice_number}
+              receiptUrl={inv.receipt_url}
+            />
+          ) : (
+            inv.status !== "paid" &&
+            inv.status !== "cancelled" && (
+              <>
+                <RecordPaymentButton
+                  invoiceId={inv.id}
+                  invoiceNumber={inv.invoice_number}
+                  remaining={inv.remaining_amount}
+                  currency={inv.currency}
+                />
+                <RemindButton invoiceId={inv.id} />
+              </>
+            )
           )}
-          {inv.receipt_url && (
+          {inv.receipt_url && inv.status !== "under_review" && (
             <a
               href={inv.receipt_url}
               target="_blank"
@@ -170,6 +198,13 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
               <Icon name="receipt" size={15} />
               {t("actions.viewReceipt")}
             </a>
+          )}
+          {inv.payments && inv.payments.length > 0 && (
+            <PaymentsHistoryButton
+              invoiceNumber={inv.invoice_number}
+              payments={inv.payments}
+              currency={inv.currency}
+            />
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
         </div>

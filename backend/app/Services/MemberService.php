@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\InvoiceStatus;
 use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
+use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Seat;
 use App\Models\Subscription;
@@ -64,10 +65,25 @@ class MemberService
     private function rosterQuery(Workspace $workspace, array $filters): Builder
     {
         $query = Subscription::query()
-            ->with(['member', 'seat'])
+            ->with(['member.internetPackages:id,name,price', 'seat'])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
             ->where('subscriptions.workspace_id', $workspace->id)
             ->select('subscriptions.*');
+
+        // One row per member: when a member re-subscribed (an old cancelled/
+        // expired subscription plus a current one), keep only their primary
+        // subscription — the active one, else the most recent — so the roster
+        // never shows the same person twice.
+        $query->whereRaw(
+            'subscriptions.id = (
+                select s2.id from subscriptions as s2
+                where s2.member_id = subscriptions.member_id
+                  and s2.workspace_id = subscriptions.workspace_id
+                order by (s2.status = ?) desc, s2.start_date desc, s2.id desc
+                limit 1
+            )',
+            [SubscriptionStatus::Active->value],
+        );
 
         $this->applyStatusFilter($query, $filters['status'] ?? null);
         $this->applySearch($query, $filters['search'] ?? null);
@@ -112,6 +128,7 @@ class MemberService
                 'start_date' => $subscription->start_date?->toDateString(),
                 'end_date' => $subscription->end_date?->toDateString(),
                 'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
+                'package' => $this->memberPackageName($workspace, $member),
             ],
             'seat' => $subscription->seat === null ? null : [
                 'id' => $subscription->seat->id,
@@ -165,6 +182,20 @@ class MemberService
         Cache::forget("workspace:{$workspace->id}:dashboard_stats");
 
         return $subscription->refresh()->load(['member', 'seat']);
+    }
+
+    /**
+     * Comma-joined internet package name(s) assigned to a member within a
+     * workspace — null when none.
+     */
+    private function memberPackageName(Workspace $workspace, User $member): ?string
+    {
+        $names = InternetPackage::query()
+            ->where('workspace_id', $workspace->id)
+            ->whereHas('members', static fn ($query) => $query->where('users.id', $member->id))
+            ->pluck('name');
+
+        return $names->isEmpty() ? null : $names->implode('، ');
     }
 
     private function freeSeat(Workspace $workspace, Subscription $subscription): void

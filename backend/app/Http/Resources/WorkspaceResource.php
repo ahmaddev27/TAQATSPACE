@@ -37,6 +37,11 @@ class WorkspaceResource extends JsonResource
             'price_per_month' => $this->price_per_month,
             'amenities' => $this->amenities ?? [],
             'photos' => $this->photoUrls(),
+            // The workspace "logo" is its owner's avatar (resolved). Present only
+            // when the owner relation is eager-loaded, so reads stay N+1-free.
+            'logo' => $this->relationLoaded('owner')
+                ? MediaUrl::resolve($this->owner?->avatar)
+                : null,
             'working_hours' => $this->working_hours,
             'status' => $this->status->value,
             'avg_rating' => $this->avg_rating,
@@ -53,6 +58,7 @@ class WorkspaceResource extends JsonResource
                 'name' => $this->owner->name,
                 'email' => $this->owner->email,
                 'phone' => $this->owner->phone,
+                'avatar' => MediaUrl::resolve($this->owner->avatar),
             ]),
 
             // Owner/Admin-only: publish state + masked messaging config (never

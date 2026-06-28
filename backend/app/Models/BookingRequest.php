@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use App\Enums\PlanType;
 use App\Enums\SeatType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ class BookingRequest extends Model
         'member_id',
         'workspace_id',
         'preferred_seat_type',
+        'plan_type',
         'message',
         'status',
         'reviewed_by',
@@ -35,6 +37,7 @@ class BookingRequest extends Model
     {
         return [
             'preferred_seat_type' => SeatType::class,
+            'plan_type' => PlanType::class,
             'status' => BookingStatus::class,
             'reviewed_at' => 'datetime',
         ];

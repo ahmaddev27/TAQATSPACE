@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.admin' => \App\Http\Middleware\EnsureAdmin::class,
             // Fine-grained admin gate: `can.permission:<permission>`.
             'can.permission' => \App\Http\Middleware\EnsureHasAdminPermission::class,
+            // Server-to-server partner auth via `X-Api-Key`.
+            'partner' => \App\Http\Middleware\AuthenticatePartner::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

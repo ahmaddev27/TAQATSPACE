@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Invoice extends Model
@@ -21,12 +22,15 @@ class Invoice extends Model
     protected $fillable = [
         'subscription_id',
         'amount',
+        'amount_paid',
         'due_date',
         'paid_at',
         'status',
         'invoice_number',
         'invoice_pdf_path',
         'receipt_path',
+        'receipt_rejected_reason',
+        'receipt_reviewed_at',
         'notes',
     ];
 
@@ -39,7 +43,9 @@ class Invoice extends Model
             'status' => InvoiceStatus::class,
             'due_date' => 'date',
             'paid_at' => 'datetime',
+            'receipt_reviewed_at' => 'datetime',
             'amount' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
         ];
     }
 
@@ -47,6 +53,12 @@ class Invoice extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /** @return HasMany<InvoicePayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderBy('paid_at');
     }
 
     // ---- Query scopes (T041) ----

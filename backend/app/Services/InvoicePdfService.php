@@ -14,6 +14,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class InvoicePdfService
 {
     /**
+     * Bump whenever the invoice template/layout changes. The cached PDF path is
+     * namespaced by this version, so a bump transparently invalidates every
+     * previously-cached PDF — old invoices regenerate with the new template
+     * instead of serving a stale render.
+     */
+    private const TEMPLATE_VERSION = 6;
+
+    /**
      * Stream the invoice PDF as an attachment, generating + caching it on the
      * default disk on first request and reusing it afterwards.
      */
@@ -30,11 +38,26 @@ class InvoicePdfService
      */
     public function ensureGenerated(Invoice $invoice): string
     {
-        $path = "invoices/{$invoice->id}.pdf";
+        $prefix = 'invoices/v'.self::TEMPLATE_VERSION.'/';
+
+        // Fingerprint the payment-relevant state so a paid (or partially paid)
+        // invoice regenerates instead of serving a stale "unpaid" cached PDF.
+        $fingerprint = substr(md5(implode('|', [
+            $invoice->status->value,
+            (string) $invoice->amount,
+            (string) $invoice->amount_paid,
+            (string) ($invoice->paid_at?->getTimestamp() ?? ''),
+        ])), 0, 10);
+
+        $path = $prefix."{$invoice->id}-{$fingerprint}.pdf";
         $disk = Storage::disk();
 
-        if ($invoice->invoice_pdf_path !== null && $disk->exists($invoice->invoice_pdf_path)) {
-            return $invoice->invoice_pdf_path;
+        // Reuse only the cache for this exact template version + payment state.
+        if (
+            $invoice->invoice_pdf_path === $path
+            && $disk->exists($path)
+        ) {
+            return $path;
         }
 
         $invoice->loadMissing('subscription.member', 'subscription.seat', 'subscription.workspace');

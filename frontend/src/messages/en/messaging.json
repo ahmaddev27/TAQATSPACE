@@ -17,6 +17,8 @@
       "allReadToast": "All notifications marked as read.",
       "deletedToast": "Notification deleted.",
       "actionFailed": "Could not update notifications.",
+      "loadMore": "Load more",
+      "loadingMore": "Loading…",
       "panelTitle": "Notifications",
       "bellLabel": "Notifications",
       "types": {

@@ -9,16 +9,24 @@ import {
   deleteNotification,
   markNotificationsRead,
 } from "@/lib/actions/messaging";
-import type { AppNotification } from "@/lib/api/notifications";
+import type {
+  AppNotification,
+  NotificationListResult,
+  NotificationMeta,
+} from "@/lib/api/notifications";
 import { NotificationItem } from "./NotificationItem";
 import { notifHref } from "./notif";
 import "./messaging.css";
 
 type Filter = "all" | "unread";
 
+/** Page size for "Load more" — matches the server pages' initial fetch. */
+const PAGE_SIZE = 50;
+
 export interface NotificationsViewProps {
   initial: AppNotification[];
-  initialUnread: number;
+  /** First-page meta (pagination + unread total) from the server page. */
+  initialMeta: NotificationMeta;
   /** Scopes per-item destinations + matches the recipient role. */
   role: "owner" | "freelancer";
 }
@@ -30,7 +38,7 @@ export interface NotificationsViewProps {
  */
 export function NotificationsView({
   initial,
-  initialUnread,
+  initialMeta,
   role,
 }: NotificationsViewProps) {
   const t = useTranslations("messaging.notifications");
@@ -39,13 +47,45 @@ export function NotificationsView({
   const [, startTransition] = useTransition();
 
   const [items, setItems] = useState<AppNotification[]>(initial);
-  const [unread, setUnread] = useState(initialUnread);
+  const [unread, setUnread] = useState(initialMeta.unread_count);
   const [filter, setFilter] = useState<Filter>("all");
+
+  // Pagination state so the feed can show every notification, not just page 1.
+  const [page, setPage] = useState(initialMeta.current_page);
+  const [hasMore, setHasMore] = useState(
+    initialMeta.current_page < initialMeta.last_page,
+  );
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const visible = useMemo(
     () => (filter === "unread" ? items.filter((n) => !n.is_read) : items),
     [items, filter],
   );
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const next = page + 1;
+      const res = await fetch(
+        `/api/notifications?page=${next}&per_page=${PAGE_SIZE}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) throw new Error("load_failed");
+      const data = (await res.json()) as NotificationListResult;
+      // Dedupe by id so a notification arriving between pages isn't shown twice.
+      setItems((list) => {
+        const seen = new Set(list.map((n) => n.id));
+        return [...list, ...data.notifications.filter((n) => !seen.has(n.id))];
+      });
+      setPage(data.meta.current_page);
+      setHasMore(data.meta.current_page < data.meta.last_page);
+    } catch {
+      toast({ tone: "err", title: t("actionFailed") });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const markOne = (n: AppNotification) => {
     if (n.is_read) return;
@@ -146,6 +186,19 @@ export function NotificationsView({
               onDelete={() => remove(n)}
             />
           ))}
+        </div>
+      )}
+
+      {hasMore && (
+        <div className="row" style={{ justifyContent: "center" }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={loadMore}
+            disabled={loadingMore}
+          >
+            {loadingMore ? t("loadingMore") : t("loadMore")}
+          </button>
         </div>
       )}
     </div>

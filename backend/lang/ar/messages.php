@@ -97,6 +97,9 @@ return [
     'subscription_not_due_for_renewal' => 'لا يمكن تجديد الاشتراك قبل وصول تاريخ انتهائه.',
     'subscription_no_access' => 'ليس لديك صلاحية الوصول إلى هذا الاشتراك.',
 
+    // Partner integration
+    'partner_unauthorized' => 'مفتاح API غير صالح أو مفقود.',
+
     // الباقات
     'package_created' => 'تم إنشاء الباقة بنجاح.',
     'package_updated' => 'تم تحديث الباقة بنجاح.',
@@ -114,8 +117,13 @@ return [
     'reminder_sent' => 'تم إرسال التذكير.',
     'invoice_member_no_subscription' => 'هذا العضو ليس لديه اشتراك نشط في مساحة عملك.',
     'invoice_already_paid' => 'تم دفع هذه الفاتورة بالفعل.',
+    'invoice_partial_amount_invalid' => 'يجب أن يكون مبلغ الدفعة أكبر من صفر.',
+    'invoice_payment_exceeds_remaining' => 'المبلغ يتجاوز الرصيد المتبقّي (:remaining).',
+    'invoice_partial_recorded' => 'تم تسجيل الدفعة.',
     'invoice_receipt_submitted' => 'تم رفع وصل الدفع، والفاتورة الآن قيد المراجعة.',
     'invoice_receipt_not_allowed' => 'لا يمكن رفع وصل دفع لهذه الفاتورة في حالتها الحالية.',
+    'invoice_receipt_not_under_review' => 'هذه الفاتورة ليست بانتظار مراجعة وصل.',
+    'invoice_receipt_rejected' => 'تم رفض وصل الدفع وإبلاغ العضو.',
     'invoice_reminder_recently_sent' => 'تم إرسال تذكير لهذه الفاتورة خلال الـ 24 ساعة الماضية بالفعل.',
 
     // الإعلانات

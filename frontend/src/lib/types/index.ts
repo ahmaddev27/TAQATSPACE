@@ -80,6 +80,8 @@ export type BookingStatus = "pending" | "approved" | "rejected";
 export type InvoiceStatus =
   | "pending"
   | "under_review"
+  | "payment_rejected"
+  | "partially_paid"
   | "paid"
   | "overdue"
   | "cancelled";
@@ -144,6 +146,7 @@ export interface WorkspaceOwnerSummary {
   name: string;
   email: string;
   phone: string | null;
+  avatar?: string | null;
 }
 
 export interface SeatsSummary {
@@ -194,6 +197,8 @@ export interface Workspace {
   price_per_month: number;
   amenities: string[];
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
   working_hours: Record<string, unknown> | null;
   status: WorkspaceStatus;
   /**
@@ -264,6 +269,8 @@ export interface SubscriptionWorkspaceSummary {
   city: string;
   address: string;
   photos: string[];
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  logo?: string | null;
 }
 
 export interface SubscriptionSeatSummary {
@@ -310,6 +317,10 @@ export interface Member {
   plan_type: PlanType;
   seat_number: string | null;
   monthly_price: number;
+  /** Comma-joined internet package names assigned to the member, if any. */
+  package: string | null;
+  /** Total monthly add-on price of the member's internet packages (decimal string). */
+  package_price: string;
   join_date: string | null;
   cancelled_at: string | null;
 }
@@ -332,6 +343,8 @@ export interface MemberDetailSubscription {
   start_date: string | null;
   end_date: string | null;
   cancelled_at: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberDetailInvoice {
@@ -359,6 +372,7 @@ export interface PackageMember {
   id: string;
   name: string;
   avatar: string | null;
+  seat_number: string | null;
   assigned_at: string | null;
 }
 
@@ -464,8 +478,12 @@ export interface OwnerStats {
 export interface MemberSummarySubscription {
   status: SubscriptionStatus;
   workspace_name: string;
+  /** The workspace logo (its owner's avatar), resolved URL or null. */
+  workspace_logo: string | null;
   plan_type: PlanType;
   end_date: string | null;
+  /** The member's internet package in this workspace, if assigned. */
+  package: string | null;
 }
 
 export interface MemberSummarySeat {
@@ -478,6 +496,16 @@ export interface MemberSummaryInvoice {
   due_date: string | null;
 }
 
+/** A live announcement from a workspace the member is subscribed to. */
+export interface MemberSummaryAnnouncement {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  workspace_name: string;
+  published_at: string | null;
+}
+
 /** Freelancer dashboard summary (`GET /member/dashboard`). */
 export interface MemberSummary {
   subscription: MemberSummarySubscription | null;
@@ -485,4 +513,5 @@ export interface MemberSummary {
   next_invoice: MemberSummaryInvoice | null;
   unread_notifications: number;
   pending_booking_requests: number;
+  announcements: MemberSummaryAnnouncement[];
 }

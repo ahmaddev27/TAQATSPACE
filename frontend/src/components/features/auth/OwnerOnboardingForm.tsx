@@ -270,7 +270,11 @@ export function OwnerOnboardingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    // Native form submission is fully neutralised: a multi-step wizard must NEVER
+    // submit implicitly (Enter, mobile keyboard "Go", IME confirm, autofill) — that
+    // jumped straight to seat-setup with capacity still empty. Submission happens
+    // ONLY via the deliberate click on the final-step button (onClick below).
+    <form onSubmit={(e) => e.preventDefault()} noValidate>
       <Stepper steps={steps} current={step} />
 
       <div className="card reg-card">
@@ -485,7 +489,13 @@ export function OwnerOnboardingForm({
             {tw("next")}
           </Button>
         ) : (
-          <Button type="submit" variant="primary" iconEnd="check" loading={isSubmitting}>
+          <Button
+            type="button"
+            variant="primary"
+            iconEnd="check"
+            loading={isSubmitting}
+            onClick={handleSubmit(onSubmit)}
+          >
             {t("submitOwner")}
           </Button>
         )}

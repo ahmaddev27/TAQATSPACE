@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
-import { SeatLegend, type SeatLegendItem } from "@/components/ui/SeatLegend";
 import { SeatMap, type SeatMapState } from "@/components/ui/SeatMap";
 import { useToast } from "@/components/providers/ToastProvider";
 import { assignSeat, unassignSeat } from "@/lib/actions/owner";
@@ -85,18 +84,12 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
   const selectedSeat = seats.find((s) => s.id === selectedId) ?? null;
   const isOccupiedSelected = selectedSeat?.status === "occupied";
 
+  // Only active members WITHOUT a seat can be assigned — a member holds at most
+  // one seat, so those already seated are hidden from the assignment picker.
   const activeMembers = useMemo(
-    () => members.filter((m) => m.status === "active"),
+    () => members.filter((m) => m.status === "active" && !m.seat_number),
     [members],
   );
-
-  const legendItems: SeatLegendItem[] = [
-    { label: t("seats.available"), bg: "--seat-available", bd: "--seat-available-bd" },
-    { label: t("seats.selectedSeat"), bg: "--seat-selected", bd: "--seat-selected-bd" },
-    { label: t("seats.occupied"), bg: "--seat-occupied", bd: "--seat-occupied-bd" },
-    { label: t("seats.reserved"), bg: "--seat-reserved", bd: "--seat-reserved-bd" },
-    { label: t("seats.maintenance"), bg: "--seat-disabled", bd: "--seat-disabled-bd" },
-  ];
 
   const handleAssign = (memberId: string) => {
     if (!selectedSeat) return;
@@ -174,8 +167,6 @@ export function SeatBoard({ seats, members }: SeatBoardProps) {
           ))}
         </div>
 
-        <div className="divider" style={{ margin: "22px 0 16px" }} />
-        <SeatLegend items={legendItems} />
       </div>
 
       <div className="stack" style={{ gap: 16 }}>

@@ -28,7 +28,7 @@ export default async function OwnerNotificationsPage({
 
       <NotificationsView
         initial={notifications}
-        initialUnread={meta.unread_count}
+        initialMeta={meta}
         role="owner"
       />
     </div>

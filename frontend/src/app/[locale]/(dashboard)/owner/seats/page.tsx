@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOwnerWorkspace } from "@/lib/actions/owner";
-import { seatsForWorkspace } from "@/lib/api/seats";
+import { ownerSeats } from "@/lib/api/seats";
 import { listMembers } from "@/lib/api/members";
 import { Icon } from "@/components/ui/Icon";
 import { SeatBoard } from "@/components/features/owner/SeatBoard";
@@ -19,7 +19,7 @@ export default async function OwnerSeatsPage({
   const workspace = await getOwnerWorkspace();
 
   const [seats, memberResult] = await Promise.all([
-    workspace ? seatsForWorkspace(workspace.id) : Promise.resolve([]),
+    workspace ? ownerSeats() : Promise.resolve([]),
     listMembers({ status: "active", per_page: 200 }),
   ]);
 

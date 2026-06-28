@@ -97,6 +97,9 @@ return [
     'subscription_not_due_for_renewal' => 'The subscription cannot be renewed before its end date is reached.',
     'subscription_no_access' => 'You do not have access to this subscription.',
 
+    // Partner integration
+    'partner_unauthorized' => 'Invalid or missing API key.',
+
     // Packages
     'package_created' => 'Package created successfully.',
     'package_updated' => 'Package updated successfully.',
@@ -114,8 +117,13 @@ return [
     'reminder_sent' => 'Reminder sent.',
     'invoice_member_no_subscription' => 'This member has no active subscription in your workspace.',
     'invoice_already_paid' => 'This invoice has already been paid.',
+    'invoice_partial_amount_invalid' => 'The payment amount must be greater than zero.',
+    'invoice_payment_exceeds_remaining' => 'The amount exceeds the outstanding balance (:remaining).',
+    'invoice_partial_recorded' => 'Payment recorded.',
     'invoice_receipt_submitted' => 'Payment receipt uploaded; the invoice is now under review.',
     'invoice_receipt_not_allowed' => 'A receipt cannot be uploaded for this invoice in its current state.',
+    'invoice_receipt_not_under_review' => 'This invoice is not awaiting receipt review.',
+    'invoice_receipt_rejected' => 'Payment receipt rejected and the member was notified.',
     'invoice_reminder_recently_sent' => 'A reminder was already sent for this invoice in the last 24 hours.',
 
     // Announcements
