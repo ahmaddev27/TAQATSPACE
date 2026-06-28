@@ -1,6 +1,12 @@
 {
   "common": {
     "currency": "₪",
+    "receipt": {
+      "title": "وصل الدفع",
+      "openOriginal": "فتح الأصل",
+      "download": "تنزيل",
+      "unsupported": "لا يمكن معاينة هذا الوصل هنا."
+    },
     "save": "حفظ",
     "saving": "جارٍ الحفظ…",
     "delete": "حذف",

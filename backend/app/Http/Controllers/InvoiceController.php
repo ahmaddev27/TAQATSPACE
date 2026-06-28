@@ -29,6 +29,21 @@ class InvoiceController extends Controller
     ) {}
 
     /**
+     * DELETE /api/workspace/invoices/{invoice} — permanently delete an invoice
+     * belonging to the owner's workspace (along with its receipts/payments).
+     */
+    public function destroy(Request $request, Invoice $invoice): JsonResponse
+    {
+        if (! $this->ownsInvoice($request, $invoice)) {
+            return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        $this->invoices->delete($invoice);
+
+        return ApiResponse::success(null, __('messages.invoice_deleted'));
+    }
+
+    /**
      * GET /api/workspace/invoices — paginated, filterable, with summary tiles.
      */
     public function index(Request $request): JsonResponse

@@ -109,7 +109,14 @@
         "reminderSent": "Reminder sent",
         "reminderFailed": "Could not send reminder",
         "issued": "Invoice issued",
-        "issueFailed": "Could not issue invoice"
+        "issueFailed": "Could not issue invoice",
+        "deleted": "Invoice deleted",
+        "deleteFailed": "Could not delete invoice"
+      },
+      "delete": {
+        "title": "Delete invoice",
+        "message": "Permanently delete invoice {invoice}? This also removes its receipts and payment history. This can't be undone.",
+        "confirm": "Delete"
       },
       "issueModal": {
         "title": "Issue new invoice",

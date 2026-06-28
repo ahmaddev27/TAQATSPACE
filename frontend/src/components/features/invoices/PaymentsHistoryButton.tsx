@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { Icon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import type { InvoicePaymentRow } from "@/lib/api/invoices";
+import { ReceiptViewerButton } from "./ReceiptViewerButton";
 
 export interface PaymentsHistoryButtonProps {
   invoiceNumber: string;
@@ -66,15 +66,11 @@ export function PaymentsHistoryButton({
                     </td>
                     <td>
                       {p.receipt_url ? (
-                        <a
-                          href={p.receipt_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-ghost btn-sm"
-                        >
-                          <Icon name="receipt" size={14} />
-                          {t("view")}
-                        </a>
+                        <ReceiptViewerButton
+                          url={p.receipt_url}
+                          label={t("view")}
+                          icon="receipt"
+                        />
                       ) : (
                         <span className="muted-3">—</span>
                       )}

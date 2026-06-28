@@ -113,6 +113,7 @@ return [
     // Invoices
     'invoice_not_found' => 'Invoice not found.',
     'invoice_created' => 'Invoice created.',
+    'invoice_deleted' => 'Invoice deleted.',
     'invoice_marked_paid' => 'Invoice marked as paid.',
     'invoice_reverted_pending' => 'Invoice reverted to pending.',
     'receipt_uploaded' => 'Receipt uploaded and invoice marked paid.',

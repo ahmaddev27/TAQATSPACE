@@ -48,6 +48,17 @@ export async function issueInvoice(
   return result;
 }
 
+/** Owner: permanently delete one of their workspace's invoices. */
+export async function deleteInvoice(
+  invoiceId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/invoices/${invoiceId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
 /** Owner: record a manual payment. `paidAt` is an optional ISO date. */
 export async function markPaid(
   invoiceId: string,

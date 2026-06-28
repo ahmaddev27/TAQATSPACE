@@ -22,6 +22,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class InvoiceService
@@ -142,6 +143,36 @@ class InvoiceService
         }
 
         return $invoice;
+    }
+
+    /**
+     * Permanently delete an invoice (owner action). Removes any stored receipt
+     * files first — the invoice's own and each ledger payment's — then deletes
+     * the invoice; payment rows cascade via the foreign key.
+     */
+    public function delete(Invoice $invoice): void
+    {
+        $disk = Storage::disk((string) config('filesystems.media', 'public'));
+
+        $paths = $invoice->payments()
+            ->pluck('receipt_path')
+            ->push($invoice->receipt_path)
+            ->filter()
+            ->unique();
+
+        foreach ($paths as $path) {
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
+        }
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        $invoice->delete();
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
     }
 
     /**
