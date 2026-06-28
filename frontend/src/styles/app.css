@@ -288,15 +288,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .seat-legend .sw { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid; }
 
 /* ---------- Modal / drawer ---------- */
-.overlay { position: fixed; inset: 0; background: rgba(10,12,16,.5); backdrop-filter: blur(2px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fade var(--t-slow); }
+/* The OVERLAY scrolls (not the modal body): a tall modal stays fully reachable
+   and `margin:auto` keeps it centred when it fits — while the modal itself never
+   clips, so in-modal popovers (member picker, native date) show in full. */
+.overlay { position: fixed; inset: 0; background: rgba(10,12,16,.5); backdrop-filter: blur(2px); z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; animation: fade var(--t-slow); }
 [data-theme="dark"] .overlay { background: rgba(0,0,0,.6); }
 @keyframes fade { from { opacity: 0; } }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2xl); box-shadow: var(--sh-md); width: 100%; max-width: 480px; animation: pop var(--t-slow); display: flex; flex-direction: column; max-height: calc(100vh - 48px); }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2xl); box-shadow: var(--sh-md); width: 100%; max-width: 480px; margin: auto; animation: pop var(--t-slow); }
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
-.modal-head { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0; }
-/* Body scrolls when content exceeds the viewport so the head/footer stay put
-   and a tall form (e.g. record-payment with a receipt preview) never clips. */
-.modal-body { padding: 22px; overflow-y: auto; }
+.modal-head { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.modal-body { padding: 22px; }
 .modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
 
 /* ---------- Image cropper ---------- */
