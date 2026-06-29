@@ -10,6 +10,11 @@ export interface NavItem {
   /** Optional notification count badge. */
   badge?: number;
   /**
+   * Visual tone of the badge. `"action"` renders the red approve/reject queue
+   * style; the default (unset) is the neutral accent (e.g. chat unread).
+   */
+  badgeTone?: "action";
+  /**
    * When set, the item is shown only to users whose permission grant includes
    * this permission (admin accounts carry `permissions` on the auth payload).
    * Items without it are visible to everyone in the role.
@@ -105,6 +110,55 @@ export function applyChatBadge(nav: RoleNav, unread: number): RoleNav {
       items: group.items.map((item) =>
         item.key === "chat" ? { ...item, badge: unread } : item,
       ),
+    })),
+  };
+}
+
+/**
+ * "Needs your action" counts (approve/reject queues) keyed by the relevant
+ * sidebar nav-item key. Absent/zero entries leave the item badge-free. Mirrors
+ * the backend `GET /api/nav/action-counts` payload, re-keyed onto nav items:
+ *   requests   ← bookings   (owner: pending booking requests)
+ *   invoices   ← receipts   (owner: receipts under review)
+ *   workspaces ← workspaces (admin: workspaces awaiting approval)
+ */
+export interface NavActionCounts {
+  bookings?: number;
+  receipts?: number;
+  workspaces?: number;
+}
+
+/** nav-item key → which action-count field drives its badge. */
+const ACTION_BADGE_MAP: Record<string, keyof NavActionCounts> = {
+  requests: "bookings",
+  invoices: "receipts",
+  workspaces: "workspaces",
+};
+
+/**
+ * Stamp the action-needed badges onto their nav items. An item gets a badge
+ * only when its mapped count is > 0; a 0/absent count leaves it untouched so no
+ * badge renders. Never mutates the input — returns a new nav object. A nav item
+ * that already carries a badge (e.g. Chat unread) is left as-is.
+ */
+export function applyActionBadges(
+  nav: RoleNav,
+  counts: NavActionCounts,
+): RoleNav {
+  return {
+    ...nav,
+    groups: nav.groups.map((group) => ({
+      ...group,
+      items: group.items.map((item) => {
+        if (item.badge) return item;
+
+        const field = ACTION_BADGE_MAP[item.key];
+        const value = field ? counts[field] : undefined;
+
+        return value && value > 0
+          ? { ...item, badge: value, badgeTone: "action" as const }
+          : item;
+      }),
     })),
   };
 }

@@ -109,7 +109,13 @@ export function Sidebar({
                   <Icon name={item.icon} />
                   {showLabels && <span>{label}</span>}
                   {showLabels && item.badge ? (
-                    <span className="nav-badge tnum">{item.badge}</span>
+                    <span
+                      className={`nav-badge tnum ${
+                        item.badgeTone === "action" ? "nav-badge--action" : ""
+                      }`.trim()}
+                    >
+                      {item.badge}
+                    </span>
                   ) : null}
                 </Link>
               );

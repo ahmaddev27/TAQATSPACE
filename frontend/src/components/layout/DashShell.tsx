@@ -17,8 +17,10 @@ import { ChatWidget } from "@/components/features/chat/ChatWidget";
 import type { UserRole } from "@/lib/types/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/app";
 import { useChatUnread } from "@/lib/firebase/useChatUnread";
+import { useActionCounts } from "@/lib/nav/useActionCounts";
 import {
   ROLE_NAV,
+  applyActionBadges,
   applyChatBadge,
   filterNavByPermissions,
   filterNavByRealtime,
@@ -74,24 +76,38 @@ export function DashShell({
   // Live count of conversations with unseen incoming messages, for the Chat badge.
   const chatUnread = useChatUnread(user?.id);
 
+  // Approve/reject queue counts (owner bookings + receipts, admin workspaces),
+  // for the red action badges on the relevant nav items.
+  const actionCounts = useActionCounts(user?.id);
+
   // Hide permission-gated items (e.g. admin management) the user cannot access,
   // then collapse the Chat/Messages duplication to a single 1:1 surface based on
   // whether realtime chat is available, and finally stamp the unread-chat badge.
   // The auth payload carries the admin account's effective permission grant.
   const nav = useMemo(
     () =>
-      applyChatBadge(
-        filterNavByRealtime(
-          filterNavByPermissions(
-            ROLE_NAV[role],
-            user?.permissions,
-            user?.is_super_admin,
+      applyActionBadges(
+        applyChatBadge(
+          filterNavByRealtime(
+            filterNavByPermissions(
+              ROLE_NAV[role],
+              user?.permissions,
+              user?.is_super_admin,
+            ),
+            firebaseReady,
           ),
-          firebaseReady,
+          chatUnread,
         ),
-        chatUnread,
+        actionCounts,
       ),
-    [role, user?.permissions, user?.is_super_admin, firebaseReady, chatUnread],
+    [
+      role,
+      user?.permissions,
+      user?.is_super_admin,
+      firebaseReady,
+      chatUnread,
+      actionCounts,
+    ],
   );
 
   // The chat surface's href, taken from the already-filtered nav so the topbar
