@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\PartnerClientFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -18,7 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class PartnerClient extends Model
 {
-    use HasUuids;
+    /** @use HasFactory<PartnerClientFactory> */
+    use HasFactory, HasUuids;
 
     /** @var list<string> */
     protected $fillable = [
