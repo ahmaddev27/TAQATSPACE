@@ -25,7 +25,7 @@ class InternetAccessService
      *
      * @return array{username: string, password: string, sent_email: bool, sent_sms: bool}
      */
-    public function provision(Subscription $subscription): array
+    public function provision(Subscription $subscription, bool $sendEmail = true): array
     {
         $subscription->loadMissing('member', 'workspace');
 
@@ -38,7 +38,7 @@ class InternetAccessService
             'internet_provisioned_at' => now(),
         ])->save();
 
-        $delivery = $this->deliver($subscription, $username, $password);
+        $delivery = $this->deliver($subscription, $username, $password, $sendEmail);
 
         return [
             'username' => $username,
@@ -54,7 +54,7 @@ class InternetAccessService
      *
      * @return array{email: bool, sms: bool}
      */
-    private function deliver(Subscription $subscription, string $username, string $password): array
+    private function deliver(Subscription $subscription, string $username, string $password, bool $sendEmail = true): array
     {
         $member = $subscription->member;
         $workspace = $subscription->workspace;
@@ -74,7 +74,10 @@ class InternetAccessService
         $sentEmail = false;
         $sentSms = false;
 
-        if ($member->email !== null && $this->settings->isSmtpConfigured($config['smtp'])) {
+        // On booking approval the branded approval email carries the credentials,
+        // so the caller suppresses this plain copy ($sendEmail = false) to avoid
+        // a duplicate; SMS still goes out here.
+        if ($sendEmail && $member->email !== null && $this->settings->isSmtpConfigured($config['smtp'])) {
             SendBroadcastMessage::dispatch('email', $member->email, $subject, $body, $config['smtp']);
             $sentEmail = true;
         }
