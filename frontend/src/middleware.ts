@@ -6,7 +6,7 @@ import { ROLE_COOKIE, TOKEN_COOKIE, dashboardFor } from "@/lib/auth";
 const intlMiddleware = createMiddleware(routing);
 
 const PROTECTED_PREFIXES = ["/owner", "/freelancer", "/admin"];
-const AUTH_PAGE_PREFIXES = ["/login", "/register", "/forgot-password", "/reset-password"];
+const AUTH_PAGE_PREFIXES = ["/login", "/admin-login", "/register", "/forgot-password", "/reset-password"];
 
 /** Strip a leading "/en" (or any known locale) to compare against route prefixes. */
 function stripLocale(pathname: string): { locale: string; rest: string } {
