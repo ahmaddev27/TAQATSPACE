@@ -5,32 +5,45 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Select";
 import { SeatMap, type SeatMapSeat } from "@/components/ui/SeatMap";
-import type { Seat } from "@/lib/types";
+import { Link } from "@/i18n/navigation";
+import type { Package, Seat } from "@/lib/types";
 
 export interface ApproveBookingModalProps {
   memberName: string;
   /** The freelancer's requested seat-type label, or null for "any seat". */
   requestedTypeLabel: string | null;
   seats: Seat[];
+  /** The workspace's active internet packages; one MUST be chosen to approve. */
+  packages: Package[];
   pending: boolean;
-  onConfirm: (seatId: string) => void;
+  onConfirm: (seatId: string | null, packageId: string) => void;
   onClose: () => void;
 }
 
-/** Approve a booking by picking an available seat (matching the requested type). */
+/**
+ * Approve a booking by picking an available seat (matching the requested type)
+ * and a required internet package. When the workspace has no packages, approval
+ * is blocked and the owner is pointed to the packages page to create one first.
+ */
 export function ApproveBookingModal({
   memberName,
   requestedTypeLabel,
   seats,
+  packages,
   pending,
   onConfirm,
   onClose,
 }: ApproveBookingModalProps) {
   const t = useTranslations("owner");
-  const [selected, setSelected] = useState<string | null>(
+  const [selectedSeat, setSelectedSeat] = useState<string | null>(
     seats[0]?.id ?? null,
   );
+  const [selectedPackage, setSelectedPackage] = useState<string>("");
+
+  const hasPackages = packages.length > 0;
+  const canApprove = hasPackages && selectedPackage !== "";
 
   const mapSeats: SeatMapSeat[] = seats.map((s) => ({
     id: s.id,
@@ -52,9 +65,11 @@ export function ApproveBookingModal({
           <Button
             variant="primary"
             icon="check"
-            disabled={!selected}
+            disabled={!canApprove}
             loading={pending}
-            onClick={() => selected && onConfirm(selected)}
+            onClick={() =>
+              canApprove && onConfirm(selectedSeat, selectedPackage)
+            }
           >
             {t("bookings.confirmApprove")}
           </Button>
@@ -79,11 +94,50 @@ export function ApproveBookingModal({
       ) : (
         <SeatMap
           seats={mapSeats}
-          selected={selected}
-          onSelect={setSelected}
+          selected={selectedSeat}
+          onSelect={setSelectedSeat}
           cols={8}
         />
       )}
+
+      <div style={{ marginTop: 20 }}>
+        {hasPackages ? (
+          <label className="stack" style={{ gap: 6 }}>
+            <span style={{ fontSize: "var(--fs-sm)", fontWeight: 600 }}>
+              {t("bookings.internetPackage")}
+            </span>
+            <Select
+              value={selectedPackage}
+              onChange={(e) => setSelectedPackage(e.target.value)}
+            >
+              <option value="" disabled>
+                {t("bookings.choosePackage")}
+              </option>
+              {packages.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {p.price}
+                </option>
+              ))}
+            </Select>
+          </label>
+        ) : (
+          <div className="card card-pad" style={{ background: "var(--surface-2)" }}>
+            <div className="h3" style={{ fontSize: "var(--fs-md)" }}>
+              {t("bookings.noPackagesTitle")}
+            </div>
+            <p className="muted" style={{ marginTop: 4, fontSize: "var(--fs-sm)" }}>
+              {t("bookings.noPackagesBody")}
+            </p>
+            <Link
+              href="/owner/packages"
+              className="btn btn-secondary"
+              style={{ marginTop: 12, display: "inline-flex" }}
+            >
+              {t("bookings.createPackageCta")}
+            </Link>
+          </div>
+        )}
+      </div>
     </Modal>
   );
 }

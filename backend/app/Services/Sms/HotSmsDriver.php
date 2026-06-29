@@ -9,16 +9,18 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * SMS driver for hotsms.ps — a simple HTTP SMS gateway keyed by
- * username / password / sender / numbers / message.
+ * SMS driver for HotSMS (hotsms.ps). The gateway is a single GET endpoint
+ * (sendbulksms.php) authenticated either by an api_token or by user_name +
+ * user_pass, with sender / mobile / type / text, all URL-encoded.
  *
  * The config is supplied per-send (resolved from the platform or a workspace),
- * never read from global app config, so the same driver instance can serve
- * multiple accounts.
+ * never read from global app config. Maps the stored messaging-settings fields:
+ * `api_key` -> `api_token` (preferred), else `username`/`password` ->
+ * `user_name`/`user_pass`; `sender` -> `sender`.
  */
 final class HotSmsDriver implements SmsDriver
 {
-    private const BASE_URL = 'https://www.hotsms.ps';
+    private const BASE_URL = 'http://hotsms.ps/sendbulksms.php';
 
     private const TIMEOUT_SECONDS = 15;
 
@@ -32,16 +34,22 @@ final class HotSmsDriver implements SmsDriver
     public function send(string $to, string $message): array
     {
         try {
-            // TODO: confirm exact endpoint/params with provider docs (hotsms.ps)
-            $response = Http::timeout(self::TIMEOUT_SECONDS)
-                ->asForm()
-                ->post(self::BASE_URL.'/api/sendsms', [
-                    'username' => (string) ($this->config['username'] ?? ''),
-                    'password' => (string) ($this->config['password'] ?? $this->config['api_key'] ?? ''),
-                    'sender' => (string) ($this->config['sender'] ?? ''),
-                    'numbers' => $to,
-                    'message' => $message,
-                ]);
+            $params = [
+                'sender' => (string) ($this->config['sender'] ?? ''),
+                'mobile' => $to,
+                'type' => 0,
+                'text' => $message,
+            ];
+
+            // Prefer the API token; fall back to username/password credentials.
+            if (! empty($this->config['api_key'])) {
+                $params['api_token'] = (string) $this->config['api_key'];
+            } else {
+                $params['user_name'] = (string) ($this->config['username'] ?? '');
+                $params['user_pass'] = (string) ($this->config['password'] ?? '');
+            }
+
+            $response = Http::timeout(self::TIMEOUT_SECONDS)->get(self::BASE_URL, $params);
 
             return [
                 'ok' => $response->successful(),

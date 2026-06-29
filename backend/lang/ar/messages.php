@@ -78,6 +78,7 @@ return [
     'seat_only_available_deletable' => 'يمكن حذف المقاعد المتاحة فقط.',
     'seat_referenced_by_subscription' => 'المقعد مرتبط باشتراك ولا يمكن حذفه.',
     'seat_not_in_workspace' => 'المقعد المحدد لا ينتمي إلى مساحة العمل هذه.',
+    'internet_package_not_in_workspace' => 'باقة الإنترنت المحددة لا تنتمي إلى مساحة العمل هذه.',
     'seat_unavailable' => 'المقعد المحدد لم يعد متاحًا. يرجى اختيار مقعد آخر.',
     'seat_type_mismatch' => 'نوع المقعد المحدد لا يطابق النوع الذي طلبه العضو.',
 

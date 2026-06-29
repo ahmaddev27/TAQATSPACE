@@ -204,6 +204,8 @@ export async function renameSeat(
 export interface ReviewBookingInput {
   action: "approve" | "reject";
   seatId?: string | null;
+  /** Required when approving: the internet package to assign to the member. */
+  packageId?: string | null;
   rejectionReason?: string | null;
 }
 
@@ -212,8 +214,13 @@ export async function reviewBooking(
   input: ReviewBookingInput,
 ): Promise<ActionResult> {
   const body: Record<string, unknown> = { action: input.action };
-  if (input.action === "approve" && input.seatId) {
-    body.seat_id = input.seatId;
+  if (input.action === "approve") {
+    if (input.seatId) {
+      body.seat_id = input.seatId;
+    }
+    if (input.packageId) {
+      body.package_id = input.packageId;
+    }
   }
   if (input.action === "reject" && input.rejectionReason) {
     body.rejection_reason = input.rejectionReason;

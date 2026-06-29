@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { serverFetch, ApiError } from "@/lib/api";
 import { isKnownRole } from "@/lib/auth";
 import { DashShell } from "@/components/layout/DashShell";
+import type { NavActionCounts } from "@/components/layout/nav-config";
 import { AccountStateActions } from "@/components/features/auth/AccountStateActions";
 import type { ApiEnvelope, User } from "@/lib/types";
 
@@ -112,11 +113,23 @@ export default async function DashboardLayout({
     );
   }
 
+  // "Needs your action" sidebar counts — fetched here (server-side, token-authed)
+  // because the Laravel API is cross-origin and a client fetch can't reach it.
+  // Non-critical chrome: any failure leaves the badges off.
+  let actionCounts: NavActionCounts = {};
+  try {
+    const res = await serverFetch<ApiEnvelope<NavActionCounts>>("/nav/action-counts");
+    actionCounts = res.data ?? {};
+  } catch {
+    // Leave counts empty so the sidebar renders badge-free.
+  }
+
   return (
     <DashShell
       role={user.role}
       userName={user.name}
       avatarInitial={avatarInitial(user.name)}
+      actionCounts={actionCounts}
     >
       {children}
     </DashShell>

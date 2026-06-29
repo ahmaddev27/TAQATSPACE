@@ -19,9 +19,11 @@ import { isFirebaseConfigured } from "@/lib/firebase/app";
 import { useChatUnread } from "@/lib/firebase/useChatUnread";
 import {
   ROLE_NAV,
+  applyActionBadges,
   applyChatBadge,
   filterNavByPermissions,
   filterNavByRealtime,
+  type NavActionCounts,
 } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -32,6 +34,12 @@ export interface DashShellProps {
   userName: string;
   /** First grapheme of the user's name, for the avatar. */
   avatarInitial: string;
+  /**
+   * "Needs your action" counts for the sidebar badges, fetched server-side in
+   * the dashboard layout (the Laravel API is cross-origin + token-authed, so a
+   * bare client fetch can't reach it). Empty for roles with no approve queue.
+   */
+  actionCounts?: NavActionCounts;
   children: ReactNode;
 }
 
@@ -59,6 +67,7 @@ export function DashShell({
   role,
   userName,
   avatarInitial,
+  actionCounts = {},
   children,
 }: DashShellProps) {
   const t = useTranslations("nav");
@@ -74,24 +83,37 @@ export function DashShell({
   // Live count of conversations with unseen incoming messages, for the Chat badge.
   const chatUnread = useChatUnread(user?.id);
 
+  // Approve/reject queue counts (owner bookings + receipts, admin workspaces)
+  // arrive as a server-fetched prop and drive the red action badges.
+
   // Hide permission-gated items (e.g. admin management) the user cannot access,
   // then collapse the Chat/Messages duplication to a single 1:1 surface based on
   // whether realtime chat is available, and finally stamp the unread-chat badge.
   // The auth payload carries the admin account's effective permission grant.
   const nav = useMemo(
     () =>
-      applyChatBadge(
-        filterNavByRealtime(
-          filterNavByPermissions(
-            ROLE_NAV[role],
-            user?.permissions,
-            user?.is_super_admin,
+      applyActionBadges(
+        applyChatBadge(
+          filterNavByRealtime(
+            filterNavByPermissions(
+              ROLE_NAV[role],
+              user?.permissions,
+              user?.is_super_admin,
+            ),
+            firebaseReady,
           ),
-          firebaseReady,
+          chatUnread,
         ),
-        chatUnread,
+        actionCounts,
       ),
-    [role, user?.permissions, user?.is_super_admin, firebaseReady, chatUnread],
+    [
+      role,
+      user?.permissions,
+      user?.is_super_admin,
+      firebaseReady,
+      chatUnread,
+      actionCounts,
+    ],
   );
 
   // The chat surface's href, taken from the already-filtered nav so the topbar
