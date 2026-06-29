@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * SMS driver for mtcsms.com — a simple HTTP SMS gateway keyed by
- * username / password / sender / numbers / message.
+ * SMS driver for MTC (int.mtcsms.com). The gateway is a single GET endpoint that
+ * takes username / password / from (sender) / to / msg / type, URL-encoded.
  *
  * The config is supplied per-send (resolved from the platform or a workspace),
- * never read from global app config, so the same driver instance can serve
- * multiple accounts.
+ * never read from global app config, so one driver instance can serve multiple
+ * accounts. Maps the stored messaging-settings field `sender` -> `from`.
  */
 final class MtcSmsDriver implements SmsDriver
 {
-    private const BASE_URL = 'https://www.mtcsms.com';
+    private const BASE_URL = 'https://int.mtcsms.com/sendsms.aspx';
 
     private const TIMEOUT_SECONDS = 15;
 
@@ -32,15 +32,16 @@ final class MtcSmsDriver implements SmsDriver
     public function send(string $to, string $message): array
     {
         try {
-            // TODO: confirm exact endpoint/params with provider docs (mtcsms.com)
+            // GET with query params (Http url-encodes them). `type=0` is the
+            // gateway's default message type.
             $response = Http::timeout(self::TIMEOUT_SECONDS)
-                ->asForm()
-                ->post(self::BASE_URL.'/api/sendsms', [
+                ->get(self::BASE_URL, [
                     'username' => (string) ($this->config['username'] ?? ''),
                     'password' => (string) ($this->config['password'] ?? $this->config['api_key'] ?? ''),
-                    'sender' => (string) ($this->config['sender'] ?? ''),
-                    'numbers' => $to,
-                    'message' => $message,
+                    'from' => (string) ($this->config['sender'] ?? ''),
+                    'to' => $to,
+                    'msg' => $message,
+                    'type' => 0,
                 ]);
 
             return [
