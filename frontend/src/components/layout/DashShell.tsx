@@ -17,13 +17,13 @@ import { ChatWidget } from "@/components/features/chat/ChatWidget";
 import type { UserRole } from "@/lib/types/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/app";
 import { useChatUnread } from "@/lib/firebase/useChatUnread";
-import { useActionCounts } from "@/lib/nav/useActionCounts";
 import {
   ROLE_NAV,
   applyActionBadges,
   applyChatBadge,
   filterNavByPermissions,
   filterNavByRealtime,
+  type NavActionCounts,
 } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
@@ -34,6 +34,12 @@ export interface DashShellProps {
   userName: string;
   /** First grapheme of the user's name, for the avatar. */
   avatarInitial: string;
+  /**
+   * "Needs your action" counts for the sidebar badges, fetched server-side in
+   * the dashboard layout (the Laravel API is cross-origin + token-authed, so a
+   * bare client fetch can't reach it). Empty for roles with no approve queue.
+   */
+  actionCounts?: NavActionCounts;
   children: ReactNode;
 }
 
@@ -61,6 +67,7 @@ export function DashShell({
   role,
   userName,
   avatarInitial,
+  actionCounts = {},
   children,
 }: DashShellProps) {
   const t = useTranslations("nav");
@@ -76,9 +83,8 @@ export function DashShell({
   // Live count of conversations with unseen incoming messages, for the Chat badge.
   const chatUnread = useChatUnread(user?.id);
 
-  // Approve/reject queue counts (owner bookings + receipts, admin workspaces),
-  // for the red action badges on the relevant nav items.
-  const actionCounts = useActionCounts(user?.id);
+  // Approve/reject queue counts (owner bookings + receipts, admin workspaces)
+  // arrive as a server-fetched prop and drive the red action badges.
 
   // Hide permission-gated items (e.g. admin management) the user cannot access,
   // then collapse the Chat/Messages duplication to a single 1:1 surface based on
