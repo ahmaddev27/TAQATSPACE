@@ -10,6 +10,7 @@ use App\Enums\SeatStatus;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceStatus;
 use App\Models\BookingRequest;
+use App\Models\InternetPackage;
 use App\Models\Seat;
 use App\Models\SeatTypePrice;
 use App\Models\Subscription;
@@ -28,7 +29,11 @@ use Illuminate\Support\Facades\DB;
  */
 class BookingService
 {
-    public function __construct(private readonly WebhookDispatcher $webhooks) {}
+    public function __construct(
+        private readonly WebhookDispatcher $webhooks,
+        private readonly PackageService $packages,
+        private readonly InternetAccessService $internet,
+    ) {}
 
     /**
      * Submit a booking request on behalf of a freelancer.
@@ -90,13 +95,24 @@ class BookingService
      * Re-checks seat availability under a row lock to defend against a race
      * where the seat was taken between the owner loading the UI and approving.
      */
-    public function approve(BookingRequest $booking, User $reviewer, ?string $seatId): BookingRequest
+    public function approve(BookingRequest $booking, User $reviewer, ?string $seatId, string $packageId): BookingRequest
     {
         $this->assertPending($booking);
 
+        // Defence-in-depth: re-assert the package belongs to the booking's
+        // workspace even though the FormRequest already validated ownership.
+        $package = InternetPackage::query()
+            ->where('id', $packageId)
+            ->where('workspace_id', $booking->workspace_id)
+            ->first();
+
+        if ($package === null) {
+            abort(422, __('messages.internet_package_not_in_workspace'));
+        }
+
         $subscription = null;
 
-        $approved = DB::transaction(function () use ($booking, $reviewer, $seatId, &$subscription): BookingRequest {
+        $approved = DB::transaction(function () use ($booking, $reviewer, $seatId, $package, &$subscription): BookingRequest {
             $seat = null;
 
             if ($seatId !== null) {
@@ -159,6 +175,12 @@ class BookingService
                 'reviewed_by' => $reviewer->id,
                 'reviewed_at' => now(),
             ]);
+
+            // Assign the chosen internet package to the member and provision
+            // their credentials (generated + delivered; delivery skips silently
+            // when messaging is not configured).
+            $this->packages->assignMember($package, $booking->member_id);
+            $this->internet->provision($subscription);
 
             $booking->member->notify(new BookingApprovedNotification($booking, $workspace->name));
 

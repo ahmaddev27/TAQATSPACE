@@ -78,6 +78,7 @@ return [
     'seat_only_available_deletable' => 'Only available seats can be deleted.',
     'seat_referenced_by_subscription' => 'Seat is referenced by a subscription and cannot be deleted.',
     'seat_not_in_workspace' => 'The selected seat does not belong to this workspace.',
+    'internet_package_not_in_workspace' => 'The selected internet package does not belong to this workspace.',
     'seat_unavailable' => 'The selected seat is no longer available. Please choose another seat.',
     'seat_type_mismatch' => 'The selected seat type does not match the type the member requested.',
 
