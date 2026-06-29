@@ -9,6 +9,7 @@ use App\Enums\SeatStatus;
 use App\Enums\SeatType;
 use App\Enums\SubscriptionStatus;
 use App\Models\BookingRequest;
+use App\Models\InternetPackage;
 use App\Models\Seat;
 use App\Models\User;
 use App\Models\Workspace;
@@ -100,11 +101,14 @@ class BookingRequestControllerTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
+
         Sanctum::actingAs($owner);
 
         $response = $this->putJson("/api/workspace/booking-requests/{$booking->id}", [
             'action' => 'approve',
             'seat_id' => $seat->id,
+            'package_id' => $package->id,
         ]);
 
         $response->assertOk()
@@ -116,7 +120,45 @@ class BookingRequestControllerTest extends TestCase
             'seat_id' => $seat->id,
             'status' => SubscriptionStatus::Active->value,
         ]);
+        $this->assertDatabaseHas('member_package', [
+            'package_id' => $package->id,
+            'member_id' => $member->id,
+        ]);
         Notification::assertSentTo($member, BookingApprovedNotification::class);
+    }
+
+    public function test_update_approve_requires_a_package(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
+        $booking = BookingRequest::factory()->create([
+            'workspace_id' => $workspace->id,
+            'status' => BookingStatus::Pending,
+        ]);
+
+        Sanctum::actingAs($owner);
+
+        $this->putJson("/api/workspace/booking-requests/{$booking->id}", [
+            'action' => 'approve',
+        ])->assertStatus(422)->assertJsonValidationErrors('package_id');
+    }
+
+    public function test_update_approve_rejects_a_package_from_another_workspace(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
+        $foreignPackage = InternetPackage::factory()->create();
+        $booking = BookingRequest::factory()->create([
+            'workspace_id' => $workspace->id,
+            'status' => BookingStatus::Pending,
+        ]);
+
+        Sanctum::actingAs($owner);
+
+        $this->putJson("/api/workspace/booking-requests/{$booking->id}", [
+            'action' => 'approve',
+            'package_id' => $foreignPackage->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('package_id');
     }
 
     public function test_update_reject_records_reason_and_returns_rejected_request(): void

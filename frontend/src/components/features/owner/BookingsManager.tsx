@@ -9,7 +9,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/providers/ToastProvider";
 import { reviewBooking } from "@/lib/actions/owner";
-import type { BookingRequest, BookingStatus, Seat } from "@/lib/types";
+import type { BookingRequest, BookingStatus, Package, Seat } from "@/lib/types";
 import { avatarInitial, shortDate } from "./format";
 import { ApproveBookingModal } from "./ApproveBookingModal";
 import { RejectBookingModal } from "./RejectBookingModal";
@@ -17,6 +17,8 @@ import { RejectBookingModal } from "./RejectBookingModal";
 export interface BookingsManagerProps {
   bookings: BookingRequest[];
   availableSeats: Seat[];
+  /** The workspace's active internet packages, one of which must be assigned on approval. */
+  packages: Package[];
 }
 
 const TAB_STATUS: Record<string, BookingStatus> = {
@@ -26,7 +28,11 @@ const TAB_STATUS: Record<string, BookingStatus> = {
 };
 
 /** Booking-request queue with status tabs and approve/reject flows. */
-export function BookingsManager({ bookings, availableSeats }: BookingsManagerProps) {
+export function BookingsManager({
+  bookings,
+  availableSeats,
+  packages,
+}: BookingsManagerProps) {
   const t = useTranslations("owner");
   const tc = useTranslations();
   const locale = useLocale();
@@ -67,10 +73,14 @@ export function BookingsManager({ bookings, availableSeats }: BookingsManagerPro
     { id: "rejected", label: `${t("bookings.tabRejected")} (${counts.rejected})` },
   ];
 
-  const doApprove = (seatId: string) => {
+  const doApprove = (seatId: string | null, packageId: string) => {
     if (!approveFor) return;
     startTransition(async () => {
-      const res = await reviewBooking(approveFor.id, { action: "approve", seatId });
+      const res = await reviewBooking(approveFor.id, {
+        action: "approve",
+        seatId,
+        packageId,
+      });
       if (res.ok) {
         toast({ tone: "ok", title: t("bookings.approved") });
         setApproveFor(null);
@@ -215,6 +225,7 @@ export function BookingsManager({ bookings, availableSeats }: BookingsManagerPro
               : null
           }
           seats={seatsForApproval}
+          packages={packages}
           pending={pending}
           onConfirm={doApprove}
           onClose={() => setApproveFor(null)}

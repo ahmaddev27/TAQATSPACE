@@ -11,6 +11,7 @@ use App\Enums\SeatType;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceStatus;
 use App\Models\BookingRequest;
+use App\Models\InternetPackage;
 use App\Models\Seat;
 use App\Models\SeatTypePrice;
 use App\Models\Subscription;
@@ -139,8 +140,9 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
         $reviewer = $workspace->owner;
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
 
-        $approved = $this->service()->approve($booking, $reviewer, $seat->id);
+        $approved = $this->service()->approve($booking, $reviewer, $seat->id, $package->id);
 
         $this->assertSame(BookingStatus::Approved, $approved->status);
         $this->assertSame($reviewer->id, $approved->reviewed_by);
@@ -159,6 +161,32 @@ class BookingServiceTest extends TestCase
         ]);
 
         Notification::assertSentTo($member, BookingApprovedNotification::class);
+
+        // The chosen package is attached to the member and credentials are issued.
+        $this->assertDatabaseHas('member_package', [
+            'package_id' => $package->id,
+            'member_id' => $member->id,
+        ]);
+        $subscription = Subscription::query()->where('member_id', $member->id)->firstOrFail();
+        $this->assertNotNull($subscription->internet_username);
+    }
+
+    public function test_approve_requires_a_package_from_the_bookings_workspace(): void
+    {
+        $this->fakeSideEffects();
+        $workspace = Workspace::factory()->create();
+        $other = Workspace::factory()->create();
+        $member = User::factory()->freelancer()->create();
+        $foreignPackage = InternetPackage::factory()->create(['workspace_id' => $other->id]);
+        $booking = BookingRequest::factory()->create([
+            'workspace_id' => $workspace->id,
+            'member_id' => $member->id,
+            'preferred_seat_type' => null,
+            'status' => BookingStatus::Pending,
+        ]);
+
+        $this->expectException(HttpException::class);
+        $this->service()->approve($booking, $workspace->owner, null, $foreignPackage->id);
     }
 
     public function test_approve_prices_from_seat_type_price_when_configured(): void
@@ -179,7 +207,8 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
-        $this->service()->approve($booking, $workspace->owner, null);
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
+        $this->service()->approve($booking, $workspace->owner, null, $package->id);
 
         $subscription = Subscription::query()->where('member_id', $member->id)->firstOrFail();
         $this->assertSame('123.45', (string) $subscription->monthly_price);
@@ -198,7 +227,8 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
-        $approved = $this->service()->approve($booking, $workspace->owner, null);
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
+        $approved = $this->service()->approve($booking, $workspace->owner, null, $package->id);
 
         $this->assertSame(BookingStatus::Approved, $approved->status);
         $this->assertDatabaseHas('subscriptions', [
@@ -223,8 +253,9 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
         $this->expectException(HttpException::class);
-        $this->service()->approve($booking, $workspace->owner, $foreignSeat->id);
+        $this->service()->approve($booking, $workspace->owner, $foreignSeat->id, $package->id);
     }
 
     public function test_approve_rejects_an_unavailable_seat(): void
@@ -243,8 +274,9 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
         $this->expectException(HttpException::class);
-        $this->service()->approve($booking, $workspace->owner, $seat->id);
+        $this->service()->approve($booking, $workspace->owner, $seat->id, $package->id);
     }
 
     public function test_approve_rejects_a_seat_type_mismatch(): void
@@ -264,8 +296,9 @@ class BookingServiceTest extends TestCase
             'status' => BookingStatus::Pending,
         ]);
 
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
         $this->expectException(HttpException::class);
-        $this->service()->approve($booking, $workspace->owner, $seat->id);
+        $this->service()->approve($booking, $workspace->owner, $seat->id, $package->id);
     }
 
     public function test_approve_blocks_an_already_reviewed_request(): void
@@ -276,8 +309,9 @@ class BookingServiceTest extends TestCase
             'workspace_id' => $workspace->id,
         ]);
 
+        $package = InternetPackage::factory()->create(['workspace_id' => $workspace->id]);
         $this->expectException(HttpException::class);
-        $this->service()->approve($booking, $workspace->owner, null);
+        $this->service()->approve($booking, $workspace->owner, null, $package->id);
     }
 
     public function test_reject_records_reason_and_notifies_member(): void

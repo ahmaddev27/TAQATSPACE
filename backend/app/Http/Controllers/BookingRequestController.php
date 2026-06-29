@@ -68,7 +68,7 @@ class BookingRequestController extends Controller
         $data = $request->validated();
 
         $booking = $data['action'] === 'approve'
-            ? $this->bookings->approve($bookingRequest, $request->user(), $data['seat_id'] ?? null)
+            ? $this->bookings->approve($bookingRequest, $request->user(), $data['seat_id'] ?? null, $data['package_id'])
             : $this->bookings->reject($bookingRequest, $request->user(), $data['rejection_reason'] ?? null);
 
         return ApiResponse::success(
