@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications\Concerns;
 
 use App\Models\Workspace;
+use App\Services\MessagingSettingsService;
+use App\Support\MailConfigurator;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,8 +24,19 @@ trait RendersWorkspaceMail
     {
         $name = $workspace?->name ?? (string) config('app.name');
 
+        // Send through the SMTP account configured in the dashboard messaging
+        // settings (the workspace's own, or the platform's) — NOT the app default
+        // mailer, which is `log` when SMTP lives in the dashboard instead of .env.
+        // MailConfigurator leaves the default untouched when nothing is set.
+        $settings = app(MessagingSettingsService::class);
+        $smtp = $workspace !== null
+            ? ($settings->forWorkspace($workspace)['smtp'] ?? [])
+            : ($settings->getPlatformRaw()['smtp'] ?? []);
+        $mailer = MailConfigurator::apply($smtp);
+
         return (new MailMessage)
-            ->from((string) config('mail.from.address'), $name)
+            ->mailer($mailer)
+            ->from((string) ($smtp['from_address'] ?? config('mail.from.address')), $name)
             ->subject($subject)
             ->view('emails.workspace-message', [
                 'workspaceName' => $name,
