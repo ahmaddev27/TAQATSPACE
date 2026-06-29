@@ -176,13 +176,18 @@ class BookingService
                 'reviewed_at' => now(),
             ]);
 
-            // Assign the chosen internet package to the member and provision
-            // their credentials (generated + delivered; delivery skips silently
-            // when messaging is not configured).
+            // Assign the chosen internet package to the member and generate their
+            // internet credentials. Suppress provision's own (plain) email — the
+            // branded approval notification below carries the credentials — but
+            // let it still send the SMS copy.
             $this->packages->assignMember($package, $booking->member_id);
-            $this->internet->provision($subscription);
+            $this->internet->provision($subscription, sendEmail: false);
 
-            $booking->member->notify(new BookingApprovedNotification($booking, $workspace->name));
+            $booking->member->notify(new BookingApprovedNotification(
+                $booking,
+                $workspace,
+                $subscription->refresh(),
+            ));
 
             return $booking->refresh()->load('member', 'workspace');
         });
