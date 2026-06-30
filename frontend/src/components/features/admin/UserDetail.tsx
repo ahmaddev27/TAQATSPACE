@@ -146,7 +146,7 @@ function FreelancerBody({ user, locale, t }: { user: AdminUserDetail; locale: st
         ) : (
           <div className="stack" style={{ gap: 12 }}>
             {subscriptions.map((s) => (
-              <SubscriptionRow key={s.id} sub={s} locale={locale} t={t} />
+              <SubscriptionRow key={s.id} sub={s} t={t} />
             ))}
           </div>
         )}
@@ -175,7 +175,7 @@ function FreelancerBody({ user, locale, t }: { user: AdminUserDetail; locale: st
 }
 
 /** A single subscription card: lifecycle, workspace, plan, price and date span. */
-function SubscriptionRow({ sub, locale, t }: { sub: AdminUserSubscription; locale: string; t: T }) {
+function SubscriptionRow({ sub, t }: { sub: AdminUserSubscription; t: T }) {
   return (
     <div className="stack" style={{ ...SUNK_ROW, gap: 10 }}>
       <div className="between row wrap" style={{ gap: 10 }}>
@@ -184,7 +184,6 @@ function SubscriptionRow({ sub, locale, t }: { sub: AdminUserSubscription; local
           <Badge tone={LIFECYCLE_TONE[sub.lifecycle]} dot>
             {t(`subscriptions.lifecycle.${sub.lifecycle}`)}
           </Badge>
-          <StatusBadge status={sub.status} locale={locale} />
         </div>
       </div>
       <div className="row wrap muted-3" style={{ gap: 18, fontSize: "var(--fs-sm)" }}>
