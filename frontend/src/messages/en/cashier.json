@@ -1,19 +1,5 @@
 {
   "cashier": {
-    "accept": {
-      "title": "Join as a cashier",
-      "subtitle": "Set your password to start using the point of sale for {workspace}.",
-      "welcome": "You've been invited to {workspace}.",
-      "loading": "Loading your invitation…",
-      "invalidInvite": "This invitation link is invalid or has expired.",
-      "email": "Email",
-      "name": "Full name",
-      "password": "Password",
-      "confirm": "Confirm password",
-      "submit": "Create account",
-      "success": "Your cashier account is ready.",
-      "error": "We couldn't complete your signup. Please try again."
-    },
     "dashboard": {
       "title": "Cashier",
       "subtitle": "Your point-of-sale workspace.",

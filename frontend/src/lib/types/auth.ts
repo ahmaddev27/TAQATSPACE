@@ -40,6 +40,19 @@ export interface User {
   is_super_admin?: boolean;
   /** Present for admin accounts only: the account's effective permissions. */
   permissions?: AdminPermission[];
+  /**
+   * A pending cashier invitation matching this account's email, surfaced during
+   * onboarding so the user can Accept/Decline. Present only while
+   * `needs_onboarding` is true; `null` when there is no open invitation.
+   */
+  pending_cashier_invitation?: CashierInvitationOffer | null;
+}
+
+/** A pending cashier invitation offered to a signed-in user during onboarding. */
+export interface CashierInvitationOffer {
+  id: string;
+  workspace_name: string | null;
+  permissions: string[];
 }
 
 /** Backend success envelope: { data, message? }. */
