@@ -1,0 +1,77 @@
+{
+  "cashier": {
+    "accept": {
+      "title": "Join as a cashier",
+      "subtitle": "Set your password to start using the point of sale for {workspace}.",
+      "welcome": "You've been invited to {workspace}.",
+      "loading": "Loading your invitation…",
+      "invalidInvite": "This invitation link is invalid or has expired.",
+      "email": "Email",
+      "name": "Full name",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "submit": "Create account",
+      "success": "Your cashier account is ready.",
+      "error": "We couldn't complete your signup. Please try again."
+    },
+    "dashboard": {
+      "title": "Cashier",
+      "subtitle": "Your point-of-sale workspace.",
+      "comingSoonTitle": "Your terminal is being set up",
+      "comingSoonBody": "The point-of-sale terminal will appear here shortly. You'll be able to sell products and manage orders once it's ready."
+    },
+    "terminal": {
+      "title": "Point of sale",
+      "subtitle": "Ring up sales, take payments, and clear open orders.",
+      "summary": {
+        "todaySales": "Today's sales",
+        "todayOrders": "Orders today",
+        "pendingOrders": "Open orders",
+        "lowStock": "Low stock"
+      },
+      "catalogue": {
+        "heading": "Products",
+        "searchPlaceholder": "Search products…",
+        "empty": "No products yet. Ask the owner to add some.",
+        "noResults": "No products match your search.",
+        "outOfStock": "Out of stock",
+        "stockLeft": "{count} left"
+      },
+      "cart": {
+        "heading": "Current order",
+        "empty": "Tap a product to start an order.",
+        "customerName": "Customer name",
+        "customerPlaceholder": "Walk-in",
+        "discount": "Discount",
+        "subtotal": "Subtotal",
+        "discountLabel": "Discount",
+        "total": "Total",
+        "method": "Payment method",
+        "cash": "Cash",
+        "transfer": "Transfer",
+        "charge": "Charge {total}",
+        "clear": "Clear",
+        "increase": "Increase quantity",
+        "decrease": "Decrease quantity",
+        "remove": "Remove item"
+      },
+      "queue": {
+        "heading": "Open orders",
+        "subtitle": "Freelancer tabs and unpaid orders waiting to be settled.",
+        "empty": "No open orders.",
+        "pay": "Pay",
+        "cancel": "Cancel",
+        "cancelTitle": "Cancel order",
+        "cancelConfirm": "Cancel order {number}? This can't be undone.",
+        "walkIn": "Walk-in",
+        "items": "{count, plural, one {# item} other {# items}}"
+      },
+      "toast": {
+        "paid": "Payment recorded",
+        "cancelled": "Order cancelled",
+        "emptyCart": "Add at least one product first.",
+        "error": "Something went wrong"
+      }
+    }
+  }
+}

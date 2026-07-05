@@ -5,8 +5,16 @@ import { ROLE_COOKIE, TOKEN_COOKIE, dashboardFor } from "@/lib/auth";
 
 const intlMiddleware = createMiddleware(routing);
 
-const PROTECTED_PREFIXES = ["/owner", "/freelancer", "/admin"];
+const PROTECTED_PREFIXES = ["/owner", "/freelancer", "/admin", "/cashier"];
 const AUTH_PAGE_PREFIXES = ["/login", "/admin-login", "/register", "/forgot-password", "/reset-password"];
+
+/**
+ * Public routes that sit under a protected prefix and must stay reachable while
+ * signed out. The cashier invite-accept page lives at `/cashier/accept` (under
+ * the `(auth)` group) yet the `/cashier` dashboard prefix is protected — keep it
+ * out of the auth redirect so an invited cashier can complete signup.
+ */
+const PUBLIC_EXCEPTIONS = ["/cashier/accept"];
 
 /** Strip a leading "/en" (or any known locale) to compare against route prefixes. */
 function stripLocale(pathname: string): { locale: string; rest: string } {
@@ -37,7 +45,12 @@ export default function middleware(request: NextRequest) {
   const isAuthenticated = !!token;
 
   // Unauthenticated user hitting a protected dashboard -> /login?redirect=...
-  if (!isAuthenticated && matchesPrefix(rest, PROTECTED_PREFIXES)) {
+  // Public exceptions (e.g. the cashier invite-accept page) are left alone.
+  if (
+    !isAuthenticated &&
+    matchesPrefix(rest, PROTECTED_PREFIXES) &&
+    !matchesPrefix(rest, PUBLIC_EXCEPTIONS)
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = withLocale(locale, "/login");
     url.search = `?redirect=${encodeURIComponent(rest)}`;

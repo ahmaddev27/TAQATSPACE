@@ -185,6 +185,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "packages", href: "/owner/packages", icon: "wifi" },
           { key: "resources", href: "/owner/resources", icon: "layers" },
           { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
+          { key: "pos", href: "/owner/pos", icon: "coffee" },
         ],
       },
       {
@@ -219,6 +220,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "home", href: "/freelancer", icon: "home" },
           { key: "explore", href: "/explore", icon: "search" },
+          { key: "pos", href: "/freelancer/pos", icon: "coffee" },
           { key: "chat", href: "/freelancer/chat", icon: "chat", realtime: "primary" },
         ],
       },
@@ -232,6 +234,14 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           },
           { key: "invoices", href: "/freelancer/invoices", icon: "receipt" },
         ],
+      },
+    ],
+  },
+  cashier: {
+    roleLabelKey: "cashierRole",
+    groups: [
+      {
+        items: [{ key: "pos", href: "/cashier", icon: "receipt" }],
       },
     ],
   },

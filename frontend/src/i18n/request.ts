@@ -24,6 +24,7 @@ const NAMESPACES = [
   "profile",
   "management",
   "chat",
+  "cashier",
 ] as const;
 
 /** Recursively merge `source` into `target` (objects deep, scalars overwrite). */

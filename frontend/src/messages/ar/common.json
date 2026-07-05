@@ -78,8 +78,10 @@
     "ownerRole": "صاحب مساحة",
     "freelancerRole": "عامل مستقل",
     "adminRole": "مشرف المنصة",
+    "cashierRole": "أمين الصندوق",
     "items": {
       "dashboard": "لوحة التحكم",
+      "pos": "نقطة البيع",
       "members": "المشتركون",
       "expenses": "المصاريف",
       "resources": "الموارد",

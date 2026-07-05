@@ -80,6 +80,42 @@
       "confirmCancel": "Confirm cancel",
       "cancelSuccess": "Subscription cancelled successfully",
       "cancelError": "Could not cancel the subscription"
+    },
+    "pos": {
+      "title": "Café ordering",
+      "subtitle": "Order from your workspace café and pay at the counter",
+      "noSubTitle": "No active subscription yet",
+      "noSubBody": "You can order from a workspace café once you have an active subscription there.",
+      "exploreCta": "Explore workspaces",
+      "chooseWorkspace": "Order from",
+      "counterTitle": "Payment happens at the counter",
+      "counterBody": "Your order is sent to the café as pending. Pick it up and pay the cashier — cash or transfer.",
+      "menuHeading": "Menu",
+      "menuSubtitle": "Add items to your order",
+      "emptyMenuTitle": "Nothing on the menu",
+      "emptyMenuBody": "This café has no items available right now.",
+      "inStock": "{count} in stock",
+      "add": "Add",
+      "increase": "Add one",
+      "decrease": "Remove one",
+      "cartHeading": "Your order",
+      "cartSubtitle": "Review before sending to the café",
+      "cartEmpty": "Your order is empty. Add items from the menu.",
+      "total": "Total",
+      "note": "Note for the café",
+      "notePlaceholder": "Anything the café should know…",
+      "placeOrder": "{count, plural, one {Send order (# item)} other {Send order (# items)}}",
+      "placed": "Order sent",
+      "placedBody": "Pay at the counter when you pick it up.",
+      "error": "Something went wrong",
+      "historyHeading": "Your orders",
+      "historySubtitle": "Recent café orders and their status",
+      "historyEmpty": "You haven't placed any café orders yet.",
+      "orderStatus": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "cancelled": "Cancelled"
+      }
     }
   }
 }
