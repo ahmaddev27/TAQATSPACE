@@ -12,6 +12,9 @@ export type StockMovementType = "restock" | "adjustment";
 /** How an order was rung up. */
 export type PosOrderSource = "cashier" | "freelancer";
 
+/** Tender used to settle a POS order. */
+export type PosPaymentMethod = "cash" | "transfer";
+
 /** Lifecycle of a POS order. */
 export type PosOrderStatus = "pending" | "paid" | "cancelled";
 
@@ -102,6 +105,25 @@ export interface PosOrdersParams {
   status?: PosOrderStatus;
   per_page?: number;
   page?: number;
+}
+
+/** A single cart line submitted when ringing up an order. */
+export interface PosOrderLineInput {
+  product_id: string;
+  qty: number;
+}
+
+/** Body for `POST /pos/orders` (creates a pending order). */
+export interface CreatePosOrderInput {
+  items: PosOrderLineInput[];
+  discount?: number;
+  customer_name?: string | null;
+  note?: string | null;
+}
+
+/** Body for `POST /pos/orders/{id}/pay`. */
+export interface PayPosOrderInput {
+  method: PosPaymentMethod;
 }
 
 /* --------------------------------- Summary ----------------------------------- */

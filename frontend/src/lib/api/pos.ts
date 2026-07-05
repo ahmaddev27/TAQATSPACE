@@ -44,3 +44,14 @@ export async function ownerPosOrders(
   );
   return res.data;
 }
+
+/* ------------------------------ Cashier context ------------------------------ */
+/**
+ * The `/pos/*` endpoints resolve the workspace from the authenticated account,
+ * so a cashier hits the exact same routes as the owner. These thin aliases give
+ * the cashier terminal an intent-revealing name without duplicating fetch logic.
+ */
+
+export const cashierPosProducts = ownerPosProducts;
+export const cashierPosSummary = ownerPosSummary;
+export const cashierPosOrders = ownerPosOrders;

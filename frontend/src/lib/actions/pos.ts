@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   AdjustStockInput,
+  CreatePosOrderInput,
+  PayPosOrderInput,
   PosOrder,
   PosProduct,
   PosProductInput,
@@ -17,6 +19,12 @@ import type {
 
 function revalidatePos(): void {
   revalidatePath("/[locale]/(dashboard)/owner/pos", "page");
+}
+
+/** Orders surface on both the owner POS page and the cashier terminal. */
+function revalidateOrders(): void {
+  revalidatePath("/[locale]/(dashboard)/owner/pos", "page");
+  revalidatePath("/[locale]/(dashboard)/cashier", "page");
 }
 
 /* --------------------------------- Products ---------------------------------- */
@@ -69,6 +77,31 @@ export async function adjustPosStock(
 
 /* ---------------------------------- Orders ----------------------------------- */
 
+/** Ring up a new order (created in the `pending` state, awaiting payment). */
+export async function createPosOrder(
+  input: CreatePosOrderInput,
+): Promise<ActionResult<PosOrder>> {
+  const result = await authedMutate<PosOrder>("/pos/orders", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOrders();
+  return result;
+}
+
+/** Settle a pending order with cash or a bank transfer. */
+export async function payPosOrder(
+  orderId: string,
+  input: PayPosOrderInput,
+): Promise<ActionResult<PosOrder>> {
+  const result = await authedMutate<PosOrder>(`/pos/orders/${orderId}/pay`, {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOrders();
+  return result;
+}
+
 /** Void a pending order (no stock was consumed). */
 export async function cancelPosOrder(
   orderId: string,
@@ -76,6 +109,6 @@ export async function cancelPosOrder(
   const result = await authedMutate<PosOrder>(`/pos/orders/${orderId}/cancel`, {
     method: "POST",
   });
-  if (result.ok) revalidatePos();
+  if (result.ok) revalidateOrders();
   return result;
 }

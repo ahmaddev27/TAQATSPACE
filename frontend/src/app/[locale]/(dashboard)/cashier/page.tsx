@@ -1,20 +1,33 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { Icon } from "@/components/ui/Icon";
+import { PosTerminal } from "@/components/features/cashier/PosTerminal";
+import {
+  cashierPosProducts,
+  cashierPosSummary,
+  cashierPosOrders,
+} from "@/lib/api/pos";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Placeholder cashier dashboard. The real POS terminal ships in a later slice;
- * for now the freshly-onboarded cashier lands on a friendly "being set up" card.
+ * Cashier point-of-sale terminal. Fetches the catalogue, open (pending) orders,
+ * and the at-a-glance summary server-side, then hands them to the interactive
+ * <PosTerminal>. The `/pos/*` endpoints resolve the workspace from the cashier's
+ * account, so no workspace id is needed here.
  */
-export default async function CashierHomePage({
+export default async function CashierPosPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("cashier.dashboard");
+  const t = await getTranslations("cashier.terminal");
+
+  const [summary, productsResult, pendingResult] = await Promise.all([
+    cashierPosSummary(),
+    cashierPosProducts(),
+    cashierPosOrders({ status: "pending", per_page: 50 }),
+  ]);
 
   return (
     <div className="page">
@@ -23,18 +36,11 @@ export default async function CashierHomePage({
         <p className="muted">{t("subtitle")}</p>
       </div>
 
-      <div
-        className="card card-pad stack"
-        style={{ gap: 12, alignItems: "center", textAlign: "center" }}
-      >
-        <span className="st-ico" style={{ width: 48, height: 48 }}>
-          <Icon name="receipt" size={22} />
-        </span>
-        <h3 className="h3">{t("comingSoonTitle")}</h3>
-        <p className="muted" style={{ maxWidth: 420 }}>
-          {t("comingSoonBody")}
-        </p>
-      </div>
+      <PosTerminal
+        products={productsResult.products}
+        pendingOrders={pendingResult.orders}
+        summary={summary}
+      />
     </div>
   );
 }
