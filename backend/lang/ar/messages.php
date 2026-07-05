@@ -41,6 +41,14 @@ return [
     'pos_stock_no_change' => 'لا يمكن أن يكون تغيير المخزون صفراً.',
     'pos_stock_insufficient' => 'المخزون غير كافٍ لهذا التغيير.',
 
+    // POS / الطلبات
+    'pos_order_created' => 'تم إنشاء الطلب.',
+    'pos_order_paid' => 'تم دفع الطلب.',
+    'pos_order_cancelled' => 'تم إلغاء الطلب.',
+    'pos_order_not_found' => 'الطلب غير موجود.',
+    'pos_order_not_pending' => 'هذا الطلب لم يعد قيد الانتظار.',
+    'pos_order_empty' => 'يجب أن يحتوي الطلب على منتج واحد على الأقل.',
+
     'no_workspace_to_update' => 'ليس لديك مساحة عمل لتحديثها.',
     'no_workspace_to_publish' => 'ليس لديك مساحة عمل للنشر فيها.',
     'no_workspace_found_account' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
