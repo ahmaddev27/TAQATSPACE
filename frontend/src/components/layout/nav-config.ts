@@ -182,24 +182,29 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
           { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
-          { key: "invoices", href: "/owner/invoices", icon: "receipt" },
           { key: "packages", href: "/owner/packages", icon: "wifi" },
-        ],
-      },
-      {
-        titleKey: "sectionManagement",
-        items: [
-          { key: "expenses", href: "/owner/expenses", icon: "wallet" },
           { key: "resources", href: "/owner/resources", icon: "layers" },
         ],
       },
       {
-        titleKey: "sectionEngage",
+        titleKey: "sectionFinance",
+        items: [
+          { key: "invoices", href: "/owner/invoices", icon: "receipt" },
+          { key: "expenses", href: "/owner/expenses", icon: "wallet" },
+        ],
+      },
+      {
+        titleKey: "sectionCommunication",
         items: [
           { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
           { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
           { key: "broadcast", href: "/owner/messaging", icon: "send" },
           { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
+        ],
+      },
+      {
+        titleKey: "sectionReports",
+        items: [
           { key: "reports", href: "/owner/reports", icon: "chart" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
         ],
@@ -236,7 +241,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [{ key: "analytics", href: "/admin", icon: "chart" }],
       },
       {
-        titleKey: "sectionManagement",
+        titleKey: "sectionManage",
         items: [
           {
             key: "workspaces",
@@ -256,6 +261,11 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             icon: "shield",
             permission: "manage_admins",
           },
+        ],
+      },
+      {
+        titleKey: "sectionBilling",
+        items: [
           {
             key: "subscriptions",
             href: "/admin/subscriptions",
@@ -277,7 +287,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         ],
       },
       {
-        titleKey: "sectionCrm",
+        titleKey: "sectionContent",
         items: [
           {
             key: "landing",
@@ -300,7 +310,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         ],
       },
       {
-        titleKey: "sectionSettings",
+        titleKey: "sectionMessaging",
         items: [
           {
             key: "chat",
