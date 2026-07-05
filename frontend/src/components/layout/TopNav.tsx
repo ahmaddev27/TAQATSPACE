@@ -37,6 +37,7 @@ const SEARCH_DEST: Record<UserRole, string | null> = {
   workspace_owner: "/owner/members",
   admin: "/admin/users",
   freelancer: null,
+  cashier: null,
 };
 
 /** Dashboard top bar: menu toggle, search, locale/theme, bell, user menu. */

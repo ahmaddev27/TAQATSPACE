@@ -78,8 +78,10 @@
     "ownerRole": "Space owner",
     "freelancerRole": "Freelancer",
     "adminRole": "Super admin",
+    "cashierRole": "Cashier",
     "items": {
       "dashboard": "Dashboard",
+      "pos": "Point of sale",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",

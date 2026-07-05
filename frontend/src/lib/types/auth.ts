@@ -1,4 +1,4 @@
-export type UserRole = "freelancer" | "workspace_owner" | "admin";
+export type UserRole = "freelancer" | "workspace_owner" | "admin" | "cashier";
 
 export type UserStatus = "active" | "suspended" | "pending_verification";
 

@@ -235,6 +235,14 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       },
     ],
   },
+  cashier: {
+    roleLabelKey: "cashierRole",
+    groups: [
+      {
+        items: [{ key: "pos", href: "/cashier", icon: "receipt" }],
+      },
+    ],
+  },
   admin: {
     roleLabelKey: "adminRole",
     groups: [

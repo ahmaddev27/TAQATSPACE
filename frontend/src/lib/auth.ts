@@ -13,6 +13,7 @@ const DASHBOARD_BY_ROLE: Record<UserRole, string> = {
   workspace_owner: "/owner",
   freelancer: "/freelancer",
   admin: "/admin",
+  cashier: "/cashier",
 };
 
 /** Resolve the dashboard path for a given role (defaults to freelancer). */
