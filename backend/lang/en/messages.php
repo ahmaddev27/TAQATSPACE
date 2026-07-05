@@ -30,6 +30,17 @@ return [
     'cashier_invite_invalid' => 'This invitation is invalid or has expired.',
     'cashier_not_found' => 'Cashier not found.',
 
+    // POS / products + inventory
+    'pos_product_created' => 'Product created.',
+    'pos_product_updated' => 'Product updated.',
+    'pos_product_deleted' => 'Product deleted.',
+    'pos_product_not_found' => 'Product not found.',
+    'pos_stock_updated' => 'Stock updated.',
+    'pos_opening_stock' => 'Opening stock',
+    'pos_product_not_tracked' => 'This product does not track stock.',
+    'pos_stock_no_change' => 'Stock change cannot be zero.',
+    'pos_stock_insufficient' => 'Insufficient stock for this change.',
+
     'no_workspace_to_update' => 'You have no workspace to update.',
     'no_workspace_to_publish' => 'You have no workspace to publish to.',
     'no_workspace_found_account' => 'No workspace found for this account.',
