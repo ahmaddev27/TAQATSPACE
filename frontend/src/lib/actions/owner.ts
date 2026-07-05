@@ -23,6 +23,12 @@ import type {
   ResourceStatus,
   ResourceType,
 } from "@/lib/types/management";
+import type {
+  Cashier,
+  CashierInvitation,
+  InviteCashierInput,
+  PosPermission,
+} from "@/lib/types/cashier";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */
@@ -544,5 +550,45 @@ export async function deleteResource(
     method: "DELETE",
   });
   if (result.ok) revalidateOwner("resources");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Cashiers (POS / café staff)                                               */
+/* -------------------------------------------------------------------------- */
+
+/** Email a cashier invitation for the owner's workspace. */
+export async function inviteCashier(
+  input: InviteCashierInput,
+): Promise<ActionResult<CashierInvitation>> {
+  const result = await authedMutate<CashierInvitation>(
+    "/workspace/cashiers/invite",
+    { method: "POST", body: input },
+  );
+  if (result.ok) revalidateOwner("cashiers");
+  return result;
+}
+
+/** Re-scope a cashier's POS permission grant. */
+export async function updateCashierPermissions(
+  cashierId: string,
+  permissions: PosPermission[],
+): Promise<ActionResult<Cashier>> {
+  const result = await authedMutate<Cashier>(
+    `/workspace/cashiers/${cashierId}/permissions`,
+    { method: "PUT", body: { permissions } },
+  );
+  if (result.ok) revalidateOwner("cashiers");
+  return result;
+}
+
+/** Deactivate (suspend) a cashier account. */
+export async function deactivateCashier(
+  cashierId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/cashiers/${cashierId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("cashiers");
   return result;
 }

@@ -1,5 +1,39 @@
 {
   "owner": {
+    "cashiers": {
+      "title": "Cashiers",
+      "subtitle": "Invite café staff and manage what they can do in the POS.",
+      "invite": "Invite cashier",
+      "inviteTitle": "Invite a cashier",
+      "email": "Email",
+      "name": "Name",
+      "permissions": "Permissions",
+      "permsHint": "Choose what this staff member may do in the POS.",
+      "perms": {
+        "pos_sell": "Sell",
+        "pos_refund": "Refund",
+        "pos_manage_products": "Manage products",
+        "pos_view_reports": "View reports"
+      },
+      "send": "Send invitation",
+      "cancel": "Cancel",
+      "save": "Save",
+      "cashiersHeading": "Staff",
+      "invitationsHeading": "Pending invitations",
+      "noCashiers": "No staff yet.",
+      "noInvitations": "No pending invitations.",
+      "status": { "active": "Active", "suspended": "Suspended" },
+      "deactivate": "Deactivate",
+      "editPerms": "Permissions",
+      "editPermsTitle": "{name}'s permissions",
+      "confirmDeactivateTitle": "Deactivate staff",
+      "confirmDeactivateMsg": "Deactivate {name}'s account?",
+      "expiresAt": "Expires {date}",
+      "invitedSuccess": "Invitation sent.",
+      "updatedSuccess": "Permissions updated.",
+      "deactivatedSuccess": "Staff deactivated.",
+      "error": "Something went wrong"
+    },
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "An overview of your space today",

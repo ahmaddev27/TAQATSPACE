@@ -1,5 +1,39 @@
 {
   "owner": {
+    "cashiers": {
+      "title": "الكاشيرية",
+      "subtitle": "ادعُ موظفي الكافي وأدِر صلاحياتهم في نقطة البيع.",
+      "invite": "دعوة كاشير",
+      "inviteTitle": "دعوة موظف كاشير",
+      "email": "البريد الإلكتروني",
+      "name": "الاسم",
+      "permissions": "الصلاحيات",
+      "permsHint": "اختر ما يُسمح لهذا الموظف بفعله في نقطة البيع.",
+      "perms": {
+        "pos_sell": "البيع",
+        "pos_refund": "الاسترجاع",
+        "pos_manage_products": "إدارة المنتجات",
+        "pos_view_reports": "عرض التقارير"
+      },
+      "send": "إرسال الدعوة",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "cashiersHeading": "الموظفون",
+      "invitationsHeading": "دعوات معلّقة",
+      "noCashiers": "لا يوجد موظفون بعد.",
+      "noInvitations": "لا توجد دعوات معلّقة.",
+      "status": { "active": "نشط", "suspended": "موقوف" },
+      "deactivate": "تعطيل",
+      "editPerms": "الصلاحيات",
+      "editPermsTitle": "صلاحيات {name}",
+      "confirmDeactivateTitle": "تعطيل الموظف",
+      "confirmDeactivateMsg": "هل تريد تعطيل حساب {name}؟",
+      "expiresAt": "تنتهي {date}",
+      "invitedSuccess": "تم إرسال الدعوة.",
+      "updatedSuccess": "تم تحديث الصلاحيات.",
+      "deactivatedSuccess": "تم تعطيل الموظف.",
+      "error": "حدث خطأ"
+    },
     "dashboard": {
       "title": "لوحة التحكم",
       "subtitle": "نظرة عامة على مساحتك اليوم",
