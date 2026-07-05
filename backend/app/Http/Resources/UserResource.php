@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\PosPermission;
 use App\Models\User;
+use App\Services\Pos\CashierManagementService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,6 +30,7 @@ class UserResource extends JsonResource
             'role' => $this->role->value,
             'status' => $this->status->value,
             'needs_onboarding' => $this->needsOnboarding(),
+            'pending_cashier_invitation' => $this->pendingCashierInvitation(),
             'specialty' => $this->specialty,
             'bio' => $this->bio,
             'avatar' => $this->avatarUrl(),
@@ -58,6 +61,32 @@ class UserResource extends JsonResource
         return [
             'is_super_admin' => $this->isSuperAdmin(),
             'permissions' => $this->effectivePermissionNames(),
+        ];
+    }
+
+    /**
+     * A still-open cashier invitation addressed to this user, surfaced only while
+     * they still need onboarding so the SPA can offer accept/decline. Resolved
+     * lazily to keep the common (already-onboarded) path query-free.
+     *
+     * @return array{id: string, workspace_name: ?string, permissions: array<int, string>}|null
+     */
+    private function pendingCashierInvitation(): ?array
+    {
+        if (! $this->needsOnboarding()) {
+            return null;
+        }
+
+        $invitation = app(CashierManagementService::class)->pendingForEmail((string) $this->email);
+
+        if ($invitation === null) {
+            return null;
+        }
+
+        return [
+            'id' => $invitation->id,
+            'workspace_name' => $invitation->workspace?->name,
+            'permissions' => $invitation->permissions ?? PosPermission::defaultsForCashier(),
         ];
     }
 
