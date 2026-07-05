@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\WorkspaceStatus;
 use App\Support\MediaUrl;
+use Database\Factories\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workspace extends Model
 {
-    /** @use HasFactory<\Database\Factories\WorkspaceFactory> */
+    /** @use HasFactory<WorkspaceFactory> */
     use HasFactory, HasUuids, SoftDeletes;
 
     /** @var list<string> */
@@ -66,6 +67,16 @@ class Workspace extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * Cashier/café staff accounts that operate this workspace's POS.
+     *
+     * @return HasMany<User, $this>
+     */
+    public function cashiers(): HasMany
+    {
+        return $this->hasMany(User::class, 'workspace_id');
     }
 
     /**
@@ -140,7 +151,7 @@ class Workspace extends Model
         return $this->hasMany(Expense::class);
     }
 
-    /** @return HasMany<Resource, $this> */
+    /** @return HasMany<resource, $this> */
     public function resources(): HasMany
     {
         return $this->hasMany(Resource::class);

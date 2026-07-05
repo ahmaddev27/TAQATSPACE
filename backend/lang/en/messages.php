@@ -20,6 +20,16 @@ return [
     'insufficient_permissions' => 'Insufficient permissions.',
     'unauthorized_action' => 'This action is unauthorized.',
     'no_workspace' => 'You have no workspace.',
+
+    // POS / cashier staff
+    'cashier_invited' => 'Invitation sent.',
+    'cashier_updated' => 'Cashier updated.',
+    'cashier_deactivated' => 'Cashier deactivated.',
+    'cashier_welcome' => 'Welcome aboard!',
+    'cashier_email_taken' => 'This email is already in use.',
+    'cashier_invite_invalid' => 'This invitation is invalid or has expired.',
+    'cashier_not_found' => 'Cashier not found.',
+
     'no_workspace_to_update' => 'You have no workspace to update.',
     'no_workspace_to_publish' => 'You have no workspace to publish to.',
     'no_workspace_found_account' => 'No workspace found for this account.',

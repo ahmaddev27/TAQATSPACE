@@ -20,6 +20,16 @@ return [
     'insufficient_permissions' => 'الصلاحيات غير كافية.',
     'unauthorized_action' => 'هذا الإجراء غير مصرّح به.',
     'no_workspace' => 'ليس لديك مساحة عمل.',
+
+    // POS / cashier staff
+    'cashier_invited' => 'تم إرسال الدعوة.',
+    'cashier_updated' => 'تم تحديث الكاشير.',
+    'cashier_deactivated' => 'تم تعطيل الكاشير.',
+    'cashier_welcome' => 'أهلاً بك!',
+    'cashier_email_taken' => 'هذا البريد الإلكتروني مستخدم بالفعل.',
+    'cashier_invite_invalid' => 'هذه الدعوة غير صالحة أو منتهية الصلاحية.',
+    'cashier_not_found' => 'الكاشير غير موجود.',
+
     'no_workspace_to_update' => 'ليس لديك مساحة عمل لتحديثها.',
     'no_workspace_to_publish' => 'ليس لديك مساحة عمل للنشر فيها.',
     'no_workspace_found_account' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
