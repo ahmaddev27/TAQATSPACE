@@ -48,6 +48,7 @@ return [
     'pos_order_not_found' => 'Order not found.',
     'pos_order_not_pending' => 'This order is no longer pending.',
     'pos_order_empty' => 'An order must have at least one item.',
+    'pos_not_subscribed' => 'You need an active subscription to this workspace to order here.',
 
     'no_workspace_to_update' => 'You have no workspace to update.',
     'no_workspace_to_publish' => 'You have no workspace to publish to.',

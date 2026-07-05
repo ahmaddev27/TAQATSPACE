@@ -48,6 +48,7 @@ return [
     'pos_order_not_found' => 'الطلب غير موجود.',
     'pos_order_not_pending' => 'هذا الطلب لم يعد قيد الانتظار.',
     'pos_order_empty' => 'يجب أن يحتوي الطلب على منتج واحد على الأقل.',
+    'pos_not_subscribed' => 'تحتاج اشتراكاً نشطاً في هذه المساحة لتطلب هنا.',
 
     'no_workspace_to_update' => 'ليس لديك مساحة عمل لتحديثها.',
     'no_workspace_to_publish' => 'ليس لديك مساحة عمل للنشر فيها.',
