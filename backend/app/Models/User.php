@@ -10,8 +10,10 @@ use App\Enums\Gender;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -22,7 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
 
     /** @var list<string> */
@@ -33,6 +35,7 @@ class User extends Authenticatable
         'phone',
         'gender',
         'role',
+        'workspace_id',
         'status',
         'sso_sub',
         'onboarding_completed_at',
@@ -71,6 +74,17 @@ class User extends Authenticatable
     public function workspace(): HasOne
     {
         return $this->hasOne(Workspace::class, 'owner_id');
+    }
+
+    /**
+     * The workspace a cashier account operates the POS for (forward pointer via
+     * `users.workspace_id`). Null for every non-cashier account.
+     *
+     * @return BelongsTo<Workspace, $this>
+     */
+    public function employerWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'workspace_id');
     }
 
     /** @return HasMany<Subscription, $this> */
@@ -157,6 +171,11 @@ class User extends Authenticatable
     public function isFreelancer(): bool
     {
         return $this->role === UserRole::Freelancer;
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->role === UserRole::Cashier;
     }
 
     public function isActive(): bool

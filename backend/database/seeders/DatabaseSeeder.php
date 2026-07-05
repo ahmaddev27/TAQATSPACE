@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         DB::transaction(function (): void {
             $this->seedRoles();
             $this->call(AdminPermissionSeeder::class);
+            $this->call(PosPermissionSeeder::class);
             $this->call(CitySeeder::class);
             $this->seedAdmin();
         });

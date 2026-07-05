@@ -33,6 +33,18 @@ class AppServiceProvider extends ServiceProvider
             return $user->id === $workspace->owner_id || $user->isAdmin();
         });
 
+        // POS (café) access to a workspace: its owner and platform admins always
+        // pass; a cashier passes only for the single workspace it is bound to.
+        // Deliberately SEPARATE from `manage-workspace` so a cashier never gains
+        // the owner-only surfaces (seats, logo, messaging, broadcasts) that gate
+        // guards — the POS controllers additionally check the specific
+        // PosPermission the action needs.
+        Gate::define('access-pos', static function (User $user, Workspace $workspace): bool {
+            return $user->id === $workspace->owner_id
+                || $user->isAdmin()
+                || ($user->isCashier() && (string) $user->workspace_id === (string) $workspace->id);
+        });
+
         // Controls access to the Scramble API docs UI (`/docs/api`) and spec
         // (`/docs/api.json`). The API surface is already discoverable from the
         // public SPA bundle, so the docs add little attack surface — allow by

@@ -13,6 +13,7 @@ enum UserRole: string
     case Freelancer = 'freelancer';
     case WorkspaceOwner = 'workspace_owner';
     case Admin = 'admin';
+    case Cashier = 'cashier';
 
     /**
      * Roles that may self-register through the public API.
