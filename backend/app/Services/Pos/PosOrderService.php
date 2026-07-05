@@ -25,6 +25,9 @@ use RuntimeException;
  */
 class PosOrderService
 {
+    /** Stock at or below this (for a tracked product) counts as "low". */
+    private const LOW_STOCK_THRESHOLD = 5;
+
     public function __construct(
         private readonly PosProductService $products,
     ) {}
@@ -126,6 +129,34 @@ class PosOrderService
 
             return $order->fresh(['items', 'payments']) ?? $order;
         });
+    }
+
+    /**
+     * At-a-glance POS figures for a workspace's dashboard section.
+     *
+     * @return array{today_sales: string, today_orders: int, pending_orders: int, low_stock: int}
+     */
+    public function summary(Workspace $workspace): array
+    {
+        $paidToday = PosOrder::query()
+            ->where('workspace_id', $workspace->id)
+            ->where('status', PosOrderStatus::Paid->value)
+            ->whereDate('paid_at', now()->toDateString());
+
+        return [
+            'today_sales' => number_format((float) (clone $paidToday)->sum('total'), 2, '.', ''),
+            'today_orders' => (clone $paidToday)->count(),
+            'pending_orders' => PosOrder::query()
+                ->where('workspace_id', $workspace->id)
+                ->where('status', PosOrderStatus::Pending->value)
+                ->count(),
+            'low_stock' => PosProduct::query()
+                ->where('workspace_id', $workspace->id)
+                ->where('is_active', true)
+                ->where('track_stock', true)
+                ->where('stock_qty', '<=', self::LOW_STOCK_THRESHOLD)
+                ->count(),
+        ];
     }
 
     /** Void a pending order (no stock was consumed, so nothing to restore). */

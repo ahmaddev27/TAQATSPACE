@@ -53,6 +53,22 @@ class OrderController extends PosController
     }
 
     /**
+     * GET /api/pos/summary — at-a-glance figures for the POS dashboard section.
+     */
+    public function summary(Request $request): JsonResponse
+    {
+        $workspace = $this->posWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $this->requirePosPermission($request->user(), PosPermission::ViewReports);
+
+        return ApiResponse::success($this->orders->summary($workspace));
+    }
+
+    /**
      * GET /api/pos/orders/{order}
      */
     public function show(Request $request, PosOrder $order): JsonResponse

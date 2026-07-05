@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\PosOrderStatus;
 use App\Models\Expense;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
+use App\Models\PosOrder;
 use App\Models\Workspace;
 use Illuminate\Support\Carbon;
 
@@ -125,6 +127,17 @@ class OwnerReportsService
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
+        // Café/POS sales count as revenue too, keyed by the month each paid order
+        // was settled.
+        $posRevenueByMonth = PosOrder::query()
+            ->where('workspace_id', $workspace->id)
+            ->where('status', PosOrderStatus::Paid->value)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '>=', $start)
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(total) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
         $expensesByMonth = Expense::query()
             ->where('workspace_id', $workspace->id)
             ->where('spent_on', '>=', $start->toDateString())
@@ -136,7 +149,8 @@ class OwnerReportsService
 
         for ($i = 0; $i < self::PL_MONTHS; $i++) {
             $month = $start->copy()->addMonths($i)->format('Y-m');
-            $revenue = (float) ($revenueByMonth[$month] ?? 0);
+            $revenue = (float) ($revenueByMonth[$month] ?? 0)
+                + (float) ($posRevenueByMonth[$month] ?? 0);
             $expenses = (float) ($expensesByMonth[$month] ?? 0);
 
             $rows[] = [

@@ -24,6 +24,7 @@ Route::middleware(['auth:sanctum'])
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
         Route::post('/products/{product}/stock', [ProductController::class, 'adjustStock']);
 
+        Route::get('/summary', [OrderController::class, 'summary']);
         Route::get('/orders', [OrderController::class, 'index']);
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
