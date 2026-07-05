@@ -11,6 +11,7 @@ use App\Models\CashierInvitation;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\CashierInvitationNotification;
+use App\Services\Pos\CashierManagementService;
 use Database\Seeders\PosPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -42,63 +43,147 @@ class CashierManagementTest extends TestCase
         $this->assertDatabaseHas('cashier_invitations', [
             'email' => 'barista@cafe.ps',
             'accepted_at' => null,
+            'declined_at' => null,
         ]);
         Notification::assertSentOnDemand(CashierInvitationNotification::class);
     }
 
-    public function test_invitee_accepts_and_receives_a_scoped_cashier_account(): void
+    public function test_invite_rejects_an_already_onboarded_email_but_allows_a_fresh_one(): void
+    {
+        Notification::fake();
+        [$owner] = $this->owningWorkspace();
+        User::factory()->create([
+            'email' => 'onboarded@mail.ps',
+            'onboarding_completed_at' => now(),
+        ]);
+        Sanctum::actingAs($owner);
+
+        $this->postJson('/api/workspace/cashiers/invite', ['email' => 'onboarded@mail.ps'])
+            ->assertStatus(422);
+
+        // A brand-new email (no account) is allowed.
+        $this->postJson('/api/workspace/cashiers/invite', ['email' => 'fresh@mail.ps'])
+            ->assertCreated();
+
+        // A not-yet-onboarded SSO account is also allowed.
+        User::factory()->create([
+            'email' => 'pending@mail.ps',
+            'onboarding_completed_at' => null,
+            'status' => UserStatus::PendingVerification,
+        ]);
+        $this->postJson('/api/workspace/cashiers/invite', ['email' => 'pending@mail.ps'])
+            ->assertCreated();
+    }
+
+    public function test_pending_for_email_finds_an_open_invitation(): void
     {
         [, $workspace] = $this->owningWorkspace();
-        $token = 'raw-token-value-123';
-        CashierInvitation::factory()->withToken($token)->create([
+        CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'barista@cafe.ps',
+        ]);
+
+        $found = app(CashierManagementService::class)->pendingForEmail('Barista@Cafe.ps');
+
+        $this->assertNotNull($found);
+        $this->assertSame('barista@cafe.ps', $found->email);
+    }
+
+    public function test_onboarding_user_accepts_and_becomes_a_scoped_cashier(): void
+    {
+        [, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
             'workspace_id' => $workspace->id,
             'email' => 'barista@cafe.ps',
             'permissions' => [PosPermission::Sell->value],
         ]);
+        $user = $this->onboardingUser('barista@cafe.ps');
+        Sanctum::actingAs($user);
 
-        $response = $this->postJson('/api/cashier/accept', [
-            'token' => $token,
-            'name' => 'Barista',
-            'password' => 'secret1234',
-            'password_confirmation' => 'secret1234',
-        ]);
+        $this->postJson("/api/cashier/invitations/{$invitation->id}/accept")
+            ->assertOk()
+            ->assertJsonPath('data.role', UserRole::Cashier->value)
+            ->assertJsonPath('data.user.needs_onboarding', false);
 
-        $response->assertCreated()->assertJsonPath('data.user.role', UserRole::Cashier->value);
-
-        $cashier = User::query()->where('email', 'barista@cafe.ps')->firstOrFail();
+        $cashier = $user->fresh();
         $this->assertSame($workspace->id, $cashier->workspace_id);
         $this->assertTrue($cashier->isCashier());
+        $this->assertNotNull($cashier->onboarding_completed_at);
         $this->assertTrue($cashier->can(PosPermission::Sell->value));
         $this->assertFalse($cashier->can(PosPermission::Refund->value));
         $this->assertDatabaseHas('cashier_invitations', [
-            'email' => 'barista@cafe.ps',
+            'id' => $invitation->id,
             'accepted_user_id' => $cashier->id,
         ]);
     }
 
-    public function test_accepting_an_expired_token_fails(): void
+    public function test_accept_is_rejected_on_email_mismatch(): void
     {
-        $token = 'expired-token';
-        CashierInvitation::factory()->withToken($token)->expired()->create();
+        [, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'barista@cafe.ps',
+        ]);
+        $user = $this->onboardingUser('someone-else@mail.ps');
+        Sanctum::actingAs($user);
 
-        $this->postJson('/api/cashier/accept', [
-            'token' => $token,
-            'name' => 'X',
-            'password' => 'secret1234',
-            'password_confirmation' => 'secret1234',
-        ])->assertStatus(422);
+        $this->postJson("/api/cashier/invitations/{$invitation->id}/accept")
+            ->assertStatus(422);
 
-        $this->assertDatabaseMissing('users', ['role' => UserRole::Cashier->value]);
+        $this->assertNull($user->fresh()->workspace_id);
     }
 
-    public function test_cannot_invite_an_email_that_already_belongs_to_a_user(): void
+    public function test_accept_is_rejected_when_user_already_onboarded(): void
     {
-        [$owner] = $this->owningWorkspace();
-        User::factory()->create(['email' => 'taken@mail.ps']);
-        Sanctum::actingAs($owner);
+        [, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'barista@cafe.ps',
+        ]);
+        $user = User::factory()->create([
+            'email' => 'barista@cafe.ps',
+            'onboarding_completed_at' => now(),
+        ]);
+        Sanctum::actingAs($user);
 
-        $this->postJson('/api/workspace/cashiers/invite', ['email' => 'taken@mail.ps'])
+        $this->postJson("/api/cashier/invitations/{$invitation->id}/accept")
             ->assertStatus(422);
+    }
+
+    public function test_decline_marks_the_invitation_and_it_stops_being_pending(): void
+    {
+        [, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'barista@cafe.ps',
+        ]);
+        $user = $this->onboardingUser('barista@cafe.ps');
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/cashier/invitations/{$invitation->id}/decline")->assertOk();
+
+        $this->assertNotNull($invitation->fresh()->declined_at);
+        $this->assertNull(
+            app(CashierManagementService::class)->pendingForEmail('barista@cafe.ps')
+        );
+    }
+
+    public function test_me_exposes_the_pending_cashier_invitation_for_a_matching_onboarding_user(): void
+    {
+        [, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'barista@cafe.ps',
+            'permissions' => [PosPermission::Sell->value],
+        ]);
+        $user = $this->onboardingUser('barista@cafe.ps');
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.user.pending_cashier_invitation.id', $invitation->id)
+            ->assertJsonPath('data.user.pending_cashier_invitation.workspace_name', $workspace->name)
+            ->assertJsonPath('data.user.pending_cashier_invitation.permissions', [PosPermission::Sell->value]);
     }
 
     public function test_owner_lists_and_deactivates_only_their_own_cashiers(): void
@@ -131,5 +216,17 @@ class CashierManagementTest extends TestCase
         $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
 
         return [$owner, $workspace];
+    }
+
+    /** A fresh SSO account that still needs onboarding. */
+    private function onboardingUser(string $email): User
+    {
+        return User::factory()->create([
+            'email' => $email,
+            'role' => UserRole::Freelancer->value,
+            'status' => UserStatus::PendingVerification->value,
+            'onboarding_completed_at' => null,
+            'workspace_id' => null,
+        ]);
     }
 }

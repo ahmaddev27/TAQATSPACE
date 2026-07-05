@@ -85,7 +85,18 @@
       },
       "finish": "Finish and create account",
       "submitOwner": "Submit for review",
-      "error": "Could not complete setup, please try again."
+      "error": "Could not complete setup, please try again.",
+      "cashierInvite": {
+        "heading": "You've been invited to {workspace} as a cashier",
+        "body": "Accept to join {workspace} and start using the point of sale. Decline if you'd rather set up your own account.",
+        "note": "Accepting will set up your cashier account and take you to the terminal.",
+        "fallbackWorkspace": "the workspace",
+        "accept": "Accept invitation",
+        "decline": "Decline",
+        "accepted": "Welcome aboard! Your cashier account is ready.",
+        "declined": "Invitation declined.",
+        "error": "We couldn't process the invitation. Please try again."
+      }
     },
     "forgot": {
       "title": "Forgot password",

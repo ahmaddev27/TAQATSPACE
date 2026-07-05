@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Pos\InvitationController;
+use App\Http\Controllers\Cashier\InvitationController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Cashier — public invitation acceptance (POS module)
+| Cashier — invitation accept/decline (POS module)
 |--------------------------------------------------------------------------
-| Token-authed, no session: a café/cashier invitee previews and accepts their
-| emailed invitation, which provisions their account. Throttled because these
-| are unauthenticated, token-guessing-adjacent endpoints.
+| Authenticated (SSO) onboarding actions: an invitee who has signed in to
+| Taqat accepts or declines a cashier invitation addressed to their verified
+| email. The signed-in account is the credential — there is no token link.
 */
-Route::prefix('cashier')
-    ->middleware('throttle:10,1')
+Route::middleware(['auth:sanctum'])
+    ->prefix('cashier/invitations')
     ->group(function (): void {
-        Route::get('/invitation', [InvitationController::class, 'show']);
-        Route::post('/accept', [InvitationController::class, 'accept']);
+        Route::post('/{invitation}/accept', [InvitationController::class, 'accept']);
+        Route::post('/{invitation}/decline', [InvitationController::class, 'decline']);
     });

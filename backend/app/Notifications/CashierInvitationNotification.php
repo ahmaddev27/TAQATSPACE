@@ -13,8 +13,10 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Emails a café/cashier staff member a branded invitation to join a workspace's
- * POS. Sent on-demand (the invitee has no account yet) and delivered through the
- * workspace's dashboard SMTP via {@see RendersWorkspaceMail}.
+ * POS. The invitee signs in to Taqat via SSO (their email is verified by the
+ * IdP) and accepts the invitation from the onboarding flow — no token is
+ * embedded. Delivered through the workspace's dashboard SMTP via
+ * {@see RendersWorkspaceMail}.
  */
 class CashierInvitationNotification extends Notification implements ShouldQueue
 {
@@ -22,7 +24,6 @@ class CashierInvitationNotification extends Notification implements ShouldQueue
 
     public function __construct(
         public readonly Workspace $workspace,
-        public readonly string $token,
         public readonly ?string $name = null,
     ) {}
 
@@ -41,8 +42,7 @@ class CashierInvitationNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         $name = $this->workspace->name;
-        $url = rtrim((string) config('app.frontend_url'), '/')
-            .'/cashier/accept?token='.urlencode($this->token);
+        $url = rtrim((string) config('app.frontend_url'), '/').'/login';
 
         $greeting = $this->name !== null ? "مرحباً {$this->name}،" : 'مرحباً،';
 
@@ -50,9 +50,10 @@ class CashierInvitationNotification extends Notification implements ShouldQueue
             $greeting,
             "تمت دعوتك للانضمام كموظف كاشير في {$name} على منصة طاقات.",
             "You have been invited to join {$name} as a POS (café) staff member.",
-            'لإكمال التسجيل وتعيين كلمة المرور، افتح الرابط التالي:',
+            'سجّل الدخول إلى طاقات بنفس بريدك الإلكتروني، ثم اقبل الدعوة من خطوة الإعداد (Onboarding).',
+            'Sign in to Taqat with this email address, then accept the invitation from the onboarding step.',
             $url,
-            'الرابط صالح لمدة 7 أيام. / This link is valid for 7 days.',
+            'الدعوة صالحة لمدة 7 أيام. / This invitation is valid for 7 days.',
         ];
 
         return $this->workspaceMail(

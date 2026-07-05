@@ -10,6 +10,7 @@ import type { User, UserRole } from "@/lib/types/auth";
 import { FreelancerOnboardingForm } from "./FreelancerOnboardingForm";
 import { OwnerOnboardingForm } from "./OwnerOnboardingForm";
 import { PendingReviewScreen } from "./PendingReviewScreen";
+import { CashierInviteCard } from "./CashierInviteCard";
 
 /** Shape returned by POST /api/auth/onboarding on success. */
 export interface OnboardingResult {
@@ -33,6 +34,10 @@ export function OnboardingFlow() {
 
   const [choice, setChoice] = useState<Choice | null>(null);
   const [ownerDone, setOwnerDone] = useState(false);
+
+  // A pending cashier invitation preempts the role picker: accepting turns the
+  // account into a cashier, declining clears the invite and reveals the picker.
+  const invitation = user?.pending_cashier_invitation ?? null;
 
   async function handleDone(result: OnboardingResult) {
     if (result.next === "pending") {
@@ -58,7 +63,9 @@ export function OnboardingFlow() {
         </p>
       </div>
 
-      {choice === null && (
+      {invitation && <CashierInviteCard invitation={invitation} />}
+
+      {!invitation && choice === null && (
         <div className="onboarding-choices">
           <button
             type="button"

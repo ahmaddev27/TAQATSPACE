@@ -30,6 +30,7 @@ class CashierInvitation extends Model
         'permissions',
         'expires_at',
         'accepted_at',
+        'declined_at',
         'accepted_user_id',
     ];
 
@@ -47,6 +48,7 @@ class CashierInvitation extends Model
             'permissions' => 'array',
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
+            'declined_at' => 'datetime',
         ];
     }
 
@@ -62,9 +64,11 @@ class CashierInvitation extends Model
         return $this->belongsTo(User::class, 'invited_by');
     }
 
-    /** Whether the invitation is still open: not yet accepted and not expired. */
+    /** Whether the invitation is still open: not accepted, not declined, not expired. */
     public function isPending(): bool
     {
-        return $this->accepted_at === null && $this->expires_at->isFuture();
+        return $this->accepted_at === null
+            && $this->declined_at === null
+            && $this->expires_at->isFuture();
     }
 }
