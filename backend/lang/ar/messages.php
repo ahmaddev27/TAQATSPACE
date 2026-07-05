@@ -30,6 +30,26 @@ return [
     'cashier_invite_invalid' => 'هذه الدعوة غير صالحة أو منتهية الصلاحية.',
     'cashier_not_found' => 'الكاشير غير موجود.',
 
+    // POS / products + inventory
+    'pos_product_created' => 'تم إنشاء المنتج.',
+    'pos_product_updated' => 'تم تحديث المنتج.',
+    'pos_product_deleted' => 'تم حذف المنتج.',
+    'pos_product_not_found' => 'المنتج غير موجود.',
+    'pos_stock_updated' => 'تم تحديث المخزون.',
+    'pos_opening_stock' => 'رصيد افتتاحي',
+    'pos_product_not_tracked' => 'هذا المنتج لا يتتبّع المخزون.',
+    'pos_stock_no_change' => 'لا يمكن أن يكون تغيير المخزون صفراً.',
+    'pos_stock_insufficient' => 'المخزون غير كافٍ لهذا التغيير.',
+
+    // POS / الطلبات
+    'pos_order_created' => 'تم إنشاء الطلب.',
+    'pos_order_paid' => 'تم دفع الطلب.',
+    'pos_order_cancelled' => 'تم إلغاء الطلب.',
+    'pos_order_not_found' => 'الطلب غير موجود.',
+    'pos_order_not_pending' => 'هذا الطلب لم يعد قيد الانتظار.',
+    'pos_order_empty' => 'يجب أن يحتوي الطلب على منتج واحد على الأقل.',
+    'pos_not_subscribed' => 'تحتاج اشتراكاً نشطاً في هذه المساحة لتطلب هنا.',
+
     'no_workspace_to_update' => 'ليس لديك مساحة عمل لتحديثها.',
     'no_workspace_to_publish' => 'ليس لديك مساحة عمل للنشر فيها.',
     'no_workspace_found_account' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
