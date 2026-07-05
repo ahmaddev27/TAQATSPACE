@@ -184,6 +184,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "packages", href: "/owner/packages", icon: "wifi" },
           { key: "resources", href: "/owner/resources", icon: "layers" },
+          { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
         ],
       },
       {
