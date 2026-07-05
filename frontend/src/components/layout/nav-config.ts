@@ -220,6 +220,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "home", href: "/freelancer", icon: "home" },
           { key: "explore", href: "/explore", icon: "search" },
+          { key: "pos", href: "/freelancer/pos", icon: "coffee" },
           { key: "chat", href: "/freelancer/chat", icon: "chat", realtime: "primary" },
         ],
       },

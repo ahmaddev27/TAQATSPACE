@@ -126,6 +126,17 @@ export interface PayPosOrderInput {
   method: PosPaymentMethod;
 }
 
+/**
+ * Body for `POST /freelancer/pos/orders`. A freelancer rings up against a
+ * workspace they are actively subscribed to; the order lands PENDING in the
+ * cashier's queue and is settled at the counter (no discount/customer here).
+ */
+export interface FreelancerCreateOrderInput {
+  workspace_id: string;
+  items: PosOrderLineInput[];
+  note?: string | null;
+}
+
 /* --------------------------------- Summary ----------------------------------- */
 
 export interface PosSummary {
