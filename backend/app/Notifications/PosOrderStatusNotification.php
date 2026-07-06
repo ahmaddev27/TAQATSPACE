@@ -46,6 +46,9 @@ class PosOrderStatusNotification extends Notification implements ShouldQueue
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'workspace_id' => $this->order->workspace_id,
+            // Human-readable body source for the notification bell (resolveBody
+            // reads `workspace_name`); the localized title comes from the type.
+            'workspace_name' => $this->order->workspace?->name,
             'status' => $this->order->status->value,
         ];
     }

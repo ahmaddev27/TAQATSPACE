@@ -59,6 +59,16 @@ export async function ownerPosOpenOrders(): Promise<PosOrder[]> {
   return orders.filter((o) => isPosOrderOpen(o.status));
 }
 
+/**
+ * The latest orders in any status (paid/unpaid, open/closed) for the terminal's
+ * read-only "recent orders" panel. Distinct from the open-orders queue, which
+ * only surfaces actionable tickets.
+ */
+export async function ownerPosRecentOrders(limit = 8): Promise<PosOrder[]> {
+  const { orders } = await ownerPosOrders({ per_page: limit });
+  return orders;
+}
+
 /** Sales analytics for the owner's workspace over an optional date range. */
 export async function ownerPosReport(
   params: PosReportParams = {},
@@ -80,4 +90,5 @@ export const cashierPosProducts = ownerPosProducts;
 export const cashierPosSummary = ownerPosSummary;
 export const cashierPosOrders = ownerPosOrders;
 export const cashierPosOpenOrders = ownerPosOpenOrders;
+export const cashierPosRecentOrders = ownerPosRecentOrders;
 export const cashierPosReport = ownerPosReport;

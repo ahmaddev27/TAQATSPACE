@@ -39,28 +39,38 @@ export function PosReports({ report }: Props) {
 
   return (
     <div className="stack" style={{ gap: 24 }}>
-      <form className="card card-pad row wrap" style={{ gap: 12, alignItems: "flex-end" }} onSubmit={applyRange}>
-        <Field label={t("from")} className="ltr" htmlFor="pos-report-from">
-          <Input
-            id="pos-report-from"
-            type="date"
-            value={from}
-            max={to || undefined}
-            onChange={(e) => setFrom(e.target.value)}
-          />
-        </Field>
-        <Field label={t("to")} className="ltr" htmlFor="pos-report-to">
-          <Input
-            id="pos-report-to"
-            type="date"
-            value={to}
-            min={from || undefined}
-            onChange={(e) => setTo(e.target.value)}
-          />
-        </Field>
-        <Button type="submit" variant="secondary" icon="filter">
-          {t("apply")}
-        </Button>
+      <form className="card card-pad" onSubmit={applyRange}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
+            gap: 12,
+            alignItems: "flex-end",
+          }}
+        >
+          <Field label={t("from")} className="ltr" htmlFor="pos-report-from">
+            <Input
+              id="pos-report-from"
+              type="date"
+              value={from}
+              max={to || undefined}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </Field>
+          <Field label={t("to")} className="ltr" htmlFor="pos-report-to">
+            <Input
+              id="pos-report-to"
+              type="date"
+              value={to}
+              min={from || undefined}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </Field>
+          <Button type="submit" variant="secondary" icon="filter" block>
+            {t("apply")}
+          </Button>
+        </div>
       </form>
 
       <div className="grid-stats">

@@ -4,6 +4,7 @@ import {
   cashierPosProducts,
   cashierPosSummary,
   cashierPosOpenOrders,
+  cashierPosRecentOrders,
 } from "@/lib/api/pos";
 import type { PosSummary } from "@/lib/types/pos";
 
@@ -24,9 +25,10 @@ export default async function CashierPosPage({
   setRequestLocale(locale);
   const t = await getTranslations("cashier.terminal");
 
-  const [productsResult, openOrders] = await Promise.all([
+  const [productsResult, openOrders, recentOrders] = await Promise.all([
     cashierPosProducts(),
     cashierPosOpenOrders(),
+    cashierPosRecentOrders(),
   ]);
 
   // The summary needs `pos_view_reports`; a sell-only cashier must still reach
@@ -48,6 +50,7 @@ export default async function CashierPosPage({
       <PosTerminal
         products={productsResult.products}
         openOrders={openOrders}
+        recentOrders={recentOrders}
         summary={summary}
       />
     </div>
