@@ -51,7 +51,7 @@ class PosReportTest extends TestCase
         $this->paidOrder($workspace, 15, 'POS-1');
         PosOrder::query()->create([
             'workspace_id' => $workspace->id, 'order_number' => 'POS-2',
-            'source' => 'cashier', 'status' => 'pending',
+            'source' => 'cashier', 'status' => 'new',
             'subtotal' => 5, 'discount' => 0, 'total' => 5,
         ]);
         PosProduct::factory()->create([
@@ -73,7 +73,7 @@ class PosReportTest extends TestCase
             'workspace_id' => $workspace->id,
             'order_number' => $number,
             'source' => 'cashier',
-            'status' => 'paid',
+            'status' => 'completed',
             'subtotal' => $total,
             'discount' => 0,
             'total' => $total,

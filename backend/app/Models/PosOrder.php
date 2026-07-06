@@ -36,6 +36,8 @@ class PosOrder extends Model
         'discount',
         'total',
         'paid_at',
+        'refunded_at',
+        'refunded_by',
         'note',
     ];
 
@@ -51,7 +53,14 @@ class PosOrder extends Model
             'discount' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
         ];
+    }
+
+    /** Whether this order has been settled (payment is decoupled from status). */
+    public function isPaid(): bool
+    {
+        return $this->paid_at !== null;
     }
 
     /** @return BelongsTo<Workspace, $this> */
@@ -82,5 +91,11 @@ class PosOrder extends Model
     public function cashier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cashier_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function refundedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refunded_by');
     }
 }

@@ -12,16 +12,20 @@ use App\Models\PosOrder;
 use App\Models\PosProduct;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\PosOrderStatusNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * The POS sales engine for a workspace: build an order from catalogue lines,
- * settle it with a payment, or void it. Stock is consumed only when an order is
- * PAID (never on placement), so a pending order never holds inventory hostage.
- * All amounts are workspace-scoped and snapshotted onto the order lines.
+ * The POS sales engine for a workspace. An order has two independent axes:
+ *  - FULFILLMENT ({@see PosOrderStatus}: new -> preparing -> ready -> completed,
+ *    plus cancelled/refunded), advanced through {@see setStatus}, and
+ *  - PAYMENT (`paid_at`), settled by {@see pay} at any point in that flow.
+ *
+ * Stock is consumed only at PAYMENT (never on placement), and restored on
+ * {@see refund}. All amounts are workspace-scoped and snapshotted onto the lines.
  */
 class PosOrderService
 {
@@ -46,7 +50,7 @@ class PosOrderService
     }
 
     /**
-     * Create a PENDING order from catalogue lines. Product name + price are
+     * Create a NEW order from catalogue lines. Product name + price are
      * snapshotted; stock is validated but NOT yet consumed.
      *
      * @param  array{items: array<int, array{product_id: string, qty: int}>, discount?: float|int|null, customer_name?: string|null, note?: string|null}  $data
@@ -67,7 +71,7 @@ class PosOrderService
                 'workspace_id' => $workspace->id,
                 'order_number' => $this->nextOrderNumber($workspace),
                 'source' => $source->value,
-                'status' => PosOrderStatus::Pending->value,
+                'status' => PosOrderStatus::New->value,
                 'member_id' => $member?->id,
                 'customer_name' => $data['customer_name'] ?? null,
                 'cashier_id' => $cashier?->id,
@@ -84,18 +88,20 @@ class PosOrderService
     }
 
     /**
-     * Settle a pending order: record the payment, consume stock for every tracked
-     * line (re-checked under lock), and mark it paid.
+     * Settle an order: record the payment and consume stock for every tracked
+     * line (re-checked under lock). Payment is decoupled from fulfillment — the
+     * `status` column is left untouched. An order can only be paid once, and
+     * never once cancelled or refunded.
      */
     public function pay(Workspace $workspace, PosOrder $order, PaymentMethod $method, User $actor): PosOrder
     {
         $this->ensureBelongs($workspace, $order);
 
-        if ($order->status !== PosOrderStatus::Pending) {
-            throw new RuntimeException(__('messages.pos_order_not_pending'));
+        if ($order->paid_at !== null || in_array($order->status, [PosOrderStatus::Cancelled, PosOrderStatus::Refunded], true)) {
+            throw new RuntimeException(__('messages.pos_order_not_payable'));
         }
 
-        return DB::transaction(function () use ($order, $method, $actor): PosOrder {
+        $paid = DB::transaction(function () use ($order, $method, $actor): PosOrder {
             foreach ($order->items as $item) {
                 $product = $item->pos_product_id !== null
                     ? PosProduct::query()->find($item->pos_product_id)
@@ -122,17 +128,44 @@ class PosOrderService
                 'paid_at' => now(),
             ]);
 
-            $order->forceFill([
-                'status' => PosOrderStatus::Paid->value,
-                'paid_at' => now(),
-            ])->save();
+            $order->forceFill(['paid_at' => now()])->save();
 
             return $order->fresh(['items', 'payments']) ?? $order;
         });
+
+        $this->notifyMember($order, 'paid');
+
+        return $paid;
     }
 
     /**
-     * At-a-glance POS figures for a workspace's dashboard section.
+     * Advance an order's FULFILLMENT status (preparing / ready / completed) and
+     * notify the member. Payment is a separate axis and is not touched here. A
+     * closed order (cancelled/refunded) can no longer move.
+     */
+    public function setStatus(Workspace $workspace, PosOrder $order, PosOrderStatus $to, User $actor): PosOrder
+    {
+        $this->ensureBelongs($workspace, $order);
+
+        if (! in_array($to, [PosOrderStatus::Preparing, PosOrderStatus::Ready, PosOrderStatus::Completed], true)) {
+            throw new RuntimeException(__('messages.pos_order_status_invalid'));
+        }
+
+        if (in_array($order->status, [PosOrderStatus::Cancelled, PosOrderStatus::Refunded], true)) {
+            throw new RuntimeException(__('messages.pos_order_closed'));
+        }
+
+        $order->forceFill(['status' => $to->value])->save();
+
+        $this->notifyMember($order, $to->value);
+
+        return $order;
+    }
+
+    /**
+     * At-a-glance POS figures for a workspace's dashboard section. `pending_orders`
+     * counts OPEN orders (new/preparing/ready); `today_sales` sums orders paid
+     * today, regardless of fulfillment status.
      *
      * @return array{today_sales: string, today_orders: int, pending_orders: int, low_stock: int}
      */
@@ -140,7 +173,7 @@ class PosOrderService
     {
         $paidToday = PosOrder::query()
             ->where('workspace_id', $workspace->id)
-            ->where('status', PosOrderStatus::Paid->value)
+            ->whereNotNull('paid_at')
             ->whereDate('paid_at', now()->toDateString());
 
         return [
@@ -148,7 +181,7 @@ class PosOrderService
             'today_orders' => (clone $paidToday)->count(),
             'pending_orders' => PosOrder::query()
                 ->where('workspace_id', $workspace->id)
-                ->where('status', PosOrderStatus::Pending->value)
+                ->whereIn('status', $this->openStatuses())
                 ->count(),
             'low_stock' => PosProduct::query()
                 ->where('workspace_id', $workspace->id)
@@ -159,18 +192,92 @@ class PosOrderService
         ];
     }
 
-    /** Void a pending order (no stock was consumed, so nothing to restore). */
+    /**
+     * Void an order. Only an OPEN, still-UNPAID order can be cancelled (no stock
+     * was consumed, so nothing to restore). Paid orders are reversed via
+     * {@see refund} instead.
+     */
     public function cancel(Workspace $workspace, PosOrder $order): PosOrder
     {
         $this->ensureBelongs($workspace, $order);
 
-        if ($order->status !== PosOrderStatus::Pending) {
-            throw new RuntimeException(__('messages.pos_order_not_pending'));
+        if ($order->paid_at !== null || ! $order->status->isOpen()) {
+            throw new RuntimeException(__('messages.pos_order_cannot_cancel'));
         }
 
         $order->forceFill(['status' => PosOrderStatus::Cancelled->value])->save();
 
         return $order;
+    }
+
+    /**
+     * Reverse a paid order: restore stock for every tracked line, record a
+     * negative (offsetting) payment, and mark the order refunded. Only a paid,
+     * not-already-refunded order can be refunded.
+     */
+    public function refund(Workspace $workspace, PosOrder $order, User $actor): PosOrder
+    {
+        $this->ensureBelongs($workspace, $order);
+
+        if ($order->paid_at === null || $order->status === PosOrderStatus::Refunded) {
+            throw new RuntimeException(__('messages.pos_order_not_refundable'));
+        }
+
+        $refunded = DB::transaction(function () use ($order, $actor): PosOrder {
+            $order->loadMissing(['items', 'payments']);
+
+            foreach ($order->items as $item) {
+                $product = $item->pos_product_id !== null
+                    ? PosProduct::query()->find($item->pos_product_id)
+                    : null;
+
+                if ($product !== null && $product->track_stock) {
+                    $this->products->adjustStock(
+                        $order->workspace,
+                        $product,
+                        StockMovementType::Restock,
+                        $item->qty,
+                        'refund '.$order->order_number,
+                        $actor,
+                    );
+                }
+            }
+
+            $method = $order->payments->first()?->method ?? PaymentMethod::Cash;
+
+            $order->payments()->create([
+                'amount' => -$order->total,
+                'method' => $method->value,
+                'received_by' => $actor->id,
+                'paid_at' => now(),
+            ]);
+
+            $order->forceFill([
+                'status' => PosOrderStatus::Refunded->value,
+                'refunded_at' => now(),
+                'refunded_by' => $actor->id,
+            ])->save();
+
+            return $order->fresh(['items', 'payments']) ?? $order;
+        });
+
+        $this->notifyMember($order, 'refunded');
+
+        return $refunded;
+    }
+
+    /**
+     * Send the order's member (if any) the in-app lifecycle notification. Walk-in
+     * orders have no member and notify no one.
+     */
+    private function notifyMember(PosOrder $order, string $event): void
+    {
+        if ($order->member_id === null) {
+            return;
+        }
+
+        $order->loadMissing('member');
+        $order->member?->notify(new PosOrderStatusNotification($order, $event));
     }
 
     /**
@@ -233,6 +340,20 @@ class PosOrderService
         if ((string) $order->workspace_id !== (string) $workspace->id) {
             abort(404, __('messages.pos_order_not_found'));
         }
+    }
+
+    /**
+     * The fulfillment statuses that keep an order in the active queue.
+     *
+     * @return array<int, string>
+     */
+    private function openStatuses(): array
+    {
+        return [
+            PosOrderStatus::New->value,
+            PosOrderStatus::Preparing->value,
+            PosOrderStatus::Ready->value,
+        ];
     }
 
     /**

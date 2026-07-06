@@ -128,10 +128,10 @@ class OwnerReportsService
             ->pluck('total', 'ym');
 
         // Café/POS sales count as revenue too, keyed by the month each paid order
-        // was settled.
+        // was settled. Refunded orders are reversed and no longer count.
         $posRevenueByMonth = PosOrder::query()
             ->where('workspace_id', $workspace->id)
-            ->where('status', PosOrderStatus::Paid->value)
+            ->where('status', '!=', PosOrderStatus::Refunded->value)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
             ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(total) as total")
