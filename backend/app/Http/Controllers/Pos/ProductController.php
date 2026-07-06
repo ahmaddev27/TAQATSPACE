@@ -124,16 +124,15 @@ class ProductController extends PosController
         $this->requirePosPermission($request->user(), PosPermission::ManageProducts);
 
         $data = $request->validated();
+        $type = StockMovementType::from($data['type']);
+        $qty = (int) $data['qty'];
+        $note = $data['note'] ?? null;
 
         try {
-            $updated = $this->products->adjustStock(
-                $workspace,
-                $product,
-                StockMovementType::from($data['type']),
-                (int) $data['qty_change'],
-                $data['note'] ?? null,
-                $request->user(),
-            );
+            // Restock ADDS the amount; adjustment SETS the corrected count.
+            $updated = $type === StockMovementType::Restock
+                ? $this->products->adjustStock($workspace, $product, StockMovementType::Restock, $qty, $note, $request->user())
+                : $this->products->setStock($workspace, $product, $qty, $note, $request->user());
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }

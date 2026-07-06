@@ -307,14 +307,21 @@ function StockModal({
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   const [type, setType] = useState<StockMovementType>("restock");
-  const [qtyChange, setQtyChange] = useState("");
+  const [qty, setQty] = useState("");
   const [note, setNote] = useState("");
+
+  // Restock ADDS an amount (start empty); adjustment SETS the corrected count
+  // (start from the current stock so the owner edits the true total).
+  const onTypeChange = (next: StockMovementType) => {
+    setType(next);
+    setQty(next === "adjustment" ? String(product.stock_qty) : "");
+  };
 
   const submit = () =>
     startTransition(async () => {
       const input: AdjustStockInput = {
         type,
-        qty_change: Number(qtyChange),
+        qty: Number(qty),
         note: note.trim() || null,
       };
       const res = await adjustPosStock(product.id, input);
@@ -346,19 +353,24 @@ function StockModal({
         <Field label={t("movementType")}>
           <Select
             value={type}
-            onChange={(e) => setType(e.target.value as StockMovementType)}
+            onChange={(e) => onTypeChange(e.target.value as StockMovementType)}
           >
             <option value="restock">{t("typeRestock")}</option>
             <option value="adjustment">{t("typeAdjustment")}</option>
           </Select>
         </Field>
-        <Field label={t("qtyChange")} hint={t("qtyChangeHint")} error={errors.qty_change?.[0]}>
+        <Field
+          label={type === "restock" ? t("addAmount") : t("correctedCount")}
+          hint={type === "restock" ? t("addAmountHint") : t("correctedCountHint")}
+          error={errors.qty?.[0]}
+        >
           <Input
             type="number"
             step="1"
+            min="0"
             className="ltr"
-            value={qtyChange}
-            onChange={(e) => setQtyChange(e.target.value)}
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
           />
         </Field>
         <Field label={t("note")} optional error={errors.note?.[0]}>

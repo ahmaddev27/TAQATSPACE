@@ -57,8 +57,8 @@ export interface PosProductInput {
 /** Body for `POST /pos/products/{id}/stock`. */
 export interface AdjustStockInput {
   type: StockMovementType;
-  /** Signed delta: positive adds, negative removes. */
-  qty_change: number;
+  /** Restock: amount to ADD. Adjustment: the corrected ABSOLUTE count to set. */
+  qty: number;
   note?: string | null;
 }
 
