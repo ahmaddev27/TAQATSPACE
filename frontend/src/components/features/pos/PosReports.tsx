@@ -49,19 +49,21 @@ export function PosReports({ report }: Props) {
             alignItems: "flex-end",
           }}
         >
-          <Field label={t("from")} className="ltr" htmlFor="pos-report-from">
+          <Field label={t("from")} htmlFor="pos-report-from">
             <Input
               id="pos-report-from"
               type="date"
+              className="ltr"
               value={from}
               max={to || undefined}
               onChange={(e) => setFrom(e.target.value)}
             />
           </Field>
-          <Field label={t("to")} className="ltr" htmlFor="pos-report-to">
+          <Field label={t("to")} htmlFor="pos-report-to">
             <Input
               id="pos-report-to"
               type="date"
+              className="ltr"
               value={to}
               min={from || undefined}
               onChange={(e) => setTo(e.target.value)}

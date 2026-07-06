@@ -1,5 +1,8 @@
 import type { IconName } from "@/components/ui/Icon";
-import type { AdminPermission, UserRole } from "@/lib/types/auth";
+import type { AdminPermission, PosPermission, UserRole } from "@/lib/types/auth";
+
+/** Any permission that can gate a nav item (admin areas or POS/cashier areas). */
+export type NavPermission = AdminPermission | PosPermission;
 
 export interface NavItem {
   /** Translation key under `nav.items.*`. */
@@ -19,7 +22,7 @@ export interface NavItem {
    * this permission (admin accounts carry `permissions` on the auth payload).
    * Items without it are visible to everyone in the role.
    */
-  permission?: AdminPermission;
+  permission?: NavPermission;
   /**
    * Gates the item on realtime-chat (Firebase) availability so the in-app 1:1
    * surface is never duplicated. `"primary"` items (the realtime Chat) show only
@@ -245,6 +248,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
       {
         items: [
           { key: "pos", href: "/cashier", icon: "receipt" },
+          {
+            key: "posProducts",
+            href: "/cashier/products",
+            icon: "coffee",
+            permission: "pos_manage_products",
+          },
           { key: "posReports", href: "/cashier/reports", icon: "chart" },
         ],
       },
