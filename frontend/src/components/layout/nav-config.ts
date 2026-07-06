@@ -7,9 +7,17 @@ export type NavPermission = AdminPermission | PosPermission;
 export interface NavItem {
   /** Translation key under `nav.items.*`. */
   key: string;
-  /** Route relative to the locale root (e.g. `/owner/members`). */
+  /**
+   * Route relative to the locale root (e.g. `/owner/members`). For a parent that
+   * only groups `children`, this is a placeholder (e.g. `"#"`) and is not linked.
+   */
   href: string;
   icon: IconName;
+  /**
+   * Nested items rendered as a collapsible sub-group under this one. When set,
+   * this item is a toggle (its own `href` is not navigated to).
+   */
+  children?: NavItem[];
   /** Optional notification count badge. */
   badge?: number;
   /**
@@ -61,12 +69,25 @@ export function filterNavByPermissions(
 
   const granted = new Set(permissions ?? []);
 
+  // Keep an item when it (a) needs no permission or the user has it, AND (b) if
+  // it groups children, at least one child survives the same test. Children are
+  // filtered recursively so a nested, permission-gated item is hidden too.
+  const keep = (item: NavItem): NavItem | null => {
+    if (item.permission && !granted.has(item.permission)) return null;
+
+    if (item.children) {
+      const children = item.children.map(keep).filter((c): c is NavItem => c !== null);
+      if (children.length === 0) return null;
+      return { ...item, children };
+    }
+
+    return item;
+  };
+
   const groups = nav.groups
     .map((group) => ({
       ...group,
-      items: group.items.filter(
-        (item) => !item.permission || granted.has(item.permission),
-      ),
+      items: group.items.map(keep).filter((i): i is NavItem => i !== null),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -187,9 +208,17 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "packages", href: "/owner/packages", icon: "wifi" },
           { key: "resources", href: "/owner/resources", icon: "layers" },
-          { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
-          { key: "posSell", href: "/owner/pos/terminal", icon: "receipt" },
-          { key: "posProducts", href: "/owner/pos", icon: "coffee" },
+          {
+            key: "posGroup",
+            href: "#",
+            icon: "coffee",
+            children: [
+              { key: "posSell", href: "/owner/pos/terminal", icon: "receipt" },
+              { key: "posProducts", href: "/owner/pos", icon: "coffee" },
+              { key: "posReports", href: "/owner/pos/reports", icon: "chart" },
+              { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
+            ],
+          },
         ],
       },
       {
@@ -212,7 +241,6 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionReports",
         items: [
           { key: "reports", href: "/owner/reports", icon: "chart" },
-          { key: "posReports", href: "/owner/pos/reports", icon: "coffee" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
         ],
       },
