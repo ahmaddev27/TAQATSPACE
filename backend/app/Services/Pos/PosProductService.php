@@ -133,6 +133,43 @@ class PosProductService
         });
     }
 
+    /**
+     * Correct a tracked product's stock to an ABSOLUTE count (a stock-take fix).
+     * The delta is computed under lock and journalled as an adjustment, so the
+     * final count is exactly $newQty regardless of concurrent changes.
+     */
+    public function setStock(
+        Workspace $workspace,
+        PosProduct $product,
+        int $newQty,
+        ?string $note,
+        User $actor,
+    ): PosProduct {
+        $this->ensureBelongs($workspace, $product);
+
+        if (! $product->track_stock) {
+            throw new RuntimeException(__('messages.pos_product_not_tracked'));
+        }
+
+        if ($newQty < 0) {
+            throw new RuntimeException(__('messages.pos_stock_insufficient'));
+        }
+
+        return DB::transaction(function () use ($product, $newQty, $note, $actor): PosProduct {
+            $locked = PosProduct::query()->lockForUpdate()->findOrFail($product->id);
+            $delta = $newQty - $locked->stock_qty;
+
+            if ($delta === 0) {
+                throw new RuntimeException(__('messages.pos_stock_no_change'));
+            }
+
+            $locked->forceFill(['stock_qty' => $newQty])->save();
+            $this->journal($locked, StockMovementType::Adjustment, $delta, $actor, $note);
+
+            return $locked->refresh();
+        });
+    }
+
     /** Append a stock-movement ledger row (never mutated after creation). */
     private function journal(PosProduct $product, StockMovementType $type, int $qtyChange, User $actor, ?string $note): void
     {
