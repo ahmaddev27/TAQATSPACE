@@ -33,6 +33,7 @@ class PosOrderResource extends JsonResource
             'discount' => (string) $this->discount,
             'total' => (string) $this->total,
             'paid_at' => $this->paid_at?->toIso8601String(),
+            'refunded_at' => $this->refunded_at?->toIso8601String(),
             'items' => PosOrderItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

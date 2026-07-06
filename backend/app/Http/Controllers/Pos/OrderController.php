@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Pos;
 
 use App\Enums\PaymentMethod;
 use App\Enums\PosOrderSource;
+use App\Enums\PosOrderStatus;
 use App\Enums\PosPermission;
 use App\Http\Requests\Pos\PayOrderRequest;
 use App\Http\Requests\Pos\StoreOrderRequest;
+use App\Http\Requests\Pos\UpdateOrderStatusRequest;
 use App\Http\Resources\PosOrderResource;
 use App\Models\PosOrder;
 use App\Services\Pos\PosOrderService;
@@ -18,9 +20,11 @@ use Illuminate\Http\Request;
 use RuntimeException;
 
 /**
- * Counter-side POS orders, operated by a cashier (or the owner). Every mutation
- * requires the `pos_sell` permission (owners always pass). Orders are created
- * pending and settled with a payment, which is when stock is consumed.
+ * Counter-side POS orders, operated by a cashier (or the owner). Most mutations
+ * require the `pos_sell` permission; refunds require `pos_refund` (owners always
+ * pass). An order carries two independent axes — fulfillment status and payment
+ * — settled respectively via {@see setStatus}/{@see pay}. Stock is consumed at
+ * payment and restored on {@see refund}.
  */
 class OrderController extends PosController
 {
@@ -135,6 +139,55 @@ class OrderController extends PosController
         }
 
         return ApiResponse::success(new PosOrderResource($paid), __('messages.pos_order_paid'));
+    }
+
+    /**
+     * POST /api/pos/orders/{order}/status — advance fulfillment status.
+     */
+    public function setStatus(UpdateOrderStatusRequest $request, PosOrder $order): JsonResponse
+    {
+        $workspace = $this->posWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $this->requirePosPermission($request->user(), PosPermission::Sell);
+
+        try {
+            $updated = $this->orders->setStatus(
+                $workspace,
+                $order,
+                PosOrderStatus::from($request->validated()['status']),
+                $request->user(),
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        return ApiResponse::success(new PosOrderResource($updated), __('messages.pos_order_status_updated'));
+    }
+
+    /**
+     * POST /api/pos/orders/{order}/refund — reverse a paid order.
+     */
+    public function refund(Request $request, PosOrder $order): JsonResponse
+    {
+        $workspace = $this->posWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $this->requirePosPermission($request->user(), PosPermission::Refund);
+
+        try {
+            $refunded = $this->orders->refund($workspace, $order, $request->user());
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+
+        return ApiResponse::success(new PosOrderResource($refunded), __('messages.pos_order_refunded'));
     }
 
     /**

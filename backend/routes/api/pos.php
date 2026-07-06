@@ -29,5 +29,7 @@ Route::middleware(['auth:sanctum'])
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
         Route::post('/orders/{order}/pay', [OrderController::class, 'pay']);
+        Route::post('/orders/{order}/status', [OrderController::class, 'setStatus']);
+        Route::post('/orders/{order}/refund', [OrderController::class, 'refund']);
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     });

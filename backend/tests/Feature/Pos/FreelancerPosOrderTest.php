@@ -44,12 +44,12 @@ class FreelancerPosOrderTest extends TestCase
         ]);
         $place->assertCreated()
             ->assertJsonPath('data.source', 'freelancer')
-            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.status', 'new')
             ->assertJsonPath('data.total', '12.00');
 
         // The order lands in the owner's/cashier's queue and can be settled there.
         Sanctum::actingAs($owner);
-        $this->getJson('/api/pos/orders?status=pending')->assertOk()->assertJsonCount(1, 'data.orders');
+        $this->getJson('/api/pos/orders?status=new')->assertOk()->assertJsonCount(1, 'data.orders');
         $this->postJson("/api/pos/orders/{$place->json('data.id')}/pay", ['method' => 'cash'])->assertOk();
         $this->assertSame(8, $product->fresh()->stock_qty);
     }
