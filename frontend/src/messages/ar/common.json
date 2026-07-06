@@ -82,6 +82,8 @@
     "items": {
       "dashboard": "لوحة التحكم",
       "pos": "نقطة البيع",
+      "posSell": "نقطة البيع",
+      "posProducts": "منتجات الكافيه",
       "members": "المشتركون",
       "expenses": "المصاريف",
       "resources": "الموارد",

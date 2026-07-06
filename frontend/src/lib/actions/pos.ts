@@ -21,9 +21,10 @@ function revalidatePos(): void {
   revalidatePath("/[locale]/(dashboard)/owner/pos", "page");
 }
 
-/** Orders surface on both the owner POS page and the cashier terminal. */
+/** Orders surface on the owner POS pages and the cashier terminal. */
 function revalidateOrders(): void {
   revalidatePath("/[locale]/(dashboard)/owner/pos", "page");
+  revalidatePath("/[locale]/(dashboard)/owner/pos/terminal", "page");
   revalidatePath("/[locale]/(dashboard)/cashier", "page");
 }
 
