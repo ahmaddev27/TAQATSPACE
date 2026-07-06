@@ -45,6 +45,7 @@
         "pos_order_paid": "تم دفع طلبك",
         "pos_order_completed": "تم تسليم طلبك",
         "pos_order_refunded": "تم استرجاع طلبك",
+        "pos_new_order": "طلب كافيه جديد",
         "generic": "إشعار"
       }
     },

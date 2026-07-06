@@ -8,14 +8,17 @@ use App\Enums\PaymentMethod;
 use App\Enums\PosOrderSource;
 use App\Enums\PosOrderStatus;
 use App\Enums\StockMovementType;
+use App\Enums\UserStatus;
 use App\Models\PosOrder;
 use App\Models\PosProduct;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\PosNewOrderNotification;
 use App\Notifications\PosOrderStatusNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use RuntimeException;
 
 /**
@@ -66,7 +69,7 @@ class PosOrderService
         $subtotal = array_sum(array_column($lines, 'line_total'));
         $discount = min(max((float) ($data['discount'] ?? 0), 0), $subtotal);
 
-        return DB::transaction(function () use ($workspace, $source, $data, $cashier, $member, $lines, $subtotal, $discount): PosOrder {
+        $order = DB::transaction(function () use ($workspace, $source, $data, $cashier, $member, $lines, $subtotal, $discount): PosOrder {
             $order = PosOrder::query()->create([
                 'workspace_id' => $workspace->id,
                 'order_number' => $this->nextOrderNumber($workspace),
@@ -85,6 +88,15 @@ class PosOrderService
 
             return $order->load('items');
         });
+
+        // A freelancer placing an order remotely won't be seen unless staff are
+        // watching the queue — alert the owner + active cashiers. A cashier's own
+        // walk-in ring-up needs no alert.
+        if ($source === PosOrderSource::Freelancer) {
+            $this->notifyStaff($workspace, $order);
+        }
+
+        return $order;
     }
 
     /**
@@ -278,6 +290,22 @@ class PosOrderService
 
         $order->loadMissing('member');
         $order->member?->notify(new PosOrderStatusNotification($order, $event));
+    }
+
+    /** Alert the workspace's POS staff (owner + active cashiers) of a new order. */
+    private function notifyStaff(Workspace $workspace, PosOrder $order): void
+    {
+        $workspace->loadMissing('owner');
+
+        $recipients = collect([$workspace->owner])
+            ->merge($workspace->cashiers()->where('status', UserStatus::Active->value)->get())
+            ->filter();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send($recipients, new PosNewOrderNotification($order->loadMissing('member')));
     }
 
     /**

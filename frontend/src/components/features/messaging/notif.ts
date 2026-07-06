@@ -54,6 +54,8 @@ export function notifPresentation(type: string): NotifPresentation {
       return { icon: "checkCircle", tone: "ok" };
     case "pos_order_refunded":
       return { icon: "alert", tone: "warn" };
+    case "pos_new_order":
+      return { icon: "inbox", tone: "info" };
     default:
       return { icon: "bell", tone: "info" };
   }
@@ -100,6 +102,7 @@ export function notifHref(
     case "pos_order_paid":
     case "pos_order_completed":
     case "pos_order_refunded":
+    case "pos_new_order":
       return role === "owner" ? `${base}/pos/terminal` : `${base}/pos`;
     default:
       return null;
