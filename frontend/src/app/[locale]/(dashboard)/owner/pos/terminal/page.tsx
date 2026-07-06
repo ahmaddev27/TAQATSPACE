@@ -4,6 +4,7 @@ import {
   ownerPosProducts,
   ownerPosSummary,
   ownerPosOpenOrders,
+  ownerPosRecentOrders,
 } from "@/lib/api/pos";
 import type { PosSummary } from "@/lib/types/pos";
 
@@ -24,9 +25,10 @@ export default async function OwnerPosTerminalPage({
   setRequestLocale(locale);
   const t = await getTranslations("cashier.terminal");
 
-  const [productsResult, openOrders] = await Promise.all([
+  const [productsResult, openOrders, recentOrders] = await Promise.all([
     ownerPosProducts(),
     ownerPosOpenOrders(),
+    ownerPosRecentOrders(),
   ]);
 
   // The summary needs `pos_view_reports`; keep the terminal resilient (owners
@@ -48,6 +50,7 @@ export default async function OwnerPosTerminalPage({
       <PosTerminal
         products={productsResult.products}
         openOrders={openOrders}
+        recentOrders={recentOrders}
         summary={summary}
       />
     </div>

@@ -68,6 +68,11 @@
         "walkIn": "Walk-in",
         "items": "{count, plural, one {# item} other {# items}}"
       },
+      "recent": {
+        "heading": "Recent orders",
+        "subtitle": "The latest orders across all statuses.",
+        "empty": "No orders yet."
+      },
       "toast": {
         "paid": "Payment recorded",
         "cancelled": "Order cancelled",

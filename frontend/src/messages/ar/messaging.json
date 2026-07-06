@@ -40,6 +40,11 @@
         "new_review": "تقييم جديد",
         "workspace_status_changed": "تغيّر حالة مساحتك",
         "new_contact_message": "رسالة تواصل جديدة",
+        "pos_order_preparing": "طلبك قيد التحضير",
+        "pos_order_ready": "طلبك جاهز",
+        "pos_order_paid": "تم دفع طلبك",
+        "pos_order_completed": "تم تسليم طلبك",
+        "pos_order_refunded": "تم استرجاع طلبك",
         "generic": "إشعار"
       }
     },

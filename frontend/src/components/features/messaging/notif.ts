@@ -44,6 +44,16 @@ export function notifPresentation(type: string): NotifPresentation {
       return { icon: "user", tone: "info" };
     case "new_contact_message":
       return { icon: "mail", tone: "info" };
+    case "pos_order_preparing":
+      return { icon: "coffee", tone: "warn" };
+    case "pos_order_ready":
+      return { icon: "checkCircle", tone: "info" };
+    case "pos_order_paid":
+      return { icon: "wallet", tone: "ok" };
+    case "pos_order_completed":
+      return { icon: "checkCircle", tone: "ok" };
+    case "pos_order_refunded":
+      return { icon: "alert", tone: "warn" };
     default:
       return { icon: "bell", tone: "info" };
   }
@@ -85,6 +95,12 @@ export function notifHref(
       return `${base}/chat`;
     case "seat_assigned":
       return role === "owner" ? `${base}/seats` : `${base}`;
+    case "pos_order_preparing":
+    case "pos_order_ready":
+    case "pos_order_paid":
+    case "pos_order_completed":
+    case "pos_order_refunded":
+      return role === "owner" ? `${base}/pos/terminal` : `${base}/pos`;
     default:
       return null;
   }
