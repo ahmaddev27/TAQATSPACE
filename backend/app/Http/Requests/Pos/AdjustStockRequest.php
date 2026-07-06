@@ -22,7 +22,9 @@ class AdjustStockRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::in([StockMovementType::Restock->value, StockMovementType::Adjustment->value])],
-            'qty_change' => ['required', 'integer', 'not_in:0', 'between:-1000000,1000000'],
+            // For a restock this is the amount to ADD; for an adjustment it is the
+            // corrected ABSOLUTE count to set. Interpreted by `type` in the controller.
+            'qty' => ['required', 'integer', 'min:0', 'max:1000000'],
             'note' => ['nullable', 'string', 'max:255'],
         ];
     }

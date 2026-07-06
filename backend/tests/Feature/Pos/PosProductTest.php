@@ -53,32 +53,41 @@ class PosProductTest extends TestCase
         $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'stock_qty' => 10]);
         Sanctum::actingAs($owner);
 
+        // Restock ADDS the amount: 10 + 5 = 15.
         $this->postJson("/api/pos/products/{$product->id}/stock", [
             'type' => StockMovementType::Restock->value,
-            'qty_change' => 5,
+            'qty' => 5,
         ])->assertOk()->assertJsonPath('data.stock_qty', 15);
 
+        // Adjustment SETS the corrected absolute count (not a delta): -> 12.
         $this->postJson("/api/pos/products/{$product->id}/stock", [
             'type' => StockMovementType::Adjustment->value,
-            'qty_change' => -3,
-            'note' => 'كسر',
+            'qty' => 12,
+            'note' => 'جرد',
         ])->assertOk()->assertJsonPath('data.stock_qty', 12);
 
         $this->assertSame(2, $product->stockMovements()->count());
+        // The adjustment journalled the delta (12 - 15 = -3).
+        $this->assertDatabaseHas('pos_stock_movements', [
+            'pos_product_id' => $product->id,
+            'type' => StockMovementType::Adjustment->value,
+            'qty_change' => -3,
+            'stock_after' => 12,
+        ]);
     }
 
-    public function test_adjustment_that_would_go_negative_is_rejected(): void
+    public function test_adjustment_to_same_count_is_rejected_as_no_change(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();
-        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'stock_qty' => 2]);
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'stock_qty' => 7]);
         Sanctum::actingAs($owner);
 
         $this->postJson("/api/pos/products/{$product->id}/stock", [
             'type' => StockMovementType::Adjustment->value,
-            'qty_change' => -5,
+            'qty' => 7,
         ])->assertStatus(422);
 
-        $this->assertSame(2, $product->fresh()->stock_qty);
+        $this->assertSame(7, $product->fresh()->stock_qty);
     }
 
     public function test_cashier_needs_manage_permission_to_create_products(): void

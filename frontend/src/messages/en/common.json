@@ -83,6 +83,8 @@
       "dashboard": "Dashboard",
       "pos": "Point of sale",
       "posReports": "POS reports",
+      "posSell": "Point of sale",
+      "posProducts": "Café products",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",
