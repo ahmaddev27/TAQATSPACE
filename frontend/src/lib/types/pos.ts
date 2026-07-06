@@ -86,6 +86,7 @@ export interface PosOrder {
   source: PosOrderSource;
   status: PosOrderStatus;
   customer_name: string | null;
+  note: string | null;
   member?: PosOrderMember | null;
   /** Decimal strings. */
   subtotal: string;

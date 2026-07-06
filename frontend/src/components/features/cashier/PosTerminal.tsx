@@ -474,6 +474,14 @@ function QueueRow({ order }: { order: PosOrder }) {
           {t("items", { count: itemCount })} ·{" "}
           <span className="tnum">{money(order.total)}</span>
         </span>
+        {order.note && (
+          <span
+            className="muted"
+            style={{ fontSize: "var(--fs-sm)", fontStyle: "italic" }}
+          >
+            “{order.note}”
+          </span>
+        )}
       </div>
       <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
         <Segmented

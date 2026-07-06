@@ -24,6 +24,7 @@ class PosOrderResource extends JsonResource
             'source' => $this->source->value,
             'status' => $this->status->value,
             'customer_name' => $this->customer_name,
+            'note' => $this->note,
             'member' => $this->whenLoaded('member', fn () => $this->member ? [
                 'id' => $this->member->id,
                 'name' => $this->member->name,
