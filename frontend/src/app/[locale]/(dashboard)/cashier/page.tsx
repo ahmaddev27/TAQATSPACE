@@ -5,6 +5,7 @@ import {
   cashierPosSummary,
   cashierPosOrders,
 } from "@/lib/api/pos";
+import type { PosSummary } from "@/lib/types/pos";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,19 @@ export default async function CashierPosPage({
   setRequestLocale(locale);
   const t = await getTranslations("cashier.terminal");
 
-  const [summary, productsResult, pendingResult] = await Promise.all([
-    cashierPosSummary(),
+  const [productsResult, pendingResult] = await Promise.all([
     cashierPosProducts(),
     cashierPosOrders({ status: "pending", per_page: 50 }),
   ]);
+
+  // The summary needs `pos_view_reports`; a sell-only cashier must still reach
+  // the terminal, so a 403 here just hides the stat tiles instead of erroring.
+  let summary: PosSummary | null = null;
+  try {
+    summary = await cashierPosSummary();
+  } catch {
+    summary = null;
+  }
 
   return (
     <div className="page">
