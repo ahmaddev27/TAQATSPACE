@@ -14,6 +14,7 @@ import {
   inviteCashier,
   updateCashierPermissions,
   deactivateCashier,
+  deleteCashierAccount,
   resendCashierInvitation,
   deleteCashierInvitation,
 } from "@/lib/actions/owner";
@@ -59,6 +60,28 @@ export function CashiersManager({ cashiers, invitations }: Props) {
       setBusyId(null);
       if (res.ok) {
         toast({ tone: "ok", title: t("deactivatedSuccess") });
+      } else {
+        toast({ tone: "err", title: t("error"), body: res.message });
+      }
+    });
+  };
+
+  const onDeleteCashier = async (cashier: Cashier) => {
+    const ok = await confirm({
+      title: t("confirmDeleteTitle"),
+      message: t("confirmDeleteMsg", { name: cashier.name }),
+      confirmLabel: t("delete"),
+      tone: "danger",
+      icon: "trash",
+    });
+    if (!ok) return;
+
+    setBusyId(cashier.id);
+    startTransition(async () => {
+      const res = await deleteCashierAccount(cashier.id);
+      setBusyId(null);
+      if (res.ok) {
+        toast({ tone: "ok", title: t("deletedSuccess") });
       } else {
         toast({ tone: "err", title: t("error"), body: res.message });
       }
@@ -135,13 +158,22 @@ export function CashiersManager({ cashiers, invitations }: Props) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    icon="trash"
+                    icon="lock"
                     loading={pending && busyId === c.id}
                     onClick={() => onDeactivate(c)}
                   >
                     {t("deactivate")}
                   </Button>
                 )}
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon="trash"
+                  loading={pending && busyId === c.id}
+                  onClick={() => onDeleteCashier(c)}
+                >
+                  {t("delete")}
+                </Button>
               </div>
             </div>
           ))

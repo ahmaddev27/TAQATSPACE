@@ -246,6 +246,23 @@ class CashierManagementTest extends TestCase
         $this->assertDatabaseMissing('cashier_invitations', ['id' => $invitation->id]);
     }
 
+    public function test_owner_permanently_deletes_a_cashier(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $cashier = User::factory()->create([
+            'role' => UserRole::Cashier->value,
+            'workspace_id' => $workspace->id,
+        ]);
+        $foreign = User::factory()->create(['role' => UserRole::Cashier->value]);
+        Sanctum::actingAs($owner);
+
+        // A cashier of another workspace is not deletable here.
+        $this->deleteJson("/api/workspace/cashiers/{$foreign->id}/permanent")->assertNotFound();
+
+        $this->deleteJson("/api/workspace/cashiers/{$cashier->id}/permanent")->assertOk();
+        $this->assertDatabaseMissing('users', ['id' => $cashier->id]);
+    }
+
     /**
      * @return array{0: User, 1: Workspace}
      */

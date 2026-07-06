@@ -28,6 +28,7 @@ return [
     'cashier_invite_deleted' => 'Invitation deleted.',
     'cashier_updated' => 'Cashier updated.',
     'cashier_deactivated' => 'Cashier deactivated.',
+    'cashier_deleted' => 'Cashier deleted.',
     'cashier_welcome' => 'Welcome aboard!',
     'cashier_email_taken' => 'This email is already in use.',
     'cashier_invite_invalid' => 'This invitation is invalid or has expired.',
