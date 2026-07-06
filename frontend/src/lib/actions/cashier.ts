@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
+import { ROLE_COOKIE, TOKEN_MAX_AGE } from "@/lib/auth";
 import type { User, UserRole } from "@/lib/types/auth";
 
 /** Shape returned by the accept endpoint on success. */
@@ -18,10 +20,26 @@ export interface AcceptCashierInvitationResult {
 export async function acceptCashierInvitation(
   invitationId: string,
 ): Promise<ActionResult<AcceptCashierInvitationResult>> {
-  return authedMutate<AcceptCashierInvitationResult>(
+  const result = await authedMutate<AcceptCashierInvitationResult>(
     `/cashier/invitations/${invitationId}/accept`,
     { method: "POST" },
   );
+
+  // The account's role changed to `cashier`; refresh the middleware-readable
+  // role cookie so it routes to /cashier instead of bouncing to the stale
+  // (freelancer placeholder) dashboard.
+  if (result.ok) {
+    const store = await cookies();
+    store.set(ROLE_COOKIE, result.data.role, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: TOKEN_MAX_AGE,
+    });
+  }
+
+  return result;
 }
 
 /**

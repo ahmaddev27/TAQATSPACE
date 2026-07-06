@@ -23,6 +23,9 @@ return [
 
     // POS / cashier staff
     'cashier_invited' => 'Invitation sent.',
+    'cashier_already_invited' => 'This email already has an open invitation — resend it instead.',
+    'cashier_invite_resent' => 'Invitation resent.',
+    'cashier_invite_deleted' => 'Invitation deleted.',
     'cashier_updated' => 'Cashier updated.',
     'cashier_deactivated' => 'Cashier deactivated.',
     'cashier_welcome' => 'Welcome aboard!',

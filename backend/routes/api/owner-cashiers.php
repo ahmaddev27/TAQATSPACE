@@ -18,6 +18,8 @@ Route::middleware(['auth:sanctum', 'role.owner'])
     ->group(function (): void {
         Route::get('/', [CashierController::class, 'index']);
         Route::post('/invite', [CashierController::class, 'invite']);
+        Route::post('/invitations/{invitation}/resend', [CashierController::class, 'resendInvitation']);
+        Route::delete('/invitations/{invitation}', [CashierController::class, 'destroyInvitation']);
         Route::put('/{cashier}/permissions', [CashierController::class, 'updatePermissions']);
         Route::delete('/{cashier}', [CashierController::class, 'destroy']);
     });

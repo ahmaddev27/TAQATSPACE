@@ -592,3 +592,27 @@ export async function deactivateCashier(
   if (result.ok) revalidateOwner("cashiers");
   return result;
 }
+
+/** Re-send a pending cashier invitation email (refreshes its expiry). */
+export async function resendCashierInvitation(
+  invitationId: string,
+): Promise<ActionResult<CashierInvitation>> {
+  const result = await authedMutate<CashierInvitation>(
+    `/workspace/cashiers/invitations/${invitationId}/resend`,
+    { method: "POST" },
+  );
+  if (result.ok) revalidateOwner("cashiers");
+  return result;
+}
+
+/** Revoke (delete) a pending cashier invitation. */
+export async function deleteCashierInvitation(
+  invitationId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/cashiers/invitations/${invitationId}`,
+    { method: "DELETE" },
+  );
+  if (result.ok) revalidateOwner("cashiers");
+  return result;
+}

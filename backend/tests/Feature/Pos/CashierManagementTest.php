@@ -207,6 +207,45 @@ class CashierManagementTest extends TestCase
         $this->deleteJson("/api/workspace/cashiers/{$foreign->id}")->assertNotFound();
     }
 
+    public function test_inviting_an_email_that_already_has_an_open_invite_is_rejected(): void
+    {
+        Notification::fake();
+        [$owner, $workspace] = $this->owningWorkspace();
+        CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'dup@mail.ps',
+        ]);
+        Sanctum::actingAs($owner);
+
+        $this->postJson('/api/workspace/cashiers/invite', ['email' => 'dup@mail.ps'])
+            ->assertStatus(422);
+    }
+
+    public function test_owner_resends_and_deletes_an_invitation(): void
+    {
+        Notification::fake();
+        [$owner, $workspace] = $this->owningWorkspace();
+        $invitation = CashierInvitation::factory()->create([
+            'workspace_id' => $workspace->id,
+            'email' => 'staff@mail.ps',
+            'expires_at' => now()->addDay(),
+        ]);
+        Sanctum::actingAs($owner);
+
+        // Resend re-sends the email + pushes the expiry out.
+        $this->postJson("/api/workspace/cashiers/invitations/{$invitation->id}/resend")->assertOk();
+        Notification::assertSentOnDemand(CashierInvitationNotification::class);
+        $this->assertTrue($invitation->fresh()->expires_at->gt(now()->addDays(5)));
+
+        // A foreign workspace's invite is not touchable here.
+        $foreign = CashierInvitation::factory()->create();
+        $this->postJson("/api/workspace/cashiers/invitations/{$foreign->id}/resend")->assertNotFound();
+
+        // Delete revokes it.
+        $this->deleteJson("/api/workspace/cashiers/invitations/{$invitation->id}")->assertOk();
+        $this->assertDatabaseMissing('cashier_invitations', ['id' => $invitation->id]);
+    }
+
     /**
      * @return array{0: User, 1: Workspace}
      */

@@ -35,6 +35,12 @@
       "invitedSuccess": "Invitation sent.",
       "updatedSuccess": "Permissions updated.",
       "deactivatedSuccess": "Staff deactivated.",
+      "resend": "Resend",
+      "deleteInvite": "Delete",
+      "resentSuccess": "Invitation resent.",
+      "inviteDeletedSuccess": "Invitation deleted.",
+      "confirmDeleteInviteTitle": "Delete invitation",
+      "confirmDeleteInviteMsg": "Delete the invitation for {email}?",
       "error": "Something went wrong"
     },
     "dashboard": {
@@ -445,6 +451,13 @@
       "cancel": "Cancel",
       "name": "Name",
       "category": "Category",
+      "categories": {
+        "none": "— none —",
+        "cold_drink": "Cold drink",
+        "hot_drink": "Hot drink",
+        "snacks": "Snacks",
+        "other": "Other"
+      },
       "sku": "SKU",
       "price": "Price",
       "trackStock": "Track inventory for this product",
