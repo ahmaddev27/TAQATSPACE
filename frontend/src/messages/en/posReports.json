@@ -1,0 +1,41 @@
+{
+  "posReports": {
+    "title": "POS reports",
+    "subtitle": "Sales, top products, and settlements over a date range.",
+    "noAccess": "You don't have access to POS reports.",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "empty": "No data for this period.",
+    "totals": {
+      "sales": "Sales",
+      "orders": "Orders",
+      "avg": "Average order"
+    },
+    "refunds": {
+      "title": "Refunds",
+      "count": "{count, plural, one {# refund} other {# refunds}}"
+    },
+    "topProducts": {
+      "title": "Top products",
+      "name": "Product",
+      "qty": "Qty",
+      "total": "Total"
+    },
+    "byCashier": {
+      "title": "By cashier",
+      "name": "Cashier",
+      "orders": "Orders",
+      "total": "Total"
+    },
+    "byMethod": {
+      "title": "By payment method",
+      "method": "Method",
+      "total": "Total"
+    },
+    "method": {
+      "cash": "Cash",
+      "transfer": "Transfer"
+    }
+  }
+}

@@ -486,9 +486,12 @@
       "noOrders": "لا توجد طلبات بعد.",
       "walkIn": "زبون عابر",
       "orderStatus": {
-        "pending": "معلّق",
-        "paid": "مدفوع",
-        "cancelled": "ملغى"
+        "new": "جديد",
+        "preparing": "قيد التحضير",
+        "ready": "جاهز",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "refunded": "مسترجع"
       }
     }
   }

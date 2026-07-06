@@ -112,9 +112,12 @@
       "historySubtitle": "أحدث طلبات الكافيه وحالتها",
       "historyEmpty": "لم تقم بأي طلبات من الكافيه بعد.",
       "orderStatus": {
-        "pending": "قيد الانتظار",
-        "paid": "مدفوع",
-        "cancelled": "ملغى"
+        "new": "جديد",
+        "preparing": "قيد التحضير",
+        "ready": "جاهز",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "refunded": "مسترجع"
       }
     }
   }

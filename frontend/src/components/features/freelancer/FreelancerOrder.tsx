@@ -28,11 +28,17 @@ interface Props {
   orders: PosOrder[];
 }
 
-/** Badge tone per order lifecycle state. */
-const ORDER_TONE: Record<PosOrderStatus, "success" | "warning" | "neutral"> = {
-  paid: "success",
-  pending: "warning",
+/** Badge tone per order fulfillment state. */
+const ORDER_TONE: Record<
+  PosOrderStatus,
+  "success" | "warning" | "neutral" | "info" | "danger"
+> = {
+  new: "neutral",
+  preparing: "warning",
+  ready: "info",
+  completed: "success",
   cancelled: "neutral",
+  refunded: "danger",
 };
 
 /**

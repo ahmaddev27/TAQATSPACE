@@ -486,9 +486,12 @@
       "noOrders": "No orders yet.",
       "walkIn": "Walk-in",
       "orderStatus": {
-        "pending": "Pending",
-        "paid": "Paid",
-        "cancelled": "Cancelled"
+        "new": "New",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
       }
     }
   }

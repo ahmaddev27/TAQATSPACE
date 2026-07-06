@@ -49,7 +49,7 @@ export interface RoleNav {
  */
 export function filterNavByPermissions(
   nav: RoleNav,
-  permissions: readonly AdminPermission[] | undefined,
+  permissions: readonly string[] | undefined,
   isSuperAdmin = false,
 ): RoleNav {
   // A super-admin holds every permission — never hide anything from them, even
@@ -209,6 +209,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         titleKey: "sectionReports",
         items: [
           { key: "reports", href: "/owner/reports", icon: "chart" },
+          { key: "posReports", href: "/owner/pos/reports", icon: "coffee" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
         ],
       },
@@ -242,7 +243,10 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
     roleLabelKey: "cashierRole",
     groups: [
       {
-        items: [{ key: "pos", href: "/cashier", icon: "receipt" }],
+        items: [
+          { key: "pos", href: "/cashier", icon: "receipt" },
+          { key: "posReports", href: "/cashier/reports", icon: "chart" },
+        ],
       },
     ],
   },

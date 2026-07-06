@@ -12,11 +12,17 @@ import type { PosOrderStatus } from "@/lib/types/pos";
 
 export const dynamic = "force-dynamic";
 
-/** Badge tone for each order lifecycle state. */
-const ORDER_TONE: Record<PosOrderStatus, "success" | "warning" | "neutral"> = {
-  paid: "success",
-  pending: "warning",
+/** Badge tone for each fulfillment state. */
+const ORDER_TONE: Record<
+  PosOrderStatus,
+  "success" | "warning" | "neutral" | "info" | "danger"
+> = {
+  new: "neutral",
+  preparing: "warning",
+  ready: "info",
+  completed: "success",
   cancelled: "neutral",
+  refunded: "danger",
 };
 
 export default async function OwnerPosPage({

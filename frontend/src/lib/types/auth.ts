@@ -18,6 +18,13 @@ export type AdminPermission =
   | "manage_messaging"
   | "view_reports";
 
+/** Named permissions that gate the POS (café) area for a cashier account. */
+export type PosPermission =
+  | "pos_sell"
+  | "pos_refund"
+  | "pos_manage_products"
+  | "pos_view_reports";
+
 export interface User {
   id: string;
   name: string;
@@ -38,8 +45,12 @@ export interface User {
   created_at: string;
   /** Present for admin accounts only: holds the elevated super-admin role. */
   is_super_admin?: boolean;
-  /** Present for admin accounts only: the account's effective permissions. */
-  permissions?: AdminPermission[];
+  /**
+   * Effective permission names. Admin accounts carry their admin-area grants;
+   * cashier accounts carry their POS grants (e.g. `pos_refund`). Absent for
+   * roles with no permission tier (owner/freelancer).
+   */
+  permissions?: (AdminPermission | PosPermission)[];
   /**
    * A pending cashier invitation matching this account's email, surfaced during
    * onboarding so the user can Accept/Decline. Present only while

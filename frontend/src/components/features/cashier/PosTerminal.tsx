@@ -9,10 +9,20 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { StatTile } from "@/components/ui/StatTile";
 import { Segmented } from "@/components/ui/Segmented";
-import { createPosOrder, payPosOrder, cancelPosOrder } from "@/lib/actions/pos";
+import { useAuth } from "@/components/providers/AuthProvider";
+import {
+  createPosOrder,
+  payPosOrder,
+  cancelPosOrder,
+  updateOrderStatus,
+  refundOrder,
+} from "@/lib/actions/pos";
 import {
   POS_LOW_STOCK_THRESHOLD,
+  isPosOrderOpen,
+  type PosAdvanceStatus,
   type PosOrder,
+  type PosOrderStatus,
   type PosPaymentMethod,
   type PosProduct,
   type PosSummary,
@@ -21,7 +31,8 @@ import { money } from "@/components/features/owner/format";
 
 interface Props {
   products: PosProduct[];
-  pendingOrders: PosOrder[];
+  /** Open orders (new/preparing/ready) shown in the settle/fulfill queue. */
+  openOrders: PosOrder[];
   /**
    * At-a-glance figures. Null when the actor lacks `pos_view_reports` (the
    * summary endpoint is gated) — the terminal still sells; it just hides the
@@ -38,6 +49,33 @@ interface CartLine {
 
 const PAYMENT_METHODS: PosPaymentMethod[] = ["cash", "transfer"];
 
+/** Next fulfillment status an open order advances to (null when terminal). */
+const NEXT_STATUS: Partial<Record<PosOrderStatus, PosAdvanceStatus>> = {
+  new: "preparing",
+  preparing: "ready",
+  ready: "completed",
+};
+
+/** i18n key (under cashier.terminal.queue) for the "advance to X" action. */
+const ADVANCE_LABEL: Record<PosAdvanceStatus, string> = {
+  preparing: "markPreparing",
+  ready: "markReady",
+  completed: "markCompleted",
+};
+
+/** Badge tone per fulfillment status. */
+const STATUS_TONE: Record<
+  PosOrderStatus,
+  "neutral" | "info" | "warning" | "success" | "danger"
+> = {
+  new: "neutral",
+  preparing: "warning",
+  ready: "info",
+  completed: "success",
+  cancelled: "neutral",
+  refunded: "danger",
+};
+
 /** True when a tracked product sits at/below the low-stock threshold. */
 function isLowStock(p: PosProduct): boolean {
   return p.track_stock && p.stock_qty <= POS_LOW_STOCK_THRESHOLD;
@@ -50,9 +88,17 @@ function isLowStock(p: PosProduct): boolean {
  * and flows down; every mutation runs through a Server Action that revalidates
  * the terminal, so summary + queue refresh on the next render.
  */
-export function PosTerminal({ products, pendingOrders, summary }: Props) {
+export function PosTerminal({ products, openOrders, summary }: Props) {
   const t = useTranslations("cashier.terminal");
+  const { user } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
+
+  // Refunds require `pos_refund`. Owners (any non-cashier actor here) always
+  // pass; a cashier needs the grant. If the permission list is absent, show the
+  // control and let the backend's 403 surface as a toast.
+  const canRefund =
+    user?.role !== "cashier" ||
+    (user.permissions?.includes("pos_refund") ?? true);
 
   const addProduct = useCallback((product: PosProduct) => {
     setLines((prev) => {
@@ -108,7 +154,7 @@ export function PosTerminal({ products, pendingOrders, summary }: Props) {
         <Cart lines={lines} setLines={setLines} />
       </div>
 
-      <Queue orders={pendingOrders} />
+      <Queue orders={openOrders} canRefund={canRefund} />
     </div>
   );
 }
@@ -396,7 +442,13 @@ function Cart({
 
 /* ---------------------------------- Queue ----------------------------------- */
 
-function Queue({ orders }: { orders: PosOrder[] }) {
+function Queue({
+  orders,
+  canRefund,
+}: {
+  orders: PosOrder[];
+  canRefund: boolean;
+}) {
   const t = useTranslations("cashier.terminal.queue");
 
   return (
@@ -411,9 +463,9 @@ function Queue({ orders }: { orders: PosOrder[] }) {
       {orders.length === 0 ? (
         <p className="muted" style={{ margin: 0 }}>{t("empty")}</p>
       ) : (
-        <div className="stack" style={{ gap: 12 }}>
+        <div className="stack" style={{ gap: 16 }}>
           {orders.map((o) => (
-            <QueueRow key={o.id} order={o} />
+            <QueueRow key={o.id} order={o} canRefund={canRefund} />
           ))}
         </div>
       )}
@@ -421,8 +473,15 @@ function Queue({ orders }: { orders: PosOrder[] }) {
   );
 }
 
-function QueueRow({ order }: { order: PosOrder }) {
+function QueueRow({
+  order,
+  canRefund,
+}: {
+  order: PosOrder;
+  canRefund: boolean;
+}) {
   const t = useTranslations("cashier.terminal.queue");
+  const tStatus = useTranslations("cashier.terminal.status");
   const tCart = useTranslations("cashier.terminal.cart");
   const tToast = useTranslations("cashier.terminal.toast");
   const { toast } = useToast();
@@ -431,6 +490,10 @@ function QueueRow({ order }: { order: PosOrder }) {
   const [method, setMethod] = useState<PosPaymentMethod>("cash");
 
   const itemCount = order.items?.reduce((sum, i) => sum + i.qty, 0) ?? 0;
+  const isPaid = order.paid_at != null;
+  const isRefunded = order.status === "refunded" || order.refunded_at != null;
+  const isOpen = isPosOrderOpen(order.status);
+  const nextStatus = NEXT_STATUS[order.status];
 
   const pay = () =>
     startTransition(async () => {
@@ -441,6 +504,37 @@ function QueueRow({ order }: { order: PosOrder }) {
         toast({ tone: "err", title: tToast("error"), body: res.message });
       }
     });
+
+  const advance = () => {
+    if (!nextStatus) return;
+    startTransition(async () => {
+      const res = await updateOrderStatus(order.id, nextStatus);
+      if (res.ok) {
+        toast({ tone: "ok", title: tToast(`status_${nextStatus}`) });
+      } else {
+        toast({ tone: "err", title: tToast("error"), body: res.message });
+      }
+    });
+  };
+
+  const refund = async () => {
+    const ok = await confirm({
+      title: t("refundTitle"),
+      message: t("refundConfirm", { number: order.order_number }),
+      confirmLabel: t("refund"),
+      tone: "danger",
+      icon: "refresh",
+    });
+    if (!ok) return;
+    startTransition(async () => {
+      const res = await refundOrder(order.id);
+      if (res.ok) {
+        toast({ tone: "ok", title: tToast("refunded") });
+      } else {
+        toast({ tone: "err", title: tToast("error"), body: res.message });
+      }
+    });
+  };
 
   const cancel = async () => {
     const ok = await confirm({
@@ -462,37 +556,93 @@ function QueueRow({ order }: { order: PosOrder }) {
   };
 
   return (
-    <div className="between row wrap" style={{ gap: 12 }}>
-      <div className="stack" style={{ gap: 4, minWidth: 0 }}>
-        <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
-          <span className="ltr" style={{ fontWeight: 600 }}>{order.order_number}</span>
-          <Badge tone={order.source === "freelancer" ? "info" : "neutral"}>
-            {order.customer_name ?? order.member?.name ?? t("walkIn")}
-          </Badge>
-        </div>
-        <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-          {t("items", { count: itemCount })} ·{" "}
-          <span className="tnum">{money(order.total)}</span>
-        </span>
-        {order.note && (
-          <span
-            className="muted"
-            style={{ fontSize: "var(--fs-sm)", fontStyle: "italic" }}
-          >
-            “{order.note}”
+    <div className="stack" style={{ gap: 10 }}>
+      <div className="between row wrap" style={{ gap: 12 }}>
+        <div className="stack" style={{ gap: 4, minWidth: 0 }}>
+          <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
+            <span className="ltr" style={{ fontWeight: 600 }}>{order.order_number}</span>
+            <Badge tone={order.source === "freelancer" ? "info" : "neutral"}>
+              {order.customer_name ?? order.member?.name ?? t("walkIn")}
+            </Badge>
+            <Badge tone={STATUS_TONE[order.status]} dot>
+              {tStatus(order.status)}
+            </Badge>
+            <Badge tone={isPaid ? "success" : "warning"} dot>
+              {isPaid ? tStatus("paid") : tStatus("unpaid")}
+            </Badge>
+          </div>
+          <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
+            {t("items", { count: itemCount })} ·{" "}
+            <span className="tnum">{money(order.total)}</span>
           </span>
-        )}
+          {order.note && (
+            <span
+              className="muted"
+              style={{ fontSize: "var(--fs-sm)", fontStyle: "italic" }}
+            >
+              “{order.note}”
+            </span>
+          )}
+        </div>
       </div>
+
       <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
-        <Segmented
-          value={method}
-          onChange={(id) => setMethod(id as PosPaymentMethod)}
-          items={PAYMENT_METHODS.map((m) => ({ id: m, label: tCart(m) }))}
-        />
-        <Button variant="primary" size="sm" icon="wallet" loading={pending} onClick={pay}>
-          {t("pay")}
-        </Button>
-        <Button variant="ghost" size="sm" icon="x" aria-label={t("cancel")} onClick={cancel} />
+        {/* Fulfillment: advance the order along new → preparing → ready → completed. */}
+        {isOpen && nextStatus && (
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={nextStatus === "completed" ? "checkCircle" : "clock"}
+            loading={pending}
+            onClick={advance}
+          >
+            {t(ADVANCE_LABEL[nextStatus])}
+          </Button>
+        )}
+
+        {/* Payment: decoupled from fulfillment — settle any time while unpaid. */}
+        {!isPaid && (
+          <>
+            <Segmented
+              value={method}
+              onChange={(id) => setMethod(id as PosPaymentMethod)}
+              items={PAYMENT_METHODS.map((m) => ({ id: m, label: tCart(m) }))}
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              icon="wallet"
+              loading={pending}
+              onClick={pay}
+            >
+              {t("pay")}
+            </Button>
+          </>
+        )}
+
+        {/* Refund a settled order (gated by pos_refund; owners always pass). */}
+        {isPaid && !isRefunded && canRefund && (
+          <Button
+            variant="danger"
+            size="sm"
+            icon="refresh"
+            loading={pending}
+            onClick={refund}
+          >
+            {t("refund")}
+          </Button>
+        )}
+
+        {/* Cancel only while unpaid (no stock consumed yet). */}
+        {!isPaid && (
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="x"
+            aria-label={t("cancel")}
+            onClick={cancel}
+          />
+        )}
       </div>
     </div>
   );

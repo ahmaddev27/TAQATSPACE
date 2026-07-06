@@ -43,6 +43,10 @@ class UserResource extends JsonResource
             // (e.g. hide the admin-management nav for a non-super-admin). Resolved
             // only for admin accounts to keep the common path query-free.
             ...$this->adminContext(),
+            // Cashier POS grants so the terminal can hide controls the cashier
+            // lacks (e.g. the Refund button without `pos_refund`). Resolved only
+            // for cashier accounts to keep the common path query-free.
+            ...$this->cashierContext(),
         ];
     }
 
@@ -61,6 +65,24 @@ class UserResource extends JsonResource
         return [
             'is_super_admin' => $this->isSuperAdmin(),
             'permissions' => $this->effectivePermissionNames(),
+        ];
+    }
+
+    /**
+     * A cashier's effective POS permission names, emitted under the same
+     * `permissions` key the admin branch uses so the SPA reads one field.
+     * Non-cashier users get an empty array (no extra queries).
+     *
+     * @return array<string, mixed>
+     */
+    private function cashierContext(): array
+    {
+        if (! $this->isCashier()) {
+            return [];
+        }
+
+        return [
+            'permissions' => $this->getPermissionNames()->values()->all(),
         ];
     }
 
