@@ -216,27 +216,25 @@ function Catalogue({
 
   return (
     <section className="card card-pad stack" style={{ gap: 16 }}>
-      <div className="between row wrap" style={{ gap: 10 }}>
-        <h3 className="h3" style={{ margin: 0 }}>{t("heading")}</h3>
-        <div className="row wrap" style={{ gap: 8 }}>
-          <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            aria-label={tCat("category")}
-            style={{ maxWidth: 150 }}
-          >
-            <option value="">{tCat("categories.all")}</option>
-            {POS_PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{tCat(`categories.${c}`)}</option>
-            ))}
-          </Select>
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("searchPlaceholder")}
-            style={{ maxWidth: 200 }}
-          />
-        </div>
+      <h3 className="h3" style={{ margin: 0 }}>{t("heading")}</h3>
+      <div className="row wrap" style={{ gap: 8 }}>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("searchPlaceholder")}
+          style={{ flex: "1 1 180px", minWidth: 0 }}
+        />
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label={tCat("category")}
+          style={{ flex: "0 0 auto", width: 160 }}
+        >
+          <option value="">{tCat("categories.all")}</option>
+          {POS_PRODUCT_CATEGORIES.map((c) => (
+            <option key={c} value={c}>{tCat(`categories.${c}`)}</option>
+          ))}
+        </Select>
       </div>
 
       {products.length === 0 ? (
@@ -268,8 +266,14 @@ function ProductButton({
   onAdd: (product: PosProduct) => void;
 }) {
   const t = useTranslations("cashier.terminal.catalogue");
+  const tCat = useTranslations("owner.pos");
   const disabled = !product.is_sellable;
   const low = isLowStock(product);
+  const categoryLabel = product.category
+    ? (POS_PRODUCT_CATEGORIES as readonly string[]).includes(product.category)
+      ? tCat(`categories.${product.category}`)
+      : product.category
+    : null;
 
   return (
     <button
@@ -292,16 +296,12 @@ function ProductButton({
         transition: "border-color .12s ease, box-shadow .12s ease, transform .06s ease",
       }}
     >
-      {product.category && (
+      {categoryLabel && (
         <span
           className="muted-3"
-          style={{
-            fontSize: "var(--fs-xs)",
-            textTransform: "uppercase",
-            letterSpacing: ".04em",
-          }}
+          style={{ fontSize: "var(--fs-xs)" }}
         >
-          {product.category}
+          {categoryLabel}
         </span>
       )}
 

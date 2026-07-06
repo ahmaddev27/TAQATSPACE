@@ -7,12 +7,18 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Select";
+import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Textarea";
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { placeFreelancerOrder } from "@/lib/actions/freelancer";
-import type { PosOrder, PosOrderStatus, PosProduct } from "@/lib/types/pos";
+import {
+  POS_PRODUCT_CATEGORIES,
+  type PosOrder,
+  type PosOrderStatus,
+  type PosProduct,
+} from "@/lib/types/pos";
 import { formatMoney, formatDate } from "./format";
 
 /** A workspace the freelancer may order from (drawn from active subscriptions). */
@@ -61,11 +67,33 @@ export function FreelancerOrder({
   // Cart: product id -> quantity (> 0). Reset whenever the workspace changes.
   const [cart, setCart] = useState<Record<string, number>>({});
   const [note, setNote] = useState("");
+  const tCat = useTranslations("owner.pos");
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
 
   const sellable = useMemo(
     () => products.filter((p) => p.is_sellable),
     [products],
   );
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sellable.filter((p) => {
+      if (category && p.category !== category) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [sellable, query, category]);
+
+  const categoryLabel = (c: string | null) =>
+    c
+      ? (POS_PRODUCT_CATEGORIES as readonly string[]).includes(c)
+        ? tCat(`categories.${c}`)
+        : c
+      : null;
 
   const lines = useMemo(
     () =>
@@ -173,8 +201,31 @@ export function FreelancerOrder({
               </div>
             </div>
           ) : (
-            <div className="stack" style={{ gap: 10 }}>
-              {sellable.map((p) => {
+            <div className="stack" style={{ gap: 12 }}>
+              <div className="row wrap" style={{ gap: 8 }}>
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("searchPlaceholder")}
+                  style={{ flex: "1 1 180px", minWidth: 0 }}
+                />
+                <Select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  aria-label={tCat("category")}
+                  style={{ flex: "0 0 auto", width: 160 }}
+                >
+                  <option value="">{tCat("categories.all")}</option>
+                  {POS_PRODUCT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{tCat(`categories.${c}`)}</option>
+                  ))}
+                </Select>
+              </div>
+
+              {visible.length === 0 ? (
+                <p className="muted" style={{ margin: 0 }}>{tCat("noResults")}</p>
+              ) : (
+                visible.map((p) => {
                 const qty = cart[p.id] ?? 0;
                 const atCap = p.track_stock && qty >= p.stock_qty;
                 return (
@@ -188,7 +239,7 @@ export function FreelancerOrder({
                         <span style={{ fontWeight: 600 }}>{p.name}</span>
                         {p.category && (
                           <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-                            {p.category}
+                            {categoryLabel(p.category)}
                           </span>
                         )}
                       </div>
@@ -236,7 +287,8 @@ export function FreelancerOrder({
                     )}
                   </div>
                 );
-              })}
+                })
+              )}
             </div>
           )}
         </section>

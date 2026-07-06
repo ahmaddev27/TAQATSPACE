@@ -92,6 +92,7 @@
       "counterBody": "Your order is sent to the café as pending. Pick it up and pay the cashier — cash or transfer.",
       "menuHeading": "Menu",
       "menuSubtitle": "Add items to your order",
+      "searchPlaceholder": "Search products…",
       "emptyMenuTitle": "Nothing on the menu",
       "emptyMenuBody": "This café has no items available right now.",
       "inStock": "{count} in stock",
