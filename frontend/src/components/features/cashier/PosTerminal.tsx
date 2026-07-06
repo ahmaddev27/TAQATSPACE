@@ -12,6 +12,7 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { StatTile } from "@/components/ui/StatTile";
 import { Segmented } from "@/components/ui/Segmented";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/actions/pos";
 import {
   POS_LOW_STOCK_THRESHOLD,
+  POS_PRODUCT_CATEGORIES,
   isPosOrderOpen,
   type PosAdvanceStatus,
   type PosOrder,
@@ -162,15 +164,7 @@ export function PosTerminal({
         </div>
       )}
 
-      <div
-        className="pos-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.6fr) minmax(280px, 1fr)",
-          gap: 20,
-          alignItems: "start",
-        }}
-      >
+      <div className="pos-grid">
         <Catalogue products={products} onAdd={addProduct} />
         <Cart lines={lines} setLines={setLines} />
       </div>
@@ -203,29 +197,46 @@ function Catalogue({
   onAdd: (product: PosProduct) => void;
 }) {
   const t = useTranslations("cashier.terminal.catalogue");
+  const tCat = useTranslations("owner.pos");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-      (p) =>
+    return products.filter((p) => {
+      if (category && p.category !== category) return false;
+      if (!q) return true;
+      return (
         p.name.toLowerCase().includes(q) ||
         (p.category ?? "").toLowerCase().includes(q) ||
-        (p.sku ?? "").toLowerCase().includes(q),
-    );
-  }, [products, query]);
+        (p.sku ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, query, category]);
 
   return (
     <section className="card card-pad stack" style={{ gap: 16 }}>
       <div className="between row wrap" style={{ gap: 10 }}>
         <h3 className="h3" style={{ margin: 0 }}>{t("heading")}</h3>
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("searchPlaceholder")}
-          style={{ maxWidth: 220 }}
-        />
+        <div className="row wrap" style={{ gap: 8 }}>
+          <Select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            aria-label={tCat("category")}
+            style={{ maxWidth: 150 }}
+          >
+            <option value="">{tCat("categories.all")}</option>
+            {POS_PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{tCat(`categories.${c}`)}</option>
+            ))}
+          </Select>
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            style={{ maxWidth: 200 }}
+          />
+        </div>
       </div>
 
       {products.length === 0 ? (

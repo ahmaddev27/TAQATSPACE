@@ -21,14 +21,14 @@ import {
 } from "@/lib/actions/pos";
 import {
   POS_LOW_STOCK_THRESHOLD,
+  POS_PRODUCT_CATEGORIES,
   type AdjustStockInput,
   type PosProduct,
   type StockMovementType,
 } from "@/lib/types/pos";
 import { money } from "./format";
 
-/** Fixed café product categories (stored as these keys; labels are localized). */
-const PRODUCT_CATEGORIES = ["cold_drink", "hot_drink", "snacks", "other"] as const;
+const PRODUCT_CATEGORIES = POS_PRODUCT_CATEGORIES;
 
 interface Props {
   products: PosProduct[];
@@ -53,6 +53,11 @@ export function PosManager({ products }: Props) {
   const [pending, startTransition] = useTransition();
   const [editor, setEditor] = useState<Editor>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
+
+  const visible = categoryFilter
+    ? products.filter((p) => p.category === categoryFilter)
+    : products;
 
   const onDelete = async (product: PosProduct) => {
     const ok = await confirm({
@@ -85,9 +90,24 @@ export function PosManager({ products }: Props) {
             {t("catalogueSubtitle")}
           </p>
         </div>
-        <Button variant="primary" icon="plus" onClick={() => setEditor({ mode: "create" })}>
-          {t("addProduct")}
-        </Button>
+        <div className="row wrap" style={{ gap: 8 }}>
+          {products.length > 0 && (
+            <Select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              aria-label={t("category")}
+              style={{ maxWidth: 180 }}
+            >
+              <option value="">{t("categories.all")}</option>
+              {PRODUCT_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{t(`categories.${c}`)}</option>
+              ))}
+            </Select>
+          )}
+          <Button variant="primary" icon="plus" onClick={() => setEditor({ mode: "create" })}>
+            {t("addProduct")}
+          </Button>
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -100,26 +120,43 @@ export function PosManager({ products }: Props) {
             <div style={{ fontSize: "var(--fs-sm)", marginTop: 4 }}>{t("emptyBody")}</div>
           </div>
         </div>
+      ) : visible.length === 0 ? (
+        <p className="muted" style={{ margin: 0 }}>{t("noResults")}</p>
       ) : (
-        <div className="stack" style={{ gap: 10 }}>
-          {products.map((p) => (
-            <div key={p.id} className="between row wrap" style={{ gap: 10 }}>
-              <div className="stack" style={{ gap: 4, minWidth: 0 }}>
-                <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
-                  <span style={{ fontWeight: 600 }}>{p.name}</span>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {visible.map((p) => (
+            <div
+              key={p.id}
+              className="stack"
+              style={{
+                gap: 10,
+                padding: 14,
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-tile)",
+                background: "var(--surface)",
+              }}
+            >
+              <div className="stack" style={{ gap: 8, minWidth: 0 }}>
+                <div className="between row" style={{ gap: 8, alignItems: "baseline" }}>
+                  <span style={{ fontWeight: 700, minWidth: 0, wordBreak: "break-word" }}>
+                    {p.name}
+                  </span>
+                  <span className="tnum" style={{ fontWeight: 700, flex: "none" }}>
+                    {money(p.price)}
+                  </span>
+                </div>
+                <div className="row wrap" style={{ gap: 6, alignItems: "center" }}>
                   {p.category && (
-                    <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
+                    <span className="badge badge-info">
                       {(PRODUCT_CATEGORIES as readonly string[]).includes(p.category)
                         ? t(`categories.${p.category}`)
                         : p.category}
-                    </span>
-                  )}
-                </div>
-                <div className="row wrap" style={{ gap: 6, alignItems: "center" }}>
-                  <span className="tnum" style={{ fontWeight: 600 }}>{money(p.price)}</span>
-                  {p.sku && (
-                    <span className="muted-3 ltr" style={{ fontSize: "var(--fs-sm)" }}>
-                      {p.sku}
                     </span>
                   )}
                   {p.track_stock ? (
@@ -133,9 +170,21 @@ export function PosManager({ products }: Props) {
                   {p.is_active && !p.is_sellable && (
                     <Badge tone="danger">{t("outOfStock")}</Badge>
                   )}
+                  {p.sku && (
+                    <span className="muted-3 ltr" style={{ fontSize: "var(--fs-xs)" }}>
+                      {p.sku}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="row" style={{ gap: 8 }}>
+              <div
+                className="row"
+                style={{
+                  gap: 8,
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: 10,
+                }}
+              >
                 {p.track_stock && (
                   <Button
                     variant="secondary"
@@ -160,6 +209,7 @@ export function PosManager({ products }: Props) {
                   aria-label={t("delete")}
                   loading={pending && busyId === p.id}
                   onClick={() => onDelete(p)}
+                  style={{ marginInlineStart: "auto" }}
                 />
               </div>
             </div>
