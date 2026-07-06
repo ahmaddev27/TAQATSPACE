@@ -45,6 +45,7 @@
         "pos_order_paid": "Your order is paid",
         "pos_order_completed": "Your order was delivered",
         "pos_order_refunded": "Your order was refunded",
+        "pos_new_order": "New café order",
         "generic": "Notification"
       }
     },
