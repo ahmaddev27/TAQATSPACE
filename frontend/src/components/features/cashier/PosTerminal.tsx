@@ -22,7 +22,12 @@ import { money } from "@/components/features/owner/format";
 interface Props {
   products: PosProduct[];
   pendingOrders: PosOrder[];
-  summary: PosSummary;
+  /**
+   * At-a-glance figures. Null when the actor lacks `pos_view_reports` (the
+   * summary endpoint is gated) — the terminal still sells; it just hides the
+   * stat tiles instead of failing to load.
+   */
+  summary: PosSummary | null;
 }
 
 /** A product plus the quantity currently in the cart. */
@@ -63,30 +68,32 @@ export function PosTerminal({ products, pendingOrders, summary }: Props) {
 
   return (
     <div className="stack" style={{ gap: 24 }}>
-      <div className="grid-stats">
-        <StatTile
-          icon="wallet"
-          label={t("summary.todaySales")}
-          value={money(summary.today_sales)}
-        />
-        <StatTile
-          icon="receipt"
-          label={t("summary.todayOrders")}
-          value={summary.today_orders}
-        />
-        <StatTile
-          icon="inbox"
-          amber={summary.pending_orders > 0}
-          label={t("summary.pendingOrders")}
-          value={summary.pending_orders}
-        />
-        <StatTile
-          icon="layers"
-          amber={summary.low_stock > 0}
-          label={t("summary.lowStock")}
-          value={summary.low_stock}
-        />
-      </div>
+      {summary && (
+        <div className="grid-stats">
+          <StatTile
+            icon="wallet"
+            label={t("summary.todaySales")}
+            value={money(summary.today_sales)}
+          />
+          <StatTile
+            icon="receipt"
+            label={t("summary.todayOrders")}
+            value={summary.today_orders}
+          />
+          <StatTile
+            icon="inbox"
+            amber={summary.pending_orders > 0}
+            label={t("summary.pendingOrders")}
+            value={summary.pending_orders}
+          />
+          <StatTile
+            icon="layers"
+            amber={summary.low_stock > 0}
+            label={t("summary.lowStock")}
+            value={summary.low_stock}
+          />
+        </div>
+      )}
 
       <div
         className="pos-grid"
@@ -467,6 +474,14 @@ function QueueRow({ order }: { order: PosOrder }) {
           {t("items", { count: itemCount })} ·{" "}
           <span className="tnum">{money(order.total)}</span>
         </span>
+        {order.note && (
+          <span
+            className="muted"
+            style={{ fontSize: "var(--fs-sm)", fontStyle: "italic" }}
+          >
+            “{order.note}”
+          </span>
+        )}
       </div>
       <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>
         <Segmented
