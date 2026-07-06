@@ -23,6 +23,9 @@ return [
 
     // POS / cashier staff
     'cashier_invited' => 'تم إرسال الدعوة.',
+    'cashier_already_invited' => 'هذا البريد لديه دعوة مفتوحة بالفعل — أعد إرسالها بدلاً من ذلك.',
+    'cashier_invite_resent' => 'تمت إعادة إرسال الدعوة.',
+    'cashier_invite_deleted' => 'تم حذف الدعوة.',
     'cashier_updated' => 'تم تحديث الكاشير.',
     'cashier_deactivated' => 'تم تعطيل الكاشير.',
     'cashier_welcome' => 'أهلاً بك!',

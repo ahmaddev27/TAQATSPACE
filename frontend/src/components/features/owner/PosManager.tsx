@@ -27,6 +27,9 @@ import {
 } from "@/lib/types/pos";
 import { money } from "./format";
 
+/** Fixed café product categories (stored as these keys; labels are localized). */
+const PRODUCT_CATEGORIES = ["cold_drink", "hot_drink", "snacks", "other"] as const;
+
 interface Props {
   products: PosProduct[];
 }
@@ -106,7 +109,9 @@ export function PosManager({ products }: Props) {
                   <span style={{ fontWeight: 600 }}>{p.name}</span>
                   {p.category && (
                     <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-                      {p.category}
+                      {(PRODUCT_CATEGORIES as readonly string[]).includes(p.category)
+                        ? t(`categories.${p.category}`)
+                        : p.category}
                     </span>
                   )}
                 </div>
@@ -244,7 +249,12 @@ function ProductModal({
         </Field>
         <div className="row wrap" style={{ gap: 12 }}>
           <Field label={t("category")} optional error={errors.category?.[0]} className="grow">
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} />
+            <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">{t("categories.none")}</option>
+              {PRODUCT_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{t(`categories.${c}`)}</option>
+              ))}
+            </Select>
           </Field>
           <Field label={t("sku")} optional error={errors.sku?.[0]} className="grow">
             <Input className="ltr" value={sku} onChange={(e) => setSku(e.target.value)} />

@@ -57,12 +57,25 @@ class CashierManagementService
             throw new RuntimeException(__('messages.cashier_email_taken'));
         }
 
+        // One open invite per email — re-inviting an already-invited address is
+        // rejected; the owner uses "resend" (or deletes it) instead.
+        $hasOpenInvite = CashierInvitation::query()
+            ->where('workspace_id', $workspace->id)
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->whereNull('accepted_at')
+            ->whereNull('declined_at')
+            ->where('expires_at', '>', Carbon::now())
+            ->exists();
+
+        if ($hasOpenInvite) {
+            throw new RuntimeException(__('messages.cashier_already_invited'));
+        }
+
         $permissions = $this->sanitizePermissions($data['permissions'] ?? null);
         $token = Str::random(48);
 
         $invitation = DB::transaction(function () use ($workspace, $inviter, $email, $data, $permissions, $token): CashierInvitation {
-            // A workspace keeps at most one open invite per email — supersede any
-            // earlier pending one so re-inviting simply refreshes it.
+            // Clear any stale (expired/declined) invites for this address first.
             CashierInvitation::query()
                 ->where('workspace_id', $workspace->id)
                 ->whereRaw('LOWER(email) = ?', [$email])
@@ -153,6 +166,45 @@ class CashierManagementService
         }
 
         $invitation->forceFill(['declined_at' => now()])->save();
+    }
+
+    /**
+     * Re-send the invitation email for a still-open invite and refresh its expiry.
+     */
+    public function resendInvitation(Workspace $workspace, CashierInvitation $invitation): CashierInvitation
+    {
+        $this->ensureInvitationBelongs($workspace, $invitation);
+
+        if ($invitation->accepted_at !== null) {
+            throw new RuntimeException(__('messages.cashier_invite_invalid'));
+        }
+
+        $invitation->forceFill([
+            'declined_at' => null,
+            'expires_at' => Carbon::now()->addDays(self::INVITE_TTL_DAYS),
+        ])->save();
+
+        Notification::route('mail', $invitation->email)->notify(
+            new CashierInvitationNotification($workspace, $invitation->name)
+        );
+
+        return $invitation;
+    }
+
+    /** Revoke a pending invitation. */
+    public function deleteInvitation(Workspace $workspace, CashierInvitation $invitation): void
+    {
+        $this->ensureInvitationBelongs($workspace, $invitation);
+
+        $invitation->delete();
+    }
+
+    /** Reject (404) an invitation that does not belong to the given workspace. */
+    private function ensureInvitationBelongs(Workspace $workspace, CashierInvitation $invitation): void
+    {
+        if ((string) $invitation->workspace_id !== (string) $workspace->id) {
+            abort(404, __('messages.cashier_invite_invalid'));
+        }
     }
 
     /**

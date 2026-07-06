@@ -14,6 +14,8 @@ import {
   inviteCashier,
   updateCashierPermissions,
   deactivateCashier,
+  resendCashierInvitation,
+  deleteCashierInvitation,
 } from "@/lib/actions/owner";
 import {
   DEFAULT_CASHIER_PERMISSIONS,
@@ -57,6 +59,41 @@ export function CashiersManager({ cashiers, invitations }: Props) {
       setBusyId(null);
       if (res.ok) {
         toast({ tone: "ok", title: t("deactivatedSuccess") });
+      } else {
+        toast({ tone: "err", title: t("error"), body: res.message });
+      }
+    });
+  };
+
+  const onResend = (inv: CashierInvitation) => {
+    setBusyId(inv.id);
+    startTransition(async () => {
+      const res = await resendCashierInvitation(inv.id);
+      setBusyId(null);
+      if (res.ok) {
+        toast({ tone: "ok", title: t("resentSuccess") });
+      } else {
+        toast({ tone: "err", title: t("error"), body: res.message });
+      }
+    });
+  };
+
+  const onDeleteInvite = async (inv: CashierInvitation) => {
+    const ok = await confirm({
+      title: t("confirmDeleteInviteTitle"),
+      message: t("confirmDeleteInviteMsg", { email: inv.email }),
+      confirmLabel: t("deleteInvite"),
+      tone: "danger",
+      icon: "trash",
+    });
+    if (!ok) return;
+
+    setBusyId(inv.id);
+    startTransition(async () => {
+      const res = await deleteCashierInvitation(inv.id);
+      setBusyId(null);
+      if (res.ok) {
+        toast({ tone: "ok", title: t("inviteDeletedSuccess") });
       } else {
         toast({ tone: "err", title: t("error"), body: res.message });
       }
@@ -118,12 +155,34 @@ export function CashiersManager({ cashiers, invitations }: Props) {
         ) : (
           invitations.map((inv) => (
             <div key={inv.id} className="between row wrap" style={{ gap: 10 }}>
-              <span className="ltr">{inv.email}</span>
-              <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
-                {inv.expires_at
-                  ? t("expiresAt", { date: new Date(inv.expires_at).toLocaleDateString() })
-                  : null}
-              </span>
+              <div className="stack" style={{ gap: 2 }}>
+                <span className="ltr">{inv.email}</span>
+                <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
+                  {inv.expires_at
+                    ? t("expiresAt", { date: new Date(inv.expires_at).toLocaleDateString() })
+                    : null}
+                </span>
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon="mail"
+                  loading={pending && busyId === inv.id}
+                  onClick={() => onResend(inv)}
+                >
+                  {t("resend")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon="trash"
+                  loading={pending && busyId === inv.id}
+                  onClick={() => onDeleteInvite(inv)}
+                >
+                  {t("deleteInvite")}
+                </Button>
+              </div>
             </div>
           ))
         )}

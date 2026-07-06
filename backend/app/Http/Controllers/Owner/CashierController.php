@@ -80,6 +80,41 @@ class CashierController extends Controller
     }
 
     /**
+     * POST /api/workspace/cashiers/invitations/{invitation}/resend
+     */
+    public function resendInvitation(Request $request, CashierInvitation $invitation): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $refreshed = $this->cashiers->resendInvitation($workspace, $invitation);
+
+        return ApiResponse::success(
+            new CashierInvitationResource($refreshed),
+            __('messages.cashier_invite_resent'),
+        );
+    }
+
+    /**
+     * DELETE /api/workspace/cashiers/invitations/{invitation}
+     */
+    public function destroyInvitation(Request $request, CashierInvitation $invitation): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $this->cashiers->deleteInvitation($workspace, $invitation);
+
+        return ApiResponse::success(null, __('messages.cashier_invite_deleted'));
+    }
+
+    /**
      * PUT /api/workspace/cashiers/{cashier}/permissions
      */
     public function updatePermissions(UpdateCashierPermissionsRequest $request, User $cashier): JsonResponse

@@ -30,7 +30,7 @@ type Choice = "freelancer" | "workspace_owner";
 export function OnboardingFlow() {
   const t = useTranslations("auth.onboarding");
   const router = useRouter();
-  const { user, refreshUser } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
 
   const [choice, setChoice] = useState<Choice | null>(null);
   const [ownerDone, setOwnerDone] = useState(false);
@@ -38,6 +38,16 @@ export function OnboardingFlow() {
   // A pending cashier invitation preempts the role picker: accepting turns the
   // account into a cashier, declining clears the invite and reveals the picker.
   const invitation = user?.pending_cashier_invitation ?? null;
+
+  // Wait for the session to hydrate before deciding what to show — otherwise the
+  // role picker flashes for a moment before a pending invitation resolves.
+  if (isLoading) {
+    return (
+      <div className="reg-wrap" style={{ display: "grid", placeItems: "center", minHeight: 240 }}>
+        <span className="btn-spinner" aria-hidden="true" />
+      </div>
+    );
+  }
 
   async function handleDone(result: OnboardingResult) {
     if (result.next === "pending") {

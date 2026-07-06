@@ -35,6 +35,12 @@
       "invitedSuccess": "تم إرسال الدعوة.",
       "updatedSuccess": "تم تحديث الصلاحيات.",
       "deactivatedSuccess": "تم تعطيل الموظف.",
+      "resend": "إعادة إرسال",
+      "deleteInvite": "حذف",
+      "resentSuccess": "تمت إعادة إرسال الدعوة.",
+      "inviteDeletedSuccess": "تم حذف الدعوة.",
+      "confirmDeleteInviteTitle": "حذف الدعوة",
+      "confirmDeleteInviteMsg": "هل تريد حذف دعوة {email}؟",
       "error": "حدث خطأ"
     },
     "dashboard": {
@@ -445,6 +451,13 @@
       "cancel": "إلغاء",
       "name": "الاسم",
       "category": "التصنيف",
+      "categories": {
+        "none": "— بدون —",
+        "cold_drink": "مشروب بارد",
+        "hot_drink": "مشروب ساخن",
+        "snacks": "سناكس",
+        "other": "أخرى"
+      },
       "sku": "رمز المنتج (SKU)",
       "price": "السعر",
       "trackStock": "تتبّع المخزون لهذا المنتج",
