@@ -28,6 +28,7 @@ return [
     'cashier_invite_deleted' => 'تم حذف الدعوة.',
     'cashier_updated' => 'تم تحديث الكاشير.',
     'cashier_deactivated' => 'تم تعطيل الكاشير.',
+    'cashier_deleted' => 'تم حذف الكاشير.',
     'cashier_welcome' => 'أهلاً بك!',
     'cashier_email_taken' => 'هذا البريد الإلكتروني مستخدم بالفعل.',
     'cashier_invite_invalid' => 'هذه الدعوة غير صالحة أو منتهية الصلاحية.',

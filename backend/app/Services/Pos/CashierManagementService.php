@@ -235,6 +235,18 @@ class CashierManagementService
         return $cashier->fresh() ?? $cashier;
     }
 
+    /**
+     * Permanently delete a cashier account. Safe for history: POS orders,
+     * payments and stock movements reference the cashier with `nullOnDelete`, so
+     * the records survive with a null actor.
+     */
+    public function deleteCashier(User $cashier, Workspace $workspace): void
+    {
+        $this->ensureBelongsToWorkspace($cashier, $workspace);
+
+        $cashier->delete();
+    }
+
     /** Reject (404) a user that is not a cashier of the given workspace. */
     private function ensureBelongsToWorkspace(User $cashier, Workspace $workspace): void
     {

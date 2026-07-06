@@ -21,5 +21,6 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::post('/invitations/{invitation}/resend', [CashierController::class, 'resendInvitation']);
         Route::delete('/invitations/{invitation}', [CashierController::class, 'destroyInvitation']);
         Route::put('/{cashier}/permissions', [CashierController::class, 'updatePermissions']);
+        Route::delete('/{cashier}/permanent', [CashierController::class, 'deleteCashier']);
         Route::delete('/{cashier}', [CashierController::class, 'destroy']);
     });

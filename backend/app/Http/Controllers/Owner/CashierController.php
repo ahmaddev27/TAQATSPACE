@@ -150,6 +150,22 @@ class CashierController extends Controller
         return ApiResponse::success(null, __('messages.cashier_deactivated'));
     }
 
+    /**
+     * DELETE /api/workspace/cashiers/{cashier}/permanent
+     */
+    public function deleteCashier(Request $request, User $cashier): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        $this->cashiers->deleteCashier($cashier, $workspace);
+
+        return ApiResponse::success(null, __('messages.cashier_deleted'));
+    }
+
     private function ownerWorkspace(Request $request): ?Workspace
     {
         return $request->user()->workspace;

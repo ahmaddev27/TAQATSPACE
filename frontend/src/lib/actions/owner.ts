@@ -593,6 +593,18 @@ export async function deactivateCashier(
   return result;
 }
 
+/** Permanently delete a cashier account (history is preserved with a null actor). */
+export async function deleteCashierAccount(
+  cashierId: string,
+): Promise<ActionResult> {
+  const result = await authedMutate(
+    `/workspace/cashiers/${cashierId}/permanent`,
+    { method: "DELETE" },
+  );
+  if (result.ok) revalidateOwner("cashiers");
+  return result;
+}
+
 /** Re-send a pending cashier invitation email (refreshes its expiry). */
 export async function resendCashierInvitation(
   invitationId: string,
