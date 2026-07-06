@@ -1,10 +1,14 @@
 import { serverFetch } from "@/lib/api";
 import type { ApiEnvelope } from "@/lib/types";
-import type {
-  PosOrdersParams,
-  PosOrdersResult,
-  PosProductsResult,
-  PosSummary,
+import {
+  isPosOrderOpen,
+  type PosOrder,
+  type PosOrdersParams,
+  type PosOrdersResult,
+  type PosProductsResult,
+  type PosReport,
+  type PosReportParams,
+  type PosSummary,
 } from "@/lib/types/pos";
 
 /**
@@ -13,7 +17,7 @@ import type {
  * Client components import the types from `@/lib/types/pos`.
  */
 
-function toQuery(params: PosOrdersParams): string {
+function toQuery(params: PosOrdersParams | PosReportParams): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value == null || value === "") continue;
@@ -45,6 +49,26 @@ export async function ownerPosOrders(
   return res.data;
 }
 
+/**
+ * Open orders (new/preparing/ready) for the terminal queue. The backend filters
+ * by a single status, so we pull the most recent orders and keep the open ones
+ * — sufficient for the live queue, where open tickets are the recent ones.
+ */
+export async function ownerPosOpenOrders(): Promise<PosOrder[]> {
+  const { orders } = await ownerPosOrders({ per_page: 50 });
+  return orders.filter((o) => isPosOrderOpen(o.status));
+}
+
+/** Sales analytics for the owner's workspace over an optional date range. */
+export async function ownerPosReport(
+  params: PosReportParams = {},
+): Promise<PosReport> {
+  const res = await serverFetch<ApiEnvelope<PosReport>>(
+    `/pos/reports${toQuery(params)}`,
+  );
+  return res.data;
+}
+
 /* ------------------------------ Cashier context ------------------------------ */
 /**
  * The `/pos/*` endpoints resolve the workspace from the authenticated account,
@@ -55,3 +79,5 @@ export async function ownerPosOrders(
 export const cashierPosProducts = ownerPosProducts;
 export const cashierPosSummary = ownerPosSummary;
 export const cashierPosOrders = ownerPosOrders;
+export const cashierPosOpenOrders = ownerPosOpenOrders;
+export const cashierPosReport = ownerPosReport;

@@ -82,6 +82,7 @@
     "items": {
       "dashboard": "Dashboard",
       "pos": "Point of sale",
+      "posReports": "POS reports",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",

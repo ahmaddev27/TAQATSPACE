@@ -41,11 +41,27 @@
         "decrease": "Decrease quantity",
         "remove": "Remove item"
       },
+      "status": {
+        "new": "New",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      },
       "queue": {
         "heading": "Open orders",
-        "subtitle": "Freelancer tabs and unpaid orders waiting to be settled.",
+        "subtitle": "Freelancer tabs and open tickets to fulfill and settle.",
         "empty": "No open orders.",
         "pay": "Pay",
+        "markPreparing": "Mark preparing",
+        "markReady": "Mark ready",
+        "markCompleted": "Mark completed",
+        "refund": "Refund",
+        "refundTitle": "Refund order",
+        "refundConfirm": "Refund order {number}? This restores stock and reverses the payment.",
         "cancel": "Cancel",
         "cancelTitle": "Cancel order",
         "cancelConfirm": "Cancel order {number}? This can't be undone.",
@@ -55,6 +71,10 @@
       "toast": {
         "paid": "Payment recorded",
         "cancelled": "Order cancelled",
+        "refunded": "Order refunded",
+        "status_preparing": "Order marked preparing",
+        "status_ready": "Order marked ready",
+        "status_completed": "Order completed",
         "emptyCart": "Add at least one product first.",
         "error": "Something went wrong"
       }

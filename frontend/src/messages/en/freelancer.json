@@ -112,9 +112,12 @@
       "historySubtitle": "Recent café orders and their status",
       "historyEmpty": "You haven't placed any café orders yet.",
       "orderStatus": {
-        "pending": "Pending",
-        "paid": "Paid",
-        "cancelled": "Cancelled"
+        "new": "New",
+        "preparing": "Preparing",
+        "ready": "Ready",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
       }
     }
   }

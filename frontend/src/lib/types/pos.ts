@@ -15,8 +15,33 @@ export type PosOrderSource = "cashier" | "freelancer";
 /** Tender used to settle a POS order. */
 export type PosPaymentMethod = "cash" | "transfer";
 
-/** Lifecycle of a POS order. */
-export type PosOrderStatus = "pending" | "paid" | "cancelled";
+/**
+ * Fulfillment lifecycle of a POS order (independent of payment, which is
+ * tracked by `paid_at`). Open = new/preparing/ready; terminal = completed,
+ * cancelled, refunded.
+ */
+export type PosOrderStatus =
+  | "new"
+  | "preparing"
+  | "ready"
+  | "completed"
+  | "cancelled"
+  | "refunded";
+
+/** Fulfillment statuses an order can be advanced TO via the status endpoint. */
+export const POS_ADVANCEABLE_STATUSES: PosOrderStatus[] = [
+  "preparing",
+  "ready",
+  "completed",
+];
+
+/** Statuses where an order is still open (in the active queue). */
+export const POS_OPEN_STATUSES: PosOrderStatus[] = ["new", "preparing", "ready"];
+
+/** True when an order is still open (awaiting fulfillment). */
+export function isPosOrderOpen(status: PosOrderStatus): boolean {
+  return POS_OPEN_STATUSES.includes(status);
+}
 
 /** Products with a `track_stock` count at or below this are considered low. */
 export const POS_LOW_STOCK_THRESHOLD = 5;
@@ -92,7 +117,10 @@ export interface PosOrder {
   subtotal: string;
   discount: string;
   total: string;
+  /** Payment flag: ISO8601 when settled, null while unpaid. Independent of `status`. */
   paid_at: string | null;
+  /** ISO8601 when the order was refunded, null otherwise. */
+  refunded_at?: string | null;
   items?: PosOrderItem[];
   created_at: string | null;
 }
@@ -127,6 +155,14 @@ export interface PayPosOrderInput {
   method: PosPaymentMethod;
 }
 
+/** A fulfillment status an order can be advanced to. */
+export type PosAdvanceStatus = "preparing" | "ready" | "completed";
+
+/** Body for `POST /pos/orders/{id}/status`. */
+export interface UpdatePosOrderStatusInput {
+  status: PosAdvanceStatus;
+}
+
 /**
  * Body for `POST /freelancer/pos/orders`. A freelancer rings up against a
  * workspace they are actively subscribed to; the order lands PENDING in the
@@ -144,6 +180,60 @@ export interface PosSummary {
   /** Decimal string of today's paid-order revenue. */
   today_sales: string;
   today_orders: number;
+  /** Open orders (new/preparing/ready) awaiting fulfillment. */
   pending_orders: number;
   low_stock: number;
+}
+
+/* ---------------------------------- Reports ---------------------------------- */
+
+/** Inclusive date window (YYYY-MM-DD) a report covers. */
+export interface PosReportRange {
+  from: string;
+  to: string;
+}
+
+/** Optional range filter for `GET /pos/reports`; both default server-side. */
+export interface PosReportParams {
+  from?: string;
+  to?: string;
+}
+
+/**
+ * Sales analytics for a workspace's POS over a date range. All money values are
+ * fixed 2-decimal strings; counts/qty are integers. Covers PAID, non-refunded
+ * orders only; refunds are reported separately.
+ */
+export interface PosReport {
+  range: PosReportRange;
+  totals: {
+    /** Decimal string. */
+    sales: string;
+    orders: number;
+    /** Decimal string. */
+    avg: string;
+  };
+  top_products: Array<{
+    name: string;
+    qty: number;
+    /** Decimal string. */
+    total: string;
+  }>;
+  by_cashier: Array<{
+    /** Cashier name, or "—" for unattributed (walk-in) rows. */
+    name: string;
+    orders: number;
+    /** Decimal string. */
+    total: string;
+  }>;
+  by_method: Array<{
+    method: PosPaymentMethod;
+    /** Decimal string. */
+    total: string;
+  }>;
+  refunds: {
+    count: number;
+    /** Decimal string. */
+    total: string;
+  };
 }

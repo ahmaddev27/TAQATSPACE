@@ -82,6 +82,7 @@
     "items": {
       "dashboard": "لوحة التحكم",
       "pos": "نقطة البيع",
+      "posReports": "تقارير نقطة البيع",
       "members": "المشتركون",
       "expenses": "المصاريف",
       "resources": "الموارد",

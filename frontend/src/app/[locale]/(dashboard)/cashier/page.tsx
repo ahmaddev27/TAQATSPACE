@@ -3,14 +3,14 @@ import { PosTerminal } from "@/components/features/cashier/PosTerminal";
 import {
   cashierPosProducts,
   cashierPosSummary,
-  cashierPosOrders,
+  cashierPosOpenOrders,
 } from "@/lib/api/pos";
 import type { PosSummary } from "@/lib/types/pos";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Cashier point-of-sale terminal. Fetches the catalogue, open (pending) orders,
+ * Cashier point-of-sale terminal. Fetches the catalogue, open orders,
  * and the at-a-glance summary server-side, then hands them to the interactive
  * <PosTerminal>. The `/pos/*` endpoints resolve the workspace from the cashier's
  * account, so no workspace id is needed here.
@@ -24,9 +24,9 @@ export default async function CashierPosPage({
   setRequestLocale(locale);
   const t = await getTranslations("cashier.terminal");
 
-  const [productsResult, pendingResult] = await Promise.all([
+  const [productsResult, openOrders] = await Promise.all([
     cashierPosProducts(),
-    cashierPosOrders({ status: "pending", per_page: 50 }),
+    cashierPosOpenOrders(),
   ]);
 
   // The summary needs `pos_view_reports`; a sell-only cashier must still reach
@@ -47,7 +47,7 @@ export default async function CashierPosPage({
 
       <PosTerminal
         products={productsResult.products}
-        pendingOrders={pendingResult.orders}
+        openOrders={openOrders}
         summary={summary}
       />
     </div>
