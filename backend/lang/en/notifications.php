@@ -16,6 +16,24 @@ return [
         'default' => [
             'title' => 'New notification',
         ],
+        'pos_new_order' => [
+            'title' => 'New café order',
+        ],
+        'pos_order_preparing' => [
+            'title' => 'Your order is being prepared',
+        ],
+        'pos_order_ready' => [
+            'title' => 'Your order is ready',
+        ],
+        'pos_order_paid' => [
+            'title' => 'Your order is paid',
+        ],
+        'pos_order_completed' => [
+            'title' => 'Your order was delivered',
+        ],
+        'pos_order_refunded' => [
+            'title' => 'Your order was refunded',
+        ],
         'new_message' => [
             'title' => 'New message',
         ],

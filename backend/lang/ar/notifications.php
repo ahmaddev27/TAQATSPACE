@@ -15,6 +15,24 @@ return [
         'default' => [
             'title' => 'إشعار جديد',
         ],
+        'pos_new_order' => [
+            'title' => 'طلب كافيه جديد',
+        ],
+        'pos_order_preparing' => [
+            'title' => 'طلبك قيد التحضير',
+        ],
+        'pos_order_ready' => [
+            'title' => 'طلبك جاهز',
+        ],
+        'pos_order_paid' => [
+            'title' => 'تم دفع طلبك',
+        ],
+        'pos_order_completed' => [
+            'title' => 'تم تسليم طلبك',
+        ],
+        'pos_order_refunded' => [
+            'title' => 'تم استرجاع طلبك',
+        ],
         'new_message' => [
             'title' => 'رسالة جديدة',
         ],
