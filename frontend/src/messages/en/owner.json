@@ -456,12 +456,15 @@
       "name": "Name",
       "category": "Category",
       "categories": {
+        "all": "All categories",
         "none": "— none —",
         "cold_drink": "Cold drink",
         "hot_drink": "Hot drink",
+        "sandwiches": "Sandwiches",
         "snacks": "Snacks",
         "other": "Other"
       },
+      "noResults": "No matching products.",
       "sku": "SKU",
       "price": "Price",
       "trackStock": "Track inventory for this product",

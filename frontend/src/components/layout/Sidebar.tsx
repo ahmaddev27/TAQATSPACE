@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { BrandLogo } from "./BrandLogo";
-import type { RoleNav } from "./nav-config";
+import type { NavItem, RoleNav } from "./nav-config";
 
 export interface SidebarProps {
   nav: RoleNav;
@@ -16,6 +17,11 @@ export interface SidebarProps {
   onNavigate: () => void;
   /** Logout handler (rendered in the footer). */
   onLogout: () => void;
+}
+
+/** Every leaf href under a set of items (recurses into nested `children`). */
+function leafHrefs(items: NavItem[]): string[] {
+  return items.flatMap((i) => (i.children ? leafHrefs(i.children) : [i.href]));
 }
 
 /** Does `href` match the current path? Index routes match exactly; others by prefix. */
@@ -56,10 +62,11 @@ export function Sidebar({
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   const indexHref = nav.groups[0]?.items[0]?.href ?? "/";
   const activeHref = findActiveHref(
     pathname,
-    nav.groups.flatMap((g) => g.items.map((i) => i.href)),
+    nav.groups.flatMap((g) => leafHrefs(g.items)),
     indexHref,
   );
 
@@ -67,6 +74,70 @@ export function Sidebar({
   // shows full labels — so labels render whenever the drawer is open, even if
   // `collapsed` was toggled on a wider viewport before resizing down.
   const showLabels = !collapsed || mobileOpen;
+
+  /** A single leaf link (used at top level and inside a nested group). */
+  const renderLeaf = (item: NavItem, nested = false) => {
+    const active = item.href === activeHref;
+    const label = t(`items.${item.key}`);
+    return (
+      <Link
+        key={item.key}
+        href={item.href}
+        className={`nav-item ${active ? "active" : ""} ${nested ? "nav-child" : ""}`.trim()}
+        title={label}
+        onClick={onNavigate}
+      >
+        <Icon name={item.icon} />
+        {showLabels && <span>{label}</span>}
+        {showLabels && item.badge ? (
+          <span
+            className={`nav-badge tnum ${
+              item.badgeTone === "action" ? "nav-badge--action" : ""
+            }`.trim()}
+          >
+            {item.badge}
+          </span>
+        ) : null}
+      </Link>
+    );
+  };
+
+  /** A parent with a collapsible sub-list. In the icon rail, children flatten. */
+  const renderItem = (item: NavItem) => {
+    if (!item.children) return renderLeaf(item);
+
+    // Icon-only rail has no room for a disclosure — surface children directly.
+    if (!showLabels) return item.children.map((c) => renderLeaf(c));
+
+    const label = t(`items.${item.key}`);
+    const hasActiveChild = item.children.some((c) => c.href === activeHref);
+    const isOpen = open[item.key] ?? hasActiveChild;
+
+    return (
+      <div key={item.key}>
+        <button
+          type="button"
+          className={`nav-item nav-parent ${hasActiveChild ? "active" : ""}`.trim()}
+          aria-expanded={isOpen}
+          title={label}
+          onClick={() => setOpen((o) => ({ ...o, [item.key]: !isOpen }))}
+        >
+          <Icon name={item.icon} />
+          <span>{label}</span>
+          <Icon
+            name="arrowR"
+            className="nav-caret"
+            style={{ transform: isOpen ? "rotate(90deg)" : undefined }}
+          />
+        </button>
+        {isOpen && (
+          <div className="nav-children">
+            {item.children.map((c) => renderLeaf(c, true))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <aside
@@ -95,31 +166,7 @@ export function Sidebar({
               <div className="nav-section">{t(group.titleKey)}</div>
             )}
             {group.titleKey && !showLabels && <div className="nav-sep" />}
-            {group.items.map((item) => {
-              const active = item.href === activeHref;
-              const label = t(`items.${item.key}`);
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className={`nav-item ${active ? "active" : ""}`.trim()}
-                  title={label}
-                  onClick={onNavigate}
-                >
-                  <Icon name={item.icon} />
-                  {showLabels && <span>{label}</span>}
-                  {showLabels && item.badge ? (
-                    <span
-                      className={`nav-badge tnum ${
-                        item.badgeTone === "action" ? "nav-badge--action" : ""
-                      }`.trim()}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
+            {group.items.map(renderItem)}
           </div>
         ))}
       </div>

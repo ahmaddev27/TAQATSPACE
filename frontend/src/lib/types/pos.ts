@@ -46,6 +46,17 @@ export function isPosOrderOpen(status: PosOrderStatus): boolean {
 /** Products with a `track_stock` count at or below this are considered low. */
 export const POS_LOW_STOCK_THRESHOLD = 5;
 
+/** Fixed café product categories (stored as these keys; labels are localized). */
+export const POS_PRODUCT_CATEGORIES = [
+  "cold_drink",
+  "hot_drink",
+  "sandwiches",
+  "snacks",
+  "other",
+] as const;
+
+export type PosProductCategory = (typeof POS_PRODUCT_CATEGORIES)[number];
+
 /* --------------------------------- Products ---------------------------------- */
 
 export interface PosProduct {
