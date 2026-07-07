@@ -57,6 +57,7 @@ return [
     'pos_order_closed' => 'هذا الطلب مغلق ولا يمكن تحديثه.',
     'pos_order_status_invalid' => 'حالة الطلب غير صالحة.',
     'pos_order_cannot_cancel' => 'يمكن إلغاء الطلبات المفتوحة غير المدفوعة فقط.',
+    'pos_order_payment_required' => 'استلم الدفع قبل تعيين الطلب كمكتمل.',
     'pos_order_not_refundable' => 'لا يمكن استرجاع هذا الطلب.',
     'pos_order_empty' => 'يجب أن يحتوي الطلب على منتج واحد على الأقل.',
     'pos_not_subscribed' => 'تحتاج اشتراكاً نشطاً في هذه المساحة لتطلب هنا.',

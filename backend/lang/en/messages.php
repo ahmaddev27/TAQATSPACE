@@ -57,6 +57,7 @@ return [
     'pos_order_closed' => 'This order is closed and can no longer be updated.',
     'pos_order_status_invalid' => 'Invalid order status.',
     'pos_order_cannot_cancel' => 'Only an open, unpaid order can be cancelled.',
+    'pos_order_payment_required' => 'Collect payment before marking the order completed.',
     'pos_order_not_refundable' => 'This order cannot be refunded.',
     'pos_order_empty' => 'An order must have at least one item.',
     'pos_not_subscribed' => 'You need an active subscription to this workspace to order here.',

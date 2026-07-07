@@ -59,6 +59,7 @@
         "markPreparing": "Mark preparing",
         "markReady": "Mark ready",
         "markCompleted": "Mark completed",
+        "payFirstHint": "Collect payment to complete",
         "refund": "Refund",
         "refundTitle": "Refund order",
         "refundConfirm": "Refund order {number}? This restores stock and reverses the payment.",

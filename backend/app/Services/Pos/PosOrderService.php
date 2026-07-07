@@ -167,6 +167,14 @@ class PosOrderService
             throw new RuntimeException(__('messages.pos_order_closed'));
         }
 
+        // An order may be prepared/readied while still unpaid (e.g. a freelancer
+        // orders ahead and settles at the counter), but it can only be COMPLETED
+        // once payment is in — otherwise it would leave the open queue unpaid,
+        // stranding the balance with no way to collect it.
+        if ($to === PosOrderStatus::Completed && $order->paid_at === null) {
+            throw new RuntimeException(__('messages.pos_order_payment_required'));
+        }
+
         $order->forceFill(['status' => $to->value])->save();
 
         $this->notifyMember($order, $to->value);
