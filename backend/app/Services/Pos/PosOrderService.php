@@ -191,8 +191,12 @@ class PosOrderService
      */
     public function summary(Workspace $workspace): array
     {
+        // Net of refunds: a refunded order keeps its `paid_at`, so it must be
+        // excluded here (mirrors PosReportService::paidOrders) or today's sales
+        // would be overstated by every reversed order.
         $paidToday = PosOrder::query()
             ->where('workspace_id', $workspace->id)
+            ->where('status', '!=', PosOrderStatus::Refunded->value)
             ->whereNotNull('paid_at')
             ->whereDate('paid_at', now()->toDateString());
 

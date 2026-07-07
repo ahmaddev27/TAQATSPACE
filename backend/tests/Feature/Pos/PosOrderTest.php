@@ -235,6 +235,28 @@ class PosOrderTest extends TestCase
         );
     }
 
+    public function test_summary_today_sales_excludes_refunded_orders(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $cashier = $this->cashierFor($workspace, [PosPermission::Sell->value, PosPermission::Refund->value, PosPermission::ViewReports->value]);
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'price' => 5, 'stock_qty' => 20]);
+        Sanctum::actingAs($cashier);
+
+        // Two paid orders of 10 each; one is then refunded.
+        $kept = $this->orderFor($workspace, $product, null);
+        $this->postJson("/api/pos/orders/{$kept->id}/pay", ['method' => 'cash'])->assertOk();
+
+        $reversed = $this->orderFor($workspace, $product, null);
+        $this->postJson("/api/pos/orders/{$reversed->id}/pay", ['method' => 'cash'])->assertOk();
+        $this->postJson("/api/pos/orders/{$reversed->id}/refund")->assertOk();
+
+        // Only the kept order counts — not the refunded one.
+        $this->getJson('/api/pos/summary')
+            ->assertOk()
+            ->assertJsonPath('data.today_sales', '10.00')
+            ->assertJsonPath('data.today_orders', 1);
+    }
+
     public function test_unpaid_order_cannot_be_refunded(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();
