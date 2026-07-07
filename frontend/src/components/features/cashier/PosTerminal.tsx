@@ -646,6 +646,9 @@ function QueueRow({
   const isRefunded = order.status === "refunded" || order.refunded_at != null;
   const isOpen = isPosOrderOpen(order.status);
   const nextStatus = NEXT_STATUS[order.status];
+  // Completing hands the ticket over and closes it out — only allowed once paid,
+  // so an unpaid order can't slip out of the queue with its balance uncollected.
+  const completeBlocked = nextStatus === "completed" && !isPaid;
 
   /** Run a mutation while flagging `action` as busy (clears when settled). */
   const run = (
@@ -753,18 +756,25 @@ function QueueRow({
           borderTop: "1px solid var(--border)",
         }}
       >
-        {/* Fulfillment: advance the order along new → preparing → ready → completed. */}
+        {/* Fulfillment: advance the order along new → preparing → ready → completed.
+            "Completed" stays locked until the order is paid (see completeBlocked). */}
         {isOpen && nextStatus && (
           <Button
             variant="secondary"
             size="sm"
             icon={nextStatus === "completed" ? "checkCircle" : "clock"}
             loading={busy === "advance"}
-            disabled={busy !== null && busy !== "advance"}
+            disabled={completeBlocked || (busy !== null && busy !== "advance")}
+            title={completeBlocked ? t("payFirstHint") : undefined}
             onClick={advance}
           >
             {t(ADVANCE_LABEL[nextStatus])}
           </Button>
+        )}
+        {completeBlocked && (
+          <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+            {t("payFirstHint")}
+          </span>
         )}
 
         {/* Payment: decoupled from fulfillment — settle any time while unpaid. */}

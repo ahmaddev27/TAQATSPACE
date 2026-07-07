@@ -156,6 +156,36 @@ class PosOrderTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_unpaid_order_cannot_be_completed(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'price' => 5, 'stock_qty' => 10]);
+        Sanctum::actingAs($owner);
+
+        $order = $this->orderFor($workspace, $product, null);
+
+        // Preparing/ready are fine while unpaid; completing is not.
+        $this->postJson("/api/pos/orders/{$order->id}/status", ['status' => 'ready'])->assertOk();
+        $this->postJson("/api/pos/orders/{$order->id}/status", ['status' => 'completed'])
+            ->assertStatus(422);
+
+        $this->assertSame('ready', $order->fresh()->status->value);
+    }
+
+    public function test_paid_order_can_be_completed(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'price' => 5, 'stock_qty' => 10]);
+        Sanctum::actingAs($owner);
+
+        $order = $this->orderFor($workspace, $product, null);
+        $this->postJson("/api/pos/orders/{$order->id}/pay", ['method' => 'cash'])->assertOk();
+
+        $this->postJson("/api/pos/orders/{$order->id}/status", ['status' => 'completed'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'completed');
+    }
+
     public function test_walk_in_order_status_change_notifies_no_one(): void
     {
         Notification::fake();

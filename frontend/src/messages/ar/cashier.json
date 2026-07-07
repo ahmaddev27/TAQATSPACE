@@ -59,6 +59,7 @@
         "markPreparing": "بدء التحضير",
         "markReady": "تحديد كجاهز",
         "markCompleted": "تحديد كمكتمل",
+        "payFirstHint": "استلم الدفع لإتمام الطلب",
         "refund": "استرجاع",
         "refundTitle": "استرجاع الطلب",
         "refundConfirm": "استرجاع الطلب {number}؟ سيعيد ذلك المخزون ويعكس عملية الدفع.",
