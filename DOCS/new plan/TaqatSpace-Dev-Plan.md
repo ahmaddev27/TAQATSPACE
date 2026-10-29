@@ -600,7 +600,7 @@ flowchart LR
 | **Milestones** | M0 … M13 بنفس الأسماء؛ وصف كل Milestone = الهدف ومعيار القبول |
 | **Labels** | النوع: `type:backend`، `type:frontend`، `type:fullstack`، `type:qa`، `type:ops`، `type:pm` · الوضع في الكود: `code:new`، `code:extension`، `code:existing` · الإصدار: `release:R0` … `release:R5` · `deferrable` (خارج المسار الأدنى) |
 | **عنوان الـ Issue** | `[M2.4] …` — رقم المهمة في الشيت ثابت ويُستخدم في الفروع والـ commits |
-| **Project «TaqatSpace Roadmap»** | لوحة بحقل **Status**: Todo → In Progress → In Review → Done، وحقول Milestone وRelease والجهد |
+| **[Project «TaqatSpace Roadmap»](https://github.com/users/ahmaddev27/projects/1)** | لوحة بحقل **Status**: Todo → In Progress → In Review → Done، وحقول Milestone وRelease والجهد |
 | **الربط** | الفرع يُنشأ من الـ Issue، والـ PR يحتوي `Closes #<رقم>` فيُغلق الـ Issue عند الدمج وتنتقل الحالة إلى Done |
 
 **دورة المهمة:**
