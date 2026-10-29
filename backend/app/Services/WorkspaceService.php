@@ -36,6 +36,7 @@ class WorkspaceService
         private readonly WorkspaceRepository $workspaces,
         private readonly SeatTypePricingService $seatTypePricing,
         private readonly SeatService $seats,
+        private readonly WorkspaceIdentityGenerator $identity,
     ) {}
 
     /**
@@ -86,6 +87,8 @@ class WorkspaceService
 
         $data['owner_id'] = $ownerId;
         $data['status'] = WorkspaceStatus::Pending->value;
+        $data['slug'] = $this->identity->generateSlug((string) ($data['name'] ?? ''));
+        $data['code'] = $this->identity->generateCode();
         $this->denormalizeCity($data);
 
         return DB::transaction(function () use ($data, $seatTypes): Workspace {
@@ -109,7 +112,10 @@ class WorkspaceService
      */
     public function updateSettings(Workspace $workspace, array $data): Workspace
     {
-        unset($data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month']);
+        unset(
+            $data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month'],
+            $data['slug'], $data['code'], $data['platform_plan'], $data['platform_status'],
+        );
 
         $this->denormalizeCity($data);
 

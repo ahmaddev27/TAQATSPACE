@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PlatformPlan;
+use App\Enums\PlatformStatus;
 use App\Enums\WorkspaceStatus;
+use App\Services\WorkspaceIdentityGenerator;
 use App\Support\MediaUrl;
 use Database\Factories\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use LogicException;
 
 class Workspace extends Model
 {
@@ -24,6 +28,10 @@ class Workspace extends Model
     protected $fillable = [
         'owner_id',
         'name',
+        'slug',
+        'code',
+        'platform_plan',
+        'platform_status',
         'description',
         'address',
         'city',
@@ -43,6 +51,27 @@ class Workspace extends Model
         'avg_rating',
     ];
 
+    /** Tenant identity that never changes once assigned. */
+    private const IMMUTABLE_IDENTITY = ['slug', 'code'];
+
+    protected static function booted(): void
+    {
+        // Fallback for rows created outside WorkspaceService (factories, seeders).
+        static::creating(function (Workspace $workspace): void {
+            $generator = app(WorkspaceIdentityGenerator::class);
+            $workspace->slug ??= $generator->generateSlug((string) $workspace->name);
+            $workspace->code ??= $generator->generateCode();
+        });
+
+        static::updating(function (Workspace $workspace): void {
+            foreach (self::IMMUTABLE_IDENTITY as $attribute) {
+                if ($workspace->isDirty($attribute) && $workspace->getOriginal($attribute) !== null) {
+                    throw new LogicException("Workspace {$attribute} is immutable once assigned.");
+                }
+            }
+        });
+    }
+
     /**
      * @return array<string, string>
      */
@@ -54,6 +83,8 @@ class Workspace extends Model
             'working_hours' => 'array',
             'messaging' => 'array',
             'status' => WorkspaceStatus::class,
+            'platform_plan' => PlatformPlan::class,
+            'platform_status' => PlatformStatus::class,
             'published_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
