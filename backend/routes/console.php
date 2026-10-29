@@ -16,6 +16,9 @@ Schedule::command('invoices:mark-overdue')->dailyAt('09:00');
 // the transition, so re-remind weekly (throttled per invoice in the service).
 Schedule::command('invoices:remind-overdue')->weeklyOn(1, '09:30');
 
+// End subscriptions past their end date (end-date based; grace days come in 4.7).
+Schedule::command('subscriptions:expire')->dailyAt('00:30');
+
 // Remind members 3 days before their subscription expires.
 Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 
