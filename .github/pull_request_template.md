@@ -1,22 +1,22 @@
 Closes #
 
-## ما تم
+## What changed
 -
 
-## لماذا
+## Why
 -
 
-## الملفات والـ endpoints المهمة
+## Key files and endpoints
 -
 
-## كيف تم التحقق
+## How it was verified
 -
 
-## تعريف الإنجاز
-- [ ] اختبارات Feature/Unit للمهمة، ونجاح الحزمة الكاملة (`php artisan test`، `npm run test`، `npm run lint`، `next build`)
-- [ ] FormRequest للتحقق وصلاحية لكل endpoint
-- [ ] `AuditLogger` لكل إجراء حساس أو مالي
-- [ ] نصوص الواجهة ar/en وRTL سليم
-- [ ] OpenAPI (`composer api:docs`) وPostman محدّثان
-- [ ] لا N+1، وفهارس للجداول الجديدة
-- [ ] الوحدة خلف الـ flag المناسب إن لم تكتمل
+## Definition of done
+- [ ] Feature/unit tests for the task, and the full suite passes (`php artisan test`, `npm run test`, `npm run lint`, `next build`)
+- [ ] FormRequest validation and an authorization check on every endpoint
+- [ ] `AuditLogger` entry for every sensitive or financial action
+- [ ] UI strings in ar/en with correct RTL
+- [ ] OpenAPI (`composer api:docs`) and the Postman collection regenerated
+- [ ] No N+1 queries; indexes on new tables
+- [ ] Behind the right feature flag if the module is not complete

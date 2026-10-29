@@ -1,694 +1,694 @@
-# خطة التطوير — TaqatSpace: من منصة سوق مساحات إلى منصة تشغيل كاملة (وفق SRS CoWorkSpaces)
+# Development Plan — TaqatSpace: From a Workspace Marketplace to a Full Operations Platform (per the CoWorkSpaces SRS)
 
-**الإصدار:** 1.0 — 29 أكتوبر 2026  
-**الوثائق المرافقة:** `TaqatSpace-Milestone-Sheet.md` (المهام والجهد والجدول) · `TaqatSpace-Milestone-Sheet.xlsx` (نسخة المتابعة)  
-**المراجع:** `SRS — الوثيقة الرئيسية.md` · `CoWorkSpaces-Milestone-Sheet.md` · فحص كود TaqatSpace على فرع `dev` (PR #185)
+**Version:** 1.0 — 29 October 2026  
+**Companion documents:** `TaqatSpace-Milestone-Sheet.md` (tasks, effort, and schedule) · `TaqatSpace-Milestone-Sheet.xlsx` (tracking copy)  
+**References:** `SRS — الوثيقة الرئيسية.md` · `CoWorkSpaces-Milestone-Sheet.md` · TaqatSpace code scan of the `dev` branch (PR #185)
 
 ---
 
-## 1. الهدف والنطاق
+## 1. Goal and Scope
 
-**الهدف:** تطوير TaqatSpace ليغطي **كامل** منظومة تشغيل مساحات العمل الموصوفة في الـ SRS، فوق ما هو مبني فعلًا، بحيث تنتقل مساحة TAQAT GAZA من CoWorkSpaces إلى TaqatSpace بالكامل، ثم تُفتح المنصة لمساحات أخرى.
+**Goal:** Evolve TaqatSpace to cover the **entire** coworking-space operations system described in the SRS (an Arabic-language source document), building on what already exists, so that the TAQAT GAZA workspace moves fully from CoWorkSpaces to TaqatSpace, after which the platform is opened to other workspaces.
 
-**النطاق (من الألف إلى الياء):**
+**Scope (end to end):**
 
-| # | المجال | يشمل |
+| # | Domain | Includes |
 | --- | --- | --- |
-| 1 | الأساس | المستأجرون (slug/code/خطة)، الفروع، الموظفون بمجموعات صلاحيات، 2FA، سجل التدقيق، الموافقات، الإعدادات الخمسة |
-| 2 | الشبكة | تكامل MikroTik (المثبّت، المزامنة، الأوامر، القفل، التحديث، التشخيص) |
-| 3 | محرك البيانات | الأجهزة، الجلسات، الحضور بأربعة أنماط، الإحصاءات، الفجوات، الولاء والشرائح، التنبيهات، أدوات السلامة |
-| 4 | التشغيل | اللوحة التنفيذية، المراقب المباشر، مركز المشتركين، العقود، Roster، مركز الحجوزات، المكاتب والغرف، طلبات الاشتراك |
-| 5 | المالية | الكتالوج، الخطط، الفواتير، السندات، الإشعارات الدائنة، المحفظة، POS، التحصيل، المصروفات، الصندوق، الضريبة، الاستيراد، المؤسسات، الساعات الإضافية، سجل النشاط |
-| 6 | برنامج GSG | المعلمات، العطلات، صيغة UR، Tracker، إقفال الشهر، مراجعة UTR، الاستخدام، البرامج، المطالبات |
-| 7 | التحليلات | تبويبات التحليلات، 19 تقريرًا، منشئ التقارير، التصدير PDF/Word/Excel/CSV/JSON |
-| 8 | السوبر أدمن | المساحات والخطط، اعتماد UTR، الاتفاقيات والمقاعد الممولة، المطالبات، الموافقات، مراقبة الراوترات، التقارير المجمّعة |
-| 9 | الفريلانسر | حالتي، الحضور، الفواتير والمحفظة، الطلبات، الاعتراضات، الأجهزة، الملف، الإشعارات |
-| 10 | العام | الموقع `/s/{slug}`، منشئ الموقع، النماذج، تسجيل ضيوف الهوتسبوت، النطاق المخصص |
-| 11 | القائم | الاكتشاف، الحجز، الدردشة، CMS، المراجعات، الإعلانات، البث، Academy API، الإشعارات — تبقى وتُربط (§8) |
-| 12 | الجودة والانتقال | E2E، التقوية، التعريب، الترحيل، UAT، القطع عن CoWorkSpaces |
+| 1 | Foundation | Tenants (slug/code/plan), branches, staff with permission groups, 2FA, audit log, approvals, the five settings areas |
+| 2 | Network | MikroTik integration (installer, sync, commands, locking, updates, diagnostics) |
+| 3 | Data engine | Devices, sessions, attendance in four modes, statistics, gaps, loyalty and segments, alerts, safety tools |
+| 4 | Operations | Executive dashboard, live monitor, members hub, contracts, Roster, booking hub, stations and rooms, subscription requests |
+| 5 | Finance | Catalog, plans, invoices, receipts and vouchers, credit notes, wallet, POS, collections, expenses, cash box, tax, import, organizations, after-hours, activity log |
+| 6 | GSG program | Parameters, holidays, UR formula, Tracker, month close, UTR review, utilization, programs, claims |
+| 7 | Analytics | Analytics tabs, 19 reports, report builder, PDF/Word/Excel/CSV/JSON export |
+| 8 | Super admin | Workspaces and plans, UTR approval, agreements and funded seats, claims, approvals, router monitoring, consolidated reports |
+| 9 | Freelancer | My status, attendance, invoices and wallet, requests, disputes, devices, profile, notifications |
+| 10 | Public | The `/s/{slug}` site, site builder, forms, hotspot guest registration, custom domain |
+| 11 | Existing | Discovery, booking, chat, CMS, reviews, announcements, broadcast, Academy API, notifications — retained and integrated (§8) |
+| 12 | Quality and migration | E2E, hardening, localization, data migration, UAT, cutover from CoWorkSpaces |
 
-**خارج النطاق (بقرار):** بوابة دفع إلكتروني، الدخول بـ OTP، شراء خطط المنصة ذاتيًا.
+**Out of scope (by decision):** online payment gateway, OTP login, self-serve purchase of platform plans.
 
 ---
 
-## 2. القرارات المعتمدة (2026-10-29)
+## 2. Approved Decisions (2026-10-29)
 
-| # | المحور | القرار | السبب |
+| # | Area | Decision | Rationale |
 | --- | --- | --- | --- |
-| D1 | الاتجاه | دمج فوق الموجود | المنصة القائمة تغطي الهوية والحجز والفوترة الأساسية وPOS؛ إعادة البناء هدر |
-| D2 | المالية | مالية كاملة لصاحب المساحة **بلا بوابة دفع** | الدفع في غزة نقدي/تحويل/شيك؛ المنصة تسجّل وتتابع |
-| D3 | الدخول | Taqat SSO + ربط اسم مستخدم MikroTik؛ تسجيل ضيف ذاتي من الهوتسبوت | SSO مبني ومعتمد؛ الهوتسبوت يغطي الضيوف بلا حساب |
-| D4 | الفريق | مطوّر واحد + Claude بوكلاء متعددين | التوازي داخل المرحلة لا بين المراحل |
-| D5 | الاستضافة | VPS (2vCPU/4GB + Redis + Supervisor) قبل أول راوتر حقيقي | cPanel المشتركة بلا worker دائم ولا Redis، وحدود عمليات PHP تُسقط اندفاع عودة الكهرباء |
-| D6 | البيانات | تشغيل متوازٍ على راوتر TAQAT GAZA بعد M2 + ترحيل بتصدير CSV/Excel | بيانات حقيقية لاختبار الدقة قبل القطع |
-| D7 | تكامل الراوتر | **PUSH** (الراوتر يرسل) بدل PULL في `DOCS/mikrotik-integration-plan.md` | الراوترات خلف NAT/CGNAT ولا يصلها الخادم |
-| D8 | العقد | توسيع `Subscription` ليصبح Contract | الحجز والفواتير وPOS والاختبارات تعتمد عليه |
-| D9 | المالية v2 | تغييرات إضافية خلف flag `finance_v2` مع مزامنة الحالات القديمة | لا كسر للفواتير الحالية أو ≈607 اختبارًا |
-| D10 | UR | حاسبة نقية `UrCalculator` + معلمات بإصدارات + نتائج مجمّدة | دقة قابلة للإثبات أمام الجهة المانحة |
-| D11 | المكونات المشتركة | `audit_logs` و`approval_requests` مخصصان، TOTP، `phpoffice/phpspreadsheet` و`phpoffice/phpword` | أبسط من الحزم العامة ويناسب نطاق المساحة |
-| D12 | المخرجات | Markdown + Excel في `DOCS/new plan/` | مرجع مقروء + نسخة متابعة |
+| D1 | Direction | Integrate on top of the existing platform | The current platform already covers identity, booking, basic billing, and POS; rebuilding would be wasteful |
+| D2 | Finance | Full finance for the workspace owner **with no payment gateway** | Payments in Gaza are cash/transfer/cheque; the platform records and tracks them |
+| D3 | Login | Taqat SSO + MikroTik username linking; self-service guest registration from the hotspot | SSO is built and approved; the hotspot covers guests without an account |
+| D4 | Team | One developer + Claude with multiple agents | Parallelism within a milestone, not across milestones |
+| D5 | Hosting | VPS (2vCPU/4GB + Redis + Supervisor) before the first real router | Shared cPanel has no persistent worker and no Redis, and its PHP process limits drop the request burst when power is restored |
+| D6 | Data | Parallel run on the TAQAT GAZA router after M2 + migration via CSV/Excel export | Real data to validate accuracy before cutover |
+| D7 | Router integration | **PUSH** (the router sends) instead of the PULL approach in `DOCS/mikrotik-integration-plan.md` | Routers sit behind NAT/CGNAT and are unreachable from the server |
+| D8 | Contract | Extend `Subscription` into a Contract | Booking, invoices, POS, and the tests depend on it |
+| D9 | Finance v2 | Additional changes behind the `finance_v2` flag, with legacy statuses kept in sync | No breakage of existing invoices or the ≈607 tests |
+| D10 | UR | Pure calculator `UrCalculator` + versioned parameters + frozen results | Provable accuracy towards the donor |
+| D11 | Shared components | Custom `audit_logs` and `approval_requests`, TOTP, `phpoffice/phpspreadsheet` and `phpoffice/phpword` | Simpler than generic packages and fits the workspace scope |
+| D12 | Deliverables | Markdown + Excel in `DOCS/new plan/` | Readable reference + tracking copy |
 
 ---
 
-## 3. الوضع الحالي للنظام
+## 3. Current System State
 
-### 3.1 المستودع والإصدارات
+### 3.1 Repository and Releases
 
-| البند | الحالة |
+| Item | Status |
 | --- | --- |
-| `dev` | PR #185 (2026-07-07) — آخر عمل: POS/الكاشير |
-| `origin/main` (الإنتاج) | PR #162 (2026-06-30) — **32 commit (كل POS) غير منشورة** |
-| آخر نشاط | 2026-07-07 (المشروع خامل منذ ≈ 16 أسبوعًا) |
-| النشر | GitHub Actions: `dev` → staging، `main` → production (`.github/workflows/deploy-*.yml`) على cPanel |
-| وثائق متقادمة | `README.md` (06-11)، `DOCS/presentation/FEATURES.md` (06-09)، `DOCS/taqat_space_dev_plan.xlsx` (كلها Todo) |
+| `dev` | PR #185 (2026-07-07) — latest work: POS/cashier |
+| `origin/main` (production) | PR #162 (2026-06-30) — **32 commits (all of POS) not yet deployed** |
+| Last activity | 2026-07-07 (project idle for ≈ 16 weeks) |
+| Deployment | GitHub Actions: `dev` → staging, `main` → production (`.github/workflows/deploy-*.yml`) on cPanel |
+| Outdated documents | `README.md` (06-11), `DOCS/presentation/FEATURES.md` (06-09), `DOCS/taqat_space_dev_plan.xlsx` (all Todo) |
 
-### 3.2 التقنية
+### 3.2 Technology
 
-| الطبقة | التفاصيل |
+| Layer | Details |
 | --- | --- |
-| Backend | Laravel 13، PHP 8.3، MySQL 8 (sqlite للاختبارات)؛ Controllers → Services → Eloquent (مستودعان فقط: `WorkspaceRepository`، `UserRepository`)؛ 74 FormRequest، 27 Resource، 23 Enum، `ApiResponse`؛ UUID؛ مسارات معيارية `backend/routes/api/*.php` |
-| الحجم | 40 migration، 27 model، 66 controller، ≈50 service، 23 إشعارًا، 5 أوامر مجدولة، ≈607 اختبار Feature |
-| الحزم | Sanctum، spatie/laravel-permission، mPDF، firebase/php-jwt، S3، Scramble (OpenAPI) — لا Excel ولا 2FA ولا سجل نشاط |
-| Frontend | Next 16 App Router، React 19، next-intl (ar/en)، مكونات UI خاصة (`frontend/src/components/ui/`)، recharts، MapLibre؛ قراءة بـ `serverFetch` وكتابة بـ Server Actions؛ 65 صفحة، 171 مكوّنًا، Vitest (17) وPlaywright (1) |
-| الوقت الحقيقي | Firestore (دردشة) + FCM (إشعارات) — اختياري عبر env |
-| الاستضافة | cPanel مشترك؛ Next.js standalone خلف mod_proxy؛ الطابور `database` يُفرّغ بالـ cron كل دقيقة |
+| Backend | Laravel 13, PHP 8.3, MySQL 8 (sqlite for tests); Controllers → Services → Eloquent (only two repositories: `WorkspaceRepository`, `UserRepository`); 74 FormRequests, 27 Resources, 23 Enums, `ApiResponse`; UUIDs; modular routes in `backend/routes/api/*.php` |
+| Size | 40 migrations, 27 models, 66 controllers, ≈50 services, 23 notifications, 5 scheduled commands, ≈607 Feature tests |
+| Packages | Sanctum, spatie/laravel-permission, mPDF, firebase/php-jwt, S3, Scramble (OpenAPI) — no Excel, no 2FA, no activity log |
+| Frontend | Next 16 App Router, React 19, next-intl (ar/en), custom UI components (`frontend/src/components/ui/`), recharts, MapLibre; reads via `serverFetch` and writes via Server Actions; 65 pages, 171 components, Vitest (17) and Playwright (1) |
+| Real-time | Firestore (chat) + FCM (notifications) — optional via env |
+| Hosting | Shared cPanel; Next.js standalone behind mod_proxy; the `database` queue is drained by cron every minute |
 
-### 3.3 الجرد حسب الدور
+### 3.3 Inventory by Role
 
-| الدور | الصفحات | أهم الموجود |
+| Role | Pages | Key existing features |
 | --- | --- | --- |
-| الزائر العام | 7 | الرئيسية (CMS)، الاستكشاف بالخريطة والفلاتر، صفحة المساحة مع BookingPanel، من نحن، الأسئلة، التواصل |
-| المصادقة | 9 | Taqat SSO (OIDC + PKCE)، اختيار الدور عند أول دخول، قبول دعوة الكاشير، دخول محلي للأدمن |
-| صاحب المساحة | 26 | لوحة KPIs، الأعضاء، الاشتراكات، لوحة المقاعد، طلبات الحجز، باقات الإنترنت، الموارد، POS (terminal/منتجات/تقارير)، الكاشيرية، الفواتير، المصروفات، الدردشة، البث، الإعلانات، التقارير (aging، P&L، الباقات) + تصدير CSV، الإعدادات (7 تبويبات) |
-| الكاشير | 4 | نقطة البيع، المنتجات (بصلاحية)، التقارير، الملف |
-| الفريلانسر | 8 | الرئيسية مع بيانات دخول الإنترنت، الاشتراك (إلغاء/تقييم)، الفواتير ورفع الإيصال، طلب من الكافيه، الدردشة، الإشعارات، الملف |
-| السوبر أدمن | 19 | لوحة KPIs، المساحات (موافقة/تعليق/نشر)، المستخدمون، الأدمنز بسبع صلاحيات **مطبّقة** (`can.permission` في 12 ملف routes)، الاشتراكات والفواتير (تعليم مدفوع + إيصال)، التقارير والتحليلات (مدينة/جنس)، CMS (الرئيسية، المحتوى، الهوية، من نحن، المدن)، المراسلة (SMS/SMTP، البث، الاستهلاك، صندوق التواصل)، الدردشة |
-| التكامل | — | Partner API لـ Academy بـ `X-Api-Key` مُجزّأ + webhooks موقّعة (`backend/app/Services/Partner/`) |
+| Public visitor | 7 | Home (CMS), explore with map and filters, workspace page with BookingPanel, About, FAQ, Contact |
+| Authentication | 9 | Taqat SSO (OIDC + PKCE), role selection on first login, cashier invitation acceptance, local admin login |
+| Workspace owner | 26 | KPI dashboard, members, subscriptions, seat board, booking requests, internet packages, resources, POS (terminal/products/reports), cashiers, invoices, expenses, chat, broadcast, announcements, reports (aging, P&L, packages) + CSV export, settings (7 tabs) |
+| Cashier | 4 | Point of sale, products (permission-gated), reports, profile |
+| Freelancer | 8 | Home with internet login credentials, subscription (cancel/rate), invoices and receipt upload, café ordering, chat, notifications, profile |
+| Super admin | 19 | KPI dashboard, workspaces (approve/suspend/publish), users, admins with seven **enforced** permissions (`can.permission` in 12 route files), subscriptions and invoices (mark paid + receipt), reports and analytics (city/gender), CMS (home, content, branding, about, cities), messaging (SMS/SMTP, broadcast, usage, contact inbox), chat |
+| Integration | — | Partner API for Academy with hashed `X-Api-Key` + signed webhooks (`backend/app/Services/Partner/`) |
 
-### 3.4 مشاكل قائمة يجب معالجتها
+### 3.4 Existing Issues to Address
 
-| المشكلة | الأثر | المعالجة |
+| Issue | Impact | Remediation |
 | --- | --- | --- |
-| مسار غير محمي `ops/clear-cache-9f3a2c` في `backend/routes/web.php` | أي شخص يمسح الكاش | M0.2 |
-| لا شيء يحوّل الاشتراك إلى `expired` | اشتراكات منتهية تبقى نشطة | M0.4، M4.7 |
-| `InvoiceService::delete` يحذف أي فاتورة حذفًا فعليًا | يخالف BR-FIN-01 | M5.5 |
-| تنبيه الانتهاء قبل 3 أيام بدل 14 | يخالف FR-MEM-03 | M4.7 |
-| `PaymentMethod` = نقدي/تحويل فقط، `PlanType` = شهري/يومي/مخصص | لا بطاقة ولا شيك ولا أنواع أسبوعي/ساعة/زائر/موظف | M4.8، M5.7 |
-| `SeatService::assign` لا يتحقق من نوع الخطة | يخالف BR-FIN-04 | M5.17 |
-| أسرار مكشوفة سابقًا (DB، AWS، Firebase، SSO) | خطر أمني | M0.3 |
-| لا عملة ولا منطقة زمنية لكل مساحة | يخالف §3.7 عام | M1.7 |
+| Unprotected route `ops/clear-cache-9f3a2c` in `backend/routes/web.php` | Anyone can clear the cache | M0.2 |
+| Nothing transitions a subscription to `expired` | Expired subscriptions stay active | M0.4, M4.7 |
+| `InvoiceService::delete` hard-deletes any invoice | Violates BR-FIN-01 | M5.5 |
+| Expiry reminder sent 3 days ahead instead of 14 | Violates FR-MEM-03 | M4.7 |
+| `PaymentMethod` = cash/transfer only, `PlanType` = monthly/daily/custom | No card or cheque, and no weekly/hourly/visitor/staff types | M4.8, M5.7 |
+| `SeatService::assign` does not validate the plan type | Violates BR-FIN-04 | M5.17 |
+| Previously exposed secrets (DB, AWS, Firebase, SSO) | Security risk | M0.3 |
+| No per-workspace currency or time zone | Violates §3.7 (General) | M1.7 |
 
 ---
 
-## 4. قاموس المصطلحات (SRS → TaqatSpace)
+## 4. Glossary (SRS → TaqatSpace)
 
-| مصطلح الـ SRS | المقابل في TaqatSpace | ملاحظة |
+| SRS term | TaqatSpace equivalent | Note |
 | --- | --- | --- |
-| المساحة (Workspace) | `Workspace` | يضاف slug وcode وخطة المنصة وحالتها |
-| صاحب المساحة | `User` بدور `workspace_owner` | مساحة واحدة لكل مالك حاليًا |
-| موظف المساحة | `User` بدور `cashier` ← يُعمَّم إلى «موظف» | مجموعات: صندوق، ضيافة، مشرف مالي |
-| المشترك / الفريلانسر | `User` بدور `freelancer` + `Subscription` | يضاف: حقول المانح، اسم MikroTik، الأجهزة؛ ويُسمح بمشترك **بلا حساب SSO** (من الاستيراد/الاكتشاف/الضيف) يُدمج عند أول دخول (M1.13) |
-| العقد / الاشتراك المالي | `Subscription` بعد توسيعه | مسودة، سماح، تجديد تلقائي، خطة، ساعات |
-| طلب الاشتراك | `BookingRequest` | يُفتح للزوار بلا حساب |
-| المكتب (Station) | `Seat` بعد توسيعه | منطقة، فرع، سعة، خصوصية، تبعية |
-| غرفة الاجتماعات | `workspace_resources` (meeting_room) | تصبح قابلة للحجز |
-| الخطة (Plan) | جدول `plans` جديد | `seat_type_prices` يبقى للعرض العام |
-| الصنف / التصنيف | `catalog_items` / `catalog_categories` | منتجات POS تُربط بها |
-| سند القبض | `receipts` + `receipt_allocations` | تُرحَّل إليها `invoice_payments` |
-| باقة الإنترنت | `InternetPackage` | تُترجم إلى ملف هوتسبوت (سرعة وحد بيانات) |
-| بيانات دخول الإنترنت | `hotspot_accounts` | بدل `subscriptions.internet_username` |
-| مفتاح API للراوتر | `routers.api_key_hash` + `AuthenticateRouter` | على نمط `AuthenticatePartner` |
-| السوبر أدمن | `User` بدور `admin` + Spatie `super_admin`/`admin` | تضاف صلاحيات للوحدات الجديدة |
+| Workspace | `Workspace` | Add slug, code, platform plan, and platform status |
+| Workspace owner | `User` with role `workspace_owner` | Currently one workspace per owner |
+| Workspace staff | `User` with role `cashier` → generalized to "Staff" | Groups: cash desk, hospitality, finance supervisor |
+| Subscriber / freelancer | `User` with role `freelancer` + `Subscription` | Adds: donor fields, MikroTik username, devices; also allows a subscriber **without an SSO account** (from import/discovery/guest) who is merged on first login (M1.13) |
+| Contract / financial subscription | `Subscription` after extension | Draft, grace period, auto-renewal, plan, hours |
+| Subscription request | `BookingRequest` | Opened to visitors without an account |
+| Station | `Seat` after extension | Zone, branch, capacity, privacy, parent |
+| Meeting room | `workspace_resources` (meeting_room) | Becomes bookable |
+| Plan | New `plans` table | `seat_type_prices` remains for public display |
+| Item / category | `catalog_items` / `catalog_categories` | POS products are linked to them |
+| Receipt | `receipts` + `receipt_allocations` | `invoice_payments` are migrated into them |
+| Internet package | `InternetPackage` | Translated into a hotspot profile (speed and data cap) |
+| Internet login credentials | `hotspot_accounts` | Replaces `subscriptions.internet_username` |
+| Router API key | `routers.api_key_hash` + `AuthenticateRouter` | Modeled on `AuthenticatePartner` |
+| Super admin | `User` with role `admin` + Spatie `super_admin`/`admin` | Permissions are added for the new modules |
 
 ---
 
-## 5. مصفوفة الفجوة التفصيلية
+## 5. Detailed Gap Matrix
 
-كل متطلب في الـ SRS مقابل الكود الحالي، بمسارات ملفات مُتحقَّق منها. الحالة: ✅ موجود · 🟨 جزئي · ⬜ جديد. ربط كل بند بمهمة موجود في عمود «مرجع SRS» في الشيت.
+Every SRS requirement mapped against the current code, with verified file paths. Status: ✅ Existing · 🟨 Partial · ⬜ New. The link from each item to a task is in the "SRS ref" column of the sheet.
 
-**الإجمالي:** 136 بندًا — ✅ موجود 3 · 🟨 جزئي 59 · ⬜ جديد 74.
+**Total:** 136 items — ✅ existing 3 · 🟨 partial 59 · ⬜ new 74.
 
-مفتاح الحالة: ✅ موجود / 🟨 جزئي / ⬜ جديد
+Status key: ✅ Existing / 🟨 Partial / ⬜ New
 
-ملاحظات عامة تم التحقق منها:
-- لا يوجد أي ذكر لـ MikroTik/RADIUS/أجهزة/حضور في `backend/` أو `frontend/src/` (InternetAccessService يولّد اسم مستخدم/كلمة مرور ويرسلها فقط، والتزويد على الراوتر "مرحلة لاحقة" بحسب تعليق الملف).
-- لا يوجد: 2FA، VAT/ضريبة، wallet/محفظة، slug/code للمساحة، سجل نشاط/تدقيق، استيراد XLSX، مؤسسات، فروع/مناطق.
-- `PaymentMethod` = cash/transfer فقط. `PlanType` = monthly/daily/custom فقط. `InvoiceStatus` = pending/under_review/payment_rejected/partially_paid/paid/overdue/cancelled (لا مسودة).
-- حذف الفاتورة (`InvoiceService::delete`) حذف فعلي، وليس إلغاءً منطقيًا.
-- `BookingRequest` = طلب عضوية من فريلانسر مسجّل (`role.freelancer`)، وليس حجز غرفة اجتماعات من زائر عام. حالاته pending/approved/rejected فقط.
-- اختصارات لوحة المفاتيح: فقط `Escape` في `DashShell.tsx` — لا F2 ولا Alt+x.
+Verified general notes:
+- No mention of MikroTik/RADIUS/devices/attendance anywhere in `backend/` or `frontend/src/` (InternetAccessService only generates a username/password and sends it; provisioning on the router is a "later phase" per the file's comment).
+- Not present: 2FA, VAT/tax, wallet, workspace slug/code, activity/audit log, XLSX import, organizations, branches/zones.
+- `PaymentMethod` = cash/transfer only. `PlanType` = monthly/daily/custom only. `InvoiceStatus` = pending/under_review/payment_rejected/partially_paid/paid/overdue/cancelled (no draft).
+- Invoice deletion (`InvoiceService::delete`) is a hard delete, not a soft cancellation.
+- `BookingRequest` = a membership request from a registered freelancer (`role.freelancer`), not a meeting-room booking by a public visitor. Its statuses are pending/approved/rejected only.
+- Keyboard shortcuts: only `Escape` in `DashShell.tsx` — no F2 and no Alt+x.
 
-### §2.3 أنواع الاشتراك
+### §2.3 Subscription types
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| SUBTYPE | أنواع الاشتراك: شهري، أسبوعي، يومي، بالساعة، زائر، موظف + طرق تسعير الخطط (ثابت، بالساعات، بالـGB، باقة بحد وصلاحية) | 🟨 | `backend/app/Enums/PlanType.php` (monthly/daily/custom)، `backend/app/Models/Subscription.php`، `backend/app/Models/InternetPackage.php` | إضافة weekly وhourly وvisitor وstaff إلى PlanType؛ نموذج خطة مالية بـ6 طرق تسعير (ساعات/GB/باقة بصلاحية)؛ ربط الاشتراك بالخطة وسعر الزيادة |
+| SUBTYPE | Subscription types: monthly, weekly, daily, hourly, visitor, staff + plan pricing methods (fixed, by hours, by GB, package with a cap and validity) | 🟨 | `backend/app/Enums/PlanType.php` (monthly/daily/custom), `backend/app/Models/Subscription.php`, `backend/app/Models/InternetPackage.php` | Add weekly, hourly, visitor, and staff to PlanType; financial plan model with 6 pricing methods (hours/GB/package with validity); link the subscription to the plan and the overage price |
 
-### §2.2 / §6 موظف المساحة
+### §2.2 / §6 Workspace staff
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| STAFF-01 | دعوة موظف بالبريد + مجموعات جاهزة (صندوق/ضيافة/مشرف مالي) أو صلاحيات فردية | 🟨 | `backend/app/Services/Pos/CashierManagementService.php`، `backend/app/Enums/PosPermission.php` (4 صلاحيات POS فقط)، `frontend/src/components/features/owner/CashiersManager.tsx` | توسيع الدور من "كاشير POS" إلى موظف مساحة عام بصلاحيات مالية (فواتير، مصروفات، أصناف، استيراد، تقارير)؛ مجموعات جاهزة؛ صفحة `/settings/staff` |
-| SEC-2FA | مصادقة ثنائية لإصدار/إلغاء الفواتير (للموظف) | ⬜ | لا يوجد (لا TOTP/OTP في `backend/app`) | TOTP أو OTP عبر البريد/SMS، تسجيل جهاز، middleware يفرضها على إصدار/إلغاء الفاتورة |
-| UX-KBD | اختصارات لوحة المفاتيح (F2 اختيار مشترك، Alt+S/A/R/L) | ⬜ | `frontend/src/components/layout/DashShell.tsx` (Escape فقط) | hook اختصارات عام، F2 في `PosTerminal.tsx`، اختصارات اللوحة، مساعدة اختصارات |
+| STAFF-01 | Invite staff by email + preset groups (cash desk/hospitality/finance supervisor) or individual permissions | 🟨 | `backend/app/Services/Pos/CashierManagementService.php`, `backend/app/Enums/PosPermission.php` (4 POS permissions only), `frontend/src/components/features/owner/CashiersManager.tsx` | Broaden the role from "POS cashier" to general workspace staff with financial permissions (invoices, expenses, items, import, reports); preset groups; `/settings/staff` page |
+| SEC-2FA | Two-factor authentication (2FA) for issuing/cancelling invoices (for staff) | ⬜ | None (no TOTP/OTP in `backend/app`) | TOTP or OTP via email/SMS, device registration, middleware enforcing it on invoice issue/cancel |
+| UX-KBD | Keyboard shortcuts (F2 select subscriber, Alt+S/A/R/L) | ⬜ | `frontend/src/components/layout/DashShell.tsx` (Escape only) | Global shortcuts hook, F2 in `PosTerminal.tsx`, dashboard shortcuts, shortcuts help |
 
-### §3.1 الرئيسية
+### §3.1 Home
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| FR-DSH-01 | درجة صحة المساحة /100 بأربعة مكونات + توصيات | ⬜ | `backend/app/Services/OwnerDashboardService.php` (إشغال، إيراد فقط) | خوارزمية الدرجة (استخدام/احتفاظ/نشاط/اتصال) وتوصيات نصية؛ تعتمد الاتصال والنشاط على بيانات الحضور غير الموجودة |
-| FR-DSH-02 | بطاقات KPI: نشطون، متصلون الآن، حضور اليوم، UR، تنزيل/رفع، DAU/WAU/MAU، الأجهزة | 🟨 | `backend/app/Services/OwnerDashboardService.php`، `frontend/src/app/[locale]/(dashboard)/owner/page.tsx` | الموجود: نشطون، إشغال، مقاعد متاحة، طلبات معلقة، فواتير متأخرة. الناقص: كل بطاقات الشبكة والحضور وUR |
-| FR-DSH-03 | رسوم: نشاط 30 يومًا، توزيع الأنواع، استهلاك الإنترنت، ساعات الذروة، أيام الأسبوع | 🟨 | `backend/app/Services/OwnerDashboardService.php` (revenue_chart 6 أشهر، members_by_status، members_by_gender)، `frontend/src/app/[locale]/(dashboard)/owner/page.tsx` | رسوم النشاط والاستهلاك وساعات الذروة وأيام الأسبوع (تتطلب حضور/شبكة)؛ توزيع أنواع الاشتراك بدل الحالة |
-| FR-DSH-04 | النمو والتفاعل: جدد، احتفاظ، معرّضون للتوقف 14+ يومًا، DAU/MAU | ⬜ | لا يوجد (OwnerDashboardService لا يحسبها) | حساب الجدد والاحتفاظ؛ مؤشر التوقف يتطلب بيانات النشاط |
-| FR-DSH-05 | إيراد متوقع، ARPU، نسبة إشغال المقاعد (كتقدير) | 🟨 | `backend/app/Services/OwnerDashboardService.php` (occupancy_pct، revenue_this_month/last_month) | الإيراد المتوقع وARPU وتوضيح أنه تقدير |
-| FR-DSH-06 | شرائح المشتركين: أبطال، معرّضون، منسحبون، جدد، خاملون، منتظمون | ⬜ | لا يوجد | محرك تقسيم (segmentation) يعتمد سجل الحضور/الاستخدام |
-| FR-DSH-07 | توقع الشهر القادم بانحدار OLS مع R² وموثوقية | ⬜ | لا يوجد | خدمة توقع (OLS) على الإيراد/الحضور وعرض R² |
-| FR-DSH-08 | قائمة "يحتاجون متابعة" وجدول ولاء + اختصارات Alt+S/A/R/L | ⬜ | لا يوجد (انظر UX-KBD) | مؤشر الولاء وقائمة المتابعة والاختصارات |
-| FR-DSH-09 | آخر مزامنة وعدد اللقطات 24 ساعة + زر تحديث يدوي | ⬜ | لا يوجد (لا مزامنة شبكة) | يتبع بناء تكامل MikroTik وجدول snapshots |
-| FR-NET-01 | جدول الأجهزة المتصلة (مستخدم، نوع، MAC، IP، uptime، تنزيل/رفع) | ⬜ | لا يوجد؛ الأقرب `backend/app/Services/InternetAccessService.php` (اعتمادات فقط) | نموذج Device وربطه بالمشترك، مزامنة MikroTik، صفحة `/live-monitor` |
-| FR-NET-02 | تحديث تلقائي كل 30 ثانية | ⬜ | لا يوجد | polling أو WebSocket في صفحة المراقب |
-| FR-NET-03 | تبويبات: متصلون الآن، الفجوات، الاستخدام، الاتجاهات | ⬜ | لا يوجد | تخزين جلسات وتحليل الانقطاعات والاتجاهات |
-| FR-ALR-01 | توليد تنبيهات آلية: استهلاك مرتفع، جهاز جديد، خطر تسرب، غير نشط | ⬜ | لا يوجد (يوجد نظام إشعارات عام `owner/notifications/page.tsx` لكنه ليس محرك تنبيهات) | نموذج Alert + مهام مجدولة بعتبات؛ تعتمد بيانات الشبكة/الحضور |
-| FR-ALR-02 | تصنيف الخطورة وعدادات وترقيم 30 | ⬜ | لا يوجد | صفحة `/alerts` وعدادات (إجمالي/غير مقروءة/اليوم/حرجة) |
+| FR-DSH-01 | Workspace health score /100 from four components + recommendations | ⬜ | `backend/app/Services/OwnerDashboardService.php` (occupancy, revenue only) | Score algorithm (usage/retention/activity/connectivity) and text recommendations; connectivity and activity depend on attendance data that does not exist |
+| FR-DSH-02 | KPI cards: active, connected now, today's attendance, UR, download/upload, DAU/WAU/MAU, devices | 🟨 | `backend/app/Services/OwnerDashboardService.php`, `frontend/src/app/[locale]/(dashboard)/owner/page.tsx` | Existing: active, occupancy, available seats, pending requests, overdue invoices. Missing: all network, attendance, and UR cards |
+| FR-DSH-03 | Charts: 30-day activity, type distribution, internet consumption, peak hours, days of the week | 🟨 | `backend/app/Services/OwnerDashboardService.php` (revenue_chart 6 months, members_by_status, members_by_gender), `frontend/src/app/[locale]/(dashboard)/owner/page.tsx` | Activity, consumption, peak-hour, and weekday charts (require attendance/network); subscription-type distribution instead of status |
+| FR-DSH-04 | Growth and engagement: new, retention, at risk of dropping off (14+ days), DAU/MAU | ⬜ | None (OwnerDashboardService does not compute them) | Compute new members and retention; the drop-off indicator requires activity data |
+| FR-DSH-05 | Expected revenue, ARPU, seat occupancy rate (as an estimate) | 🟨 | `backend/app/Services/OwnerDashboardService.php` (occupancy_pct, revenue_this_month/last_month) | Expected revenue and ARPU, and labeling it as an estimate |
+| FR-DSH-06 | Subscriber segments: champions, at risk, churned, new, dormant, regulars | ⬜ | None | Segmentation engine based on the attendance/usage log |
+| FR-DSH-07 | Next-month forecast via OLS regression with R² and confidence | ⬜ | None | Forecasting service (OLS) on revenue/attendance and R² display |
+| FR-DSH-08 | "Needs follow-up" list and loyalty table + Alt+S/A/R/L shortcuts | ⬜ | None (see UX-KBD) | Loyalty indicator, follow-up list, and shortcuts |
+| FR-DSH-09 | Last sync and 24-hour snapshot count + manual refresh button | ⬜ | None (no network sync) | Follows building the MikroTik integration and the snapshots table |
+| FR-NET-01 | Connected devices table (user, type, MAC, IP, uptime, download/upload) | ⬜ | None; closest is `backend/app/Services/InternetAccessService.php` (credentials only) | Device model linked to the subscriber, MikroTik sync, `/live-monitor` page |
+| FR-NET-02 | Auto-refresh every 30 seconds | ⬜ | None | Polling or WebSocket on the monitor page |
+| FR-NET-03 | Tabs: connected now, gaps, usage, trends | ⬜ | None | Session storage and analysis of disconnections and trends |
+| FR-ALR-01 | Automatic alert generation: high consumption, new device, churn risk, inactive | ⬜ | None (a general notifications system exists at `owner/notifications/page.tsx`, but it is not an alerts engine) | Alert model + scheduled jobs with thresholds; depends on network/attendance data |
+| FR-ALR-02 | Severity classification, counters, and pagination of 30 | ⬜ | None | `/alerts` page and counters (total/unread/today/critical) |
 
-### §3.2 التجاري
+### §3.2 Commercial
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| FR-SUB-01 | جدول شهري: أيام، نسبة الحضور، ساعات، GB، خطة، غير المفوتر، رصيد | 🟨 | `backend/app/Services/OwnerSubscriptionService.php`، `frontend/src/components/features/owner/SubscriptionsTable.tsx`، `frontend/src/app/[locale]/(dashboard)/owner/subscriptions/page.tsx` | الموجود: قائمة الاشتراكات بالحالة/السعر. الناقص: الأيام والحضور والساعات وGB (حضور/شبكة)، "غير المفوتر" والرصيد (محفظة/دفتر حساب مشترك) |
-| FR-SUB-02 | بحث (اسم/هاتف/مستخدم) وترتيب بـ6 معايير | 🟨 | `backend/app/Services/OwnerSubscriptionService.php` (applySearch/applySort)، `backend/app/Services/MemberService.php` | مراجعة حقول البحث (اسم مستخدم الإنترنت) ومعايير الترتيب الستة |
-| FR-SUB-03 | بطاقات: حاضرون، عليهم مبالغ، إجمالي مستحق، رصيد محافظ، اشتراكات نشطة | 🟨 | `backend/app/Services/InvoiceService.php` (workspaceSummary)، `backend/app/Services/OwnerDashboardService.php` | الموجود: ملخص فواتير وعدد النشط. الناقص: الحاضرون ورصيد المحافظ (المحفظة غير موجودة) |
-| FR-RMB-01 | استقبال حجوزات غرف الاجتماعات من الموقع العام ومراجعتها (معلق/موافق/مرفوض/ملغى/قادم) | 🟨 | `backend/app/Services/BookingService.php`، `frontend/src/app/[locale]/(dashboard)/owner/bookings/page.tsx`، `backend/app/Models/Resource.php` (ResourceType::MeetingRoom كمخزون فقط) | الموجود: طلبات عضوية (pending/approved/rejected) من مستخدم مسجّل. الناقص: حجز غرفة بتاريخ/وقت من زائر عام بدون حساب، حالتا ملغى/قادم، منع التعارض، ربط بـResource |
-| FR-RMB-02 | بحث باسم الضيف/بريده وتصفية بالتاريخ | ⬜ | لا يوجد (طلبات العضوية بلا حقول ضيف/تاريخ حجز) | حقول guest_name/email/date وفلاتر البحث |
+| FR-SUB-01 | Monthly table: days, attendance rate, hours, GB, plan, unbilled, balance | 🟨 | `backend/app/Services/OwnerSubscriptionService.php`, `frontend/src/components/features/owner/SubscriptionsTable.tsx`, `frontend/src/app/[locale]/(dashboard)/owner/subscriptions/page.tsx` | Existing: subscriptions list with status/price. Missing: days, attendance, hours, and GB (attendance/network), "unbilled" and balance (wallet/subscriber account ledger) |
+| FR-SUB-02 | Search (name/phone/username) and sort by 6 criteria | 🟨 | `backend/app/Services/OwnerSubscriptionService.php` (applySearch/applySort), `backend/app/Services/MemberService.php` | Review the search fields (internet username) and the six sort criteria |
+| FR-SUB-03 | Cards: present, owing amounts, total due, wallet balances, active subscriptions | 🟨 | `backend/app/Services/InvoiceService.php` (workspaceSummary), `backend/app/Services/OwnerDashboardService.php` | Existing: invoice summary and active count. Missing: present members and wallet balances (the wallet does not exist) |
+| FR-RMB-01 | Receive meeting-room bookings from the public site and review them (pending/approved/rejected/cancelled/upcoming) | 🟨 | `backend/app/Services/BookingService.php`, `frontend/src/app/[locale]/(dashboard)/owner/bookings/page.tsx`, `backend/app/Models/Resource.php` (ResourceType::MeetingRoom as inventory only) | Existing: membership requests (pending/approved/rejected) from a registered user. Missing: room booking by date/time from a public visitor without an account, cancelled/upcoming statuses, conflict prevention, linking to Resource |
+| FR-RMB-02 | Search by guest name/email and filter by date | ⬜ | None (membership requests have no guest/booking-date fields) | guest_name/email/date fields and search filters |
 
-### §3.3 المالية
+### §3.3 Finance
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| FR-FIN-01 | قسم "ما يحتاج انتباهك" (مثل مشتركون فعالون بلا اشتراك مالي) | ⬜ | `frontend/src/components/features/invoices/OwnerInvoiceAlert.tsx` (تنبيه فواتير فقط) | لوحة `/finance` وقواعد الانتباه وروابطها |
-| FR-FIN-02 | أربعة أرقام: مقبوض، مصروف، نتيجة تشغيلية، مفوتر غير مدفوع؛ كل بطاقة تفتح سجلاتها | 🟨 | `backend/app/Services/OwnerReportsService.php` (profit_loss)، `backend/app/Services/ExpenseService.php` (summaryForWorkspace)، `backend/app/Services/InvoiceService.php` (workspaceSummary) | ما تجمّع في لوحة مالية واحدة مع drill-down؛ دمج مقبوضات POS مع الفواتير |
-| FR-FIN-03 | أعمار الذمم وأعلى الأرصدة + خيار إظهار تفاصيل الفوترة والضريبة | 🟨 | `backend/app/Services/OwnerReportsService.php` (aging)، `frontend/src/components/features/owner/OwnerReportsSections.tsx` | أعلى الأرصدة حسب المشترك؛ تبديل إظهار الضريبة (لا ضريبة) |
-| FIN-POS | POS: اختيار مشترك F2، كتالوج أو بند يدوي، خصم وسببه، "إضافة للحساب" أو "تحصيل" (نقدي/بطاقة/تحويل/شيك)، لوحة أرقام، استخدام مقاعد | 🟨 | `backend/app/Services/Pos/PosOrderService.php`، `frontend/src/components/features/cashier/PosTerminal.tsx`، `frontend/src/app/[locale]/(dashboard)/owner/pos/terminal/page.tsx` | الموجود: طلبات POS بكتالوج ومخزون وخصم وطريقتي دفع cash/transfer وحالات وإرجاع. الناقص: بطاقة/شيك، بند يدوي، سبب الخصم، "إضافة إلى الحساب" (دفتر مشترك)، F2، لوحة أرقام، بيع استخدام مقاعد |
-| FIN-INV | فاتورة يدوية، تجهيز جماعي بالشهر مع معاينة، مسودة→إصدار، حالات ودفع، فلتر المتأخر | 🟨 | `backend/app/Services/InvoiceService.php`، `backend/app/Services/InvoicePdfService.php`، `frontend/src/components/features/invoices/IssueInvoiceModal.tsx` | الموجود: فاتورة يدوية (مبلغ واحد)، توليد شهري آلي (أمر مجدول)، مدفوعات جزئية، PDF، متأخر، تذكير. الناقص: بنود متعددة، مسودة/إصدار، معاينة التجهيز الجماعي، ضريبة، عدم قابلية التعديل |
-| FIN-COL | تحصيلات: أعمار الديون 0–90+، تسجيل متابعة بملاحظة، فلتر "لا أستطيع التواصل" | 🟨 | `backend/app/Services/OwnerReportsService.php` (aging)، `backend/app/Services/InvoiceService.php` (sendReminder/remindOverdue)، `frontend/src/components/features/owner/OwnerReportsSections.tsx` | شاشة `/finance/collections` ونموذج متابعة (ملاحظة، نتيجة تواصل) وفلتر عدم الاستجابة |
-| FIN-RCP | سندات قبض: دفعة موزعة على فواتير، حالات الشيك، فرز بتاريخ التحصيل/الاستلام | 🟨 | `backend/app/Models/InvoicePayment.php`، `backend/app/Services/InvoiceService.php` (recordPayment، approveReceipt)، `frontend/src/components/features/invoices/RecordPaymentButton.tsx` | الموجود: دفعات على فاتورة واحدة مع إيصال مرفوع ومراجعة. الناقص: سند قبض مستقل بترقيم، توزيع دفعة على عدة فواتير، حالات الشيك، تاريخ التحصيل مقابل الاستلام |
-| FIN-EXP | مصروفات: تصنيف، وسيلة دفع، مرجع، إلغاء | 🟨 | `backend/app/Services/ExpenseService.php`، `backend/app/Models/Expense.php`، `frontend/src/components/features/owner/ExpensesTable.tsx` | الموجود: CRUD + تجميع بالفئة والشهر + تصدير + مخطط. الناقص: وسيلة الدفع والمرجع والإلغاء (بدل الحذف) وتصنيفات ديناميكية |
-| FIN-CN | إشعارات دائنة مرتبطة بفاتورة صادرة مع سبب | ⬜ | لا يوجد (`InvoiceStatus::Cancelled` موجود لكن الحذف فعلي) | جدول credit_notes، ترقيم، ربط بالفاتورة، سبب، أثر على الذمم |
-| FIN-PV | مبالغ مستردة: سند صرف من حساب المشترك عند إعادة رصيد المحفظة | ⬜ | لا يوجد (إرجاع POS فقط: `backend/app/Services/Pos/PosOrderService.php`) | سند صرف، المحفظة/الرصيد، ترقيم وتدقيق |
-| FIN-CASH | مطابقة الصندوق: حركة اليوم حسب الوسيلة وحاسبة عدّ النقد | 🟨 | `backend/app/Services/Pos/PosReportService.php` (byMethod)، `frontend/src/components/features/pos/PosReports.tsx` | حركة اليوم حسب الوسيلة تغطي POS فقط. الناقص: دمج مدفوعات الفواتير والمصروفات (داخل/خارج/صافي) وحاسبة عدّ النقد، وشاشة `/finance/cash-up` |
-| FIN-IMP | استيراد XLSX للكتالوج/المسحوبات مع معاينة واعتماد ذري | ⬜ | لا يوجد (تصدير فقط: `backend/app/Services/Owner/OwnerExportService.php`) | رفع وتحقق (≤2000 صف/5MB/بلا معادلات)، معاينة، transaction، منع التكرار |
-| FIN-VAT | تقرير ضريبة القيمة المضافة على أساس الاستحقاق | ⬜ | لا يوجد | معدل الضريبة بالإعدادات، تجميده عند الإصدار، حقول ضريبة بالفاتورة، تقرير وتنزيل |
-| FIN-PLN | خطط: 6 طرق تسعير، سعر الزيادة، مقعد مخصص، عرض خاص، أرشفة | 🟨 | `backend/app/Services/PackageService.php`، `backend/app/Models/InternetPackage.php`، `backend/app/Services/SeatTypePricingService.php` | الموجود: باقات إنترنت (سرعة، سعر، حد GB، فعّال) وأسعار أنواع المقاعد. الناقص: خطة مالية موحدة بطرق التسعير الستة وسعر الزيادة والعرض الخاص والأرشفة |
-| FIN-ITM | أصناف: رمز ثابت، اسم عربي/إنجليزي، تصنيف، وحدة، سعر | 🟨 | `backend/app/Services/Pos/PosProductService.php`، `backend/app/Models/PosProduct.php`، `frontend/src/components/features/owner/PosManager.tsx` | الموجود: منتج (name، sku، category نصي، price، مخزون). الناقص: اسمان عربي/إنجليزي، وحدة، ربط بتصنيف، استخدامه في الفواتير |
-| FIN-CAT | تصنيفات مبيعات ومصروفات برمز ثابت وترتيب وأرشفة | 🟨 | `backend/app/Enums/ExpenseCategory.php` (7 قيم ثابتة)، `backend/app/Models/PosProduct.php` (category نص حر) | جدول تصنيفات ديناميكي (مبيعات/مصروفات) برمز وترتيب وأرشفة |
-| FIN-AH | ساعات إضافية: قواعد احتساب بعد الدوام ومعاينة (متوقفة حاليًا) | ⬜ | لا يوجد (`working_hours` في `backend/app/Models/Workspace.php` للعرض فقط) | قواعد احتساب ومعاينة شهرية؛ تتطلب بيانات حضور؛ متوقفة في المرجع فيمكن تأجيلها |
-| FIN-SEAT | مقاعد: إشغال اليوم، إيراد المخصصة، حالات (متاح/مخصص/محجوز لاحقًا/خارج الخدمة)، تحرير المنتهية | 🟨 | `backend/app/Services/SeatService.php`، `backend/app/Enums/SeatStatus.php`، `frontend/src/components/features/owner/SeatBoard.tsx` | الموجود: خريطة مقاعد وإسناد/إلغاء وحالات available/occupied/reserved/maintenance. الناقص: إيراد المقاعد المخصصة، "محجوز لاحقًا" بتاريخ، تحرير تلقائي للمنتهية |
-| FIN-ORG | مؤسسات: شركة تدفع عن أفرادها بفاتورة موحدة مع رقم ضريبي | ⬜ | لا يوجد | جدول organizations وربط الأعضاء وقواعد تغطية وفاتورة موحدة وقيمة ضريبية |
-| FIN-ACT | سجل النشاط المالي (17 إجراء: من/متى/لماذا) | ⬜ | لا يوجد | جدول audit للإجراءات المالية ومراقب (observer/service) وشاشة عرض بفلاتر |
-| BR-FIN-01 | الفاتورة الصادرة لا تُعدّل؛ التصحيح بإشعار دائن أو إلغاء | 🟨 | `backend/app/Services/InvoiceService.php` (delete حذف فعلي)، `backend/app/Http/Controllers/InvoiceController.php` | حذف فعلي مسموح حاليًا (يخالف القاعدة). المطلوب: إلغاء منطقي + منع التعديل بعد الإصدار + إشعار دائن |
-| BR-FIN-02 | النقد وحده يدخل الصندوق، والوسائل الأخرى للمطابقة فقط | ⬜ | `backend/app/Enums/PaymentMethod.php` (cash/transfer) بلا مفهوم صندوق | تمييز مدفوعات النقد في cash-up وإضافة وسائل بطاقة/شيك |
-| BR-FIN-03 | لا ضريبة ما لم يُحدد معدل في الإعدادات ← التشغيل | ⬜ | لا يوجد (لا ضريبة في النظام) | حقل معدل الضريبة بإعدادات التشغيل وتطبيقه عند الإصدار فقط |
-| BR-FIN-04 | المقعد المخصص يتطلب خطة شهرية أو أسبوعية أو باقة | 🟨 | `backend/app/Services/SeatService.php` (assign يتطلب اشتراكًا نشطًا فقط) | التحقق من نوع الخطة (شهري/أسبوعي/باقة) عند الإسناد |
+| FR-FIN-01 | "Needs your attention" section (e.g. active subscribers without a financial subscription) | ⬜ | `frontend/src/components/features/invoices/OwnerInvoiceAlert.tsx` (invoice alert only) | `/finance` dashboard, attention rules, and their links |
+| FR-FIN-02 | Four figures: received, spent, operating result, billed unpaid; each card opens its records | 🟨 | `backend/app/Services/OwnerReportsService.php` (profit_loss), `backend/app/Services/ExpenseService.php` (summaryForWorkspace), `backend/app/Services/InvoiceService.php` (workspaceSummary) | Not aggregated into a single finance dashboard with drill-down; merge POS receipts with invoices |
+| FR-FIN-03 | Receivables aging and top balances + option to show billing and tax details | 🟨 | `backend/app/Services/OwnerReportsService.php` (aging), `frontend/src/components/features/owner/OwnerReportsSections.tsx` | Top balances by subscriber; tax display toggle (no tax exists) |
+| FIN-POS | POS: F2 subscriber selection, catalog or manual line, discount with reason, "Add to account" or "Collect" (cash/card/transfer/check), numeric keypad, seat usage | 🟨 | `backend/app/Services/Pos/PosOrderService.php`, `frontend/src/components/features/cashier/PosTerminal.tsx`, `frontend/src/app/[locale]/(dashboard)/owner/pos/terminal/page.tsx` | Existing: POS orders with catalog, stock, discount, two payment methods cash/transfer, statuses, and refunds. Missing: card/check, manual line, discount reason, "Add to account" (subscriber ledger), F2, numeric keypad, selling seat usage |
+| FIN-INV | Manual invoice, bulk monthly preparation with preview, draft→issue, statuses and payment, overdue filter | 🟨 | `backend/app/Services/InvoiceService.php`, `backend/app/Services/InvoicePdfService.php`, `frontend/src/components/features/invoices/IssueInvoiceModal.tsx` | Existing: manual invoice (single amount), automatic monthly generation (scheduled command), partial payments, PDF, overdue, reminder. Missing: multiple line items, draft/issue, bulk-preparation preview, tax, immutability |
+| FIN-COL | Collections: debt aging 0–90+, log a follow-up with a note, "Can't reach" filter | 🟨 | `backend/app/Services/OwnerReportsService.php` (aging), `backend/app/Services/InvoiceService.php` (sendReminder/remindOverdue), `frontend/src/components/features/owner/OwnerReportsSections.tsx` | `/finance/collections` screen, follow-up model (note, contact outcome), and non-response filter |
+| FIN-RCP | Receipts: payment allocated across invoices, check statuses, sort by collection/receipt date | 🟨 | `backend/app/Models/InvoicePayment.php`, `backend/app/Services/InvoiceService.php` (recordPayment, approveReceipt), `frontend/src/components/features/invoices/RecordPaymentButton.tsx` | Existing: payments against a single invoice with an uploaded receipt and review. Missing: standalone numbered receipt, allocating one payment across multiple invoices, check statuses, collection date vs. receipt date |
+| FIN-EXP | Expenses: category, payment method, reference, cancellation | 🟨 | `backend/app/Services/ExpenseService.php`, `backend/app/Models/Expense.php`, `frontend/src/components/features/owner/ExpensesTable.tsx` | Existing: CRUD + grouping by category and month + export + chart. Missing: payment method, reference, cancellation (instead of deletion), and dynamic categories |
+| FIN-CN | Credit notes linked to an issued invoice, with a reason | ⬜ | None (`InvoiceStatus::Cancelled` exists but deletion is a hard delete) | credit_notes table, numbering, link to the invoice, reason, effect on receivables |
+| FIN-PV | Refunds: payment voucher from the subscriber's account when refunding a wallet balance | ⬜ | None (POS refunds only: `backend/app/Services/Pos/PosOrderService.php`) | Payment voucher, wallet/balance, numbering and auditing |
+| FIN-CASH | Cash-up: today's movements by method and a cash-count calculator | 🟨 | `backend/app/Services/Pos/PosReportService.php` (byMethod), `frontend/src/components/features/pos/PosReports.tsx` | Today's movements by method cover POS only. Missing: merging invoice payments and expenses (in/out/net), the cash-count calculator, and the `/finance/cash-up` screen |
+| FIN-IMP | XLSX import for catalog/withdrawals with preview and atomic commit | ⬜ | None (export only: `backend/app/Services/Owner/OwnerExportService.php`) | Upload and validation (≤2000 rows/5MB/no formulas), preview, transaction, duplicate prevention |
+| FIN-VAT | VAT report on an accrual basis | ⬜ | None | Tax rate in settings, frozen at issuance, tax fields on the invoice, report and download |
+| FIN-PLN | Plans: 6 pricing methods, overage price, dedicated seat, special offer, archiving | 🟨 | `backend/app/Services/PackageService.php`, `backend/app/Models/InternetPackage.php`, `backend/app/Services/SeatTypePricingService.php` | Existing: internet packages (speed, price, GB cap, active) and seat-type prices. Missing: a unified financial plan with the six pricing methods, overage price, special offer, and archiving |
+| FIN-ITM | Items: fixed code, Arabic/English name, category, unit, price | 🟨 | `backend/app/Services/Pos/PosProductService.php`, `backend/app/Models/PosProduct.php`, `frontend/src/components/features/owner/PosManager.tsx` | Existing: product (name, sku, free-text category, price, stock). Missing: separate Arabic/English names, unit, link to a category, use in invoices |
+| FIN-CAT | Sales and expense categories with a fixed code, ordering, and archiving | 🟨 | `backend/app/Enums/ExpenseCategory.php` (7 fixed values), `backend/app/Models/PosProduct.php` (free-text category) | Dynamic categories table (sales/expenses) with code, ordering, and archiving |
+| FIN-AH | Extra hours: charging rules for time after working hours, and preview (currently disabled) | ⬜ | None (`working_hours` in `backend/app/Models/Workspace.php` is display-only) | Charging rules and monthly preview; requires attendance data; disabled in the reference, so it can be deferred |
+| FIN-SEAT | Seats: today's occupancy, dedicated-seat revenue, statuses (available/dedicated/reserved for later/out of service), releasing expired ones | 🟨 | `backend/app/Services/SeatService.php`, `backend/app/Enums/SeatStatus.php`, `frontend/src/components/features/owner/SeatBoard.tsx` | Existing: seat map, assign/unassign, statuses available/occupied/reserved/maintenance. Missing: dedicated-seat revenue, date-based "reserved for later", automatic release of expired seats |
+| FIN-ORG | Organizations: a company pays for its members with a consolidated invoice and a tax number | ⬜ | None | organizations table, member linking, coverage rules, consolidated invoice, and tax value |
+| FIN-ACT | Financial activity log (17 actions: who/when/why) | ⬜ | None | Audit table for financial actions, an observer/service, and a viewing screen with filters |
+| BR-FIN-01 | An issued invoice is never edited; corrections go through a credit note or cancellation | 🟨 | `backend/app/Services/InvoiceService.php` (delete is a hard delete), `backend/app/Http/Controllers/InvoiceController.php` | Hard delete is currently allowed (violates the rule). Required: soft cancellation + edit lock after issuance + credit note |
+| BR-FIN-02 | Only cash enters the cash drawer; other methods are for reconciliation only | ⬜ | `backend/app/Enums/PaymentMethod.php` (cash/transfer) with no cash-drawer concept | Distinguish cash payments in cash-up and add card/check methods |
+| BR-FIN-03 | No tax unless a rate is set in Settings → Operations | ⬜ | None (no tax in the system) | Tax-rate field in the operations settings, applied only at issuance |
+| BR-FIN-04 | A dedicated seat requires a monthly or weekly plan or a package | 🟨 | `backend/app/Services/SeatService.php` (assign only requires an active subscription) | Validate the plan type (monthly/weekly/package) on assignment |
 
-### §3.6 الأماكن
+### §3.6 Locations
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| FR-STN-01 | المكاتب: إضافة مفرد أو مجمّع (بدء، عدد، بادئة)، نوع، منطقة، سعة، خصوصية، تبعية؛ غرف الاجتماعات للحجز العام | 🟨 | `backend/app/Services/SeatService.php`، `backend/app/Services/ResourceService.php`، `frontend/src/components/features/owner/SeatBoard.tsx` | الموجود: مقاعد بأنواع fixed/flexible/private_office وموارد (meeting_room…) بكمية. الناقص: إضافة مجمّعة برقم بدء وبادئة، المنطقة، السعة/الخصوصية لكل مكتب، التبعية، عرض الغرف للحجز العام |
-| FR-STN-02 | تبويبات: المخزون، الآن، الشهر، الفروع (تعدد الفروع) | ⬜ | لا يوجد (`Workspace` واحدة لكل مالك، لا فروع/zones) | نموذج branches/zones، تبويبات العرض، ونطاق الاستعلامات بالفرع |
+| FR-STN-01 | Stations: add single or bulk (start, count, prefix), type, zone, capacity, privacy, affiliation; meeting rooms for public booking | 🟨 | `backend/app/Services/SeatService.php`, `backend/app/Services/ResourceService.php`, `frontend/src/components/features/owner/SeatBoard.tsx` | Existing: seats with fixed/flexible/private_office types and resources (meeting_room…) with quantity. Missing: bulk add with a start number and prefix, zone, per-station capacity/privacy, affiliation, listing rooms for public booking |
+| FR-STN-02 | Tabs: inventory, now, month, branches (multi-branch) | ⬜ | None (one `Workspace` per owner, no branches/zones) | branches/zones model, view tabs, and branch-scoped queries |
 
-### §3.7 الإعدادات
+### §3.7 Settings
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 |---|---|---|---|---|
-| SET-GEN | عام: اسم، وصف، slug ثابت، تواصل، بنك وIBAN مجمّد، منطقة زمنية وعملة، بيانات واي فاي | 🟨 | `backend/app/Services/WorkspaceService.php` (updateSettings)، `backend/app/Http/Requests/Workspace/UpdateWorkspaceRequest.php`، `frontend/src/components/features/owner/SettingsTabs.tsx` | الموجود: اسم، وصف، عنوان، مدينة، هاتف، موقع، شعار/صور، مرافق. الناقص: slug، بيانات البنك/IBAN، المنطقة الزمنية والعملة، بيانات الواي فاي، البريد/التواصل |
-| SET-OPS | التشغيل: سعة، وضع الجلوس، ساعات وأيام العمل، أسعار الأنواع، الضريبة؛ الحفظ "يُرسل للموافقة" | 🟨 | `backend/app/Services/SeatTypePricingService.php`، `backend/app/Services/WorkspaceService.php` (updateSeatTypes)، `frontend/src/components/features/owner/SettingsTabs.tsx` (تبويبا seatTypes وhours) | الموجود: أسعار أنواع المقاعد وسعتها وساعات العمل (حفظ مباشر). الناقص: وضع الجلوس ثابت/مرن، الضريبة، سير موافقة السوبر أدمن على التغيير، العطل |
-| SET-DNS | النطاق وDNS: رابط اللوحة والموقع العام، طلب نطاق مخصص | ⬜ | لا يوجد | حقول النطاق وطلب النطاق المخصص وموافقة الأدمن |
-| SET-API | API والتكامل: حالة MikroTik، رمز المساحة، endpoint، إعادة إنشاء مفتاح API، حالة الخطة، فحص وتشخيص | ⬜ | لا يوجد للمالك؛ الأقرب `backend/app/Models/PartnerClient.php` (مفاتيح شريك UR، ليست للمساحة) | مفتاح API ورمز لكل مساحة وإعادة توليده، حالة المزامنة، مركز تشخيص |
-| SET-DNG | منطقة الخطر: إعادة تعيين المساحة (حذف مشتركين/أجهزة/عقود/إحصاءات…) | ⬜ | لا يوجد | عملية إعادة تعيين بتأكيد وtransaction مع إبقاء الهوية والمالك وتوليد مفتاح API جديد |
+| SET-GEN | General: name, description, fixed slug, contact, bank and frozen IBAN, timezone and currency, Wi-Fi details | 🟨 | `backend/app/Services/WorkspaceService.php` (updateSettings), `backend/app/Http/Requests/Workspace/UpdateWorkspaceRequest.php`, `frontend/src/components/features/owner/SettingsTabs.tsx` | Existing: name, description, address, city, phone, location, logo/images, amenities. Missing: slug, bank/IBAN details, timezone and currency, Wi-Fi details, email/contact |
+| SET-OPS | Operations: capacity, seating mode, working hours and days, type prices, tax; saving is "sent for approval" | 🟨 | `backend/app/Services/SeatTypePricingService.php`, `backend/app/Services/WorkspaceService.php` (updateSeatTypes), `frontend/src/components/features/owner/SettingsTabs.tsx` (seatTypes and hours tabs) | Existing: seat-type prices and capacity, and working hours (saved directly). Missing: fixed/flexible seating mode, tax, super admin approval workflow for changes, holidays |
+| SET-DNS | Domain and DNS: dashboard and public-site links, custom domain request | ⬜ | None | Domain fields, custom domain request, and admin approval |
+| SET-API | API and integration: MikroTik status, workspace code, endpoint, regenerate API key, plan status, check and diagnostics | ⬜ | None for the owner; closest is `backend/app/Models/PartnerClient.php` (UR partner keys, not per workspace) | Per-workspace API key and code with regeneration, sync status, diagnostics center |
+| SET-DNG | Danger zone: workspace reset (delete subscribers/devices/contracts/statistics…) | ⬜ | None | Reset operation with confirmation and a transaction, keeping the identity and owner and generating a new API key |
 
-ملاحظة منهجية: لا يوجد في الكود أي مفهوم لـ MikroTik/Router/Device/Attendance/Contract/Roster/UR/Program/Claim/Holiday/Parameter/AuditLog/2FA/OTP (تم التحقق بـ Grep). أقرب المكافئات: `Subscription` (اشتراك واحد بمقعد)، `Seat`، `BookingRequest`، `Invoice`/`InvoicePayment`، `PosOrder`، `Expense`، `Resource`، `Workspace`. الأدوار الحالية: `freelancer`, `workspace_owner`, `admin`, `cashier` (`backend/app/Enums/UserRole.php`).
+Methodology note: the code has no concept of MikroTik/Router/Device/Attendance/Contract/Roster/UR/Program/Claim/Holiday/Parameter/AuditLog/2FA/OTP (verified with Grep). Closest equivalents: `Subscription` (a single subscription with a seat), `Seat`, `BookingRequest`, `Invoice`/`InvoicePayment`, `PosOrder`, `Expense`, `Resource`, `Workspace`. Current roles: `freelancer`, `workspace_owner`, `admin`, `cashier` (`backend/app/Enums/UserRole.php`).
 
-### §3.4 — مركز المشتركين (FR-MEM)
+### §3.4 — Members hub (FR-MEM)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-MEM-01 | تبويبات مركز المشتركين (اليوم، المشتركون، أسبوعي، شهري، تقويم، عقود، زوار، تنبيهات، ملفات، إدارة جماعية) | 🟨 | `frontend/src/app/[locale]/(dashboard)/owner/members/page.tsx`، `frontend/src/components/features/owner/MembersTable.tsx` | صفحة قائمة أعضاء واحدة فقط؛ كل التبويبات الباقية جديدة |
-| FR-MEM-02 | تبويب «اليوم»: سعة 640 ساعة/يوم، متعاقد مقابل فعلي، تحميل بالساعة بعتبات 70%/90% | ⬜ | `backend/app/Services/OwnerDashboardService.php` (نسبة إشغال مقاعد فقط) | لا ساعات ولا حضور فعلي ولا سعة بالساعات؛ يحتاج بيانات جلسات |
-| FR-MEM-03 | العقود بآلة حالات (مسودة/نشط/معلق/منتهي/ملغى)، تمديد وتجديد جماعي، تنبيه 14 يومًا | 🟨 | `backend/app/Enums/SubscriptionStatus.php`، `backend/app/Services/OwnerSubscriptionService.php`، `backend/app/Console/Commands/NotifyExpiringSubscriptions.php` | الحالات الحالية: pending/active/suspended/expired/cancelled دون مسودة ولا انتقالات محكومة؛ تجديد فردي فقط (لا جماعي)؛ تنبيه 3 أيام بدل 14؛ لا أيام سماح ولا تجديد تلقائي ولا كيان Contract |
-| FR-MEM-04 | زوار مباشرون بلا اشتراك + فجوة إيراد واقتراح نوع | ⬜ | — | يحتاج لقطات أجهزة/حضور الراوتر |
-| FR-MEM-05 | تنبيهات مختصة (عقود تنتهي، غير نشط 30+، انخفاض ولاء، عمل إضافي، زوار متكررون، امتلاء) | 🟨 | `backend/app/Notifications/SubscriptionExpiringNotification.php`، `backend/app/Console/Commands/NotifyExpiringSubscriptions.php`، `backend/app/Notifications/InvoiceOverdueNotification.php` | إشعار انتهاء اشتراك وفواتير متأخرة فقط؛ لا محرك قواعد (Alert Rule) ولا عتبات ولا تهدئة ولا بقية الأنواع |
-| FR-MEM-06 | معالج الملف: جنس، تعليم (10)، تخصص (35)، حالة وظيفية، اسم MikroTik | 🟨 | `backend/app/Models/User.php` (gender, specialty, bio)، `backend/app/Enums/Gender.php`، `backend/app/Http/Controllers/ProfileController.php` | الجنس والتخصص (نص حر) فقط؛ لا مستوى تعليمي ولا حالة وظيفية ولا قوائم مقيدة ولا اسم مستخدم MikroTik (الأقرب `internet_username` في `Subscription`) |
-| FR-MEM-07 | إدارة جماعية + اكتشاف تلقائي ذكي لنوع الاشتراك + تصدير CSV | 🟨 | `backend/app/Services/Owner/OwnerExportService.php`، `backend/routes/api/owner-members.php` | تصدير CSV للأعضاء موجود؛ لا عمليات جماعية ولا اكتشاف ذكي |
-| FR-MEM-08 | ملف المشترك: نظرة عامة، اشتراك، درجات، نشاط، مقارنة أقران، ولاء/قوة، تقويم نشاط، أجهزة | 🟨 | `backend/app/Services/MemberService.php` (memberDetail)، `frontend/src/components/features/owner/MemberDrawer.tsx`، `frontend/src/components/features/owner/MemberAnalytics.tsx` | تفاصيل مستخدم/اشتراك/مقعد/فواتير موجودة؛ لا درجات ولاء/قوة ولا أقران ولا تقويم نشاط ولا أجهزة |
-| FR-MEM-09 | القائمة الشهرية (Roster): تعبئة/نسخ الشهر الماضي وحساب الساعات المحجوزة من السعة | ⬜ | — | كيان Roster Entry ووظائف النسخ والحساب كلها جديدة |
+| FR-MEM-01 | Members hub tabs (today, subscribers, weekly, monthly, calendar, contracts, visitors, alerts, profiles, bulk management) | 🟨 | `frontend/src/app/[locale]/(dashboard)/owner/members/page.tsx`, `frontend/src/components/features/owner/MembersTable.tsx` | Only a single members list page; all remaining tabs are new |
+| FR-MEM-02 | "Today" tab: capacity of 640 hours/day, contracted vs. actual, hourly load with 70%/90% thresholds | ⬜ | `backend/app/Services/OwnerDashboardService.php` (seat occupancy rate only) | No hours, no actual attendance, no hour-based capacity; requires session data |
+| FR-MEM-03 | Contracts with a state machine (draft/active/suspended/expired/cancelled), bulk extension and renewal, 14-day alert | 🟨 | `backend/app/Enums/SubscriptionStatus.php`, `backend/app/Services/OwnerSubscriptionService.php`, `backend/app/Console/Commands/NotifyExpiringSubscriptions.php` | Current statuses: pending/active/suspended/expired/cancelled with no draft and no governed transitions; individual renewal only (no bulk); 3-day alert instead of 14; no grace days, no auto-renewal, and no Contract entity |
+| FR-MEM-04 | Live visitors without a subscription + revenue gap and type suggestion | ⬜ | — | Requires router device/attendance snapshots |
+| FR-MEM-05 | Specialized alerts (expiring contracts, inactive 30+, loyalty drop, overtime, repeat visitors, full capacity) | 🟨 | `backend/app/Notifications/SubscriptionExpiringNotification.php`, `backend/app/Console/Commands/NotifyExpiringSubscriptions.php`, `backend/app/Notifications/InvoiceOverdueNotification.php` | Only subscription-expiry and overdue-invoice notifications; no rules engine (Alert Rule), no thresholds, no cooldown, and none of the other types |
+| FR-MEM-06 | Profile wizard: gender, education (10), specialization (35), employment status, MikroTik username | 🟨 | `backend/app/Models/User.php` (gender, specialty, bio), `backend/app/Enums/Gender.php`, `backend/app/Http/Controllers/ProfileController.php` | Gender and specialization (free text) only; no education level, no employment status, no constrained lists, and no MikroTik username (closest is `internet_username` on `Subscription`) |
+| FR-MEM-07 | Bulk management + smart automatic detection of subscription type + CSV export | 🟨 | `backend/app/Services/Owner/OwnerExportService.php`, `backend/routes/api/owner-members.php` | Members CSV export exists; no bulk operations and no smart detection |
+| FR-MEM-08 | Subscriber profile: overview, subscription, scores, activity, peer comparison, loyalty/strength, activity calendar, devices | 🟨 | `backend/app/Services/MemberService.php` (memberDetail), `frontend/src/components/features/owner/MemberDrawer.tsx`, `frontend/src/components/features/owner/MemberAnalytics.tsx` | User/subscription/seat/invoice details exist; no loyalty/strength scores, no peers, no activity calendar, and no devices |
+| FR-MEM-09 | Monthly roster: fill/copy last month and compute booked hours against capacity | ⬜ | — | The Roster Entry entity and the copy and compute functions are all new |
 
-### §3.4 — طلبات الاشتراك (FR-REQ)
+### §3.4 — Subscription requests (FR-REQ)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-REQ-01 | مراجعة طلبات العضوية من الموقع العام بحالات معلق/موافق/مرفوض/متوفر/ملغى | 🟨 | `backend/app/Services/BookingService.php`، `backend/app/Http/Controllers/BookingRequestController.php`، `frontend/src/components/features/owner/BookingsManager.tsx` | الحالات: pending/approved/rejected فقط (`BookingStatus`)؛ مقدّم الطلب يجب أن يكون فريلانسر مسجّل الدخول (لا نموذج عام للزوار)؛ لا «متوفر» ولا «ملغى»؛ الموافقة تنشئ اشتراك + فاتورة ويُبلَّغ Webhook |
+| FR-REQ-01 | Review membership requests from the public site with statuses pending/approved/rejected/available/cancelled | 🟨 | `backend/app/Services/BookingService.php`, `backend/app/Http/Controllers/BookingRequestController.php`, `frontend/src/components/features/owner/BookingsManager.tsx` | Statuses: pending/approved/rejected only (`BookingStatus`); the applicant must be a logged-in freelancer (no public form for visitors); no "available" and no "cancelled"; approval creates a subscription + invoice and notifies the Webhook |
 
-### §3.4 — مركز الحجوزات (FR-BKG)
+### §3.4 — Booking hub (FR-BKG)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-BKG-01 | عروض: خط زمني، تقويم، عقود، حضور | ⬜ | `frontend/src/components/features/owner/SeatBoard.tsx` (لوحة مقاعد فقط) | لا Booking Hub ولا خط زمني ولا تقويم |
-| FR-BKG-02 | حجز جديد بمشترك/نوع/مكتب/فترة وساعات 08:00–15:00 | ⬜ | `backend/app/Services/SeatService.php` (إسناد مقعد لعضو) | لا حجز بفترات/ساعات يومية؛ فقط إسناد مقعد لاشتراك |
-| FR-BKG-03 | تأكيد الحضور (مؤكد/متغيب/جزئي/انتظار) يدوي أو تلقائي مع تراجع | ⬜ | — | لا حضور إطلاقًا |
-| FR-BKG-04 | عقد جديد (مدة بالشهور، سماح، تجديد تلقائي) + إنشاء حجز الشهر الحالي | 🟨 | `backend/app/Services/BookingService.php` (approve ينشئ اشتراكًا)، `backend/app/Models/Subscription.php` | اشتراك start/end فقط؛ لا مدة بالشهور ولا سماح ولا تجديد تلقائي ولا حجز شهري |
-| FR-BKG-05 | تجاوز الساعات المعتمدة يتطلب سببًا إلزاميًا | ⬜ | — | لا مفهوم ساعات معتمدة |
-| FR-BKG-06 | ملخص حضور شهري + مزامنة AUTO مع الراوتر | ⬜ | `backend/app/Services/InternetAccessService.php` (يولّد بيانات دخول إنترنت فقط، بلا اتصال بالراوتر) | لا تكامل MikroTik ولا قراءة جلسات |
+| FR-BKG-01 | Views: timeline, calendar, contracts, attendance | ⬜ | `frontend/src/components/features/owner/SeatBoard.tsx` (seat board only) | No Booking Hub, no timeline, and no calendar |
+| FR-BKG-02 | New booking with subscriber/type/station/period and hours 08:00–15:00 | ⬜ | `backend/app/Services/SeatService.php` (assigns a seat to a member) | No booking by periods/daily hours; only seat assignment to a subscription |
+| FR-BKG-03 | Attendance confirmation (confirmed/absent/partial/pending), manual or automatic, with undo | ⬜ | — | No attendance at all |
+| FR-BKG-04 | New contract (duration in months, grace, auto-renewal) + create the current month's booking | 🟨 | `backend/app/Services/BookingService.php` (approve creates a subscription), `backend/app/Models/Subscription.php` | Subscription has start/end only; no duration in months, no grace, no auto-renewal, and no monthly booking |
+| FR-BKG-05 | Exceeding approved hours requires a mandatory reason | ⬜ | — | No concept of approved hours |
+| FR-BKG-06 | Monthly attendance summary + AUTO sync with the router | ⬜ | `backend/app/Services/InternetAccessService.php` (only generates internet login credentials, with no router connection) | No MikroTik integration and no session reading |
 
 ### §3.4 — GSG UR Tracker (FR-TRK)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-TRK-01 | حاسبة تدقيق UR بأربع خطوات | ⬜ | — | جديد كليًا |
-| FR-TRK-02 | أنماط الحضور (Active Actual, Day Span, Hour Bucket, Half-Hour) | ⬜ | — | جديد؛ يعتمد على بيانات جلسات |
-| FR-TRK-03 | سلسلة AR→C→max→TypeW→ΣH/Tmax وقراءات RAW/UTD/EXPECTED/FINAL | ⬜ | — | محرك صيغة ومعلمات (32) جديد |
+| FR-TRK-01 | Four-step UR audit calculator | ⬜ | — | Entirely new |
+| FR-TRK-02 | Attendance modes (Active Actual, Day Span, Hour Bucket, Half-Hour) | ⬜ | — | New; depends on session data |
+| FR-TRK-03 | AR→C→max→TypeW→ΣH/Tmax chain and RAW/UTD/EXPECTED/FINAL readings | ⬜ | — | New formula and parameters engine (32) |
 
-### §3.4 — البرامج (FR-PRG)
+### §3.4 — Programs (FR-PRG)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-PRG-01 | محفظة الاتفاقيات والمقاعد وسعر المقعد وسجل حوكمة | ⬜ | — | كيانات Program/Agreement/Seat-assignment/Governance log جديدة (`Seat` الحالي مادي لا تمويلي) |
-| FR-PRG-02 | مطالبات شهرية مجمّدة + خطاب PDF/Word/TXT + سحب | ⬜ | `backend/app/Services/InvoicePdfService.php` (mPDF لفواتير فقط) | كيان Claim وتجميد المبلغ ومولّد الخطاب جديدان |
-| FR-PRG-03 | تقرير المساحة PDF/Word/Excel/CSV | ⬜ | `backend/app/Services/Owner/OwnerExportService.php` (CSV) | لا تقرير برامج ولا Word/Excel |
-| FR-PRG-04 | «لايف»: من الموجود الآن من أصحاب المقاعد الممولة | ⬜ | — | يحتاج قراءات راوتر |
-| FR-PRG-05 | لوحة مقاعد لكل اتفاقية؛ الإسناد من لوحة المشغّل | ⬜ | — | جديد |
+| FR-PRG-01 | Portfolio of agreements and seats, seat price, and governance log | ⬜ | — | New Program/Agreement/Seat-assignment/Governance log entities (the current `Seat` is physical, not funding-related) |
+| FR-PRG-02 | Frozen monthly claims + PDF/Word/TXT letter + withdrawal | ⬜ | `backend/app/Services/InvoicePdfService.php` (mPDF for invoices only) | The Claim entity, amount freezing, and the letter generator are new |
+| FR-PRG-03 | Workspace report in PDF/Word/Excel/CSV | ⬜ | `backend/app/Services/Owner/OwnerExportService.php` (CSV) | No programs report and no Word/Excel |
+| FR-PRG-04 | "Live": which funded-seat holders are present right now | ⬜ | — | Requires router readings |
+| FR-PRG-05 | Seat board per agreement; assignment from the operator dashboard | ⬜ | — | New |
 
-### §3.4 — إقفال الشهر (FR-MCL)
+### §3.4 — Month close (FR-MCL)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-MCL-01 | معالج 4 خطوات لإقفال الشهر | ⬜ | — | جديد |
-| FR-MCL-02 | 22 فحص جودة في 7 فئات + إصلاح تلقائي/ذكي | ⬜ | — | جديد |
-| FR-MCL-03 | الإغلاق يرسل الشهر لمراجعة UTR | ⬜ | — | جديد (يتطلب طابور اعتماد لدى الأدمن) |
+| FR-MCL-01 | 4-step month-close wizard | ⬜ | — | New |
+| FR-MCL-02 | 22 quality checks in 7 categories + automatic/smart fix | ⬜ | — | New |
+| FR-MCL-03 | Closing sends the month to UTR review | ⬜ | — | New (requires an approvals queue on the admin side) |
 
-### §3.4 — الاستخدام ومراجعة UTR (FR-UR)
+### §3.4 — Utilization and UTR review (FR-UR)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-UR-01 | رقم UR الرسمي (SSOT) + ثلاث قراءات + Qualified-C | ⬜ | — | جديد (الإشغال الحالي في `OwnerDashboardService.php` نسبة مقاعد وليس UR) |
-| FR-UR-02 | الفرق بين UR الحالي والمتوقع بعد الاعتماد | ⬜ | — | جديد |
-| FR-UR-03 | توزيع الساعات/عامل C/اتجاه 12 شهرًا/توصيات/تحديث الآن | ⬜ | — | جديد |
-| FR-UR-04 | شاشة مراجعة لكل مشترك + ملاحظة تبرير + اقتراحات نوع ذكي + تحليل سلوكي | ⬜ | — | جديد (UTR Record) |
+| FR-UR-01 | Official UR figure (SSOT) + three readings + Qualified-C | ⬜ | — | New (the current occupancy in `OwnerDashboardService.php` is a seat ratio, not UR) |
+| FR-UR-02 | Difference between the current UR and the expected UR after approval | ⬜ | — | New |
+| FR-UR-03 | Hours distribution/C factor/12-month trend/recommendations/refresh now | ⬜ | — | New |
+| FR-UR-04 | Per-subscriber review screen + justification note + smart type suggestions + behavioral analysis | ⬜ | — | New (UTR Record) |
 
-### §3.5 — التحليلات والتقارير
+### §3.5 — Analytics and reports
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-ANL-01 | تحليلات بـ 8 تبويبات (نظرة عامة، متقدم، شهري، احتفاظ، مقارنة، تقييم، KPI، أجهزة) | 🟨 | `backend/app/Services/OwnerDashboardService.php`، `backend/app/Services/Admin/AnalyticsService.php`، `frontend/src/components/features/admin/AnalyticsDashboard.tsx` | لوحة المالك (إيراد 6 أشهر، جنس، حالة) ولوحة أدمن (مدينة/جنس) فقط؛ لا صفحة `/analytics` للمالك ولا تبويبات احتفاظ/مقارنة/أجهزة/KPI؛ تقييمات المساحات موجودة منفصلة (`backend/app/Services/ReviewService.php`) |
-| FR-RPT-01 | 19 نوع تقرير + سنة/شهر + إنشاء سريع | 🟨 | `backend/app/Services/OwnerReportsService.php`، `backend/app/Services/Pos/PosReportService.php`، `frontend/src/components/features/owner/OwnerReportsSections.tsx` | يوجد بشكل ما: (1) قائمة المشتركين (CSV)، (2) ملخص مالي/أرباح وخسائر شهري، (3) أعمار ديون (تحصيل) — مقاربة جزئية، (4) استخدام الباقات (package uptake)، (5) تقرير مبيعات POS. غير موجود: الملخص التنفيذي، السعة، صحة المشتركين، الاحتفاظ، الإشغال بأنواعه الثلاثة، الولاء، استهلاك الشبكة، توقع الطلب، الإيراد المحتمل، مقارنة الفترات، جودة البيانات، تحليل الوقت، اللوحة الموحدة، تقرير GSG الشهري. التصدير CSV فقط (PDF للفواتير فقط) |
+| FR-ANL-01 | Analytics with 8 tabs (overview, advanced, monthly, retention, comparison, ratings, KPI, devices) | 🟨 | `backend/app/Services/OwnerDashboardService.php`, `backend/app/Services/Admin/AnalyticsService.php`, `frontend/src/components/features/admin/AnalyticsDashboard.tsx` | Only the owner dashboard (6-month revenue, gender, status) and the admin dashboard (city/gender); no `/analytics` page for the owner and no retention/comparison/devices/KPI tabs; workspace ratings exist separately (`backend/app/Services/ReviewService.php`) |
+| FR-RPT-01 | 19 report types + year/month + quick generate | 🟨 | `backend/app/Services/OwnerReportsService.php`, `backend/app/Services/Pos/PosReportService.php`, `frontend/src/components/features/owner/OwnerReportsSections.tsx` | Exists in some form: (1) subscribers list (CSV), (2) monthly financial summary/profit and loss, (3) debt aging (collections) — partial approximation, (4) package usage (package uptake), (5) POS sales report. Missing: executive summary, capacity, subscriber health, retention, occupancy in its three variants, loyalty, network consumption, demand forecast, potential revenue, period comparison, data quality, time analysis, unified dashboard, GSG monthly report. Export is CSV only (PDF for invoices only) |
 
-### §4 — الفريلانسر (FR-FL + نقاط التماس)
+### §4 — Freelancer (FR-FL + touchpoints)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-FL-01 | بوابة دخول OTP على الهاتف | ⬜ | `backend/app/Services/Auth/TaqatSsoService.php`، `backend/app/Http/Controllers/Auth/TaqatSsoController.php` | الدخول حاليًا بريد/كلمة مرور + SSO؛ لا OTP (`Sms/` موجود كسائق إرسال فقط في `backend/app/Services/Sms/SmsService.php`) |
-| FR-FL-02 | عرض الاشتراك والساعات والحضور والرصيد والفواتير وتنزيلها | 🟨 | `backend/app/Http/Controllers/Member/DashboardController.php`، `backend/app/Http/Controllers/Member/InvoiceController.php`، `frontend/src/app/[locale]/(dashboard)/freelancer/invoices/page.tsx` | الاشتراك والفواتير وتنزيل PDF (`/invoices/{invoice}/pdf`) موجودة؛ لا ساعات/حضور ولا محفظة/رصيد |
-| FR-FL-03 | طلب تجديد/تغيير خطة وحجز غرفة | 🟨 | `backend/app/Http/Controllers/BookingRequestController.php`، `backend/app/Http/Controllers/SubscriptionController.php` | طلب اشتراك جديد وإلغاء موجودان؛ لا طلب تجديد/تغيير خطة ولا حجز غرف |
-| FR-FL-04 | الاعتراض على ساعات/رسوم خاطئة | ⬜ | `backend/app/Http/Controllers/Member/InvoiceController.php` (رفع إيصال فقط) | لا آلية اعتراض (قد يُبنى فوق الرسائل/المحادثة `backend/app/Http/Controllers/ChatController.php`) |
-| FR-FL-05 | إدارة أجهزته المرتبطة | ⬜ | `backend/app/Models/DeviceToken.php` (رموز Push فقط، ليست أجهزة شبكة) | كيان Device (MAC/IP) جديد |
-| FL-TP-GUEST | تسجيل ذاتي للضيف عبر Hotspot | ⬜ | `backend/app/Services/InternetAccessService.php` | لا Hotspot/MikroTik؛ الموجود إصدار بيانات اعتماد إنترنت يدويًا من المالك |
-| FL-TP-STATUS | صفحة «حالتي» العامة | 🟨 | `frontend/src/app/[locale]/(dashboard)/freelancer/subscription/page.tsx`، `backend/app/Http/Controllers/Partner/MembershipController.php` | حالة الاشتراك داخل لوحة مسجّلة + API شريك؛ لا صفحة عامة بالهاتف |
-| FL-TP-FORMS | نموذج طلب اشتراك/حجز غرف عامان بحدود مدة | 🟨 | `frontend/src/app/[locale]/(public)/workspaces/[id]/page.tsx`، `backend/app/Http/Controllers/BookingRequestController.php` | الطلب يتطلب حساب فريلانسر؛ لا نموذج زائر ولا حجز غرف ولا حدود مدة/حجز مسبق |
-| FL-TP-POS | مشتريات الضيافة/POS تُضاف للحساب أو تُحصَّل فورًا | ✅ | `backend/app/Services/Pos/PosOrderService.php`، `backend/routes/api/freelancer-pos.php`، `frontend/src/app/[locale]/(dashboard)/freelancer/pos/page.tsx` | الفريلانسر يطلب والكاشير يحصّل؛ لا إضافة على حساب/فاتورة ولا محفظة (بحسب النموذج الحالي: دفع عند الكاونتر) |
-| FL-TP-HOLIDAY | عطلات معتمدة تُخرج الأيام من العمل | ⬜ | — | كيان Holiday جديد (الأقرب `working_hours` JSON في `Workspace`) |
-| FL-TP-TOOLS | أدوات تقسيم/دمج/حظر | ⬜ | — | جديد |
+| FR-FL-01 | Phone OTP login portal | ⬜ | `backend/app/Services/Auth/TaqatSsoService.php`, `backend/app/Http/Controllers/Auth/TaqatSsoController.php` | Login is currently email/password + SSO; no OTP (`Sms/` exists only as a sending driver in `backend/app/Services/Sms/SmsService.php`) |
+| FR-FL-02 | View subscription, hours, attendance, balance, and invoices, and download them | 🟨 | `backend/app/Http/Controllers/Member/DashboardController.php`, `backend/app/Http/Controllers/Member/InvoiceController.php`, `frontend/src/app/[locale]/(dashboard)/freelancer/invoices/page.tsx` | Subscription, invoices, and PDF download (`/invoices/{invoice}/pdf`) exist; no hours/attendance and no wallet/balance |
+| FR-FL-03 | Request renewal/plan change and book a room | 🟨 | `backend/app/Http/Controllers/BookingRequestController.php`, `backend/app/Http/Controllers/SubscriptionController.php` | New subscription request and cancellation exist; no renewal/plan-change request and no room booking |
+| FR-FL-04 | Dispute incorrect hours/charges | ⬜ | `backend/app/Http/Controllers/Member/InvoiceController.php` (receipt upload only) | No dispute mechanism (could be built on top of messaging/chat `backend/app/Http/Controllers/ChatController.php`) |
+| FR-FL-05 | Manage their linked devices | ⬜ | `backend/app/Models/DeviceToken.php` (Push tokens only, not network devices) | New Device entity (MAC/IP) |
+| FL-TP-GUEST | Guest self-registration via Hotspot | ⬜ | `backend/app/Services/InternetAccessService.php` | No Hotspot/MikroTik; what exists is manual issuance of internet credentials by the owner |
+| FL-TP-STATUS | Public "My status" page | 🟨 | `frontend/src/app/[locale]/(dashboard)/freelancer/subscription/page.tsx`, `backend/app/Http/Controllers/Partner/MembershipController.php` | Subscription status inside the logged-in dashboard + partner API; no public phone-based page |
+| FL-TP-FORMS | Public subscription-request and room-booking forms with duration limits | 🟨 | `frontend/src/app/[locale]/(public)/workspaces/[id]/page.tsx`, `backend/app/Http/Controllers/BookingRequestController.php` | The request requires a freelancer account; no visitor form, no room booking, and no duration/advance-booking limits |
+| FL-TP-POS | Hospitality/POS purchases are added to the account or collected immediately | ✅ | `backend/app/Services/Pos/PosOrderService.php`, `backend/routes/api/freelancer-pos.php`, `frontend/src/app/[locale]/(dashboard)/freelancer/pos/page.tsx` | The freelancer orders and the cashier collects; no adding to an account/invoice and no wallet (per the current model: pay at the counter) |
+| FL-TP-HOLIDAY | Approved holidays remove days from working days | ⬜ | — | New Holiday entity (closest is the `working_hours` JSON in `Workspace`) |
+| FL-TP-TOOLS | Split/merge/block tools | ⬜ | — | New |
 
-### §5 — السوبر أدمن (FR-SA)
+### §5 — Super admin (FR-SA)
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| FR-SA-01 | إدارة المساحات: إنشاء، تفعيل/إيقاف، تعيين الخطة | 🟨 | `backend/app/Services/Admin/AdminWorkspaceService.php`، `backend/routes/api/workspaces.php`، `frontend/src/components/features/admin/WorkspacesTable.tsx` | تفعيل/تعليق/نشر/إلغاء نشر موجود؛ إنشاء من الأدمن وتعيين «خطة» للمساحة غير موجود (لا خطط SaaS بحسب نموذج العمل) |
-| FR-SA-02 | طابور اعتماد UTR لكل المساحات | ⬜ | — | جديد |
-| FR-SA-03 | إدارة البرامج والاتفاقيات ولوحات المقاعد | ⬜ | — | جديد |
-| FR-SA-04 | استلام المطالبات ومتابعة صرفها | ⬜ | — | جديد |
-| FR-SA-05 | اعتماد تغييرات الإعدادات الحساسة والنطاقات | 🟨 | `backend/app/Services/Admin/AdminWorkspaceService.php` (دورة نشر/اعتماد المساحة) | اعتماد نشر المساحة فقط؛ لا طلبات تغيير إعدادات/نطاق مخصص |
-| FR-SA-06 | إدارة معلمات صيغة UR العامة | ⬜ | `backend/app/Models/SiteSetting.php` (إعدادات موقع عامة غير ذات صلة بالصيغة) | Parameter Set جديد |
-| FR-SA-07 | مراقبة صحة المزامنة وتنبيه توقف الراوتر | ⬜ | `backend/app/Http/Controllers/HealthController.php` (صحة API فقط) | لا راوترات ولا مزامنة |
-| SA-RPT | تجميع تقارير المساحات للجهة المانحة | 🟨 | `backend/app/Services/Admin/ReportsService.php`، `backend/app/Services/Admin/AnalyticsService.php`، `backend/app/Services/Admin/ExportService.php` | تجميع إيرادات/اشتراكات/مساحات/مدن/جنس عبر المنصة + CSV؛ لا تقرير GSG ولا بيانات مانح/برامج |
+| FR-SA-01 | Workspace management: create, activate/suspend, assign a plan | 🟨 | `backend/app/Services/Admin/AdminWorkspaceService.php`, `backend/routes/api/workspaces.php`, `frontend/src/components/features/admin/WorkspacesTable.tsx` | Activate/suspend/publish/unpublish exists; admin-side creation and assigning a "plan" to a workspace do not exist (no SaaS plans per the business model) |
+| FR-SA-02 | UTR approvals queue across all workspaces | ⬜ | — | New |
+| FR-SA-03 | Manage programs, agreements, and seat boards | ⬜ | — | New |
+| FR-SA-04 | Receive claims and track their disbursement | ⬜ | — | New |
+| FR-SA-05 | Approve sensitive settings changes and domains | 🟨 | `backend/app/Services/Admin/AdminWorkspaceService.php` (workspace publish/approval cycle) | Workspace publish approval only; no settings-change or custom-domain requests |
+| FR-SA-06 | Manage the global UR formula parameters | ⬜ | `backend/app/Models/SiteSetting.php` (general site settings unrelated to the formula) | New Parameter Set |
+| FR-SA-07 | Sync health monitoring and router-down alert | ⬜ | `backend/app/Http/Controllers/HealthController.php` (API health only) | No routers and no sync |
+| SA-RPT | Aggregate workspace reports for the donor | 🟨 | `backend/app/Services/Admin/ReportsService.php`, `backend/app/Services/Admin/AnalyticsService.php`, `backend/app/Services/Admin/ExportService.php` | Platform-wide aggregation of revenue/subscriptions/workspaces/cities/gender + CSV; no GSG report and no donor/program data |
 
-### §6 — مصفوفة الصلاحيات والتدفقات
+### §6 — Permissions matrix and flows
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| PERM-ROLES | 4 أدوار: مالك، موظف، فريلانسر، سوبر أدمن | ✅ | `backend/app/Enums/UserRole.php`، `backend/app/Enums/PosPermission.php`، `backend/app/Enums/AdminPermission.php` | «موظف المساحة» = `cashier` بصلاحيات POS فقط (sell/refund/manage_products/view_reports)؛ لا موظف مشرف مالي/ضيافة ولا صلاحيات فواتير/مصروفات/استيراد منفصلة |
-| PERM-2FA | فواتير بصلاحية + مصادقة ثنائية للموظف | ⬜ | `backend/app/Http/Middleware/EnsureHasAdminPermission.php` | لا 2FA؛ الفواتير للمالك فقط (`role.owner`) ولا صلاحيات موظف عليها |
-| PERM-ADMIN | صلاحيات أدمن دقيقة | ✅ | `backend/app/Services/Admin/AdminManagementService.php`، `frontend/src/lib/admin-guard.ts`، `backend/database/seeders/AdminPermissionSeeder.php` | 7 صلاحيات (`can.permission:`)؛ لا صلاحية اعتماد UR/مطالبات |
-| PERM-RESET | إعادة تعيين المساحة (حذف بيانات) | ⬜ | — | غير موجود (يوجد حذف مقعد/مصدر فقط) |
-| FLOW-UR | التدفق الرئيسي: اتصال ← حضور ← تبرير ← إقفال ← اعتماد ← مطالبة | ⬜ | — | كامل السلسلة جديدة |
-| FLOW-1 | طلب عضوية ← موافقة ← مشترك وعقد وخطة | 🟨 | `backend/app/Services/BookingService.php`، `backend/app/Http/Controllers/BookingRequestController.php` | موافقة تنشئ اشتراكًا + فاتورة + إسناد مقعد + إشعار + Webhook؛ المقدّم يجب أن يكون مسجّلًا؛ لا عقد |
-| FLOW-2 | تحويل زائر مباشر إلى مشترك | ⬜ | — | يتطلب Live visitors |
-| FLOW-3 | دورة الفوترة: حركات غير مفوترة ← مسودات ← إصدار ← سند قبض ← إشعار دائن | 🟨 | `backend/app/Services/InvoiceService.php`، `backend/app/Console/Commands/GenerateMonthlyInvoices.php`، `backend/app/Models/InvoicePayment.php` | فواتير شهرية تلقائية + دفعات جزئية + مراجعة إيصال + تذكير/تأخر؛ لا حركات غير مفوترة ولا مسودة/إصدار منفصلان ولا سند قبض مستقل ولا إشعار دائن (الاسترداد في POS فقط: `backend/app/Services/Pos/PosOrderService.php`) |
-| FLOW-4 | دورة العقد مسودة→نشط→معلق↔نشط→منتهي/ملغى + تنبيه 14 يومًا | 🟨 | `backend/app/Enums/SubscriptionStatus.php`، `backend/app/Services/MemberService.php` (updateStatus) | حالات اشتراك مشابهة بدون مسودة وانتقالات صارمة؛ تنبيه 3 أيام |
-| FLOW-5 | تغيير المعلمات: طلب ← موافقة الأدمن ← إعادة حساب Tmax/UR | ⬜ | — | جديد (workflow طلبات تغيير) |
+| PERM-ROLES | 4 roles: owner, staff, freelancer, super admin | ✅ | `backend/app/Enums/UserRole.php`, `backend/app/Enums/PosPermission.php`, `backend/app/Enums/AdminPermission.php` | "Workspace staff" = `cashier` with POS permissions only (sell/refund/manage_products/view_reports); no finance-supervisor/hospitality staff and no separate invoice/expense/import permissions |
+| PERM-2FA | Permission-gated invoices + two-factor authentication for staff | ⬜ | `backend/app/Http/Middleware/EnsureHasAdminPermission.php` | No 2FA; invoices are owner-only (`role.owner`) with no staff permissions on them |
+| PERM-ADMIN | Fine-grained admin permissions | ✅ | `backend/app/Services/Admin/AdminManagementService.php`, `frontend/src/lib/admin-guard.ts`, `backend/database/seeders/AdminPermissionSeeder.php` | 7 permissions (`can.permission:`); no UR/claims approval permission |
+| PERM-RESET | Workspace reset (data deletion) | ⬜ | — | Does not exist (only seat/resource deletion exists) |
+| FLOW-UR | Main flow: connection → attendance → justification → close → approval → claim | ⬜ | — | The entire chain is new |
+| FLOW-1 | Membership request → approval → subscriber, contract, and plan | 🟨 | `backend/app/Services/BookingService.php`, `backend/app/Http/Controllers/BookingRequestController.php` | Approval creates a subscription + invoice + seat assignment + notification + Webhook; the applicant must be registered; no contract |
+| FLOW-2 | Convert a live visitor into a subscriber | ⬜ | — | Requires Live visitors |
+| FLOW-3 | Billing cycle: unbilled charges → drafts → issue → receipt → credit note | 🟨 | `backend/app/Services/InvoiceService.php`, `backend/app/Console/Commands/GenerateMonthlyInvoices.php`, `backend/app/Models/InvoicePayment.php` | Automatic monthly invoices + partial payments + uploaded-receipt review + reminder/overdue; no unbilled charges, no separate draft/issue, no standalone receipt, and no credit note (refunds in POS only: `backend/app/Services/Pos/PosOrderService.php`) |
+| FLOW-4 | Contract lifecycle draft→active→suspended↔active→expired/cancelled + 14-day alert | 🟨 | `backend/app/Enums/SubscriptionStatus.php`, `backend/app/Services/MemberService.php` (updateStatus) | Similar subscription statuses without draft and without strict transitions; 3-day alert |
+| FLOW-5 | Parameter change: request → admin approval → recompute Tmax/UR | ⬜ | — | New (change-request workflow) |
 
-### §7.1 — المتطلبات غير الوظيفية
+### §7.1 — Non-functional requirements
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| NFR-SEC | 2FA، مفتاح API آمن، صلاحيات دقيقة | 🟨 | `backend/app/Http/Middleware/AuthenticatePartner.php`، `backend/app/Models/PartnerClient.php`، `backend/app/Http/Middleware/EnsureHasAdminPermission.php` | مفتاح API مُجزّأ (`api_key_hash`) ويُرسل في `X-Api-Key`؛ Sanctum + صلاحيات Spatie؛ throttle على مسارات؛ لا 2FA؛ كلمة مرور الإنترنت تُخزَّن مشفّرة (`internet_password_enc`) |
-| NFR-INTEG | استيراد ذري بلا تكرار؛ تجميد الفاتورة/المطالبة/الضريبة؛ رموز ثابتة | 🟨 | `backend/app/Services/OwnerSubscriptionService.php` (DB::transaction)، `backend/app/Models/Invoice.php` (`invoice_number` unique)، `backend/app/Models/PosProduct.php` (`sku`) | معاملات DB وترقيم فواتير فريد وSKU للمنتجات؛ لا استيراد XLSX، لا ضريبة/تجميد صريح بعد الإصدار، لا مطالبات |
-| NFR-AUDIT | سجل مالي بـ 17 إجراء، سجل حوكمة، سجل تجديد، سبب لكل تجاوز | ⬜ | `backend/app/Models/PosStockMovement.php` (سجل حركات مخزون فقط) | لا Audit Log عام ولا سجل تجديد ولا حوكمة |
-| NFR-PERF | تحديث مراقب مباشر 30ث، لقطات راوتر، إعادة حساب يدوية | 🟨 | `backend/routes/console.php` (جدولة فواتير/إشعارات/queue كل دقيقة) | لا مراقب مباشر ولا لقطات؛ المهام المجدولة وطابور DB موجودان |
-| NFR-I18N | واجهة عربية RTL، موقع عام ثنائي اللغة، 16 منطقة زمنية و8 عملات | 🟨 | `frontend/src/messages/ar.json`، `frontend/src/messages/en.json`، `backend/app/Http/Middleware/SetLocale.php` | عربي/إنجليزي RTL موجود؛ لا إعداد منطقة زمنية ولا عملة لكل مساحة (لا حقول currency/timezone في `Workspace`) |
-| NFR-UX | اختصارات لوحة مفاتيح، حالات فارغة، تأكيد قبل الحذف | 🟨 | `frontend/src/components/features/owner/SeatBoard.tsx`، `frontend/src/components/layout/DashShell.tsx` | تأكيدات وحالات فارغة قائمة في المكونات؛ لا اختصارات لوحة مفاتيح عامة (Alt+S… إلخ) |
-| NFR-INT | MikroTik، تصدير PDF/Word/Excel/CSV/JSON، استيراد XLSX | 🟨 | `backend/app/Services/Admin/ExportService.php`، `backend/app/Services/InvoicePdfService.php`، `backend/app/Services/Partner/WebhookDispatcher.php` | CSV (فواتير/أعضاء/مصروفات + أدمن) وPDF فاتورة (mPDF) وWebhook شريك؛ لا MikroTik ولا Word/Excel/JSON ولا استيراد XLSX (لا PhpSpreadsheet في `backend/composer.json`) |
+| NFR-SEC | 2FA, secure API key, fine-grained permissions | 🟨 | `backend/app/Http/Middleware/AuthenticatePartner.php`, `backend/app/Models/PartnerClient.php`, `backend/app/Http/Middleware/EnsureHasAdminPermission.php` | API key is hashed (`api_key_hash`) and sent in `X-Api-Key`; Sanctum + Spatie permissions; throttling on routes; no 2FA; the internet password is stored encrypted (`internet_password_enc`) |
+| NFR-INTEG | Atomic import without duplicates; freezing of invoice/claim/tax; fixed codes | 🟨 | `backend/app/Services/OwnerSubscriptionService.php` (DB::transaction), `backend/app/Models/Invoice.php` (`invoice_number` unique), `backend/app/Models/PosProduct.php` (`sku`) | DB transactions, unique invoice numbering, and product SKUs; no XLSX import, no tax and no explicit freeze after issuance, no claims |
+| NFR-AUDIT | Financial log with 17 actions, governance log, renewal log, reason for every override | ⬜ | `backend/app/Models/PosStockMovement.php` (stock movements log only) | No general Audit Log, no renewal log, and no governance log |
+| NFR-PERF | Live monitor refresh every 30s, router snapshots, manual recompute | 🟨 | `backend/routes/console.php` (scheduling of invoices/notifications/queue every minute) | No live monitor and no snapshots; scheduled tasks and the DB queue exist |
+| NFR-I18N | Arabic RTL interface, bilingual public site, 16 timezones and 8 currencies | 🟨 | `frontend/src/messages/ar.json`, `frontend/src/messages/en.json`, `backend/app/Http/Middleware/SetLocale.php` | Arabic/English RTL exists; no per-workspace timezone or currency setting (no currency/timezone fields on `Workspace`) |
+| NFR-UX | Keyboard shortcuts, empty states, confirmation before deletion | 🟨 | `frontend/src/components/features/owner/SeatBoard.tsx`, `frontend/src/components/layout/DashShell.tsx` | Confirmations and empty states exist in the components; no global keyboard shortcuts (Alt+S, etc.) |
+| NFR-INT | MikroTik, PDF/Word/Excel/CSV/JSON export, XLSX import | 🟨 | `backend/app/Services/Admin/ExportService.php`, `backend/app/Services/InvoicePdfService.php`, `backend/app/Services/Partner/WebhookDispatcher.php` | CSV (invoices/members/expenses + admin), invoice PDF (mPDF), and partner Webhook; no MikroTik, no Word/Excel/JSON, and no XLSX import (no PhpSpreadsheet in `backend/composer.json`) |
 
-### §7.2 — نموذج البيانات
+### §7.2 — Data model
 
-| المعرّف | المتطلب (مختصر بالعربية) | الحالة | الموجود حاليًا (مسارات ملفات مؤكدة) | الناقص |
+| ID | Requirement | Status | Existing today (verified paths) | Missing |
 | --- | --- | --- | --- | --- |
-| ENT-Workspace | slug، رمز، خطة، حالة، سعة، ساعات/أيام العمل، عملة، بنك | 🟨 | `backend/app/Models/Workspace.php`، `backend/database/migrations/2026_06_02_110001_create_core_business_tables.php` | موجود: status, total_seats, working_hours JSON, city, logo؛ ناقص: slug، plan، عملة، منطقة زمنية، بنك، سعة بالساعات |
-| ENT-Subscriber | هاتف، اسم MikroTik، نوع، حالة، جنس، تعليم، تخصص، وظيفة، ولاء، قوة | 🟨 | `backend/app/Models/User.php`، `backend/app/Models/Subscription.php` | المشترك = `User` (role freelancer) + `Subscription` (بلا جدول منفصل)؛ ناقص: تعليم، حالة وظيفية، درجات ولاء/قوة، اسم MikroTik على المستخدم |
-| ENT-Device | MAC، IP، جلسات، تنزيل/رفع، آخر ظهور (لقطة) | ⬜ | `backend/app/Models/DeviceToken.php` (Push token لا جهاز شبكة) | جديد |
-| ENT-Contract | نوع، بدء، مدة، سماح، تجديد، مكتب، ساعات، حالة حضور | 🟨 | `backend/app/Models/Subscription.php`، `backend/app/Models/BookingRequest.php` | `Subscription` يغطي النوع/البدء/الانتهاء/المقعد؛ ناقص: سماح، تجديد تلقائي، ساعات، حضور؛ لا جدول حجوزات (Booking) |
-| ENT-RosterEntry | شهر، نوع، وحدات، ساعات، Gift Hours | ⬜ | — | جديد |
-| ENT-UTRRecord | متعاقد، فعلي، AR%، C، Locked Hours، تبرير، اعتماد | ⬜ | — | جديد |
-| ENT-PlanItemCategory | طريقة تسعير، سعر، وحدة، رمز ثابت | 🟨 | `backend/app/Models/InternetPackage.php`، `backend/app/Models/SeatTypePrice.php`، `backend/app/Models/PosProduct.php` | باقات إنترنت وأسعار أنواع مقاعد ومنتجات POS (sku + category نصي)؛ لا كيان خطة/صنف/تصنيف موحّد برمز ثابت ولا وحدة/طريقة تسعير |
-| ENT-Billing | فاتورة، سند قبض، إشعار دائن، سند صرف، مصروف | 🟨 | `backend/app/Models/Invoice.php`، `backend/app/Models/InvoicePayment.php`، `backend/app/Models/Expense.php` | فاتورة + دفعات (≈ سند قبض) + مصروف + `PosPayment` (`backend/app/Models/PosPayment.php`) للاسترداد؛ ناقص: إشعار دائن، سند صرف، ربط بمؤسسة |
-| ENT-Organization | اسم، رقم ضريبي، تواصل | ⬜ | — | جديد (لا شركات تدفع فاتورة موحدة) |
-| ENT-StationLocation | رقم، نوع، منطقة، سعة، خصوصية، فرع | 🟨 | `backend/app/Models/Seat.php`، `backend/app/Models/Resource.php`، `backend/app/Enums/SeatType.php` | `Seat` (رقم، نوع fixed/flexible/private_office، حالة) و`Resource`؛ ناقص: منطقة، سعة، خصوصية، فرع |
-| ENT-ProgramAgreementClaim | مانح، مقاعد، سعر، فترة، نوع تمويل، حوكمة | ⬜ | — | جديد |
-| ENT-AlertRule | نوع، خطورة، عتبة، تهدئة، قنوات | 🟨 | `backend/app/Notifications/SubscriptionExpiringNotification.php`، `backend/app/Services/Messaging/BroadcastService.php`، `backend/app/Services/NavActionCountService.php` | إشعارات ثابتة الكود (DB/Push/Email/SMS) بلا جدول قواعد؛ لا عتبات/تهدئة/خطورة |
-| ENT-ParameterHoliday | معلمات الـ32، تواريخ، حالة طلب | ⬜ | `backend/app/Models/SiteSetting.php` (مفتاح/قيمة عام) | جديد |
+| ENT-Workspace | Slug, code, plan, status, capacity, working hours/days, currency, bank | 🟨 | `backend/app/Models/Workspace.php`, `backend/database/migrations/2026_06_02_110001_create_core_business_tables.php` | Existing: status, total_seats, working_hours JSON, city, logo; missing: slug, plan, currency, timezone, bank, capacity in hours |
+| ENT-Subscriber | Phone, MikroTik username, type, status, gender, education, specialization, occupation, loyalty, strength | 🟨 | `backend/app/Models/User.php`, `backend/app/Models/Subscription.php` | Subscriber = `User` (role freelancer) + `Subscription` (no separate table); missing: education, employment status, loyalty/strength scores, MikroTik username on the user |
+| ENT-Device | MAC, IP, sessions, download/upload, last seen (snapshot) | ⬜ | `backend/app/Models/DeviceToken.php` (Push token, not a network device) | New |
+| ENT-Contract | Type, start, duration, grace, renewal, station, hours, attendance status | 🟨 | `backend/app/Models/Subscription.php`, `backend/app/Models/BookingRequest.php` | `Subscription` covers type/start/end/seat; missing: grace, auto-renewal, hours, attendance; no bookings table (Booking) |
+| ENT-RosterEntry | Month, type, units, hours, Gift Hours | ⬜ | — | New |
+| ENT-UTRRecord | Contracted, actual, AR%, C, Locked Hours, justification, approval | ⬜ | — | New |
+| ENT-PlanItemCategory | Pricing method, price, unit, fixed code | 🟨 | `backend/app/Models/InternetPackage.php`, `backend/app/Models/SeatTypePrice.php`, `backend/app/Models/PosProduct.php` | Internet packages, seat-type prices, and POS products (sku + free-text category); no unified plan/item/category entity with a fixed code and no unit/pricing method |
+| ENT-Billing | Invoice, receipt, credit note, payment voucher, expense | 🟨 | `backend/app/Models/Invoice.php`, `backend/app/Models/InvoicePayment.php`, `backend/app/Models/Expense.php` | Invoice + payments (≈ receipt) + expense + `PosPayment` (`backend/app/Models/PosPayment.php`) for refunds; missing: credit note, payment voucher, organization linkage |
+| ENT-Organization | Name, tax number, contact | ⬜ | — | New (no companies paying a consolidated invoice) |
+| ENT-StationLocation | Number, type, zone, capacity, privacy, branch | 🟨 | `backend/app/Models/Seat.php`, `backend/app/Models/Resource.php`, `backend/app/Enums/SeatType.php` | `Seat` (number, type fixed/flexible/private_office, status) and `Resource`; missing: zone, capacity, privacy, branch |
+| ENT-ProgramAgreementClaim | Donor, seats, price, period, funding type, governance | ⬜ | — | New |
+| ENT-AlertRule | Type, severity, threshold, cooldown, channels | 🟨 | `backend/app/Notifications/SubscriptionExpiringNotification.php`, `backend/app/Services/Messaging/BroadcastService.php`, `backend/app/Services/NavActionCountService.php` | Hard-coded notifications (DB/Push/Email/SMS) with no rules table; no thresholds/cooldown/severity |
+| ENT-ParameterHoliday | The 32 parameters, dates, request status | ⬜ | `backend/app/Models/SiteSetting.php` (generic key/value) | New |
 
 ---
 
-## 6. المعمارية المستهدفة
+## 6. Target Architecture
 
-### 6.1 البنية التحتية
+### 6.1 Infrastructure
 
-- **VPS** (Ubuntu 24.04): Nginx + PHP 8.3-FPM، MySQL 8 (buffer pool ≈ 1.5GB)، Redis 7، Supervisor، Certbot، Next.js تحت systemd، نسخ احتياطي ليلي إلى S3 الحالي.
-- **الطوابير:** `ingest` (1–2 عملية) لمعالجة بيانات الراوتر، `default` للإشعارات، `heavy` (مهلة 900 ث) لإعادة الحساب والاستيراد والـ PDF.
-- **قاعدة ثابتة:** طلب `/sync` لا يعتمد على الطابور أبدًا — يكتب البيانات داخل transaction ويرد مباشرة، والمعالجة الثقيلة لاحقًا. نفس الكود يعمل على cPanel (بالـ cron) وعلى الـ VPS (بالـ workers).
-- **النطاق الثابت `sync.taqat.space`** يُكتب في `install.rsc` من اليوم الأول، فنقل البنية لاحقًا لا يتطلب إعادة تثبيت الراوترات.
+- **VPS** (Ubuntu 24.04): Nginx + PHP 8.3-FPM, MySQL 8 (buffer pool ≈ 1.5GB), Redis 7, Supervisor, Certbot, Next.js under systemd, nightly backups to the existing S3.
+- **Queues:** `ingest` (1–2 processes) for processing router data, `default` for notifications, `heavy` (900 s timeout) for recalculation, imports, and PDFs.
+- **Invariant:** the `/sync` request never depends on the queue — it writes the data inside a transaction and responds immediately; heavy processing happens afterwards. The same code runs on cPanel (via cron) and on the VPS (via workers).
+- **The fixed hostname `sync.taqat.space`** is written into `install.rsc` from day one, so moving the infrastructure later does not require reinstalling routers.
 
-### 6.2 بروتوكول تكامل الراوتر (PUSH)
+### 6.2 Router Integration Protocol (PUSH)
 
 ```mermaid
 sequenceDiagram
-  participant O as صاحب المساحة
+  participant O as Workspace owner
   participant S as TaqatSpace
-  participant R as راوتر MikroTik
-  O->>S: إنشاء راوتر ← رمز تثبيت لمرة واحدة (30 د)
+  participant R as MikroTik router
+  O->>S: Create router → one-time install token (30 min)
   O->>R: /tool fetch install.rsc?token=… (check-certificate=yes)
-  R->>S: أول sync ← ربط الرقم التسلسلي
-  loop كل 50 ثانية
+  R->>S: First sync → bind serial number
+  loop Every 50 seconds
     R->>S: POST /api/v1/hotspot/{code}/sync (X-API-Key, batch_id, seq, now, events, snapshot chunk, acks)
-    S-->>R: نص عادي: ترويسة CWS-SYNC + nonce + أوامر من القائمة المسموحة
+    S-->>R: Plain text: CWS-SYNC header + nonce + allowlisted commands
   end
 ```
 
-| الآلية | التصميم |
+| Mechanism | Design |
 | --- | --- |
-| المصادقة | `AuthenticateRouter`: `{code}` ← المساحة، `hash_equals(sha256(key))` مع المفتاح الحالي أو السابق ضمن فترة السماح، قفل الرقم التسلسلي، سجل تشخيص في `terminate()` |
-| منع التكرار | `seq` دائم على flash، `event_uid = boot_id-seq`، `UNIQUE(router_id, event_uid)` + `insertOrIgnore`؛ الرد على `(router, batch_id)` مخزّن 10 دقائق |
-| الساعة | الراوتر يرسل `now`؛ الخادم يصحح أوقات الأحداث بالفرق (راوترات بلا بطارية ساعة بعد انقطاع الكهرباء) |
-| الأوامر | `router_commands`: requested → delivered → acknowledged (+ failed/expired)؛ إعادة إرسال بعد 3 دورات بلا تأكيد؛ كل فعل idempotent |
-| القائمة المسموحة | `upsert-user`، `disable-user`، `remove-active`، `block-mac`، `set-key`، `update-script` — السكربت لا ينفّذ نص الرد كما هو |
-| صيغة الرد | نص عادي ≤ 4KB (RouterOS 7.12 لا يحلل JSON) |
-| التشغيل المتوازي | وضع «استطلاع فقط» يقرأ `/ip hotspot active` دون لمس خطافات CoWorkSpaces |
-| الحدود | `RateLimiter::for('router')` ≈ 12 طلب/دقيقة لكل راوتر |
+| Authentication | `AuthenticateRouter`: `{code}` → workspace, `hash_equals(sha256(key))` against the current key or the previous key within the grace period, serial-number lock, diagnostic log in `terminate()` |
+| Deduplication | Persistent `seq` on flash, `event_uid = boot_id-seq`, `UNIQUE(router_id, event_uid)` + `insertOrIgnore`; the response for `(router, batch_id)` is cached for 10 minutes |
+| Clock | The router sends `now`; the server corrects event timestamps by the offset (routers without a clock battery after power outages) |
+| Commands | `router_commands`: requested → delivered → acknowledged (+ failed/expired); resent after 3 cycles without acknowledgment; every action is idempotent |
+| Allowlist | `upsert-user`, `disable-user`, `remove-active`, `block-mac`, `set-key`, `update-script` — the script never executes the response text verbatim |
+| Response format | Plain text ≤ 4KB (RouterOS 7.12 cannot parse JSON) |
+| Parallel run | "Poll-only" mode that reads `/ip hotspot active` without touching the CoWorkSpaces hooks |
+| Limits | `RateLimiter::for('router')` ≈ 12 requests/minute per router |
 
-### 6.3 محرك البيانات
+### 6.3 Data Engine
 
-`hotspot_events` (خام) → `hotspot_sessions` (فوري، بقفل Redis لكل راوتر) → `attendance_daily` (إعادة بناء الأيام المتأثرة كل 5 دقائق + تمريرة ليلية) → `stats_monthly_subscriber` / `stats_daily_workspace`.
+`hotspot_events` (raw) → `hotspot_sessions` (real-time, with a per-router Redis lock) → `attendance_daily` (affected days rebuilt every 5 minutes + a nightly pass) → `stats_monthly_subscriber` / `stats_daily_workspace`.
 
-- `attendance_daily` يخزّن **bitmap من 48 خانة** (نصف ساعة)، فتُستخرج الأنماط الأربعة (Active Actual، Day Span، Hour Bucket، Half-Hour) من صف واحد لكل مشترك ويوم.
-- الوقت النشط = اتحاد فترات كل أجهزة المشترك (لا عدّ مزدوج).
-- «إعادة الحساب» تحذف وتعيد بناء مدى تاريخي بشكل حتمي.
-- الجداول عالية الحجم بمفاتيح BIGINT (استثناء من UUID)، والحسابات في PHP لا SQL خاص بـ MySQL (توافق sqlite في الاختبارات).
+- `attendance_daily` stores a **48-slot bitmap** (half-hour slots), so the four modes (Active Actual, Day Span, Hour Bucket, Half-Hour) are derived from a single row per subscriber per day.
+- Active time = the union of intervals across all of the subscriber's devices (no double counting).
+- "Recalculate" deterministically deletes and rebuilds a historical range.
+- High-volume tables use BIGINT keys (an exception to UUIDs), and computations run in PHP rather than MySQL-specific SQL (sqlite compatibility in tests).
 
-### 6.4 المستأجرون
+### 6.4 Tenancy
 
-- `workspaces`: `slug` (ثابت بعد التعيين)، `code` (8 محارف base32)، `platform_plan`، `platform_status`.
-- `branches` جديد، و`seats` يُوسَّع (zone، branch_id، kind، capacity، is_private، parent_id).
-- `CurrentWorkspace` يُحدَّد من المالك أو `users.workspace_id` للموظف أو الراوتر؛ Trait `BelongsToWorkspace` يملأ `workspace_id` تلقائيًا ويطبّق النطاق **على النماذج الجديدة فقط**، مع `withoutWorkspaceScope()` للأدمن والمهام المجدولة.
+- `workspaces`: `slug` (immutable once set), `code` (8 base32 characters), `platform_plan`, `platform_status`.
+- New `branches` table, and `seats` is extended (zone, branch_id, kind, capacity, is_private, parent_id).
+- `CurrentWorkspace` is resolved from the owner, from `users.workspace_id` for staff, or from the router; the `BelongsToWorkspace` trait auto-fills `workspace_id` and applies the scope **to new models only**, with `withoutWorkspaceScope()` for admins and scheduled jobs.
 
-### 6.5 المالية v2
+### 6.5 Finance v2
 
-| الحالة القديمة | `doc_status` | `payment_status` |
+| Legacy status | `doc_status` | `payment_status` |
 | --- | --- | --- |
-| pending، overdue، under_review، payment_rejected | issued | unpaid |
+| pending, overdue, under_review, payment_rejected | issued | unpaid |
 | partially_paid | issued | partial |
 | paid | issued | paid |
 | cancelled | void | — |
 
-- الفاتورة: `workspace_id`، `customer_id`، `subscription_id` يصبح اختياريًا، بنود `invoice_lines` (backfill بند واحد لكل فاتورة قديمة)، معدل ضريبة مجمّد عند الإصدار، ترقيم `document_sequences` بقفل `lockForUpdate`، مراقب يمنع تعديل الحقول المالية بعد الإصدار.
-- POS «إضافة إلى الحساب» ← `unbilled_charges`؛ «تحصيل» ← سند قبض.
-- `invoice_payments` تُرحَّل إلى `receipts` + `receipt_allocations`، و`PaymentMethod` يُوسَّع (بطاقة، شيك).
-- مطابقة الصندوق والضريبة تقارير فوق البيانات (بلا جداول جديدة).
+- Invoice: `workspace_id`, `customer_id`, `subscription_id` becomes optional, `invoice_lines` line items (backfill one line per legacy invoice), tax rate frozen at issuance, `document_sequences` numbering with a `lockForUpdate` lock, and an observer that blocks edits to financial fields after issuance.
+- POS "Add to account" → `unbilled_charges`; "Collect" → receipt.
+- `invoice_payments` are migrated to `receipts` + `receipt_allocations`, and `PaymentMethod` is extended (card, cheque).
+- Cash-up and tax are reports over existing data (no new tables).
 
-### 6.6 محرك UR وGSG
+### 6.6 UR and GSG Engine
 
-- `app/Domain/Utilization/UrCalculator`: PHP نقي بلا Eloquent، يأخذ `UrParameters` و`Capacity` ومدخلات المشتركين ويعيد AR وC والساعات المعتمدة وTypeW والقراءات RAW/UTD/EXPECTED/FINAL، مع `CALCULATOR_VERSION`.
-- `ur_parameter_sets` و`capacity_versions` و`holidays`: بإصدارات، غير قابلة للتعديل بعد الاعتماد، وتمر عبر `approval_requests`.
-- `ur_month_runs` (open → closed → approved/reopened) تحفظ إصدار المعلمات والحاسبة و`input_hash` والنتائج المجمّدة؛ إعادة الفتح بيد السوبر أدمن فقط.
-- فحوص إقفال الشهر الـ 22: class لكل فحص يطبّق `MonthCloseCheck` (+ `fix()` اختياري).
-- `programs`، `agreements`، `funded_seat_assignments`، `agreement_governance_events` (append-only)، `program_claims` (مبلغ وIBAN مجمّدان عند الإرسال).
+- `app/Domain/Utilization/UrCalculator`: pure PHP with no Eloquent; takes `UrParameters`, `Capacity`, and subscriber inputs, and returns AR, C, approved hours, TypeW, and the RAW/UTD/EXPECTED/FINAL readings, along with `CALCULATOR_VERSION`.
+- `ur_parameter_sets`, `capacity_versions`, and `holidays`: versioned, immutable once approved, and routed through `approval_requests`.
+- `ur_month_runs` (open → closed → approved/reopened) store the parameter and calculator versions, `input_hash`, and the frozen results; only the super admin can reopen a month.
+- The 22 month-close checks: one class per check implementing `MonthCloseCheck` (+ an optional `fix()`).
+- `programs`, `agreements`, `funded_seat_assignments`, `agreement_governance_events` (append-only), `program_claims` (amount and IBAN frozen on submission).
 
-### 6.7 المكونات المشتركة
+### 6.7 Shared Components
 
-| المكوّن | التصميم |
+| Component | Design |
 | --- | --- |
-| سجل التدقيق | `audit_logs` (BIGINT، workspace، الفاعل ونوعه: مستخدم/نظام/راوتر، الإجراء مثل `finance.invoice.issued`، الموضوع، السبب، التغييرات، IP، request_id) يُكتب صراحة عبر `AuditLogger`؛ سجل النشاط المالي = فلتر `finance.*` |
-| 2FA | TOTP (`pragmarx/google2fa`) بسر مشفّر ورموز استرداد؛ للأدمن المحلي: كلمة مرور ← تحدٍّ ← توكن؛ لمستخدمي SSO: تحدٍّ محلي بعد OIDC (إلا إن أكد Taqat MFA)؛ `RequireRecentTwoFactor` (10 دقائق) لإصدار وإلغاء الفواتير؛ للمالك والموظف والأدمن فقط |
-| الموافقات | `approval_requests` (النوع: معلمات UR، سعة، ساعات عمل، عطلة، نطاق مخصص) + `ApprovalHandler` بـ validate/apply/describe؛ UTR والمطالبات لها دورتها الخاصة |
-| Excel/Word | `phpoffice/phpspreadsheet` للاستيراد والتصدير (رفض المعادلات بـ `isFormula()`)، `phpoffice/phpword` للخطابات؛ CSV يبقى بالبث الحالي في `OwnerExportService` |
+| Audit log | `audit_logs` (BIGINT, workspace, actor and actor type: user/system/router, action such as `finance.invoice.issued`, subject, reason, changes, IP, request_id), written explicitly via `AuditLogger`; the finance activity log = a `finance.*` filter |
+| 2FA | TOTP (`pragmarx/google2fa`) with an encrypted secret and recovery codes; for the local admin: password → challenge → token; for SSO users: a local challenge after OIDC (unless Taqat confirms MFA); `RequireRecentTwoFactor` (10 minutes) for issuing and voiding invoices; for owners, staff, and admins only |
+| Approvals | `approval_requests` (types: UR parameters, capacity, working hours, holiday, custom domain) + `ApprovalHandler` with validate/apply/describe; UTR and claims have their own lifecycles |
+| Excel/Word | `phpoffice/phpspreadsheet` for import and export (formulas rejected via `isFormula()`), `phpoffice/phpword` for letters; CSV stays on the existing streaming in `OwnerExportService` |
 
-### 6.8 الواجهة الأمامية
+### 6.8 Frontend
 
-- إعادة استخدام: `DataTable`، `StatTile`، `Modal`/`Drawer`/`ConfirmDialog`، `Tabs`، الرسوم (`LineChart`، `BarChart`، recharts)، `SeatMap` — من `frontend/src/components/ui/`.
-- نفس نمط البيانات: قراءة بـ `serverFetch` (`frontend/src/lib/api.ts`)، كتابة بـ Server Actions (`frontend/src/lib/actions/`)، فلاتر URL بـ `useUrlFilters`.
-- القائمة الجديدة بمجموعات SRS في `nav-config.ts` مع إخفاء الوحدات حسب الـ flags والصلاحيات.
-- التحديث الحي (المراقب المباشر، التشخيصات) باستطلاع كل 30 ث مع كاش Redis 15 ث على الخادم.
-- كل نص بالعربية والإنجليزية في ملفات namespace (المفتاح ملفوف باسم الـ namespace).
+- Reuse: `DataTable`, `StatTile`, `Modal`/`Drawer`/`ConfirmDialog`, `Tabs`, charts (`LineChart`, `BarChart`, recharts), `SeatMap` — from `frontend/src/components/ui/`.
+- Same data pattern: reads via `serverFetch` (`frontend/src/lib/api.ts`), writes via Server Actions (`frontend/src/lib/actions/`), URL filters via `useUrlFilters`.
+- The new navigation menu, organized into the SRS groups in `nav-config.ts`, hides modules according to flags and permissions.
+- Live updates (live monitor, diagnostics) via polling every 30 s, with a 15 s server-side Redis cache.
+- All text in Arabic and English in namespace files (each key wrapped in its namespace name).
 
 ---
 
-## 7. نموذج البيانات الجديد
+## 7. New Data Model
 
-| المجال | الجداول الجديدة | تعديلات على الجداول القائمة |
+| Domain | New tables | Changes to existing tables |
 | --- | --- | --- |
-| الأساس | `branches`، `audit_logs`، `approval_requests`، `workspace_features` (flags) | `workspaces` (+slug، code، platform_plan، platform_status، currency، timezone، bank/IBAN، wifi)، `users` (+2FA) |
-| الشبكة | `routers`، `router_install_tokens`، `router_commands`، `router_api_logs`، `hotspot_accounts` | `subscriptions.internet_*` ← تُرحَّل إلى `hotspot_accounts` |
-| البيانات | `devices`، `hotspot_events`، `router_snapshots`، `router_snapshot_chunks`، `device_presence`، `hotspot_sessions`، `router_gaps`، `attendance_daily`، `stats_daily_workspace`، `stats_monthly_subscriber`، `alert_rules`، `alerts` | — |
-| التشغيل | `subscription_status_history`، `roster_entries`، `bookings` (مكتب/غرفة بساعات وحالة حضور)، `room_bookings` | `subscriptions` (+contract_type، billing_mode، plan_id، custom_price، contracted_hours، grace_days، auto_renew، renewed_from_id، organization_id، draft)، `seats` (+zone، branch_id، kind، capacity، is_private، parent_id)، `users` (+education، specialization، employment_status)، `booking_requests` (+حالات، طلب بلا حساب) |
-| المالية | `catalog_categories`، `catalog_items`، `plans`، `unbilled_charges`، `invoice_lines`، `document_sequences`، `receipts`، `receipt_allocations`، `credit_notes`، `wallet_entries`، `payment_vouchers`، `organizations`، `organization_members`، `invoice_runs`، `import_batches`، `after_hours_rules` | `invoices` (+workspace_id، customer_id، doc_status، payment_status، المجاميع، الضريبة، الفترة)، `pos_products` (+catalog_item_id)، `workspace_expenses` (+method، reference، voided_at) |
-| GSG | `ur_parameter_sets`، `capacity_versions`، `holidays`، `ur_month_runs`، `utr_records`، `programs`، `agreements`، `funded_seat_assignments`، `agreement_governance_events`، `program_claims` | — |
-| الفريلانسر والعام | `member_requests` (تجديد/تغيير خطة/حجز غرفة)، `disputes`، `site_sections` (منشئ الموقع)، `custom_domains` | — |
+| Foundation | `branches`, `audit_logs`, `approval_requests`, `workspace_features` (flags) | `workspaces` (+slug, code, platform_plan, platform_status, currency, timezone, bank/IBAN, wifi), `users` (+2FA) |
+| Network | `routers`, `router_install_tokens`, `router_commands`, `router_api_logs`, `hotspot_accounts` | `subscriptions.internet_*` → migrated to `hotspot_accounts` |
+| Data | `devices`, `hotspot_events`, `router_snapshots`, `router_snapshot_chunks`, `device_presence`, `hotspot_sessions`, `router_gaps`, `attendance_daily`, `stats_daily_workspace`, `stats_monthly_subscriber`, `alert_rules`, `alerts` | — |
+| Operations | `subscription_status_history`, `roster_entries`, `bookings` (station/room, by the hour, with attendance status), `room_bookings` | `subscriptions` (+contract_type, billing_mode, plan_id, custom_price, contracted_hours, grace_days, auto_renew, renewed_from_id, organization_id, draft), `seats` (+zone, branch_id, kind, capacity, is_private, parent_id), `users` (+education, specialization, employment_status), `booking_requests` (+statuses, requests without an account) |
+| Finance | `catalog_categories`, `catalog_items`, `plans`, `unbilled_charges`, `invoice_lines`, `document_sequences`, `receipts`, `receipt_allocations`, `credit_notes`, `wallet_entries`, `payment_vouchers`, `organizations`, `organization_members`, `invoice_runs`, `import_batches`, `after_hours_rules` | `invoices` (+workspace_id, customer_id, doc_status, payment_status, totals, tax, period), `pos_products` (+catalog_item_id), `workspace_expenses` (+method, reference, voided_at) |
+| GSG | `ur_parameter_sets`, `capacity_versions`, `holidays`, `ur_month_runs`, `utr_records`, `programs`, `agreements`, `funded_seat_assignments`, `agreement_governance_events`, `program_claims` | — |
+| Freelancer and public | `member_requests` (renewal/plan change/room booking), `disputes`, `site_sections` (site builder), `custom_domains` | — |
 
-**الاحتفاظ:** الأحداث الخام 90 يومًا بعد إقفال الشهر، أجزاء اللقطات 7 أيام، سجلات API 14 يومًا، الجلسات ≥ 24 شهرًا، الحضور اليومي دائمًا.
+**Retention:** raw events for 90 days after month close, snapshot chunks for 7 days, API logs for 14 days, sessions for ≥ 24 months, daily attendance indefinitely.
 
 ---
 
-## 8. أثر التغييرات على الوحدات القائمة
+## 8. Impact on Existing Modules
 
-| الوحدة القائمة | ما يحدث لها |
+| Existing module | What happens to it |
 | --- | --- |
-| الاكتشاف والبحث (`/explore`) | تبقى؛ روابط المساحات تنتقل إلى `/s/{slug}` |
-| صفحة المساحة + BookingPanel | تبقى؛ الأسعار تُقرأ من الخطط، وطلب بلا حساب يصبح ممكنًا |
-| طلبات الحجز (`BookingRequest`) | تصبح «طلبات الاشتراك» بحالات أوسع؛ الموافقة تُنشئ عقدًا + خطة + حساب هوتسبوت (أمر للراوتر) |
-| الاشتراكات (`Subscription`) | تصبح العقود: آلة حالات، سماح، تجديد تلقائي، انتهاء فعلي |
-| المقاعد ولوحة المقاعد | تصبح «المكاتب» بمناطق وفروع وإضافة مجمّعة؛ `SeatBoard` يتطور إلى المخزون/الآن/الشهر |
-| أسعار أنواع المقاعد | تبقى للعرض العام، والتسعير الفعلي من `plans` |
-| باقات الإنترنت | تُترجم إلى ملفات هوتسبوت على الراوتر (السرعة وحد البيانات) |
-| بيانات دخول الإنترنت | تنتقل إلى `hotspot_accounts` وتُدفع للراوتر فعليًا |
-| الفواتير والدفعات الجزئية | تتحول إلى v2 (بنود، مسودة/إصدار/إلغاء، سندات بتوزيع) مع توافق خلفي |
-| رفع الإيصال من الفريلانسر | يبقى؛ يُنشئ سند قبض معلّقًا للمراجعة |
-| فوترة المنصة عند الأدمن (تعليم مدفوع + إيصال) | تبقى كما هي لتتبع اشتراكات المساحات في المنصة |
-| POS والكاشير | المنتجات تُربط بالكتالوج، «إضافة إلى الحساب» تولّد حركات غير مفوترة، الكاشير يصبح مجموعة صلاحيات ضمن «الموظفين» |
-| المصروفات | تصنيفات من الكتالوج + وسيلة دفع + مرجع + إلغاء |
-| الموارد | الغرف تصبح قابلة للحجز |
-| تقارير المالك والتصدير | تصبح جزءًا من محرك التقارير، والتصدير يضاف له Excel/Word/PDF |
-| تحليلات الأدمن (مدينة/جنس) | تبقى وتُدمج في التقارير المجمّعة |
-| الدردشة، البث، الإعلانات، المراجعات | تبقى دون تغيير |
-| CMS والهوية والمدن | تبقى؛ نمط Landing CMS أساس منشئ موقع المساحة |
-| Academy Partner API والـ webhooks | تبقى؛ `booking.approved` يستمر مع الموافقة على طلب الاشتراك |
-| الإشعارات (23 + FCM) | تبقى وتضاف أنواع: تنبيهات، فاتورة صادرة، طلبات، اعتراضات، موافقات |
-| المهام المجدولة | تضاف: `subscriptions:expire`، rollups الحضور، التنبيهات، تشغيلات الفواتير، التنظيف؛ `invoices:generate-monthly` يُستبدل بـ `invoice_runs` تحت flag |
+| Discovery and search (`/explore`) | Retained; workspace links move to `/s/{slug}` |
+| Workspace page + BookingPanel | Retained; prices are read from plans, and requests without an account become possible |
+| Booking requests (`BookingRequest`) | Become "subscription requests" with a wider set of statuses; approval creates a contract + plan + hotspot account (a router command) |
+| Subscriptions (`Subscription`) | Become contracts: state machine, grace period, auto-renewal, actual expiry |
+| Seats and the seat board | Become "stations" with zones, branches, and bulk add; `SeatBoard` evolves into the Inventory/Now/Month views |
+| Seat type prices | Retained for public display; actual pricing comes from `plans` |
+| Internet packages | Translated into hotspot profiles on the router (speed and data cap) |
+| Internet login credentials | Move to `hotspot_accounts` and are actually pushed to the router |
+| Invoices and partial payments | Move to v2 (line items, draft/issue/void, receipts with allocations) with backward compatibility |
+| Freelancer receipt upload | Retained; creates a pending receipt for review |
+| Platform billing in the admin panel (mark paid + receipt) | Retained as is, to track workspaces' platform subscriptions |
+| POS and cashier | Products are linked to the catalog, "Add to account" generates unbilled charges, and cashier becomes a permission group within "Staff" |
+| Expenses | Categories from the catalog + payment method + reference + void |
+| Resources | Rooms become bookable |
+| Owner reports and export | Become part of the reporting engine, and export gains Excel/Word/PDF |
+| Admin analytics (city/gender) | Retained and merged into the consolidated reports |
+| Chat, broadcast, announcements, reviews | Retained unchanged |
+| CMS, branding, and cities | Retained; the Landing CMS pattern is the basis of the workspace site builder |
+| Academy Partner API and webhooks | Retained; `booking.approved` continues to fire on subscription-request approval |
+| Notifications (23 + FCM) | Retained, with new types added: alerts, invoice issued, requests, disputes, approvals |
+| Scheduled jobs | Added: `subscriptions:expire`, attendance rollups, alerts, invoice runs, cleanup; `invoices:generate-monthly` is replaced by `invoice_runs` behind a flag |
 
 ---
 
-## 9. نموذج التنفيذ متعدد الوكلاء (Multi-Agent) والـ Workflows
+## 9. Multi-Agent Execution Model and Workflows
 
-### 9.1 المبدأ
+### 9.1 Principle
 
-المطوّر هو صاحب القرار والمراجع النهائي. Claude ينسّق وكلاء متخصصين، كل وكيل في سياق معزول بمهمة ضيقة ونطاق ملفات محدد، فيتوازى التنفيذ داخل كل Milestone بينما تبقى الـ Milestones تسلسلية.
+The developer is the decision-maker and final reviewer. Claude orchestrates specialized agents, each in an isolated context with a narrow task and a defined file scope, so execution runs in parallel within each milestone while the milestones themselves remain sequential.
 
-### 9.2 الأدوار
+### 9.2 Roles
 
-| الوكيل | الدور | متى |
+| Agent | Role | When |
 | --- | --- | --- |
-| `researcher` / `Explore` | مسح الكود وتحديد ما يُعاد استخدامه قبل كل Milestone | بداية كل Milestone |
-| `architect` | مواصفة المرحلة: الجداول والـ migrations، عقد الـ API (OpenAPI)، الحالات والانتقالات، قائمة اختبارات القبول | بعد المسح، وقبل أي كود |
-| `coder` (Backend) | migrations، Services، FormRequests، Resources، الاختبارات أولًا للحاسبات | التنفيذ — worktree مستقل |
-| `coder` (Frontend) | الصفحات والمكونات وServer Actions وملفات الترجمة مقابل العقد | التنفيذ — worktree مستقل، بالتوازي مع Backend |
-| `reviewer` | مراجعة الـ diff: الصحة، الأمان، الأداء، N+1، الصلاحيات، التعريب | بعد الدمج الداخلي |
-| `nested-reviewer` | مراجعة مع تحقق مستقل لكل ملاحظة | للوحدات الحرجة: `/sync`، المالية v2، `UrCalculator` |
-| `superpowers:code-reviewer` | مطابقة المنجز مع خطة الـ Milestone ومعايير القبول | نهاية كل Milestone قبل الـ PR |
+| `researcher` / `Explore` | Scan the code and identify what can be reused before each milestone | Start of each milestone |
+| `architect` | Milestone spec: tables and migrations, API contract (OpenAPI), states and transitions, acceptance test list | After the scan, before any code |
+| `coder` (Backend) | Migrations, Services, FormRequests, Resources, tests first for calculators | Implementation — separate worktree |
+| `coder` (Frontend) | Pages, components, Server Actions, and translation files against the contract | Implementation — separate worktree, in parallel with Backend |
+| `reviewer` | Diff review: correctness, security, performance, N+1, permissions, localization | After the internal merge |
+| `nested-reviewer` | Review with independent verification of each finding | For critical modules: `/sync`, finance v2, `UrCalculator` |
+| `superpowers:code-reviewer` | Check the delivered work against the milestone plan and acceptance criteria | End of each milestone, before the PR |
 
-### 9.3 دورة كل Milestone
+### 9.3 Milestone Cycle
 
 ```mermaid
 flowchart LR
-  A[1 مسح الكود<br/>researcher] --> B[2 المواصفة والعقد<br/>architect]
-  B --> C{موافقة المطوّر}
+  A[1 Code scan<br/>researcher] --> B[2 Spec and contract<br/>architect]
+  B --> C{Developer approval}
   C --> D1[3a Backend<br/>coder · worktree]
   C --> D2[3b Frontend<br/>coder · worktree]
-  D1 --> E[4 دمج داخلي + الاختبارات]
+  D1 --> E[4 Internal merge + tests]
   D2 --> E
-  E --> F[5 مراجعة<br/>reviewer + أمنية]
-  F --> G[6 تحقق القبول<br/>محاكي/CHR/المتصفح]
-  G --> H[7 PR إلى dev<br/>المطوّر يدمج]
+  E --> F[5 Review<br/>reviewer + security]
+  F --> G[6 Acceptance verification<br/>simulator/CHR/browser]
+  G --> H[7 PR to dev<br/>developer merges]
 ```
 
-1. **المسح:** وكيل يحدد الملفات والأنماط القابلة لإعادة الاستخدام.
-2. **المواصفة والعقد:** `architect` يكتب `DOCS/specs/Mx-<topic>.md` + عقد OpenAPI + أنواع TypeScript؛ المطوّر يوافق قبل التنفيذ.
-3. **التنفيذ المتوازي:** Backend وFrontend في worktrees منفصلة على فروع فرعية من فرع الـ Milestone، والواجهة تعمل على العقد ببيانات تجريبية حتى يجهز الـ API.
-4. **الدمج والاختبار:** `php artisan test` + `npm run test` + `npm run lint` + `next build` (فحص الأنواع).
-5. **المراجعة:** `reviewer` على الـ diff كاملًا، و`/security-review` للوحدات الحساسة؛ الملاحظات تُعاد للـ coder.
-6. **التحقق:** تشغيل فعلي (المحاكي، CHR، المتصفح) مقابل معايير قبول الـ Milestone.
-7. **التسليم:** PR إلى `dev` بملخص مفصّل؛ المطوّر يدمج فيُنشر على staging.
+1. **Scan:** an agent identifies the reusable files and patterns.
+2. **Spec and contract:** `architect` writes `DOCS/specs/Mx-<topic>.md` + an OpenAPI contract + TypeScript types; the developer approves before implementation.
+3. **Parallel implementation:** Backend and Frontend in separate worktrees on sub-branches off the milestone branch; the frontend works against the contract with mock data until the API is ready.
+4. **Merge and test:** `php artisan test` + `npm run test` + `npm run lint` + `next build` (type check).
+5. **Review:** `reviewer` on the full diff, and `/security-review` for sensitive modules; findings go back to the coder.
+6. **Verification:** real execution (simulator, CHR, browser) against the milestone's acceptance criteria.
+7. **Delivery:** PR to `dev` with a detailed summary; the developer merges, which deploys to staging.
 
-### 9.4 خريطة التوازي لكل Milestone
+### 9.4 Parallelism Map per Milestone
 
-| Milestone | المسار A (Backend) | المسار B (Frontend) | مسار C | تركيز المراجعة |
+| Milestone | Track A (Backend) | Track B (Frontend) | Track C | Review focus |
 | --- | --- | --- | --- | --- |
-| M1 | slug/code، Trait، audit، approvals، 2FA | الإعدادات، الموظفون، القائمة | — | الصلاحيات، 2FA |
-| M2 | `/sync`، الأوامر، المفاتيح | صفحتا التكامل والتشخيص | سكربتات RouterOS + المحاكي | **الأمان** (المصادقة، القائمة المسموحة) |
-| M3 | الجلسات، الحضور، الإحصاءات | — | التنبيهات + أدوات السلامة | الدقة، الأداء |
-| M4 | العقود، Roster، الحجوزات، المكاتب | اللوحة، المراقب، مركز المشتركين | ملف المشترك + الحجوزات (FE ثانٍ) | N+1، تجربة الاستخدام |
-| M5 | الفواتير v2 + الترحيل | الشاشات المالية | الاستيراد + الضريبة + المحفظة | **سلامة المال**، التوافق الخلفي |
-| M6 | `UrCalculator` (test-first) + الإقفال | Tracker، UTR، الاستخدام | المستورد + البرامج والمطالبات | **دقة الصيغة** |
-| M7 | محرك التقارير + التصدير | التحليلات | منشئ التقارير | الأداء |
-| M8 | UTR، الاتفاقيات، المطالبات | لوحات الأدمن | مراقبة الراوترات | الصلاحيات |
-| M9–M10 | الطلبات، الضيوف، النطاق | البوابة، الموقع العام | منشئ الموقع | الأمان العام |
-| M11–M12 | E2E والحمل | Playwright | التعريب | الانحدار |
+| M1 | slug/code, Trait, audit, approvals, 2FA | Settings, staff, navigation menu | — | Permissions, 2FA |
+| M2 | `/sync`, commands, keys | Integration and diagnostics pages | RouterOS scripts + simulator | **Security** (authentication, allowlist) |
+| M3 | Sessions, attendance, statistics | — | Alerts + safety tools | Accuracy, performance |
+| M4 | Contracts, Roster, bookings, stations | Dashboard, monitor, members hub | Subscriber profile + bookings (second FE) | N+1, UX |
+| M5 | Invoices v2 + migration | Finance screens | Import + tax + wallet | **Money integrity**, backward compatibility |
+| M6 | `UrCalculator` (test-first) + month close | Tracker, UTR, utilization | Importer + programs and claims | **Formula accuracy** |
+| M7 | Reporting engine + export | Analytics | Report builder | Performance |
+| M8 | UTR, agreements, claims | Admin dashboards | Router monitoring | Permissions |
+| M9–M10 | Requests, guests, domain | Portal, public site | Site builder | Public-surface security |
+| M11–M12 | E2E and load | Playwright | Localization | Regression |
 
-### 9.5 متى نستخدم Workflow
+### 9.5 When to Use a Workflow
 
-- **Workflow** = سكربت ينسّق عدة وكلاء آليًا بمراحل (تصميم ← تنفيذ متوازٍ ← مراجعة متعددة الأبعاد ← تحقق).
-- يُستخدم فقط **بطلب صريح من المطوّر** («استخدم workflow») لأنه يستهلك موارد أكثر.
-- مرشّح للـ Milestones الكبيرة: **M4 وM5 وM6**، بحجم أقل من 10 وكلاء لكل تشغيل.
-- باقي الـ Milestones تكفيها دورة §9.3 بوكلاء يُطلقون يدويًا من الجلسة.
+- **Workflow** = a script that orchestrates multiple agents automatically in stages (design → parallel implementation → multi-dimensional review → verification).
+- Used only **on the developer's explicit request** ("use workflow"), because it consumes more resources.
+- Candidates are the large milestones: **M4, M5, and M6**, with fewer than 10 agents per run.
+- The remaining milestones are well served by the §9.3 cycle, with agents launched manually from the session.
 
-### 9.6 قواعد منع التعارض
+### 9.6 Conflict-Prevention Rules
 
-- worktree وفرع فرعي لكل وكيل تنفيذ؛ الدمج في فرع الـ Milestone فقط.
-- **العقد أولًا:** لا يبدأ الـ Frontend قبل اعتماد OpenAPI؛ الأنواع تُولَّد من Scramble.
-- الـ migrations ملك مسار Backend وحده؛ `nav-config.ts` وملفات الترجمة المشتركة يعدّلها وكيل واحد في كل مرة.
-- كل وكيل يتلقى القواعد الملزمة في موجّهه: طبقات Controllers → Services → (Repositories للاستعلامات المعقدة) → Models، FormRequest للتحقق، Resource للاستجابة، Enum للحالات، `ApiResponse`، UUID (إلا الجداول عالية الحجم)، `BelongsToWorkspace` للنماذج الجديدة، تسجيل التدقيق للإجراءات الحساسة، الترجمة ar/en، لا استعلامات داخل الحلقات.
-- PRs صغيرة نسبيًا (المالية v2 تُقسم إلى 4–5 PRs).
+- One worktree and sub-branch per implementation agent; merges go into the milestone branch only.
+- **Contract first:** the frontend does not start before the OpenAPI contract is approved; types are generated from Scramble.
+- Migrations are owned by the Backend track alone; `nav-config.ts` and shared translation files are edited by one agent at a time.
+- Every agent receives the binding rules in its prompt: Controllers → Services → (Repositories for complex queries) → Models layering, FormRequest for validation, Resource for responses, Enum for statuses, `ApiResponse`, UUIDs (except for high-volume tables), `BelongsToWorkspace` for new models, audit logging for sensitive actions, ar/en translations, no queries inside loops.
+- Relatively small PRs (finance v2 is split into 4–5 PRs).
 
 ---
 
-## 10. أسلوب العمل والمعايير
+## 10. Working Practices and Standards
 
-**الفروع:** `chore/m0-…`، `feat/mN-…`، `test/m11-…`، `release/m13-…` من `dev`؛ PR إلى `dev` بملخص مفصّل (ما تغيّر، لماذا، الـ endpoints والملفات، كيف تم التحقق). المطوّر يدمج وينشر؛ لا نشر يدوي.
+**Branches:** `chore/m0-…`, `feat/mN-…`, `test/m11-…`, `release/m13-…` from `dev`; PR to `dev` with a detailed summary (what changed, why, the endpoints and files, how it was verified). The developer merges and deploys; no manual deploys.
 
-### 10.1 سير العمل على GitHub (Issues + Milestones + Project)
+### 10.1 GitHub Workflow (Issues + Milestones + Project)
 
-كل مهمة في الشيت = **Issue** على `ahmaddev27/TAQATSPACE`، وجسمها هو **مواصفة المهمة** (الهدف، النطاق، خارج النطاق، التصميم التقني، معايير القبول، الاختبارات، الاعتماديات) + بياناتها الوصفية + تعريف الإنجاز.
+Every task in the sheet = an **Issue** on `ahmaddev27/TAQATSPACE`, whose body is the **task spec** (goal, scope, out of scope, technical design, acceptance criteria, tests, dependencies) + its metadata + the Definition of Done.
 
-| العنصر على GitHub | الاستخدام |
+| GitHub element | Usage |
 | --- | --- |
-| **Milestones** | M0 … M13 بنفس الأسماء؛ وصف كل Milestone = الهدف ومعيار القبول |
-| **Labels** | النوع: `type:backend`، `type:frontend`، `type:fullstack`، `type:qa`، `type:ops`، `type:pm` · الوضع في الكود: `code:new`، `code:extension`، `code:existing` · الإصدار: `release:R0` … `release:R5` · `deferrable` (خارج المسار الأدنى) |
-| **عنوان الـ Issue** | `[M2.4] …` — رقم المهمة في الشيت ثابت ويُستخدم في الفروع والـ commits |
-| **[Project «TaqatSpace Roadmap»](https://github.com/users/ahmaddev27/projects/1)** | لوحة بحقل **Status**: Todo → In Progress → In Review → Done، وحقول Milestone وRelease والجهد |
-| **الربط** | الفرع يُنشأ من الـ Issue، والـ PR يحتوي `Closes #<رقم>` فيُغلق الـ Issue عند الدمج وتنتقل الحالة إلى Done |
+| **Milestones** | M0 … M13 with the same names; each milestone's description = its goal and acceptance criterion |
+| **Labels** | Type: `type:backend`, `type:frontend`, `type:fullstack`, `type:qa`, `type:ops`, `type:pm` · Code state: `code:new`, `code:extension`, `code:existing` · Release: `release:R0` … `release:R5` · `deferrable` (outside the minimum switch-over path) |
+| **Issue title** | `[M2.4] …` — the sheet task number is fixed and is used in branches and commits |
+| **[Project "TaqatSpace Roadmap"](https://github.com/users/ahmaddev27/projects/1)** | Board with a **Status** field: Todo → In Progress → In Review → Done, plus Milestone, Release, and Effort fields |
+| **Linking** | The branch is created from the Issue, and the PR contains `Closes #<number>`, so the Issue closes on merge and the status moves to Done |
 
-**دورة المهمة:**
+**Task lifecycle:**
 
-1. **البدء:** `gh issue develop <رقم> --base dev --name feat/m2-4-sync-endpoint --checkout` ← فرع مرتبط بالـ Issue (يظهر في Development) + الحالة **In Progress**.
-2. **العمل:** commits بصيغة `feat(m2.4): …`؛ الوكلاء يقرؤون المواصفة بـ `gh issue view <رقم>`.
-3. **المراجعة:** `gh pr create --base dev` وفي الجسم `Closes #<رقم>` + ملخص التنفيذ والتحقق ← الحالة **In Review**.
-4. **الإغلاق:** المطوّر يدمج ← الـ Issue يُغلق تلقائيًا ← الحالة **Done** (أتمتة اللوحة المدمجة: Item closed / PR merged → Done).
-5. **تغيير النطاق:** يُحدَّث جسم الـ Issue نفسه (هو المرجع الحي للمواصفة)، ويُسجَّل التغيير في تعليق.
+1. **Start:** `gh issue develop <number> --base dev --name feat/m2-4-sync-endpoint --checkout` → a branch linked to the Issue (shown under Development) + status **In Progress**.
+2. **Work:** commits in the form `feat(m2.4): …`; agents read the spec via `gh issue view <number>`.
+3. **Review:** `gh pr create --base dev` with `Closes #<number>` in the body + an implementation and verification summary → status **In Review**.
+4. **Close:** the developer merges → the Issue closes automatically → status **Done** (built-in board automation: Item closed / PR merged → Done).
+5. **Scope change:** update the Issue body itself (it is the living spec), and record the change in a comment.
 
-**ملاحظة:** الشيت (md/xlsx) يبقى لقطة التخطيط وتوزيع الجهد؛ الحالة الحية على GitHub Project.
+**Note:** the sheet (md/xlsx) remains the planning snapshot and effort allocation; the live status is on the GitHub Project.
 
-### 10.2 تعريف الإنجاز (Definition of Done) لكل مهمة
+### 10.2 Definition of Done (per task)
 
-- اختبارات Feature للـ API (ونجاح كامل الحزمة القائمة) + اختبارات وحدة للحاسبات.
-- التحقق من المدخلات (FormRequest) والصلاحيات (Policy/Gate/permission) لكل endpoint.
-- تسجيل التدقيق لكل إجراء حساس أو مالي.
-- نصوص الواجهة بالعربية والإنجليزية، وRTL سليم.
-- توثيق OpenAPI مُعاد توليده (`composer api:docs`) وPostman محدّث.
-- لا N+1 ولا استعلامات في حلقات؛ فهارس للجداول الجديدة.
-- الـ flag المناسب يحمي الوحدة إن لم تكتمل.
-
----
-
-## 11. خطة الاختبار
-
-| المستوى | الأداة | يغطي |
-| --- | --- | --- |
-| وحدة | PHPUnit | `UrCalculator` (اختبارات ذهبية 3.8%/71.8%)، الحضور (bitmap والأنماط الأربعة)، الضريبة، الترقيم، آلة حالات العقد |
-| Feature | PHPUnit (sqlite) | كل endpoint جديد + الصلاحيات (403) + التوافق الخلفي للفواتير وPOS |
-| محاكاة | `hotspot:simulate` + `FakeRouterTransport` | الانقطاعات، التكرارات، انحراف الساعة، اندفاع إعادة الإقلاع |
-| راوتر افتراضي/حقيقي | MikroTik CHR + راوتر TAQAT GAZA (متوازٍ) | السكربتات، المثبّت، الأوامر، 2,048 جلسة |
-| مطابقة | بيانات CoWorkSpaces المصدّرة + أشهر التشغيل المتوازي | الساعات (≤ 5%)، UR، UTR |
-| واجهة | Vitest + Playwright | المكونات الحرجة + التدفقات الثمانية (M11) |
-| حمل وأمان | k6 + مراجعة أمنية | `/sync` ≤ 300ms عند 50 مساحة، الأدوار والـ API |
-| قبول | UAT | المالك، الموظف، السوبر أدمن، عينة فريلانسرز |
+- Feature tests for the API (with the full existing suite passing) + unit tests for calculators.
+- Input validation (FormRequest) and authorization (Policy/Gate/permission) for every endpoint.
+- Audit logging for every sensitive or financial action.
+- UI text in Arabic and English, with correct RTL.
+- Regenerated OpenAPI documentation (`composer api:docs`) and an updated Postman collection.
+- No N+1 and no queries in loops; indexes on new tables.
+- The appropriate flag guards the module if it is incomplete.
 
 ---
 
-## 12. الإصدارات والنشر
+## 11. Test Plan
 
-| الإصدار | المحتوى | شرط الإصدار |
+| Level | Tool | Covers |
 | --- | --- | --- |
-| R0 | M0 + POS | فحص staging |
-| R1 | M1–M3 | لازم ليستقبل الإنتاج بيانات التشغيل المتوازي؛ flag `network` لمساحة TAQAT GAZA فقط |
-| R2 | M4–M5 | `finance_v2` مطفأ افتراضيًا، يُفعَّل لمساحة الاختبار أولًا |
-| R3 | M6–M8 | `gsg` لمساحة TAQAT GAZA؛ مطابقة شهر كامل |
+| Unit | PHPUnit | `UrCalculator` (golden tests 3.8%/71.8%), attendance (bitmap and the four modes), tax, numbering, contract state machine |
+| Feature | PHPUnit (sqlite) | Every new endpoint + permissions (403) + backward compatibility for invoices and POS |
+| Simulation | `hotspot:simulate` + `FakeRouterTransport` | Outages, duplicates, clock drift, reboot bursts |
+| Virtual/real router | MikroTik CHR + TAQAT GAZA router (parallel) | Scripts, installer, commands, 2,048 sessions |
+| Reconciliation | Exported CoWorkSpaces data + parallel-run months | Hours (≤ 5%), UR, UTR |
+| UI | Vitest + Playwright | Critical components + the eight flows (M11) |
+| Load and security | k6 + security review | `/sync` ≤ 300ms at 50 workspaces, roles and API |
+| Acceptance | UAT | Owner, staff, super admin, a sample of freelancers |
+
+---
+
+## 12. Releases and Deployment
+
+| Release | Content | Release condition |
+| --- | --- | --- |
+| R0 | M0 + POS | Staging check |
+| R1 | M1–M3 | Required for production to receive parallel-run data; `network` flag for the TAQAT GAZA workspace only |
+| R2 | M4–M5 | `finance_v2` off by default, enabled for the test workspace first |
+| R3 | M6–M8 | `gsg` for the TAQAT GAZA workspace; full-month reconciliation |
 | R4 | M9–M10 | — |
-| R5 | M11–M13 | E2E أخضر، لا ثغرات حرجة، UAT موقّع |
+| R5 | M11–M13 | E2E green, no critical vulnerabilities, UAT signed off |
 
-**سلامة الـ migrations:** إضافية فقط (أعمدة nullable ثم backfill ثم قيود)، لا حذف أعمدة قبل إصدار لاحق، ونسخة احتياطية قبل كل إصدار إلى `main`.
-
----
-
-## 13. البنية التحتية والانتقال من cPanel
-
-1. تجهيز الـ VPS (M0.5) وتشغيل staging عليه أولًا.
-2. تحويل workflows النشر (M0.6) مع إبقاء cPanel كاحتياط.
-3. نقل الإنتاج بعد استقرار staging أسبوعًا (M2.14، قبل التشغيل المتوازي M2.13): نسخ قاعدة البيانات، تبديل DNS لـ `api.taqat.space` و`taqat.space` و`sync.taqat.space`، مراقبة 48 ساعة.
-4. إيقاف خدمات cPanel بعد أسبوعين بلا مشاكل.
-
-**متطلبات الـ VPS الدنيا:** 2vCPU / 4GB RAM / 80GB، Ubuntu 24.04، MySQL 8، Redis 7، Supervisor، Certbot؛ تُرفع عند تجاوز 10 مساحات.
+**Migration safety:** additive only (nullable columns, then backfill, then constraints), no column drops before a later release, and a backup before every release to `main`.
 
 ---
 
-## 14. التشغيل المتوازي والترحيل والقطع
+## 13. Infrastructure and Migration from cPanel
 
-| المرحلة | التوقيت | ما يحدث |
+1. Provision the VPS (M0.5) and run staging on it first.
+2. Switch the deployment workflows (M0.6) while keeping cPanel as a fallback.
+3. Move production once staging has been stable for a week (M2.14, before the M2.13 parallel run): copy the database, switch DNS for `api.taqat.space`, `taqat.space`, and `sync.taqat.space`, and monitor for 48 hours.
+4. Shut down the cPanel services after two weeks without issues.
+
+**Minimum VPS requirements:** 2vCPU / 4GB RAM / 80GB, Ubuntu 24.04, MySQL 8, Redis 7, Supervisor, Certbot; to be scaled up beyond 10 workspaces.
+
+---
+
+## 14. Parallel Run, Data Migration, and Cutover
+
+| Phase | Timing | What happens |
 | --- | --- | --- |
-| أ. التثبيت المتوازي | نهاية M2 | سكربت TaqatSpace بوضع «استطلاع فقط» بجانب سكربت CoWorkSpaces |
-| ب. المقارنة الشهرية | من M3 (M3.12) | تقرير شهري: الساعات لكل مشترك وUR مقابل CoWorkSpaces، مع توثيق كل فرق > 5% |
-| ج. الاستيراد التجريبي | M6.1 | استيراد التصدير إلى staging وتقرير مطابقة |
-| د. القطع | M13 | تاريخ تجميد، تصدير ← استيراد نهائي، تفعيل خطافات TaqatSpace الكاملة وإزالة سكربت CoWorkSpaces، تحقق |
-| هـ. الاحتياط | تمرين قبل القطع (M13.8) + شهر بعده | CoWorkSpaces للقراءة فقط كمرجع؛ خطة رجوع: إعادة سكربتهم إن فشل إغلاق أول شهر |
+| A. Parallel installation | End of M2 | TaqatSpace script in "poll-only" mode alongside the CoWorkSpaces script |
+| B. Monthly comparison | From M3 (M3.12) | Monthly report: hours per subscriber and UR vs. CoWorkSpaces, with every difference > 5% documented |
+| C. Trial import | M6.1 | Import the export into staging + reconciliation report |
+| D. Cutover | M13 | Freeze date, export → final import, enable the full TaqatSpace hooks and remove the CoWorkSpaces script, verification |
+| E. Fallback | Rehearsal before cutover (M13.8) + one month after | CoWorkSpaces kept read-only as a reference; rollback plan: reinstate their script if the first month close fails |
 
 ---
 
-## 15. المخاطر والأسئلة المفتوحة
+## 15. Risks and Open Questions
 
-سجل المخاطر (R1–R12) والأسئلة المفتوحة في `TaqatSpace-Milestone-Sheet.md` §7 و§8 وفي ورقتي Risks وOpen Questions في ملف Excel.
+The risk register (R1–R12) and the open questions are in `TaqatSpace-Milestone-Sheet.md` §7 and §8, and in the Risks and Open Questions sheets of the Excel file.
 
 ---
 
-## 16. الخطوات التالية المباشرة (M0)
+## 16. Immediate Next Steps (M0)
 
-1. دمج PR إصدار POS إلى `main` (المطوّر).
-2. إزالة مسار ops وتدوير الأسرار.
-3. حجز الـ VPS وتجهيزه، وإنشاء `sync.taqat.space`.
-4. طلب الملحقين أ وب وتصدير بيانات CoWorkSpaces ومواصفة صيغة UR الكاملة (M0.7، M0.8، M0.11).
-5. جلسة تأكيد نطاق السوبر أدمن والفريلانسر (M0.10) والإجابة عن الأسئلة المفتوحة السبعة.
-6. بدء M1 بدورة الوكلاء (§9.3).
+1. Merge the POS release PR into `main` (developer).
+2. Remove the ops route and rotate the secrets.
+3. Provision and set up the VPS, and create `sync.taqat.space`.
+4. Request annexes A and B, the CoWorkSpaces data export, and the full UR formula specification (M0.7, M0.8, M0.11).
+5. Hold a scope-confirmation session for the super admin and freelancer areas (M0.10) and answer the seven open questions.
+6. Start M1 with the agent cycle (§9.3).
