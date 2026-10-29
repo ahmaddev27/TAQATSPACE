@@ -1,3 +1,5 @@
+> **Superseded (2026-10-29).** This server→router **pull** design (RouterOS API) was never implemented and is replaced by the router→server **push** protocol (`POST /api/v1/hotspot/{code}/sync`), because routers sit behind NAT/CGNAT. See decision D7 and §6.2 of [`DOCS/new plan/TaqatSpace-Dev-Plan.md`](new%20plan/TaqatSpace-Dev-Plan.md) and milestone M2. Kept for history only.
+
 # خطة ربط MikroTik — تزويد المشتركين بإنترنت (user/password)
 
 > الهدف: عند تفعيل اشتراك العضو، يتولّد له **اسم مستخدم وكلمة مرور** للدخول على إنترنت المساحة عبر **Hotspot** على راوتر MikroTik، بسرعة وحدّ بيانات مأخوذين من `InternetPackage`. وعند الإيقاف/الإلغاء/الانتهاء يتعطّل تلقائياً.

@@ -31,7 +31,7 @@ resolve_issue() {
 
 issue_title() { gh issue view "$1" -R "$REPO" --json title --jq .title; }
 
-# Branch name is recorded in the issue body table: | **الفرع** | `feat/m2-4` |
+# Branch name is recorded in the issue body table: | **Branch** | `feat/m2-4` |
 issue_branch() {
   gh issue view "$1" -R "$REPO" --json body --jq .body | grep -o '`[a-z]*/m[0-9-]*`' | head -1 | tr -d '`'
 }
@@ -76,7 +76,7 @@ cmd_pr() {
   branch=$(git rev-parse --abbrev-ref HEAD)
   git push -u origin "$branch"
   gh pr create -R "$REPO" --base "$BASE_BRANCH" --head "$branch" --title "$title" \
-    --body "$(printf 'Closes #%s\n\n## ما تم\n- \n\n## كيف تم التحقق\n- \n' "$issue")"
+    --body "$(printf 'Closes #%s\n\n## What changed\n- \n\n## How it was verified\n- \n' "$issue")"
   set_status "$issue" "In Review"
 }
 

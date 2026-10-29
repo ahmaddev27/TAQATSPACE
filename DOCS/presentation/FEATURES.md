@@ -1,3 +1,5 @@
+> **Outdated (snapshot of 2026-06-09).** Built later and not covered here: POS/café + cashier, partial payments and the payment ledger, internet credentials, daily seat booking, dynamic cities, the Academy partner API, owner receipt review, workspace logo, and the deeper owner reports. For the current state see the [README](../../README.md); for what comes next see [`DOCS/new plan/`](../new%20plan/).
+
 # TaqatSpace — Detailed Features, Flows & User Stories
 # طاقة سبيس — المرجع التفصيلي للميزات والتدفّقات وقصص المستخدم
 

@@ -1,37 +1,37 @@
 ---
-name: مهمة من خارطة الطريق
-about: مهمة جديدة بنفس قالب مواصفات الـ Milestone Sheet
+name: Roadmap task
+about: A new task using the same spec template as the milestone sheet
 title: "[Mx.y] "
 labels: ""
 ---
 
 | | |
 | --- | --- |
-| **المهمة** | `x.y` — |
+| **Task** | `x.y` — |
 | **Milestone** | |
-| **مرجع SRS** | |
-| **الوضع الحالي في الكود** | جديد / توسعة: `path` / موجود: `path` |
-| **النوع / الجهد / الإصدار** | BE · 1 يوم · R1 |
-| **الفرع** | `feat/mx-y` |
+| **SRS ref** | |
+| **Code state** | New / Extension: `path` / Existing: `path` |
+| **Type / effort / release** | BE · 1 day(s) · R1 |
+| **Branch** | `feat/mx-y` |
 
-## الهدف
+## Goal
 
-## النطاق
+## Scope
 -
 
-## خارج النطاق
+## Out of scope
 -
 
-## التصميم التقني
+## Technical design
 - **Backend:**
 - **Frontend:**
-- **يُعاد استخدامه:**
+- **Reuses:**
 
-## معايير القبول
+## Acceptance criteria
 - [ ]
 
-## الاختبارات
+## Tests
 - [ ]
 
-## الاعتماديات والملاحظات
-- يعتمد على:
+## Dependencies & notes
+- Depends on:
