@@ -242,6 +242,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "reports", href: "/owner/reports", icon: "chart" },
           { key: "settings", href: "/owner/settings", icon: "settings" },
+          { key: "auditLog", href: "/owner/settings/audit", icon: "shield" },
         ],
       },
     ],

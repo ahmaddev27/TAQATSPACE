@@ -19,6 +19,7 @@ use App\Models\Workspace;
 use App\Notifications\BookingApprovedNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Notifications\NewBookingRequestNotification;
+use App\Services\Audit\AuditLogger;
 use App\Services\Partner\WebhookDispatcher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ class BookingService
         private readonly WebhookDispatcher $webhooks,
         private readonly PackageService $packages,
         private readonly InternetAccessService $internet,
+        private readonly AuditLogger $audit,
     ) {}
 
     /**
@@ -196,6 +198,11 @@ class BookingService
         // committed, so they only ever see a booking that truly landed.
         $this->webhooks->bookingApproved($approved, $subscription);
 
+        $this->audit->log('booking.approved', $approved, changes: [
+            'subscription_id' => $subscription?->id,
+            'package_id' => $packageId,
+        ], actor: $reviewer);
+
         return $approved;
     }
 
@@ -218,6 +225,8 @@ class BookingService
         $rejected = $booking->refresh()->load('member', 'workspace');
 
         $this->webhooks->bookingRejected($rejected);
+
+        $this->audit->log('booking.rejected', $rejected, $reason, actor: $reviewer);
 
         return $rejected;
     }

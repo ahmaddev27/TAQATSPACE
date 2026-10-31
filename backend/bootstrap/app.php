@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Resolve the request locale before validation runs so error messages
         // (and every other translated string) come back in the caller's language.
         $middleware->api(prepend: [
+            \App\Http\Middleware\AssignRequestId::class,
             \App\Http\Middleware\SetLocale::class,
         ]);
 

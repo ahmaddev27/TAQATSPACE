@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -12,6 +13,10 @@ use Illuminate\Support\Str;
 
 class PasswordResetService
 {
+    public function __construct(
+        private readonly AuditLogger $audit,
+    ) {}
+
     /**
      * Always returns without revealing whether the email exists.
      */
@@ -36,6 +41,9 @@ class PasswordResetService
             $user->tokens()->delete();
 
             event(new PasswordReset($user));
+
+            // The reset link is the proof of identity, so the account itself is the actor.
+            $this->audit->log('auth.password_reset', $user, actor: $user);
         });
     }
 }

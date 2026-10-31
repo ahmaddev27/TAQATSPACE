@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\CashierInvitationNotification;
 use App\Services\Admin\AdminManagementService;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -33,6 +34,10 @@ class CashierManagementService
 {
     /** How long an emailed invitation stays valid. */
     private const INVITE_TTL_DAYS = 7;
+
+    public function __construct(
+        private readonly AuditLogger $audit,
+    ) {}
 
     /**
      * Create + email a cashier invitation for a workspace. The invitation is just
@@ -96,6 +101,11 @@ class CashierManagementService
         Notification::route('mail', $email)->notify(
             new CashierInvitationNotification($workspace, $invitation->name)
         );
+
+        $this->audit->log('staff.invited', $invitation, changes: [
+            'email' => $email,
+            'permissions' => $permissions,
+        ], actor: $inviter);
 
         return $invitation;
     }
@@ -216,8 +226,15 @@ class CashierManagementService
     {
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 
+        $before = $cashier->getPermissionNames()->sort()->values()->all();
+
         $cashier->syncPermissions($this->sanitizePermissions($permissions) ?? []);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->audit->log('permissions.changed', $cashier, changes: [
+            'before' => $before,
+            'after' => $cashier->fresh()?->getPermissionNames()->sort()->values()->all(),
+        ], workspaceId: (string) $workspace->id);
 
         return $cashier->fresh() ?? $cashier;
     }
@@ -231,6 +248,8 @@ class CashierManagementService
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 
         $cashier->forceFill(['status' => UserStatus::Suspended->value])->save();
+
+        $this->audit->log('staff.deactivated', $cashier, workspaceId: (string) $workspace->id);
 
         return $cashier->fresh() ?? $cashier;
     }
