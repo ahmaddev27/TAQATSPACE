@@ -211,6 +211,11 @@ export interface Workspace {
    */
   is_published?: boolean;
   published_at?: string | null;
+  /** Immutable URL identity; owner/admin payloads only. */
+  slug?: string;
+  code?: string;
+  /** Absolute dashboard and public-site links; owner/admin payloads only. */
+  urls?: { dashboard: string; public: string };
   avg_rating: number | null;
   /**
    * Per-seat-type pricing. All three types may be present; disabled ones are

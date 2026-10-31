@@ -76,6 +76,11 @@ class WorkspaceRepository
         return Workspace::query()->public()->with(['seatTypes', 'owner:id,avatar'])->find($id);
     }
 
+    public function findActiveBySlug(string $slug): ?Workspace
+    {
+        return Workspace::query()->public()->with(['seatTypes', 'owner:id,avatar'])->where('slug', $slug)->first();
+    }
+
     public function findByOwnerId(string $ownerId): ?Workspace
     {
         return Workspace::query()->where('owner_id', $ownerId)->first();

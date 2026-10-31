@@ -126,3 +126,12 @@ export async function deleteWorkspacePhoto(path: string): Promise<Workspace> {
   });
   return res.data;
 }
+
+/** Public lookup by slug, used by the `/w/{slug}` redirect. */
+export async function showWorkspaceBySlug(slug: string): Promise<Workspace> {
+  const res = await serverFetch<ApiEnvelope<Workspace>>(
+    `/workspaces/by-slug/${encodeURIComponent(slug)}`,
+    { auth: false },
+  );
+  return res.data;
+}

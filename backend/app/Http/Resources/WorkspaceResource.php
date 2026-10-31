@@ -67,6 +67,7 @@ class WorkspaceResource extends JsonResource
                 fn (): array => [
                     'slug' => $this->slug,
                     'code' => $this->code,
+                    'urls' => $this->urls(),
                     'platform_plan' => $this->platform_plan?->value,
                     'platform_status' => $this->platform_status?->value,
                     'is_published' => $this->isPublished(),
@@ -74,6 +75,21 @@ class WorkspaceResource extends JsonResource
                     'messaging' => $this->maskedMessaging(),
                 ],
             ),
+        ];
+    }
+
+    /**
+     * The workspace's dashboard and public-site links on the frontend.
+     *
+     * @return array{dashboard: string, public: string}
+     */
+    private function urls(): array
+    {
+        $base = rtrim((string) config('app.frontend_url'), '/');
+
+        return [
+            'dashboard' => $base.'/owner',
+            'public' => $base.'/w/'.$this->slug,
         ];
     }
 

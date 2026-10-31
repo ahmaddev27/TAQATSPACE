@@ -23,6 +23,7 @@ import type { City, SeatType, Workspace } from "@/lib/types";
 import { PhotoManager } from "./PhotoManager";
 import { LogoManager } from "./LogoManager";
 import { MessagingTab } from "./MessagingTab";
+import { DomainTab } from "./DomainTab";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -283,6 +284,7 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
     { id: "photos", label: t("settings.tabPhotos") },
     { id: "hours", label: t("settings.tabHours") },
     { id: "messaging", label: tm("tab") },
+    { id: "domain", label: t("settings.tabDomain") },
   ];
 
   return (
@@ -607,9 +609,18 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
         {tab === "messaging" && (
           <MessagingTab messaging={workspace.messaging} />
         )}
+
+        {tab === "domain" && workspace.slug && workspace.urls && (
+          <DomainTab
+            slug={workspace.slug}
+            code={workspace.code ?? ""}
+            dashboardUrl={workspace.urls.dashboard}
+            publicUrl={workspace.urls.public}
+          />
+        )}
       </div>
 
-      {tab !== "photos" && tab !== "seatTypes" && tab !== "messaging" && (
+      {tab !== "photos" && tab !== "seatTypes" && tab !== "messaging" && tab !== "domain" && (
         <Button
           variant="primary"
           icon="check"

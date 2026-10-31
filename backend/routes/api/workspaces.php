@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('workspaces')->group(function (): void {
     Route::get('/', [WorkspaceController::class, 'index']);
     Route::get('/cities', [WorkspaceController::class, 'cities']);
+    Route::get('/by-slug/{slug}', [WorkspaceController::class, 'bySlug']);
     Route::get('/{workspace}', [WorkspaceController::class, 'show']);
 });
 

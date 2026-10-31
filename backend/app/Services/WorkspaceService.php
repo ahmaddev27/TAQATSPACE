@@ -68,6 +68,11 @@ class WorkspaceService
         return $this->workspaces->findActiveById($id);
     }
 
+    public function findActivePublicBySlug(string $slug): ?Workspace
+    {
+        return $this->workspaces->findActiveBySlug($slug);
+    }
+
     /**
      * Create the owner's single workspace. Status starts as pending.
      *
