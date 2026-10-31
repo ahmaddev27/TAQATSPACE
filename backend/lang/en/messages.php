@@ -21,6 +21,8 @@ return [
     'no_workspace_context' => 'No workspace is linked to this account.',
     'unauthorized_action' => 'This action is unauthorized.',
     'no_workspace' => 'You have no workspace.',
+    'feature_disabled' => 'This module is not enabled for your workspace.',
+    'workspace_features_updated' => 'Workspace features updated.',
 
     // POS / cashier staff
     'cashier_invited' => 'Invitation sent.',

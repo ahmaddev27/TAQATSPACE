@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Models\SeatTypePrice;
 use App\Models\Workspace;
+use App\Services\FeatureFlagService;
 use App\Services\MessagingSettingsService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
@@ -59,6 +60,12 @@ class WorkspaceResource extends JsonResource
                 'phone' => $this->owner->phone,
                 'avatar' => MediaUrl::resolve($this->owner->avatar),
             ]),
+
+            // Admin listing only: present when the flag rows are eager-loaded.
+            'features' => $this->whenLoaded(
+                'featureFlags',
+                fn (): array => app(FeatureFlagService::class)->flagMap($this->featureFlags),
+            ),
 
             // Owner/Admin-only: publish state + masked messaging config (never
             // the secrets). The public discovery payload never exposes these.

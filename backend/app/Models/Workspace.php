@@ -120,6 +120,12 @@ class Workspace extends Model
         return $this->hasMany(User::class, 'workspace_id');
     }
 
+    /** @return HasMany<WorkspaceFeatureFlag, $this> */
+    public function featureFlags(): HasMany
+    {
+        return $this->hasMany(WorkspaceFeatureFlag::class);
+    }
+
     /**
      * The workspace's display logo as a resolved URL. Prefers the dedicated
      * logo; falls back to the owner's avatar (only when that relation is loaded,

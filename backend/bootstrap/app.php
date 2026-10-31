@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'can.permission' => \App\Http\Middleware\EnsureHasAdminPermission::class,
             // Binds the request's workspace into the tenancy context (403 if none).
             'workspace.current' => \App\Http\Middleware\CurrentWorkspace::class,
+            // Per-workspace module gate: `feature:<network|finance_v2|gsg>` (403 when off).
+            'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
             // Server-to-server partner auth via `X-Api-Key`.
             'partner' => \App\Http\Middleware\AuthenticatePartner::class,
         ]);

@@ -44,6 +44,12 @@
       "colCity": "City",
       "colStatus": "Status",
       "colPublished": "Publishing",
+      "colFeatures": "Modules",
+      "features": {
+        "network": "Network",
+        "finance_v2": "Finance v2",
+        "gsg": "GSG"
+      },
       "colCreated": "Created",
       "approve": "Approve",
       "suspend": "Suspend",
@@ -80,7 +86,9 @@
         "statusFailed": "Could not update the workspace status",
         "published": "Workspace published",
         "unpublished": "Workspace unpublished",
-        "publishFailed": "Could not update the publishing state"
+        "publishFailed": "Could not update the publishing state",
+        "featureUpdated": "Module setting updated",
+        "featureFailed": "Could not update the module setting"
       }
     },
     "workspaceDetail": {

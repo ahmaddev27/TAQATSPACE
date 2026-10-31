@@ -8,6 +8,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\Workspace;
+use App\Services\FeatureFlagService;
 use App\Services\WorkspaceService;
 use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +20,10 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class AdminWorkspaceService
 {
-    public function __construct(private readonly WorkspaceService $workspaces) {}
+    public function __construct(
+        private readonly WorkspaceService $workspaces,
+        private readonly FeatureFlagService $features,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -60,6 +64,7 @@ class AdminWorkspaceService
                 'capacity' => $row->capacity,
                 'enabled' => $row->enabled,
             ])->all(),
+            'features' => $this->features->flagsFor($workspace->id),
             'seats' => $this->workspaces->seatsSummary($workspace->id),
             'subscriptions' => $this->subscriptions($workspace),
             'invoices' => $this->invoices($workspace),

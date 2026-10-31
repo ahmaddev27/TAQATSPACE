@@ -21,8 +21,13 @@ import {
 } from "@/components/ui/DataTable";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
-import { setWorkspacePublished, updateWorkspaceStatus } from "@/lib/actions/admin";
-import type { Workspace, WorkspaceStatus } from "@/lib/types";
+import {
+  setWorkspaceFeature,
+  setWorkspacePublished,
+  updateWorkspaceStatus,
+} from "@/lib/actions/admin";
+import { Checkbox } from "@/components/ui/Checkbox";
+import type { Workspace, WorkspaceFeature, WorkspaceStatus } from "@/lib/types";
 import { adminDate } from "./format";
 import { ExportCsvLink } from "./ExportCsvLink";
 
@@ -33,6 +38,7 @@ const TABS: StatusTab[] = ["all", "pending", "active", "suspended", "rejected"];
 // client-only convenience and is intentionally NOT forwarded to the download.
 const FILTER_KEYS = ["status", "search"] as const;
 const PAGE_SIZE = 10;
+const FEATURES: WorkspaceFeature[] = ["network", "finance_v2", "gsg"];
 
 export interface WorkspacesTableProps {
   workspaces: Workspace[];
@@ -132,6 +138,23 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
     });
   };
 
+  const runFeature = (
+    workspace: Workspace,
+    feature: WorkspaceFeature,
+    enabled: boolean,
+  ) => {
+    setBusy(busyKey(workspace.id, feature));
+    startTransition(async () => {
+      const res = await setWorkspaceFeature(workspace.id, feature, enabled);
+      setBusy(null);
+      if (res.ok) {
+        toast({ tone: "ok", title: t("toast.featureUpdated") });
+      } else {
+        toast({ tone: "err", title: t("toast.featureFailed"), body: res.message });
+      }
+    });
+  };
+
   // Publishing is non-destructive (one click); unpublishing hides a live
   // workspace from the public site, so it goes through the styled confirm.
   const togglePublish = async (workspace: Workspace) => {
@@ -215,6 +238,24 @@ export function WorkspacesTable({ workspaces }: WorkspacesTableProps) {
             {t("unpublishedBadge")}
           </Badge>
         ),
+    },
+    {
+      id: "features",
+      header: t("colFeatures"),
+      cell: (w) => (
+        <div className="stack" style={{ gap: 4 }}>
+          {FEATURES.map((feature) => (
+            <Checkbox
+              key={feature}
+              checked={w.features?.[feature] ?? false}
+              disabled={busy === busyKey(w.id, feature)}
+              onChange={(e) => runFeature(w, feature, e.target.checked)}
+            >
+              {t(`features.${feature}`)}
+            </Checkbox>
+          ))}
+        </div>
+      ),
     },
     {
       id: "created",

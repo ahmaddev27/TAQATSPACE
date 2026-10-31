@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\WorkspaceFeatureController;
 use App\Http\Controllers\LogoController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\WorkspaceController;
@@ -42,4 +43,5 @@ Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_workspac
         Route::put('/{workspace}/status', [WorkspaceController::class, 'adminUpdateStatus']);
         Route::put('/{workspace}/publish', [WorkspaceController::class, 'adminPublish']);
         Route::put('/{workspace}/unpublish', [WorkspaceController::class, 'adminUnpublish']);
+        Route::put('/{workspace}/features', [WorkspaceFeatureController::class, 'update']);
     });

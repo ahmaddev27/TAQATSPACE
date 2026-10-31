@@ -11,6 +11,8 @@ export type {
   Gender,
   AdminRole,
   AdminPermission,
+  WorkspaceFeature,
+  WorkspaceFeatureFlags,
   ApiEnvelope,
   ApiErrorBody,
 } from "./auth";
@@ -49,6 +51,7 @@ export type {
   BroadcastResult,
 } from "./messaging";
 import type { WorkspaceMessagingConfig } from "./messaging";
+import type { WorkspaceFeatureFlags } from "./auth";
 
 export type {
   ContentKey,
@@ -228,6 +231,8 @@ export interface Workspace {
   recent_reviews?: RecentReview[];
   /** Present on the admin listing only. */
   owner?: WorkspaceOwnerSummary;
+  /** Per-workspace module flags; present on the admin listing only. */
+  features?: WorkspaceFeatureFlags;
   /**
    * Masked messaging config. Present only for requests that may manage the
    * workspace (its owner or an admin); absent on public discovery responses.
