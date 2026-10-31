@@ -994,6 +994,383 @@
                 }
             }
         },
+        "/workspace/audit-logs": {
+            "get": {
+                "operationId": "owner.auditLog.index",
+                "summary": "GET /api/workspace/audit-logs",
+                "tags": [
+                    "AuditLog"
+                ],
+                "parameters": [
+                    {
+                        "name": "actor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "pattern": "^[a-z0-9_.]+\\*?$",
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 64
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "workspace_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "logs": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/AuditLogResource"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "per_page",
+                                                        "total",
+                                                        "last_page"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "logs",
+                                                "meta"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/audit-logs": {
+            "get": {
+                "operationId": "admin.auditLog.index",
+                "summary": "GET /api/admin/audit-logs",
+                "tags": [
+                    "AuditLog"
+                ],
+                "parameters": [
+                    {
+                        "name": "actor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "pattern": "^[a-z0-9_.]+\\*?$",
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 64
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "workspace_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "logs": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/AuditLogResource"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "per_page",
+                                                        "total",
+                                                        "last_page"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "logs",
+                                                "meta"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "operationId": "auth.login",
@@ -14487,6 +14864,103 @@
                     "member_id"
                 ],
                 "title": "AssignSeatRequest"
+            },
+            "AuditLogResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "workspace_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "actor_type": {
+                        "type": "string"
+                    },
+                    "actor": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "email"
+                        ]
+                    },
+                    "action": {
+                        "type": "string"
+                    },
+                    "subject_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "subject_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "changes": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {}
+                    },
+                    "ip": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "request_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "workspace_id",
+                    "actor_type",
+                    "actor",
+                    "action",
+                    "subject_type",
+                    "subject_id",
+                    "reason",
+                    "changes",
+                    "ip",
+                    "request_id",
+                    "created_at"
+                ],
+                "title": "AuditLogResource"
             },
             "BookingRequestResource": {
                 "type": "object",

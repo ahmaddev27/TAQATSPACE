@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\CashierInvitationNotification;
 use App\Services\Admin\AdminManagementService;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -34,6 +35,10 @@ class StaffManagementService
 {
     /** How long an emailed invitation stays valid. */
     private const INVITE_TTL_DAYS = 7;
+
+    public function __construct(
+        private readonly AuditLogger $audit,
+    ) {}
 
     /**
      * Create + email a cashier invitation for a workspace. The invitation is just
@@ -100,6 +105,11 @@ class StaffManagementService
         Notification::route('mail', $email)->notify(
             new CashierInvitationNotification($workspace, $invitation->name)
         );
+
+        $this->audit->log('staff.invited', $invitation, changes: [
+            'email' => $email,
+            'permissions' => $permissions,
+        ], actor: $inviter);
 
         return $invitation;
     }
@@ -225,12 +235,22 @@ class StaffManagementService
     {
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 
+        $before = $cashier->getPermissionNames()->sort()->values()->all();
+        $groupBefore = $cashier->staff_group;
+
         if ($group !== null) {
             $cashier->forceFill(['staff_group' => $group->value])->save();
         }
 
         $cashier->syncPermissions($this->sanitizePermissions($permissions) ?? []);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->audit->log('permissions.changed', $cashier, changes: [
+            'before' => $before,
+            'after' => $cashier->fresh()?->getPermissionNames()->sort()->values()->all(),
+            'group_before' => $groupBefore?->value,
+            'group_after' => ($group ?? $groupBefore)?->value,
+        ], workspaceId: (string) $workspace->id);
 
         return $cashier->fresh() ?? $cashier;
     }
@@ -244,6 +264,8 @@ class StaffManagementService
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 
         $cashier->forceFill(['status' => UserStatus::Suspended->value])->save();
+
+        $this->audit->log('staff.deactivated', $cashier, workspaceId: (string) $workspace->id);
 
         return $cashier->fresh() ?? $cashier;
     }
