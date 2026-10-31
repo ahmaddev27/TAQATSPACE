@@ -1,0 +1,9 @@
+[32m./composer.json has been updated[39m
+[32mRunning composer update pragmarx/google2fa bacon/bacon-qr-code --with-all-dependencies[39m
+[32mLoading composer repositories with package information[39m
+[32mUpdating dependencies[39m
+Nothing to modify in lock file
+[32mWriting lock file[39m
+[32mInstalling dependencies from lock file (including require-dev)[39m
+Nothing to install, update or remove
+[32mGenerating optimized autoload files[39m
