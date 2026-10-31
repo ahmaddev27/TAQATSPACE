@@ -216,7 +216,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
               { key: "posSell", href: "/owner/pos/terminal", icon: "receipt" },
               { key: "posProducts", href: "/owner/pos", icon: "coffee" },
               { key: "posReports", href: "/owner/pos/reports", icon: "chart" },
-              { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
+              { key: "staff", href: "/owner/settings/staff", icon: "shield" },
             ],
           },
         ],

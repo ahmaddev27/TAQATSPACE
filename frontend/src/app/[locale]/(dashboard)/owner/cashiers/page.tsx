@@ -1,26 +1,13 @@
-import { setRequestLocale, getTranslations } from "next-intl/server";
-import { ownerCashiers } from "@/lib/api/cashiers";
-import { CashiersManager } from "@/components/features/owner/CashiersManager";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function CashiersPage({
+/** Temporary redirect: the cashiers page became `/owner/settings/staff` (M1.3). */
+export default async function LegacyCashiersPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("owner.cashiers");
-  const { cashiers, invitations } = await ownerCashiers();
-
-  return (
-    <div className="page">
-      <div className="page-head">
-        <h1 className="h1">{t("title")}</h1>
-        <p className="muted">{t("subtitle")}</p>
-      </div>
-      <CashiersManager cashiers={cashiers} invitations={invitations} />
-    </div>
-  );
+  redirect(`/${locale}/owner/settings/staff`);
 }

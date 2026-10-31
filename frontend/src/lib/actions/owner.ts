@@ -24,11 +24,12 @@ import type {
   ResourceType,
 } from "@/lib/types/management";
 import type {
-  Cashier,
-  CashierInvitation,
-  InviteCashierInput,
+  Staff,
+  StaffInvitation,
+  InviteStaffInput,
   PosPermission,
-} from "@/lib/types/cashier";
+  StaffGroup,
+} from "@/lib/types/staff";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */
@@ -554,77 +555,78 @@ export async function deleteResource(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Cashiers (POS / café staff)                                               */
+/*  Workspace staff (POS / café)                                             */
 /* -------------------------------------------------------------------------- */
 
-/** Email a cashier invitation for the owner's workspace. */
-export async function inviteCashier(
-  input: InviteCashierInput,
-): Promise<ActionResult<CashierInvitation>> {
-  const result = await authedMutate<CashierInvitation>(
-    "/workspace/cashiers/invite",
+/** Email a staff invitation for the owner's workspace. */
+export async function inviteStaff(
+  input: InviteStaffInput,
+): Promise<ActionResult<StaffInvitation>> {
+  const result = await authedMutate<StaffInvitation>(
+    "/workspace/staff/invite",
     { method: "POST", body: input },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Re-scope a cashier's POS permission grant. */
-export async function updateCashierPermissions(
-  cashierId: string,
+/** Re-scope a staff member's group and permission grant. */
+export async function updateStaffPermissions(
+  staffId: string,
   permissions: PosPermission[],
-): Promise<ActionResult<Cashier>> {
-  const result = await authedMutate<Cashier>(
-    `/workspace/cashiers/${cashierId}/permissions`,
-    { method: "PUT", body: { permissions } },
+  staffGroup?: StaffGroup,
+): Promise<ActionResult<Staff>> {
+  const result = await authedMutate<Staff>(
+    `/workspace/staff/${staffId}/permissions`,
+    { method: "PUT", body: { permissions, staff_group: staffGroup } },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Deactivate (suspend) a cashier account. */
-export async function deactivateCashier(
-  cashierId: string,
+/** Deactivate (suspend) a staff account. */
+export async function deactivateStaff(
+  staffId: string,
 ): Promise<ActionResult> {
-  const result = await authedMutate(`/workspace/cashiers/${cashierId}`, {
+  const result = await authedMutate(`/workspace/staff/${staffId}`, {
     method: "DELETE",
   });
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Permanently delete a cashier account (history is preserved with a null actor). */
-export async function deleteCashierAccount(
-  cashierId: string,
+/** Permanently delete a staff account (history is preserved with a null actor). */
+export async function deleteStaffAccount(
+  staffId: string,
 ): Promise<ActionResult> {
   const result = await authedMutate(
-    `/workspace/cashiers/${cashierId}/permanent`,
+    `/workspace/staff/${staffId}/permanent`,
     { method: "DELETE" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Re-send a pending cashier invitation email (refreshes its expiry). */
-export async function resendCashierInvitation(
+/** Re-send a pending staff invitation email (refreshes its expiry). */
+export async function resendStaffInvitation(
   invitationId: string,
-): Promise<ActionResult<CashierInvitation>> {
-  const result = await authedMutate<CashierInvitation>(
-    `/workspace/cashiers/invitations/${invitationId}/resend`,
+): Promise<ActionResult<StaffInvitation>> {
+  const result = await authedMutate<StaffInvitation>(
+    `/workspace/staff/invitations/${invitationId}/resend`,
     { method: "POST" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Revoke (delete) a pending cashier invitation. */
-export async function deleteCashierInvitation(
+/** Revoke (delete) a pending staff invitation. */
+export async function deleteStaffInvitation(
   invitationId: string,
 ): Promise<ActionResult> {
   const result = await authedMutate(
-    `/workspace/cashiers/invitations/${invitationId}`,
+    `/workspace/staff/invitations/${invitationId}`,
     { method: "DELETE" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }

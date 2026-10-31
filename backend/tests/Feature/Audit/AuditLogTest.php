@@ -8,7 +8,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Audit\AuditLogger;
-use App\Services\Pos\CashierManagementService;
+use App\Services\Pos\StaffManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -158,7 +158,7 @@ class AuditLogTest extends TestCase
         [$owner, $workspace] = $this->ownerWithWorkspace();
         Sanctum::actingAs($owner);
 
-        app(CashierManagementService::class)->invite($workspace, $owner, ['email' => 'new@example.com']);
+        app(StaffManagementService::class)->invite($workspace, $owner, ['email' => 'new@example.com']);
 
         $this->assertDatabaseHas('audit_logs', [
             'workspace_id' => $workspace->id,

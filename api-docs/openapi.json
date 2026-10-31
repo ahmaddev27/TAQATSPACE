@@ -2194,565 +2194,6 @@
                 }
             }
         },
-        "/workspace/cashiers": {
-            "get": {
-                "operationId": "cashier.index",
-                "description": "The workspace's cashier accounts plus any open (unaccepted) invitations.",
-                "summary": "GET /api/workspace/cashiers",
-                "tags": [
-                    "Cashier"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "cashiers": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/CashierResource"
-                                                            }
-                                                        },
-                                                        "invitations": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/CashierInvitationResource"
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "cashiers",
-                                                        "invitations"
-                                                    ]
-                                                },
-                                                "message": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "data",
-                                                "message"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "cashiers": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            },
-                                                            "minItems": 0,
-                                                            "maxItems": 0,
-                                                            "additionalItems": false
-                                                        },
-                                                        "invitations": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            },
-                                                            "minItems": 0,
-                                                            "maxItems": 0,
-                                                            "additionalItems": false
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "cashiers",
-                                                        "invitations"
-                                                    ]
-                                                },
-                                                "message": {
-                                                    "type": "null"
-                                                }
-                                            },
-                                            "required": [
-                                                "data",
-                                                "message"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/invite": {
-            "post": {
-                "operationId": "cashier.invite",
-                "summary": "POST /api/workspace/cashiers/invite",
-                "tags": [
-                    "Cashier"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/InviteCashierRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CashierInvitationResource"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/invitations/{invitation}/resend": {
-            "post": {
-                "operationId": "cashier.resendInvitation",
-                "summary": "POST /api/workspace/cashiers/invitations/{invitation}/resend",
-                "tags": [
-                    "Cashier"
-                ],
-                "parameters": [
-                    {
-                        "name": "invitation",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invitation ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CashierInvitationResource"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/invitations/{invitation}": {
-            "delete": {
-                "operationId": "cashier.destroyInvitation",
-                "summary": "DELETE /api/workspace/cashiers/invitations/{invitation}",
-                "tags": [
-                    "Cashier"
-                ],
-                "parameters": [
-                    {
-                        "name": "invitation",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invitation ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "null"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u062f\u0639\u0648\u0629."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/{cashier}/permissions": {
-            "put": {
-                "operationId": "cashier.updatePermissions",
-                "summary": "PUT /api/workspace/cashiers/{cashier}/permissions",
-                "tags": [
-                    "Cashier"
-                ],
-                "parameters": [
-                    {
-                        "name": "cashier",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cashier ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateCashierPermissionsRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CashierResource"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/{cashier}/permanent": {
-            "delete": {
-                "operationId": "cashier.deleteCashier",
-                "summary": "DELETE /api/workspace/cashiers/{cashier}/permanent",
-                "tags": [
-                    "Cashier"
-                ],
-                "parameters": [
-                    {
-                        "name": "cashier",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cashier ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "null"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/workspace/cashiers/{cashier}": {
-            "delete": {
-                "operationId": "cashier.destroy",
-                "summary": "DELETE /api/workspace/cashiers/{cashier}",
-                "tags": [
-                    "Cashier"
-                ],
-                "parameters": [
-                    {
-                        "name": "cashier",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cashier ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "null"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u062a\u0639\u0637\u064a\u0644 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/chat/token": {
             "post": {
                 "operationId": "chat.token",
@@ -12158,6 +11599,1160 @@
                 }
             }
         },
+        "/workspace/staff": {
+            "get": {
+                "operationId": "owner.staff.index_0",
+                "description": "The workspace's staff accounts plus any open (unaccepted) invitations.",
+                "summary": "GET /api/workspace/staff",
+                "tags": [
+                    "Staff"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "staff": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/StaffResource"
+                                                            }
+                                                        },
+                                                        "cashiers": {
+                                                            "type": "array",
+                                                            "description": "Deprecated alias of `staff` for pre-1.3 clients.",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/StaffResource"
+                                                            }
+                                                        },
+                                                        "invitations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/CashierInvitationResource"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "staff",
+                                                        "cashiers",
+                                                        "invitations"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "staff": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "cashiers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "invitations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "staff",
+                                                        "cashiers",
+                                                        "invitations"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/invite": {
+            "post": {
+                "operationId": "owner.staff.invite_0",
+                "summary": "POST /api/workspace/staff/invite",
+                "tags": [
+                    "Staff"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreStaffInvitationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CashierInvitationResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/invitations/{invitation}/resend": {
+            "post": {
+                "operationId": "owner.staff.resendInvitation_0",
+                "summary": "POST /api/workspace/staff/invitations/{invitation}/resend",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "invitation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invitation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CashierInvitationResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/invitations/{invitation}": {
+            "delete": {
+                "operationId": "owner.staff.destroyInvitation_0",
+                "summary": "DELETE /api/workspace/staff/invitations/{invitation}",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "invitation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invitation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/{cashier}/permissions": {
+            "put": {
+                "operationId": "owner.staff.updatePermissions_0",
+                "summary": "PUT /api/workspace/staff/{cashier}/permissions",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateStaffPermissionsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StaffResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/{cashier}/permanent": {
+            "delete": {
+                "operationId": "owner.staff.deleteStaff_0",
+                "summary": "DELETE /api/workspace/staff/{cashier}/permanent",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/staff/{cashier}": {
+            "delete": {
+                "operationId": "owner.staff.destroy_0",
+                "summary": "DELETE /api/workspace/staff/{cashier}",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0639\u0637\u064a\u0644 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers": {
+            "get": {
+                "operationId": "owner.staff.index_0",
+                "description": "The workspace's staff accounts plus any open (unaccepted) invitations.",
+                "summary": "GET /api/workspace/staff",
+                "tags": [
+                    "Staff"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "staff": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/StaffResource"
+                                                            }
+                                                        },
+                                                        "cashiers": {
+                                                            "type": "array",
+                                                            "description": "Deprecated alias of `staff` for pre-1.3 clients.",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/StaffResource"
+                                                            }
+                                                        },
+                                                        "invitations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/CashierInvitationResource"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "staff",
+                                                        "cashiers",
+                                                        "invitations"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "staff": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "cashiers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        },
+                                                        "invitations": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "staff",
+                                                        "cashiers",
+                                                        "invitations"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/invite": {
+            "post": {
+                "operationId": "owner.staff.invite_0",
+                "summary": "POST /api/workspace/staff/invite",
+                "tags": [
+                    "Staff"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreStaffInvitationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CashierInvitationResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/invitations/{invitation}/resend": {
+            "post": {
+                "operationId": "owner.staff.resendInvitation_0",
+                "summary": "POST /api/workspace/staff/invitations/{invitation}/resend",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "invitation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invitation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CashierInvitationResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/invitations/{invitation}": {
+            "delete": {
+                "operationId": "owner.staff.destroyInvitation_0",
+                "summary": "DELETE /api/workspace/staff/invitations/{invitation}",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "invitation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The invitation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u062f\u0639\u0648\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/{cashier}/permissions": {
+            "put": {
+                "operationId": "owner.staff.updatePermissions_0",
+                "summary": "PUT /api/workspace/staff/{cashier}/permissions",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateStaffPermissionsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StaffResource"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/{cashier}/permanent": {
+            "delete": {
+                "operationId": "owner.staff.deleteStaff_0",
+                "summary": "DELETE /api/workspace/staff/{cashier}/permanent",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workspace/cashiers/{cashier}": {
+            "delete": {
+                "operationId": "owner.staff.destroy_0",
+                "summary": "DELETE /api/workspace/staff/{cashier}",
+                "tags": [
+                    "Staff"
+                ],
+                "parameters": [
+                    {
+                        "name": "cashier",
+                        "in": "path",
+                        "required": true,
+                        "description": "The cashier ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u0639\u0637\u064a\u0644 \u0627\u0644\u0643\u0627\u0634\u064a\u0631."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/subscriptions": {
             "get": {
                 "operationId": "admin.subscription.index",
@@ -14479,6 +15074,9 @@
                             "null"
                         ]
                     },
+                    "staff_group": {
+                        "type": "string"
+                    },
                     "permissions": {
                         "type": "array",
                         "items": {}
@@ -14494,46 +15092,12 @@
                     "id",
                     "email",
                     "name",
+                    "staff_group",
                     "permissions",
                     "expires_at",
                     "created_at"
                 ],
                 "title": "CashierInvitationResource"
-            },
-            "CashierResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "permissions": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "created_at": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "email",
-                    "status",
-                    "permissions",
-                    "created_at"
-                ],
-                "title": "CashierResource"
             },
             "CityResource": {
                 "type": "object",
@@ -14689,42 +15253,6 @@
                     "email"
                 ],
                 "title": "ForgotPasswordRequest"
-            },
-            "InviteCashierRequest": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "maxLength": 255
-                    },
-                    "name": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 255
-                    },
-                    "permissions": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "pos_sell",
-                                "pos_refund",
-                                "pos_manage_products",
-                                "pos_view_reports"
-                            ]
-                        }
-                    }
-                },
-                "required": [
-                    "email"
-                ],
-                "title": "InviteCashierRequest"
             },
             "InvoiceLineResource": {
                 "type": "object",
@@ -16169,6 +16697,45 @@
                 ],
                 "title": "SeatResource"
             },
+            "StaffResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "staff_group": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "status",
+                    "staff_group",
+                    "permissions",
+                    "created_at"
+                ],
+                "title": "StaffResource"
+            },
             "StoreAdminRequest": {
                 "type": "object",
                 "description": "Validates creating a new admin account. Authorization is enforced by the\nroute middleware (auth:sanctum + can.manage_admins).",
@@ -16743,6 +17310,53 @@
                 ],
                 "title": "StoreSeatRequest"
             },
+            "StoreStaffInvitationRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "staff_group": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "cashier",
+                            "hospitality",
+                            "finance_supervisor"
+                        ]
+                    },
+                    "permissions": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "pos_sell",
+                                "pos_refund",
+                                "pos_manage_products",
+                                "pos_view_reports"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "email"
+                ],
+                "title": "StoreStaffInvitationRequest"
+            },
             "StoreWorkspaceRequest": {
                 "type": "object",
                 "properties": {
@@ -17170,27 +17784,6 @@
                     }
                 },
                 "title": "UpdateBrandingRequest"
-            },
-            "UpdateCashierPermissionsRequest": {
-                "type": "object",
-                "properties": {
-                    "permissions": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "pos_sell",
-                                "pos_refund",
-                                "pos_manage_products",
-                                "pos_view_reports"
-                            ]
-                        }
-                    }
-                },
-                "required": [
-                    "permissions"
-                ],
-                "title": "UpdateCashierPermissionsRequest"
             },
             "UpdateCityRequest": {
                 "type": "object",
@@ -18180,6 +18773,38 @@
                 },
                 "title": "UpdateSiteContentRequest"
             },
+            "UpdateStaffPermissionsRequest": {
+                "type": "object",
+                "properties": {
+                    "staff_group": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "cashier",
+                            "hospitality",
+                            "finance_supervisor"
+                        ]
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "pos_sell",
+                                "pos_refund",
+                                "pos_manage_products",
+                                "pos_view_reports"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "permissions"
+                ],
+                "title": "UpdateStaffPermissionsRequest"
+            },
             "UpdateUserStatusRequest": {
                 "type": "object",
                 "description": "Validates an admin user-status transition. Authorization is enforced by the\nroute middleware (auth:sanctum + role.admin).",
@@ -18487,6 +19112,9 @@
                             "workspace_name": {
                                 "type": "string"
                             },
+                            "staff_group": {
+                                "type": "string"
+                            },
                             "permissions": {
                                 "anyOf": [
                                     {
@@ -18512,6 +19140,7 @@
                         "required": [
                             "id",
                             "workspace_name",
+                            "staff_group",
                             "permissions"
                         ]
                     },

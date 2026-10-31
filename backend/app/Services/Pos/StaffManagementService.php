@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Pos;
 
 use App\Enums\PosPermission;
+use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\CashierInvitation;
@@ -21,8 +22,8 @@ use RuntimeException;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Owner-facing administration of a workspace's cashier/café staff: email
- * invitations, SSO-onboarding acceptance, the staff directory, and
+ * Owner-facing administration of a workspace's staff (cashier, hospitality and
+ * finance-supervisor groups): email invitations, SSO-onboarding acceptance, the staff directory, and
  * deactivation. Mirrors {@see AdminManagementService} but
  * scoped to a single workspace via `users.workspace_id`.
  *
@@ -30,7 +31,7 @@ use Spatie\Permission\PermissionRegistrar;
  * (email verified by the IdP) and, during onboarding, accepts or declines a
  * pending invitation matching their address — there is no local password.
  */
-class CashierManagementService
+class StaffManagementService
 {
     /** How long an emailed invitation stays valid. */
     private const INVITE_TTL_DAYS = 7;
@@ -47,7 +48,7 @@ class CashierManagementService
      * a not-yet-onboarded SSO account (or no account at all) is fine, since that
      * account can still adopt the cashier role during onboarding.
      *
-     * @param  array{email: string, name?: string|null, permissions?: array<int, string>|null}  $data
+     * @param  array{email: string, name?: string|null, staff_group?: string|null, permissions?: array<int, string>|null}  $data
      */
     public function invite(Workspace $workspace, User $inviter, array $data): CashierInvitation
     {
@@ -76,10 +77,12 @@ class CashierManagementService
             throw new RuntimeException(__('messages.cashier_already_invited'));
         }
 
-        $permissions = $this->sanitizePermissions($data['permissions'] ?? null);
+        $group = StaffGroup::tryFrom((string) ($data['staff_group'] ?? '')) ?? StaffGroup::Cashier;
+        // Explicit permissions refine the group; absent ones fall back to the group's map.
+        $permissions = $this->sanitizePermissions($data['permissions'] ?? null) ?? $group->permissions();
         $token = Str::random(48);
 
-        $invitation = DB::transaction(function () use ($workspace, $inviter, $email, $data, $permissions, $token): CashierInvitation {
+        $invitation = DB::transaction(function () use ($workspace, $inviter, $email, $data, $group, $permissions, $token): CashierInvitation {
             // Clear any stale (expired/declined) invites for this address first.
             CashierInvitation::query()
                 ->where('workspace_id', $workspace->id)
@@ -94,6 +97,7 @@ class CashierManagementService
                 'name' => $data['name'] ?? null,
                 'token_hash' => $this->hashToken($token),
                 'permissions' => $permissions,
+                'staff_group' => $group->value,
                 'expires_at' => Carbon::now()->addDays(self::INVITE_TTL_DAYS),
             ]);
         });
@@ -141,16 +145,19 @@ class CashierManagementService
             throw new RuntimeException(__('messages.cashier_invite_invalid'));
         }
 
-        return DB::transaction(function () use ($user, $invitation): User {
+        $group = $invitation->staff_group ?? StaffGroup::Cashier;
+
+        return DB::transaction(function () use ($user, $invitation, $group): User {
             $user->forceFill([
                 'role' => UserRole::Cashier->value,
                 'workspace_id' => $invitation->workspace_id,
+                'staff_group' => $group->value,
                 'status' => UserStatus::Active->value,
                 'onboarding_completed_at' => now(),
             ])->save();
 
             $user->syncRoles([UserRole::Cashier->value]);
-            $user->syncPermissions($invitation->permissions ?? PosPermission::defaultsForCashier());
+            $user->syncPermissions($invitation->permissions ?? $group->permissions());
             app(PermissionRegistrar::class)->forgetCachedPermissions();
 
             $invitation->forceFill([
@@ -218,15 +225,22 @@ class CashierManagementService
     }
 
     /**
-     * Update a cashier's POS permission grant (owner curates what they can do).
+     * Update a staff member's permission grant (owner curates what they can do).
+     * An optional group re-labels the member; the explicit list still decides the
+     * effective grant, so single permissions can be added or removed on top.
      *
      * @param  array<int, string>  $permissions
      */
-    public function updatePermissions(User $cashier, Workspace $workspace, array $permissions): User
+    public function updatePermissions(User $cashier, Workspace $workspace, array $permissions, ?StaffGroup $group = null): User
     {
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 
         $before = $cashier->getPermissionNames()->sort()->values()->all();
+        $groupBefore = $cashier->staff_group;
+
+        if ($group !== null) {
+            $cashier->forceFill(['staff_group' => $group->value])->save();
+        }
 
         $cashier->syncPermissions($this->sanitizePermissions($permissions) ?? []);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -234,6 +248,8 @@ class CashierManagementService
         $this->audit->log('permissions.changed', $cashier, changes: [
             'before' => $before,
             'after' => $cashier->fresh()?->getPermissionNames()->sort()->values()->all(),
+            'group_before' => $groupBefore?->value,
+            'group_after' => ($group ?? $groupBefore)?->value,
         ], workspaceId: (string) $workspace->id);
 
         return $cashier->fresh() ?? $cashier;
@@ -259,7 +275,7 @@ class CashierManagementService
      * payments and stock movements reference the cashier with `nullOnDelete`, so
      * the records survive with a null actor.
      */
-    public function deleteCashier(User $cashier, Workspace $workspace): void
+    public function deleteStaff(User $cashier, Workspace $workspace): void
     {
         $this->ensureBelongsToWorkspace($cashier, $workspace);
 

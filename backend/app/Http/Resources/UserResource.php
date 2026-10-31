@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Enums\PosPermission;
+use App\Enums\StaffGroup;
 use App\Models\User;
-use App\Services\Pos\CashierManagementService;
+use App\Services\Pos\StaffManagementService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -91,7 +92,7 @@ class UserResource extends JsonResource
      * they still need onboarding so the SPA can offer accept/decline. Resolved
      * lazily to keep the common (already-onboarded) path query-free.
      *
-     * @return array{id: string, workspace_name: ?string, permissions: array<int, string>}|null
+     * @return array{id: string, workspace_name: ?string, staff_group: string, permissions: array<int, string>}|null
      */
     private function pendingCashierInvitation(): ?array
     {
@@ -99,7 +100,7 @@ class UserResource extends JsonResource
             return null;
         }
 
-        $invitation = app(CashierManagementService::class)->pendingForEmail((string) $this->email);
+        $invitation = app(StaffManagementService::class)->pendingForEmail((string) $this->email);
 
         if ($invitation === null) {
             return null;
@@ -108,6 +109,7 @@ class UserResource extends JsonResource
         return [
             'id' => $invitation->id,
             'workspace_name' => $invitation->workspace?->name,
+            'staff_group' => ($invitation->staff_group ?? StaffGroup::Cashier)->value,
             'permissions' => $invitation->permissions ?? PosPermission::defaultsForCashier(),
         ];
     }
