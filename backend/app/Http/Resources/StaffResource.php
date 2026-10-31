@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\StaffGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @mixin User
  */
-class CashierResource extends JsonResource
+class StaffResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -23,6 +24,7 @@ class CashierResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'status' => $this->status->value,
+            'staff_group' => ($this->staff_group ?? StaffGroup::Cashier)->value,
             'permissions' => $this->getPermissionNames()->values()->all(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

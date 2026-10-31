@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AdminPermission;
 use App\Enums\AdminRole;
 use App\Enums\Gender;
+use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
@@ -36,6 +37,7 @@ class User extends Authenticatable
         'gender',
         'role',
         'workspace_id',
+        'staff_group',
         'status',
         'sso_sub',
         'onboarding_completed_at',
@@ -63,6 +65,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'gender' => Gender::class,
             'role' => UserRole::class,
+            'staff_group' => StaffGroup::class,
             'status' => UserStatus::class,
             'documents' => 'array',
         ];

@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Cashier;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\CashierInvitation;
-use App\Services\Pos\CashierManagementService;
+use App\Services\Pos\StaffManagementService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ use RuntimeException;
 class InvitationController extends Controller
 {
     public function __construct(
-        private readonly CashierManagementService $cashiers,
+        private readonly StaffManagementService $staff,
     ) {}
 
     /**
@@ -32,7 +32,7 @@ class InvitationController extends Controller
     public function accept(Request $request, CashierInvitation $invitation): JsonResponse
     {
         try {
-            $user = $this->cashiers->acceptForUser($request->user(), $invitation);
+            $user = $this->staff->acceptForUser($request->user(), $invitation);
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -50,7 +50,7 @@ class InvitationController extends Controller
      */
     public function decline(Request $request, CashierInvitation $invitation): JsonResponse
     {
-        $this->cashiers->declineForUser($request->user(), $invitation);
+        $this->staff->declineForUser($request->user(), $invitation);
 
         return ApiResponse::success(null);
     }

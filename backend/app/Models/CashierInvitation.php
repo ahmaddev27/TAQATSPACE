@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\StaffGroup;
 use Database\Factories\CashierInvitationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,7 @@ class CashierInvitation extends Model
         'name',
         'token_hash',
         'permissions',
+        'staff_group',
         'expires_at',
         'accepted_at',
         'declined_at',
@@ -46,6 +48,7 @@ class CashierInvitation extends Model
     {
         return [
             'permissions' => 'array',
+            'staff_group' => StaffGroup::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
             'declined_at' => 'datetime',

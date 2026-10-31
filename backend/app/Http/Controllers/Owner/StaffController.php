@@ -4,44 +4,47 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Owner;
 
+use App\Enums\StaffGroup;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Owner\InviteCashierRequest;
-use App\Http\Requests\Owner\UpdateCashierPermissionsRequest;
+use App\Http\Requests\Owner\StoreStaffInvitationRequest;
+use App\Http\Requests\Owner\UpdateStaffPermissionsRequest;
 use App\Http\Resources\CashierInvitationResource;
-use App\Http\Resources\CashierResource;
+use App\Http\Resources\StaffResource;
 use App\Models\CashierInvitation;
 use App\Models\User;
 use App\Models\Workspace;
-use App\Services\Pos\CashierManagementService;
+use App\Services\Pos\StaffManagementService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
 /**
- * Café/cashier staff administration for the authenticated owner's workspace
+ * Workspace staff administration for the authenticated owner's workspace
  * ONLY. Every action is scoped to that workspace.
  */
-class CashierController extends Controller
+class StaffController extends Controller
 {
     public function __construct(
-        private readonly CashierManagementService $cashiers,
+        private readonly StaffManagementService $staff,
     ) {}
 
     /**
-     * GET /api/workspace/cashiers
+     * GET /api/workspace/staff
      *
-     * The workspace's cashier accounts plus any open (unaccepted) invitations.
+     * The workspace's staff accounts plus any open (unaccepted) invitations.
      */
     public function index(Request $request): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
-            return ApiResponse::success(['cashiers' => [], 'invitations' => []]);
+            return ApiResponse::success(['staff' => [], 'cashiers' => [], 'invitations' => []]);
         }
 
-        $cashiers = $workspace->cashiers()->with('permissions:id,name')->latest()->get();
+        $members = StaffResource::collection(
+            $workspace->cashiers()->with('permissions:id,name')->latest()->get()
+        );
         $invitations = CashierInvitation::query()
             ->where('workspace_id', $workspace->id)
             ->whereNull('accepted_at')
@@ -50,15 +53,17 @@ class CashierController extends Controller
             ->get();
 
         return ApiResponse::success([
-            'cashiers' => CashierResource::collection($cashiers),
+            'staff' => $members,
+            // Deprecated alias of `staff` for pre-1.3 clients.
+            'cashiers' => $members,
             'invitations' => CashierInvitationResource::collection($invitations),
         ]);
     }
 
     /**
-     * POST /api/workspace/cashiers/invite
+     * POST /api/workspace/staff/invite
      */
-    public function invite(InviteCashierRequest $request): JsonResponse
+    public function invite(StoreStaffInvitationRequest $request): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
 
@@ -67,7 +72,7 @@ class CashierController extends Controller
         }
 
         try {
-            $invitation = $this->cashiers->invite($workspace, $request->user(), $request->validated());
+            $invitation = $this->staff->invite($workspace, $request->user(), $request->validated());
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -80,7 +85,7 @@ class CashierController extends Controller
     }
 
     /**
-     * POST /api/workspace/cashiers/invitations/{invitation}/resend
+     * POST /api/workspace/staff/invitations/{invitation}/resend
      */
     public function resendInvitation(Request $request, CashierInvitation $invitation): JsonResponse
     {
@@ -90,7 +95,7 @@ class CashierController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $refreshed = $this->cashiers->resendInvitation($workspace, $invitation);
+        $refreshed = $this->staff->resendInvitation($workspace, $invitation);
 
         return ApiResponse::success(
             new CashierInvitationResource($refreshed),
@@ -99,7 +104,7 @@ class CashierController extends Controller
     }
 
     /**
-     * DELETE /api/workspace/cashiers/invitations/{invitation}
+     * DELETE /api/workspace/staff/invitations/{invitation}
      */
     public function destroyInvitation(Request $request, CashierInvitation $invitation): JsonResponse
     {
@@ -109,15 +114,15 @@ class CashierController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $this->cashiers->deleteInvitation($workspace, $invitation);
+        $this->staff->deleteInvitation($workspace, $invitation);
 
         return ApiResponse::success(null, __('messages.cashier_invite_deleted'));
     }
 
     /**
-     * PUT /api/workspace/cashiers/{cashier}/permissions
+     * PUT /api/workspace/staff/{cashier}/permissions
      */
-    public function updatePermissions(UpdateCashierPermissionsRequest $request, User $cashier): JsonResponse
+    public function updatePermissions(UpdateStaffPermissionsRequest $request, User $cashier): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
 
@@ -125,17 +130,18 @@ class CashierController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $updated = $this->cashiers->updatePermissions(
+        $updated = $this->staff->updatePermissions(
             $cashier,
             $workspace,
             $request->validated()['permissions'],
+            StaffGroup::tryFrom((string) $request->validated('staff_group')),
         );
 
-        return ApiResponse::success(new CashierResource($updated), __('messages.cashier_updated'));
+        return ApiResponse::success(new StaffResource($updated), __('messages.cashier_updated'));
     }
 
     /**
-     * DELETE /api/workspace/cashiers/{cashier}
+     * DELETE /api/workspace/staff/{cashier}
      */
     public function destroy(Request $request, User $cashier): JsonResponse
     {
@@ -145,15 +151,15 @@ class CashierController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $this->cashiers->deactivate($cashier, $workspace);
+        $this->staff->deactivate($cashier, $workspace);
 
         return ApiResponse::success(null, __('messages.cashier_deactivated'));
     }
 
     /**
-     * DELETE /api/workspace/cashiers/{cashier}/permanent
+     * DELETE /api/workspace/staff/{cashier}/permanent
      */
-    public function deleteCashier(Request $request, User $cashier): JsonResponse
+    public function deleteStaff(Request $request, User $cashier): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
 
@@ -161,7 +167,7 @@ class CashierController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $this->cashiers->deleteCashier($cashier, $workspace);
+        $this->staff->deleteStaff($cashier, $workspace);
 
         return ApiResponse::success(null, __('messages.cashier_deleted'));
     }
