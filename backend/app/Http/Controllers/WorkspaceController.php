@@ -74,6 +74,20 @@ class WorkspaceController extends Controller
     }
 
     /**
+     * GET /api/workspaces/by-slug/{slug} — public lookup used by the `/w/{slug}` redirect.
+     */
+    public function bySlug(string $slug): JsonResponse
+    {
+        $model = $this->workspaces->findActivePublicBySlug($slug);
+
+        if ($model === null) {
+            return ApiResponse::error(__('messages.workspace_not_found'), 404);
+        }
+
+        return ApiResponse::success(new WorkspaceResource($model));
+    }
+
+    /**
      * POST /api/workspace/create — owner only, one workspace per owner.
      */
     public function store(StoreWorkspaceRequest $request): JsonResponse
