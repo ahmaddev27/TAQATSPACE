@@ -214,6 +214,14 @@ export interface Workspace {
   /** Immutable URL identity; owner/admin payloads only. */
   slug?: string;
   code?: string;
+  /** General settings (contact, bank, locale, Wi-Fi); owner/admin payloads only. */
+  contact_email?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  timezone?: string;
+  currency?: string;
+  wifi_ssid?: string | null;
+  wifi_password?: string | null;
   /** Absolute dashboard and public-site links; owner/admin payloads only. */
   urls?: { dashboard: string; public: string };
   avg_rating: number | null;

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Workspace;
 
+use App\Enums\WorkspaceCurrency;
+use App\Enums\WorkspaceTimezone;
+use App\Rules\Iban;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateWorkspaceRequest extends FormRequest
 {
@@ -30,6 +34,13 @@ class UpdateWorkspaceRequest extends FormRequest
             'address' => ['sometimes', 'required', 'string', 'max:255'],
             'city_id' => ['sometimes', 'required', 'string', 'exists:cities,id'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'contact_email' => ['sometimes', 'nullable', 'email:rfc', 'max:191'],
+            'bank_name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'iban' => ['sometimes', 'nullable', new Iban],
+            'timezone' => ['sometimes', 'required', Rule::enum(WorkspaceTimezone::class)],
+            'currency' => ['sometimes', 'required', Rule::enum(WorkspaceCurrency::class)],
+            'wifi_ssid' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'wifi_password' => ['sometimes', 'nullable', 'string', 'max:128'],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'amenities' => ['sometimes', 'nullable', 'array'],
