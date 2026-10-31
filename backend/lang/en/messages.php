@@ -18,6 +18,7 @@ return [
     // Generic / shared
     'unauthenticated' => 'Unauthenticated.',
     'insufficient_permissions' => 'Insufficient permissions.',
+    'no_workspace_context' => 'No workspace is linked to this account.',
     'unauthorized_action' => 'This action is unauthorized.',
     'no_workspace' => 'You have no workspace.',
 

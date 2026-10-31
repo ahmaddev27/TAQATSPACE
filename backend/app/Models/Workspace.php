@@ -63,6 +63,16 @@ class Workspace extends Model
             $workspace->code ??= $generator->generateCode();
         });
 
+        // Keeps the "every workspace has one default branch" invariant for new tenants.
+        static::created(function (Workspace $workspace): void {
+            Branch::create([
+                'workspace_id' => $workspace->id,
+                'name' => $workspace->name,
+                'address' => $workspace->address,
+                'is_default' => true,
+            ]);
+        });
+
         static::updating(function (Workspace $workspace): void {
             foreach (self::IMMUTABLE_IDENTITY as $attribute) {
                 if ($workspace->isDirty($attribute) && $workspace->getOriginal($attribute) !== null) {

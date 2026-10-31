@@ -18,6 +18,7 @@ return [
     // عام / مشترك
     'unauthenticated' => 'غير مصادق.',
     'insufficient_permissions' => 'الصلاحيات غير كافية.',
+    'no_workspace_context' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
     'unauthorized_action' => 'هذا الإجراء غير مصرّح به.',
     'no_workspace' => 'ليس لديك مساحة عمل.',
 
