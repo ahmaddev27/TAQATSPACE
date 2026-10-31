@@ -1,0 +1,30 @@
+{
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Who did what, when and why, for sensitive and financial actions in this workspace",
+    "financeOnly": "Financial activity",
+    "filters": "Filters",
+    "clearAll": "Clear all",
+    "count": "Entries",
+    "colWhen": "When",
+    "colActor": "Actor",
+    "colAction": "Action",
+    "colSubject": "Subject",
+    "colReason": "Reason",
+    "colIp": "IP",
+    "emptyTitle": "No audit entries",
+    "emptyBody": "Sensitive actions will appear here as they happen.",
+    "actorType": {
+      "user": "User",
+      "system": "System",
+      "router": "Router"
+    },
+    "filter": {
+      "actor_id": "Actor ID",
+      "action": "Action (e.g. finance.*)",
+      "from": "From",
+      "to": "To",
+      "reason": "Reason"
+    }
+  }
+}
