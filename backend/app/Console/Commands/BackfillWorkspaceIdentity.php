@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 class BackfillWorkspaceIdentity extends Command
 {
     /** @var string */
-    protected $signature = 'workspaces:backfill-identity';
+    protected $signature = 'workspaces:backfill-identity {--chunk=100 : Workspaces loaded per batch}';
 
     /** @var string */
     protected $description = 'Assign a slug and code to every workspace that lacks one (idempotent).';
@@ -21,8 +21,11 @@ class BackfillWorkspaceIdentity extends Command
     {
         $updated = 0;
 
+        // Page by id, not offset: every saved row leaves the IS NULL filter, so offset
+        // paging would skip the rows that shift into the already-read pages.
         Workspace::withTrashed()
             ->where(fn (Builder $query) => $query->whereNull('slug')->orWhereNull('code'))
+            ->lazyById(max(1, (int) $this->option('chunk')))
             ->each(function (Workspace $workspace) use ($generator, &$updated): void {
                 $workspace->forceFill([
                     'slug' => $workspace->slug ?? $generator->generateSlug($workspace->name),
