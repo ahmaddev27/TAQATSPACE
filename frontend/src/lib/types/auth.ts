@@ -16,7 +16,8 @@ export type AdminPermission =
   | "manage_billing"
   | "manage_content"
   | "manage_messaging"
-  | "view_reports";
+  | "view_reports"
+  | "approve_requests";
 
 /** Named permissions that gate the POS (café) area for a cashier account. */
 export type PosPermission =

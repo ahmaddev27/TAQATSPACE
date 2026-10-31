@@ -266,4 +266,7 @@ return [
     'chat_token_failed' => 'Could not start a chat session. Please try again later.',
     'chat_attachment_not_found' => 'Attachment not found.',
 
+    'approval_not_pending' => 'This request has already been decided or cancelled.',
+    'approval_not_found' => 'Approval request not found.',
+
 ];

@@ -26,10 +26,12 @@ enum AdminPermission: string
     case ManageContent = 'manage_content';
     case ManageMessaging = 'manage_messaging';
     case ViewReports = 'view_reports';
+    case ApproveRequests = 'approve_requests';
 
     /**
      * Permissions a standard `admin` receives by default. Deliberately excludes
-     * `manage_admins` — only a `super_admin` may administer other admins.
+     * `manage_admins` — only a `super_admin` may administer other admins — and
+     * `approve_requests`, which changes tenant settings and is granted explicitly.
      *
      * @return array<int, string>
      */

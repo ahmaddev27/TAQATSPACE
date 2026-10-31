@@ -7,6 +7,9 @@ namespace App\Providers;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\Channels\SafeMailChannel;
+use App\Services\Approvals\ApprovalHandlerRegistry;
+use App\Services\Approvals\Handlers\CapacityApprovalHandler;
+use App\Services\Approvals\Handlers\WorkingHoursApprovalHandler;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentWorkspaceContext::class);
+
+        // Add a handler here when a new ApprovalType is introduced.
+        $this->app->singleton(ApprovalHandlerRegistry::class, fn ($app) => new ApprovalHandlerRegistry([
+            $app->make(CapacityApprovalHandler::class),
+            $app->make(WorkingHoursApprovalHandler::class),
+        ]));
     }
 
     public function boot(): void

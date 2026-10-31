@@ -266,4 +266,7 @@ return [
     'chat_token_failed' => 'تعذّر بدء جلسة المحادثة. يرجى المحاولة لاحقًا.',
     'chat_attachment_not_found' => 'المرفق غير موجود.',
 
+    'approval_not_pending' => 'تم البت في هذا الطلب مسبقاً أو إلغاؤه.',
+    'approval_not_found' => 'طلب الموافقة غير موجود.',
+
 ];

@@ -315,6 +315,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             icon: "shield",
             permission: "manage_admins",
           },
+          {
+            key: "approvals",
+            href: "/admin/approvals",
+            icon: "check",
+            permission: "approve_requests",
+          },
         ],
       },
       {
