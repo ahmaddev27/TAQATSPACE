@@ -24,6 +24,8 @@
       "action": "Action (e.g. finance.*)",
       "from": "From",
       "to": "To",
+      "subject_type": "Subject type (e.g. Invoice)",
+      "subject_id": "Subject ID",
       "reason": "Reason"
     }
   }

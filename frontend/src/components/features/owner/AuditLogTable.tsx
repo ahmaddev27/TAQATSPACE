@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import type { AuditLogEntry, AuditLogMeta } from "@/lib/types/audit";
 
-const FILTER_KEYS = ["actor_id", "action", "from", "to", "reason"] as const;
+const FILTER_KEYS = ["actor_id", "action", "from", "to", "subject_type", "subject_id", "reason"] as const;
 const FINANCE_ACTIONS = "finance.*";
 
 export interface AuditLogTableProps {
@@ -123,6 +123,18 @@ export function AuditLogTable({ logs, meta }: AuditLogTableProps) {
             value={filters.to}
             onChange={(e) => setFilter("to", e.target.value || null)}
             aria-label={t("filter.to")}
+          />
+          <Input
+            value={filters.subject_type}
+            onChange={(e) => setFilter("subject_type", e.target.value.trim() || null)}
+            placeholder={t("filter.subject_type")}
+            aria-label={t("filter.subject_type")}
+          />
+          <Input
+            value={filters.subject_id}
+            onChange={(e) => setFilter("subject_id", e.target.value.trim() || null)}
+            placeholder={t("filter.subject_id")}
+            aria-label={t("filter.subject_id")}
           />
           <Input
             value={filters.reason}

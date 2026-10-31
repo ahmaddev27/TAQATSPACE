@@ -4,7 +4,7 @@ import { AuditLogTable } from "@/components/features/owner/AuditLogTable";
 
 export const dynamic = "force-dynamic";
 
-const FILTER_KEYS = ["actor_id", "action", "from", "to", "reason"] as const;
+const FILTER_KEYS = ["actor_id", "action", "from", "to", "subject_type", "subject_id", "reason"] as const;
 
 export default async function OwnerAuditLogPage({
   params,

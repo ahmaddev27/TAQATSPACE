@@ -24,6 +24,8 @@
       "action": "الإجراء (مثل finance.*)",
       "from": "من",
       "to": "إلى",
+      "subject_type": "نوع الكيان (مثل Invoice)",
+      "subject_id": "معرّف الكيان",
       "reason": "السبب"
     }
   }
