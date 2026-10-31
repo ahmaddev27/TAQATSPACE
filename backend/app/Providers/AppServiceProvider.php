@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\Channels\SafeMailChannel;
+use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->scoped(CurrentWorkspaceContext::class);
     }
 
     public function boot(): void
