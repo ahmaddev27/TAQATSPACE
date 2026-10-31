@@ -198,7 +198,7 @@ class MemberService
         return $names->isEmpty() ? null : $names->implode('، ');
     }
 
-    private function freeSeat(Workspace $workspace, Subscription $subscription): void
+    public function freeSeat(Workspace $workspace, Subscription $subscription): void
     {
         if ($subscription->seat_id !== null) {
             Seat::query()
