@@ -1,12 +1,19 @@
 {
   "owner": {
-    "cashiers": {
-      "title": "Cashiers",
-      "subtitle": "Invite café staff and manage what they can do in the POS.",
-      "invite": "Invite cashier",
-      "inviteTitle": "Invite a cashier",
+    "staff": {
+      "title": "Staff",
+      "subtitle": "Invite staff by group and fine-tune what each member can do.",
+      "invite": "Invite staff",
+      "inviteTitle": "Invite a staff member",
       "email": "Email",
       "name": "Name",
+      "group": "Group",
+      "groupHint": "The group sets the default permissions; you can adjust them below.",
+      "groups": {
+        "cashier": "Cashier",
+        "hospitality": "Hospitality",
+        "finance_supervisor": "Finance supervisor"
+      },
       "permissions": "Permissions",
       "permsHint": "Choose what this staff member may do in the POS.",
       "perms": {
@@ -18,9 +25,9 @@
       "send": "Send invitation",
       "cancel": "Cancel",
       "save": "Save",
-      "cashiersHeading": "Staff",
+      "staffHeading": "Staff",
       "invitationsHeading": "Pending invitations",
-      "noCashiers": "No staff yet.",
+      "noStaff": "No staff yet.",
       "noInvitations": "No pending invitations.",
       "status": {
         "active": "Active",

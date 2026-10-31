@@ -1,12 +1,19 @@
 {
   "owner": {
-    "cashiers": {
-      "title": "الكاشيرية",
-      "subtitle": "ادعُ موظفي الكافي وأدِر صلاحياتهم في نقطة البيع.",
-      "invite": "دعوة كاشير",
-      "inviteTitle": "دعوة موظف كاشير",
+    "staff": {
+      "title": "الموظفون",
+      "subtitle": "ادعُ الموظفين حسب المجموعة وعدّل صلاحيات كل موظف.",
+      "invite": "دعوة موظف",
+      "inviteTitle": "دعوة موظف",
       "email": "البريد الإلكتروني",
       "name": "الاسم",
+      "group": "المجموعة",
+      "groupHint": "تحدد المجموعة الصلاحيات الافتراضية، ويمكنك تعديلها أدناه.",
+      "groups": {
+        "cashier": "الكاشير",
+        "hospitality": "الضيافة",
+        "finance_supervisor": "مشرف مالي"
+      },
       "permissions": "الصلاحيات",
       "permsHint": "اختر ما يُسمح لهذا الموظف بفعله في نقطة البيع.",
       "perms": {
@@ -18,9 +25,9 @@
       "send": "إرسال الدعوة",
       "cancel": "إلغاء",
       "save": "حفظ",
-      "cashiersHeading": "الموظفون",
+      "staffHeading": "الموظفون",
       "invitationsHeading": "دعوات معلّقة",
-      "noCashiers": "لا يوجد موظفون بعد.",
+      "noStaff": "لا يوجد موظفون بعد.",
       "noInvitations": "لا توجد دعوات معلّقة.",
       "status": {
         "active": "نشط",

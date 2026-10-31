@@ -8,100 +8,90 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Badge } from "@/components/ui/Badge";
 import {
-  inviteCashier,
-  updateCashierPermissions,
-  deactivateCashier,
-  deleteCashierAccount,
-  resendCashierInvitation,
-  deleteCashierInvitation,
+  inviteStaff,
+  updateStaffPermissions,
+  deactivateStaff,
+  deleteStaffAccount,
+  resendStaffInvitation,
+  deleteStaffInvitation,
 } from "@/lib/actions/owner";
 import {
-  DEFAULT_CASHIER_PERMISSIONS,
+  DEFAULT_STAFF_GROUP,
   POS_PERMISSIONS,
-  type Cashier,
-  type CashierInvitation,
+  STAFF_GROUPS,
+  STAFF_GROUP_PERMISSIONS,
   type PosPermission,
-} from "@/lib/types/cashier";
+  type Staff,
+  type StaffGroup,
+  type StaffInvitation,
+} from "@/lib/types/staff";
 
 interface Props {
-  cashiers: Cashier[];
-  invitations: CashierInvitation[];
+  staff: Staff[];
+  invitations: StaffInvitation[];
 }
 
 type Editor =
   | { mode: "invite" }
-  | { mode: "permissions"; cashier: Cashier }
+  | { mode: "permissions"; member: Staff }
   | null;
 
-export function CashiersManager({ cashiers, invitations }: Props) {
-  const t = useTranslations("owner.cashiers");
+export function StaffManager({ staff, invitations }: Props) {
+  const t = useTranslations("owner.staff");
   const { toast } = useToast();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
   const [editor, setEditor] = useState<Editor>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const onDeactivate = async (cashier: Cashier) => {
+  /** Run a server action for one row, toasting the outcome. */
+  const run = (
+    id: string,
+    action: () => Promise<{ ok: boolean; message?: string }>,
+    successKey: string,
+  ) => {
+    setBusyId(id);
+    startTransition(async () => {
+      const res = await action();
+      setBusyId(null);
+      if (res.ok) {
+        toast({ tone: "ok", title: t(successKey) });
+      } else {
+        toast({ tone: "err", title: t("error"), body: res.message });
+      }
+    });
+  };
+
+  const onDeactivate = async (member: Staff) => {
     const ok = await confirm({
       title: t("confirmDeactivateTitle"),
-      message: t("confirmDeactivateMsg", { name: cashier.name }),
+      message: t("confirmDeactivateMsg", { name: member.name }),
       confirmLabel: t("deactivate"),
       tone: "danger",
       icon: "trash",
     });
-    if (!ok) return;
-
-    setBusyId(cashier.id);
-    startTransition(async () => {
-      const res = await deactivateCashier(cashier.id);
-      setBusyId(null);
-      if (res.ok) {
-        toast({ tone: "ok", title: t("deactivatedSuccess") });
-      } else {
-        toast({ tone: "err", title: t("error"), body: res.message });
-      }
-    });
+    if (ok) run(member.id, () => deactivateStaff(member.id), "deactivatedSuccess");
   };
 
-  const onDeleteCashier = async (cashier: Cashier) => {
+  const onDeleteStaff = async (member: Staff) => {
     const ok = await confirm({
       title: t("confirmDeleteTitle"),
-      message: t("confirmDeleteMsg", { name: cashier.name }),
+      message: t("confirmDeleteMsg", { name: member.name }),
       confirmLabel: t("delete"),
       tone: "danger",
       icon: "trash",
     });
-    if (!ok) return;
-
-    setBusyId(cashier.id);
-    startTransition(async () => {
-      const res = await deleteCashierAccount(cashier.id);
-      setBusyId(null);
-      if (res.ok) {
-        toast({ tone: "ok", title: t("deletedSuccess") });
-      } else {
-        toast({ tone: "err", title: t("error"), body: res.message });
-      }
-    });
+    if (ok) run(member.id, () => deleteStaffAccount(member.id), "deletedSuccess");
   };
 
-  const onResend = (inv: CashierInvitation) => {
-    setBusyId(inv.id);
-    startTransition(async () => {
-      const res = await resendCashierInvitation(inv.id);
-      setBusyId(null);
-      if (res.ok) {
-        toast({ tone: "ok", title: t("resentSuccess") });
-      } else {
-        toast({ tone: "err", title: t("error"), body: res.message });
-      }
-    });
-  };
+  const onResend = (inv: StaffInvitation) =>
+    run(inv.id, () => resendStaffInvitation(inv.id), "resentSuccess");
 
-  const onDeleteInvite = async (inv: CashierInvitation) => {
+  const onDeleteInvite = async (inv: StaffInvitation) => {
     const ok = await confirm({
       title: t("confirmDeleteInviteTitle"),
       message: t("confirmDeleteInviteMsg", { email: inv.email }),
@@ -109,18 +99,7 @@ export function CashiersManager({ cashiers, invitations }: Props) {
       tone: "danger",
       icon: "trash",
     });
-    if (!ok) return;
-
-    setBusyId(inv.id);
-    startTransition(async () => {
-      const res = await deleteCashierInvitation(inv.id);
-      setBusyId(null);
-      if (res.ok) {
-        toast({ tone: "ok", title: t("inviteDeletedSuccess") });
-      } else {
-        toast({ tone: "err", title: t("error"), body: res.message });
-      }
-    });
+    if (ok) run(inv.id, () => deleteStaffInvitation(inv.id), "inviteDeletedSuccess");
   };
 
   return (
@@ -132,35 +111,36 @@ export function CashiersManager({ cashiers, invitations }: Props) {
       </div>
 
       <section className="card card-pad stack" style={{ gap: 12 }}>
-        <h3 className="h3" style={{ margin: 0 }}>{t("cashiersHeading")}</h3>
-        {cashiers.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>{t("noCashiers")}</p>
+        <h3 className="h3" style={{ margin: 0 }}>{t("staffHeading")}</h3>
+        {staff.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>{t("noStaff")}</p>
         ) : (
-          cashiers.map((c) => (
-            <div key={c.id} className="between row wrap" style={{ gap: 10 }}>
+          staff.map((m) => (
+            <div key={m.id} className="between row wrap" style={{ gap: 10 }}>
               <div className="stack" style={{ gap: 4 }}>
-                <span style={{ fontWeight: 600 }}>{c.name}</span>
-                <span className="muted-3 ltr" style={{ fontSize: "var(--fs-sm)" }}>{c.email}</span>
+                <span style={{ fontWeight: 600 }}>{m.name}</span>
+                <span className="muted-3 ltr" style={{ fontSize: "var(--fs-sm)" }}>{m.email}</span>
                 <div className="row wrap" style={{ gap: 6 }}>
-                  <Badge tone={c.status === "active" ? "success" : "neutral"} dot>
-                    {t(`status.${c.status}`)}
+                  <Badge tone="neutral">{t(`groups.${m.staff_group}`)}</Badge>
+                  <Badge tone={m.status === "active" ? "success" : "neutral"} dot>
+                    {t(`status.${m.status}`)}
                   </Badge>
-                  {c.permissions.map((p) => (
+                  {m.permissions.map((p) => (
                     <Badge key={p} tone="info">{t(`perms.${p}`)}</Badge>
                   ))}
                 </div>
               </div>
               <div className="row" style={{ gap: 8 }}>
-                <Button variant="secondary" size="sm" icon="shield" onClick={() => setEditor({ mode: "permissions", cashier: c })}>
+                <Button variant="secondary" size="sm" icon="shield" onClick={() => setEditor({ mode: "permissions", member: m })}>
                   {t("editPerms")}
                 </Button>
-                {c.status === "active" && (
+                {m.status === "active" && (
                   <Button
                     variant="ghost"
                     size="sm"
                     icon="lock"
-                    loading={pending && busyId === c.id}
-                    onClick={() => onDeactivate(c)}
+                    loading={pending && busyId === m.id}
+                    onClick={() => onDeactivate(m)}
                   >
                     {t("deactivate")}
                   </Button>
@@ -169,8 +149,8 @@ export function CashiersManager({ cashiers, invitations }: Props) {
                   variant="danger"
                   size="sm"
                   icon="trash"
-                  loading={pending && busyId === c.id}
-                  onClick={() => onDeleteCashier(c)}
+                  loading={pending && busyId === m.id}
+                  onClick={() => onDeleteStaff(m)}
                 >
                   {t("delete")}
                 </Button>
@@ -190,8 +170,9 @@ export function CashiersManager({ cashiers, invitations }: Props) {
               <div className="stack" style={{ gap: 2 }}>
                 <span className="ltr">{inv.email}</span>
                 <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
+                  {t(`groups.${inv.staff_group}`)}
                   {inv.expires_at
-                    ? t("expiresAt", { date: new Date(inv.expires_at).toLocaleDateString() })
+                    ? ` · ${t("expiresAt", { date: new Date(inv.expires_at).toLocaleDateString() })}`
                     : null}
                 </span>
               </div>
@@ -224,9 +205,34 @@ export function CashiersManager({ cashiers, invitations }: Props) {
         <InviteModal onClose={() => setEditor(null)} />
       )}
       {editor?.mode === "permissions" && (
-        <PermissionsModal cashier={editor.cashier} onClose={() => setEditor(null)} />
+        <PermissionsModal member={editor.member} onClose={() => setEditor(null)} />
       )}
     </div>
+  );
+}
+
+/** Group dropdown; picking a group pre-fills its permissions, which stay editable. */
+function GroupSelect({
+  value,
+  onChange,
+}: {
+  value: StaffGroup;
+  onChange: (next: StaffGroup) => void;
+}) {
+  const t = useTranslations("owner.staff");
+
+  return (
+    <Field label={t("group")} hint={t("groupHint")}>
+      <Select
+        aria-label={t("group")}
+        value={value}
+        onChange={(e) => onChange(e.target.value as StaffGroup)}
+      >
+        {STAFF_GROUPS.map((g) => (
+          <option key={g} value={g}>{t(`groups.${g}`)}</option>
+        ))}
+      </Select>
+    </Field>
   );
 }
 
@@ -238,7 +244,7 @@ function PermissionPicker({
   value: PosPermission[];
   onChange: (next: PosPermission[]) => void;
 }) {
-  const t = useTranslations("owner.cashiers");
+  const t = useTranslations("owner.staff");
   const toggle = (perm: PosPermission) =>
     onChange(value.includes(perm) ? value.filter((p) => p !== perm) : [...value, perm]);
 
@@ -256,17 +262,30 @@ function PermissionPicker({
 }
 
 function InviteModal({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("owner.cashiers");
+  const t = useTranslations("owner.staff");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [permissions, setPermissions] = useState<PosPermission[]>(DEFAULT_CASHIER_PERMISSIONS);
+  const [group, setGroup] = useState<StaffGroup>(DEFAULT_STAFF_GROUP);
+  const [permissions, setPermissions] = useState<PosPermission[]>(
+    STAFF_GROUP_PERMISSIONS[DEFAULT_STAFF_GROUP],
+  );
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+
+  const pickGroup = (next: StaffGroup) => {
+    setGroup(next);
+    setPermissions(STAFF_GROUP_PERMISSIONS[next]);
+  };
 
   const submit = () =>
     startTransition(async () => {
-      const res = await inviteCashier({ email, name: name || undefined, permissions });
+      const res = await inviteStaff({
+        email,
+        name: name || undefined,
+        staff_group: group,
+        permissions,
+      });
       if (res.ok) {
         toast({ tone: "ok", title: t("invitedSuccess") });
         onClose();
@@ -295,21 +314,28 @@ function InviteModal({ onClose }: { onClose: () => void }) {
         <Field label={t("name")} optional error={errors.name?.[0]}>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
+        <GroupSelect value={group} onChange={pickGroup} />
         <PermissionPicker value={permissions} onChange={setPermissions} />
       </div>
     </Modal>
   );
 }
 
-function PermissionsModal({ cashier, onClose }: { cashier: Cashier; onClose: () => void }) {
-  const t = useTranslations("owner.cashiers");
+function PermissionsModal({ member, onClose }: { member: Staff; onClose: () => void }) {
+  const t = useTranslations("owner.staff");
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
-  const [permissions, setPermissions] = useState<PosPermission[]>(cashier.permissions);
+  const [group, setGroup] = useState<StaffGroup>(member.staff_group);
+  const [permissions, setPermissions] = useState<PosPermission[]>(member.permissions);
+
+  const pickGroup = (next: StaffGroup) => {
+    setGroup(next);
+    setPermissions(STAFF_GROUP_PERMISSIONS[next]);
+  };
 
   const submit = () =>
     startTransition(async () => {
-      const res = await updateCashierPermissions(cashier.id, permissions);
+      const res = await updateStaffPermissions(member.id, permissions, group);
       if (res.ok) {
         toast({ tone: "ok", title: t("updatedSuccess") });
         onClose();
@@ -320,7 +346,7 @@ function PermissionsModal({ cashier, onClose }: { cashier: Cashier; onClose: () 
 
   return (
     <Modal
-      title={t("editPermsTitle", { name: cashier.name })}
+      title={t("editPermsTitle", { name: member.name })}
       icon="shield"
       onClose={onClose}
       footer={
@@ -330,7 +356,10 @@ function PermissionsModal({ cashier, onClose }: { cashier: Cashier; onClose: () 
         </>
       }
     >
-      <PermissionPicker value={permissions} onChange={setPermissions} />
+      <div className="stack" style={{ gap: 14 }}>
+        <GroupSelect value={group} onChange={pickGroup} />
+        <PermissionPicker value={permissions} onChange={setPermissions} />
+      </div>
     </Modal>
   );
 }
