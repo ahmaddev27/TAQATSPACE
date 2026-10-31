@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Audit\AuditLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,7 @@ class PasswordResetService
 {
     public function __construct(
         private readonly AuditLogger $audit,
+        private readonly UserRepositoryInterface $users,
     ) {}
 
     /**
@@ -22,6 +24,11 @@ class PasswordResetService
      */
     public function sendResetLink(string $email): void
     {
+        // An unclaimed subscriber has no credentials; a reset would hand it a login.
+        if ($this->users->findUnclaimedByEmail($email) !== null) {
+            return;
+        }
+
         Password::sendResetLink(['email' => $email]);
     }
 
