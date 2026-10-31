@@ -65,6 +65,10 @@ class WorkspaceResource extends JsonResource
             $this->mergeWhen(
                 $this->canManage($request),
                 fn (): array => [
+                    'slug' => $this->slug,
+                    'code' => $this->code,
+                    'platform_plan' => $this->platform_plan?->value,
+                    'platform_status' => $this->platform_status?->value,
                     'is_published' => $this->isPublished(),
                     'published_at' => $this->published_at?->toIso8601String(),
                     'messaging' => $this->maskedMessaging(),
