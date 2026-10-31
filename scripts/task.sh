@@ -11,11 +11,34 @@
 set -euo pipefail
 
 REPO="ahmaddev27/TAQATSPACE"
-OWNER="ahmaddev27"
-PROJECT_TITLE="TaqatSpace Roadmap"
 BASE_BRANCH="dev"
+# "TaqatSpace Roadmap" board (user project #1) and its Status field — stable ids, so a status
+# change needs no lookups (the gh project subcommands fail with "unknown owner type" on a slow link).
+PROJECT_ID="PVT_kwHOA0rXy84BpS36"
+STATUS_FIELD_ID="PVTSSF_lAHOA0rXy84BpS36zhnvJHY"
 
 die() { echo "error: $*" >&2; exit 1; }
+
+# The GitHub API is flaky from here: retry a command a few times before giving up.
+retry() {
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    "$@" && return 0
+    sleep 5
+  done
+  return 1
+}
+
+status_option_id() {
+  case "$1" in
+    Todo) echo "5aa59488" ;;
+    "In Progress") echo "1c226f81" ;;
+    "In Review") echo "1c92803e" ;;
+    Blocked) echo "93a8a26d" ;;
+    Done) echo "aa3e5201" ;;
+    *) return 1 ;;
+  esac
+}
 
 # Accepts a task id (2.4) or an issue number (312) and prints the issue number.
 resolve_issue() {
@@ -36,25 +59,25 @@ issue_branch() {
   gh issue view "$1" -R "$REPO" --json body --jq .body | grep -o '`[a-z]*/m[0-9-]*`' | head -1 | tr -d '`'
 }
 
-project_number() {
-  gh project list --owner "$OWNER" --format json --jq ".projects[] | select(.title == \"$PROJECT_TITLE\") | .number"
+# Prints "<issue node id> <board item id or empty>" for an issue number.
+issue_board_ids() {
+  gh api graphql -f query="query{ repository(owner:\"${REPO%/*}\",name:\"${REPO#*/}\"){ issue(number:$1){ id
+    projectItems(first:10){ nodes{ id project{ id } } } } } }" \
+    --jq ".data.repository.issue | \"\(.id) \([.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id][0] // \"\")\""
 }
 
 set_status() {
-  local issue="$1" status="$2" number project_id field_id option_id item_id
-  number=$(project_number)
-  [ -n "$number" ] || { echo "warning: project \"$PROJECT_TITLE\" not found — status not updated" >&2; return 0; }
-  project_id=$(gh project view "$number" --owner "$OWNER" --format json --jq .id)
-  field_id=$(gh project field-list "$number" --owner "$OWNER" --format json --jq '.fields[] | select(.name == "Status") | .id')
-  option_id=$(gh project field-list "$number" --owner "$OWNER" --format json \
-    --jq ".fields[] | select(.name == \"Status\") | .options[] | select(.name == \"$status\") | .id")
-  [ -n "$option_id" ] || die "status \"$status\" is not an option on the board"
-  item_id=$(gh project item-list "$number" --owner "$OWNER" --limit 500 --format json \
-    --jq ".items[] | select(.content.number == $issue) | .id")
+  local issue="$1" status="$2" option_id ids node_id item_id
+  option_id=$(status_option_id "$status") || die "status \"$status\" is not an option on the board"
+  ids=$(retry issue_board_ids "$issue") || die "could not read issue #$issue"
+  node_id=${ids%% *}
+  item_id=${ids#* }
   if [ -z "$item_id" ]; then
-    item_id=$(gh project item-add "$number" --owner "$OWNER" --url "https://github.com/$REPO/issues/$issue" --format json --jq .id)
+    item_id=$(retry gh api graphql -f query="mutation{ addProjectV2ItemById(input:{projectId:\"$PROJECT_ID\",contentId:\"$node_id\"}){ item{ id } } }" \
+      --jq .data.addProjectV2ItemById.item.id) || die "could not add issue #$issue to the board"
   fi
-  gh project item-edit --id "$item_id" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id" >/dev/null
+  retry gh api graphql -f query="mutation{ updateProjectV2ItemFieldValue(input:{projectId:\"$PROJECT_ID\",itemId:\"$item_id\",fieldId:\"$STATUS_FIELD_ID\",value:{singleSelectOptionId:\"$option_id\"}}){ projectV2Item{ id } } }" \
+    >/dev/null || die "could not set #$issue to $status"
   echo "#$issue → $status"
 }
 
