@@ -104,4 +104,16 @@ class WorkspaceIdentityTest extends TestCase
 
         $this->assertSame($before, Workspace::query()->pluck('code', 'id')->all());
     }
+
+    public function test_backfill_covers_every_row_across_several_batches_including_trashed(): void
+    {
+        Workspace::factory()->count(5)->create(['name' => 'Legacy']);
+        Workspace::query()->first()->delete();
+        DB::table('workspaces')->update(['slug' => null, 'code' => null]);
+
+        $this->artisan('workspaces:backfill-identity', ['--chunk' => 2])->assertSuccessful();
+
+        $this->assertSame(0, DB::table('workspaces')->whereNull('slug')->orWhereNull('code')->count());
+        $this->assertSame(5, DB::table('workspaces')->distinct()->count('code'));
+    }
 }
