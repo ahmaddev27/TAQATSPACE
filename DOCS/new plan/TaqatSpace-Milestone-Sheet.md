@@ -40,19 +40,19 @@
 | [M2](https://github.com/ahmaddev27/TAQATSPACE/milestone/3) | MikroTik integration (PUSH model) | 14 | 14.5 | 2.9 | 4 → 7 | M1 + VPS | R1 |
 | [M3](https://github.com/ahmaddev27/TAQATSPACE/milestone/4) | Data engine: attendance, statistics and alerts | 12 | 12.5 | 2.5 | 7 → 9 | M2 | R1 |
 | [M4](https://github.com/ahmaddev27/TAQATSPACE/milestone/5) | Workspace owner dashboard: operations and subscribers | 17 | 16.25 | 3.25 | 9 → 12 | M3 | R2 |
-| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: billing, collections and point of sale (no payment gateway) | 25 | 21.75 | 4.35 | 12 → 17 | M1, M4 | R2 |
+| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: billing, collections and point of sale (no payment gateway) | 25 | 22.25 | 4.45 | 12 → 17 | M1, M4 | R2 |
 | [M6](https://github.com/ahmaddev27/TAQATSPACE/milestone/7) | GSG program, UR and month close | 14 | 14.75 | 2.95 | 17 → 20 | M3, M4 | R3 |
-| [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, reports and report builder | 6 | 9.25 | 1.85 | 20 → 21 | M3, M6 | R3 |
-| [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin dashboard extension | 10 | 7.5 | 1.5 | 21 → 23 | M6 | R3 |
+| [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, reports and report builder | 6 | 9.25 | 1.85 | 20 → 22 | M3, M6 | R3 |
+| [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin dashboard extension | 10 | 7.5 | 1.5 | 22 → 23 | M6 | R3 |
 | [M9](https://github.com/ahmaddev27/TAQATSPACE/milestone/10) | Freelancer portal extension | 11 | 6.75 | 1.35 | 23 → 24 | M3, M4, M5 | R4 |
 | [M10](https://github.com/ahmaddev27/TAQATSPACE/milestone/11) | Public site, site builder and guest registration | 8 | 5.5 | 1.1 | 24 → 25 | M2, M9 | R4 |
-| [M11](https://github.com/ahmaddev27/TAQATSPACE/milestone/12) | Cross-dashboard integration (End-to-End) | 10 | 5 | 1 | 25 → 26 | M8, M9, M10 | R5 |
-| [M12](https://github.com/ahmaddev27/TAQATSPACE/milestone/13) | Hardening: security, performance and localization | 8 | 5.5 | 1.1 | 26 → 27 | M11 | R5 |
+| [M11](https://github.com/ahmaddev27/TAQATSPACE/milestone/12) | Cross-dashboard integration (End-to-End) | 10 | 5 | 1 | 26 → 26 | M8, M9, M10 | R5 |
+| [M12](https://github.com/ahmaddev27/TAQATSPACE/milestone/13) | Hardening: security, performance and localization | 8 | 5.5 | 1.1 | 27 → 28 | M11 | R5 |
 | [M13](https://github.com/ahmaddev27/TAQATSPACE/milestone/14) | Migration, UAT and full switch-over from CoWorkSpaces | 8 | 8.25 | 1.65 | 28 → 29 | M12 | R5 |
-|  | **Total** | **168** | **143.25** | **≈ 28.6 weeks** |  |  |  |
+|  | **Total** | **168** | **143.75** | **≈ 28.8 weeks** |  |  |  |
 
 - Execution is **sequential** (one developer); parallelism happens inside each milestone through agents (backend and frontend in separate worktrees) — see §9 of the development plan.
-- **Minimum switch-over path** (defer 9 deferrable tasks): ≈ 134.5 days ≈ 26.9 weeks — see §5.
+- **Minimum switch-over path** (defer 9 deferrable tasks): ≈ 135 days ≈ 27 weeks — see §5.
 - **Re-estimation:** after M2 closes, actual days are compared with estimates and the sheet is updated (the project's historical velocity with Claude was higher than estimated).
 
 ### Critical path
@@ -255,7 +255,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M5 — Finance v2: billing, collections and point of sale (no payment gateway) (weeks 12–17 · 21.75 days)
+### M5 — Finance v2: billing, collections and point of sale (no payment gateway) (weeks 12–17 · 22.25 days)
 
 **Goal:** Complete finance for the workspace owner that records payments made outside the platform, added non-destructively behind a flag and fully compatible with the existing invoices and POS.  
 **Depends on:** M1, M4 · **Branch:** `feat/m5-finance-v2 (several PRs)` · **Release:** R2 · **GitHub:** [milestone #6](https://github.com/ahmaddev27/TAQATSPACE/milestone/6)
@@ -286,8 +286,8 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 | 5.22 | Full-cycle test: subscription → charges → invoice → partial payment → credit note → refund + compatibility with legacy invoices and tests | — | New | QA | 1 | [#275](https://github.com/ahmaddev27/TAQATSPACE/issues/275) |
 | 5.23 | Subscriber financial profile: a wallet, deposit, unbilled charges, invoices, receipts and credit notes tab inside the subscriber profile (4.11) | FR-MEM-08, §3.3 | New | BE+FE | 0.75 | [#276](https://github.com/ahmaddev27/TAQATSPACE/issues/276) |
 | 5.24 | Platform-wide hour packages: catalog, purchases activated after offline payment, and an append-only hour ledger (e.g. $10 = 8 hours, $100 = 100 hours; by hours, not by time, and not tied to one workspace) | New requirement (2026-11-03) | New | BE+FE | 1.25 | [#365](https://github.com/ahmaddev27/TAQATSPACE/issues/365) |
-| 5.25 | Deduct package hours from attendance at any participating workspace, cut and restore access by balance, and report hours consumed per workspace | New requirement (2026-11-03) | New | BE+FE | 1.5 | [#366](https://github.com/ahmaddev27/TAQATSPACE/issues/366) |
-|  | **Total** |  |  |  | **21.75** |  |
+| 5.25 | Super admin chooses participating workspaces and sets the hour price per workspace or unified; deduct package hours from attendance, cut and restore access by balance, and report hours and amount due per workspace | New requirement (2026-11-03) | New | BE+FE | 2 | [#366](https://github.com/ahmaddev27/TAQATSPACE/issues/366) |
+|  | **Total** |  |  |  | **22.25** |  |
 
 **Deliverables:** Complete finance behind `finance_v2`: catalog, plans, itemized invoices, vouchers, credit notes, wallet, tax, import, finance dashboard and activity log.
 
@@ -330,7 +330,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M7 — Analytics, reports and report builder (weeks 20–21 · 9.25 days)
+### M7 — Analytics, reports and report builder (weeks 20–22 · 9.25 days)
 
 **Goal:** In-depth analytics, standard reports, and export in every required format.  
 **Depends on:** M3, M6 · **Branch:** `feat/m7-reports` · **Release:** R3 · **GitHub:** [milestone #8](https://github.com/ahmaddev27/TAQATSPACE/milestone/8)
@@ -353,7 +353,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M8 — Super admin dashboard extension (weeks 21–23 · 7.5 days)
+### M8 — Super admin dashboard extension (weeks 22–23 · 7.5 days)
 
 **Goal:** Make the super admin the final approval point: UTR, programs and funded seats, claims, approvals, and network monitoring.  
 **Depends on:** M6 · **Branch:** `feat/m8-super-admin` · **Release:** R3 · **GitHub:** [milestone #9](https://github.com/ahmaddev27/TAQATSPACE/milestone/9)
@@ -434,7 +434,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M11 — Cross-dashboard integration (End-to-End) (weeks 25–26 · 5 days)
+### M11 — Cross-dashboard integration (End-to-End) (week 26 · 5 days)
 
 **Goal:** Ensure that every flow crossing the four dashboards (owner, staff, freelancer, super admin) works end to end.  
 **Depends on:** M8, M9, M10 · **Branch:** `test/m11-e2e` · **Release:** R5 · **GitHub:** [milestone #12](https://github.com/ahmaddev27/TAQATSPACE/milestone/12)
@@ -461,7 +461,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M12 — Hardening: security, performance and localization (weeks 26–27 · 5.5 days)
+### M12 — Hardening: security, performance and localization (weeks 27–28 · 5.5 days)
 
 **Goal:** Bring the system up to multi-workspace production quality.  
 **Depends on:** M11 · **Branch:** `chore/m12-hardening` · **Release:** R5 · **GitHub:** [milestone #13](https://github.com/ahmaddev27/TAQATSPACE/milestone/13)
@@ -559,7 +559,7 @@ These tasks do not block replacing CoWorkSpaces and can move to a second phase i
 | M10 | 10.7 | Custom domain: request → super admin approval → DNS/SSL activation | 0.5 | [#322](https://github.com/ahmaddev27/TAQATSPACE/issues/322) |
 |  |  | **Total** | **8.75** |  |
 
-Full scope ≈ 143.25 days; minimum path ≈ 134.5 days (≈ 26.9 weeks).
+Full scope ≈ 143.75 days; minimum path ≈ 135 days (≈ 27 weeks).
 
 ---
 
@@ -567,7 +567,7 @@ Full scope ≈ 143.25 days; minimum path ≈ 134.5 days (≈ 26.9 weeks).
 
 | Type | Days | Share |
 | --- | --- | --- |
-| BE+FE | 74.25 | 52% |
+| BE+FE | 74.75 | 52% |
 | BE | 36.75 | 26% |
 | QA | 11.75 | 8% |
 | FE | 5.5 | 4% |
@@ -615,8 +615,8 @@ Resolved on 2026-10-29: the freelancer portal exists and is extended; sign-in is
 | 5 | Does the CoWorkSpaces export contain per-subscriber UTR and raw sessions? | M6.1 |
 | 6 | Does TAQAT GAZA currently have more than one branch/router? What is the router model and RouterOS version? | M1.2, M2.12 |
 | 7 | Platform plans for workspaces (free/paid): manual status tracking as in the current business model? | M8.1 |
-| 8 | Hour packages: who receives the payment, and how are workspaces paid for hours consumed at them (rate per hour or share of the package price)? | M5.24, M5.25 |
-| 9 | Hour packages: do hours expire, and which workspaces participate? | M5.24, M5.25 |
+| 8 | Hour packages: who receives the payment? Is the hour price only what the workspace earns, or does it also change how fast subscriber hours are used? | M5.24, M5.25 |
+| 9 | Hour packages: do hours expire? | M5.24 |
 | 10 | Does a company (organization) get its own login to see its members' reports? | M7.6 |
 
 ---

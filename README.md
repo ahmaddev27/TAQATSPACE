@@ -7,7 +7,7 @@ Multi-tenant coworking platform for Gaza — Arabic-first (RTL) + English. Today
 | | |
 |---|---|
 | **Platform** | Phases 1–4 + platform expansion + realtime (Firebase) + POS/café & cashier — **built** |
-| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 168 tasks, ≈ 143 working days (≈ 28.6 weeks)** |
+| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 168 tasks, ≈ 144 working days (≈ 28.8 weeks)** |
 | **Current milestone** | **M0 — Readiness & discovery** ([milestone](https://github.com/ahmaddev27/TAQATSPACE/milestone/1)) |
 | **Production** | 🟢 [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) — at PR #162 (2026-06-30). POS/cashier and later work are on `dev`, pending release R0 ([#186](https://github.com/ahmaddev27/TAQATSPACE/issues/186)) |
 | **Staging** | 🟢 [staging.taqat.space](https://staging.taqat.space) — deploys from `dev` |
@@ -33,7 +33,7 @@ Planning documents (in [`DOCS/new plan/`](DOCS/new%20plan/)):
 | [M2](https://github.com/ahmaddev27/TAQATSPACE/milestone/3) | MikroTik integration (router PUSH sync, installer, commands) | 14 | 14.5 | R1 |
 | [M3](https://github.com/ahmaddev27/TAQATSPACE/milestone/4) | Data engine: sessions, attendance, stats, scores, alerts | 12 | 12.5 | R1 |
 | [M4](https://github.com/ahmaddev27/TAQATSPACE/milestone/5) | Owner operations: dashboard, live monitor, members hub, contracts, bookings, stations | 17 | 16.25 | R2 |
-| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: plans, invoices, receipts, credit notes, wallet, VAT, imports, platform hour packages (no payment gateway) | 25 | 21.75 | R2 |
+| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: plans, invoices, receipts, credit notes, wallet, VAT, imports, platform hour packages (no payment gateway) | 25 | 22.25 | R2 |
 | [M6](https://github.com/ahmaddev27/TAQATSPACE/milestone/7) | GSG programme: UR engine, month close, UTR review, programs & claims | 14 | 14.75 | R3 |
 | [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, 19 reports, workspace reports center, exports, report builder | 6 | 9.25 | R3 |
 | [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin: UTR approvals, funded seats, claims, approvals queue, router monitoring | 10 | 7.5 | R3 |

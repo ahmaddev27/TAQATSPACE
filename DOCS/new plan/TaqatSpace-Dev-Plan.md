@@ -47,7 +47,7 @@
 | D10 | UR | Pure calculator `UrCalculator` + versioned parameters + frozen results | Provable accuracy towards the donor |
 | D11 | Shared components | Custom `audit_logs` and `approval_requests`, TOTP, `phpoffice/phpspreadsheet` and `phpoffice/phpword` | Simpler than generic packages and fits the workspace scope |
 | D12 | Deliverables | Markdown + Excel in `DOCS/new plan/` | Readable reference + tracking copy |
-| D13 | Hour packages (2026-11-03) | Platform-wide prepaid hour packages, by hours rather than by time (e.g. $10 = 8 hours, $100 = 100 hours), usable at any participating workspace; offline payment recorded by the super admin | Requested by the product owner; separate from workspace plans (5.2). Tasks 5.24, 5.25, 9.11 |
+| D13 | Hour packages (2026-11-03) | Platform-wide prepaid hour packages, by hours rather than by time (e.g. $10 = 8 hours, $100 = 100 hours), usable at any participating workspace; the super admin chooses the participating workspaces and sets the hour price per workspace or as one unified price; offline payment recorded by the super admin | Requested by the product owner; separate from workspace plans (5.2). Tasks 5.24, 5.25, 9.11 |
 
 ---
 
