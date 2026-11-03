@@ -43,6 +43,12 @@ A|command_id|status
 
 JSON is still accepted as an internal array form (the same keys, `at` and `now` as integers, `acks` as `{command_id, status}` objects); routers never send it.
 
+### Retries, batch size and refused batches (`sync.rsc` 1.1.0)
+
+- **Retry.** A batch that could not be sent is kept and sent again next cycle with the same `batch_id`, `seq`, `boot_id`, `nonce`, events, snapshot chunk and acknowledgements. Only the `H` line is rebuilt, and its `now` is read from the router clock at that moment. The server shifts every event by `server_now - router_now`, so a stale `now` after a one-hour outage would move all events by one hour. A retried `batch_id` whose cached reply has expired (10 minutes) is processed again: events are deduplicated by `boot_id-seq`, so nothing is stored twice, and the router clock offset is refreshed.
+- **Batch size.** One batch carries at most 500 `E` lines (the server limit) and at most 40000 bytes of them, because `/tool fetch` `http-data` is limited to 64 KB and a snapshot chunk (3000 bytes), the acks and the head share it. Remaining events stay in the buffer, in order, and go out in the following cycles. The RAM buffer (`cwsMaxEvents`) holds 2000 events; beyond that new events are dropped and the next snapshot heals the gap.
+- **Refused batch.** Every failed send increments a counter. After 5 failures in a row the router sends a header-only probe (fresh `batch_id`, no events). If the probe fails it was an outage and the batch is kept. If the probe succeeds the server is reachable but refuses this batch (for example 422), so the router drops the whole batch (events, snapshot chunk, acks), logs an error on the router and carries on with the next one. Dropped events are lost from the event log; the next snapshot corrects who is online, and unacknowledged commands are resent by the server (see the command queue).
+
 ## Sync reply (`text/plain`, at most 4 KB)
 
 ```
@@ -69,4 +75,4 @@ Lifecycle: `requested` -> `delivered` (sent in a reply) -> `acknowledged` (`A|id
 
 ## Limits
 
-500 events, 200 snapshot chunks, 60000 bytes per chunk, 100 acks per batch.
+500 events, 200 snapshot chunks, 60000 bytes per chunk, 100 acks per batch. The router script stays below these (500 events and 40000 event bytes per batch).

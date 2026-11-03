@@ -26,7 +26,7 @@ class RouterScriptsTest extends TestCase
     {
         $this->assertSame([], $this->scripts->outdatedScripts(), 'Update resources/routeros/version.json after editing a script.');
         $this->assertSame($this->scripts->computedHashes(), $this->scripts->declaredHashes());
-        $this->assertSame('1.0.0', $this->scripts->version());
+        $this->assertSame('1.1.0', $this->scripts->version());
         $this->assertSame('7.12', $this->scripts->minimumRouterOsVersion());
     }
 
@@ -80,7 +80,7 @@ class RouterScriptsTest extends TestCase
         $rendered = $this->scripts->render('sync.rsc', $values);
 
         $this->assertStringContainsString('https://sync.taqat.space/api/v1/hotspot/ABCD2345/sync', $rendered);
-        $this->assertStringContainsString('script version 1.0.0', $rendered);
+        $this->assertStringContainsString('script version 1.1.0', $rendered);
         $this->assertStringNotContainsString('{{', $rendered);
 
         $this->expectException(InvalidArgumentException::class);

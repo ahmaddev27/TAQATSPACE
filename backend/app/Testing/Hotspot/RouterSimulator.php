@@ -10,28 +10,28 @@ use Random\Randomizer;
 /**
  * A virtual MikroTik router that follows resources/routeros/sync.rsc: the
  * event counter survives reboots (flash state file), the boot id does not, a
- * failed send keeps the exact same batch (same batch_id, same events), and the
- * reply is read by the interpreter twin, which queues `A|` acknowledgements.
- * The wire text is built field by field from DOCS/integration/router-protocol.md.
+ * failed send keeps the same batch (same batch_id, seq, nonce, events, snapshot
+ * chunk and acks) while the H line is rebuilt with the current clock at every
+ * attempt, and the reply is read by the interpreter twin, which queues `A|`
+ * acknowledgements. The wire text is built field by field from
+ * DOCS/integration/router-protocol.md.
  *
- * sync.rsc freezes the whole batch, including the `now` in its H line, so after
- * an outage the resent batch carries a stale `now` and the server shifts every
- * event by the outage length. `$refreshNowOnResend` models a router that
- * rewrites `now` on resend; it is off by default to stay faithful to the script.
- *
- * One deliberate difference: sync.rsc never splits its event buffer, so a long
- * outage would exceed the server's 500-event limit; the simulator sends at
- * most that many events per batch and keeps the rest for the next cycle.
+ * A batch holds at most MAX_EVENTS_PER_BATCH events, the rest stays buffered in
+ * order. A batch the server keeps refusing is dropped after
+ * QUARANTINE_AFTER_FAILURES failed sends, but only when a header-only probe
+ * proves the server is reachable, exactly like sync.rsc.
  */
 final class RouterSimulator
 {
-    public const SCRIPT_VERSION = '1.0.0';
+    public const SCRIPT_VERSION = '1.1.0';
 
     public const MAX_EVENTS_PER_BATCH = 500;
 
     private const SNAPSHOT_ROWS_PER_CHUNK = 100;
 
     private const SNAPSHOT_EVERY_CYCLES = 36;
+
+    public const QUARANTINE_AFTER_FAILURES = 5;
 
     private int $seq = 0;
 
@@ -55,10 +55,15 @@ final class RouterSimulator
 
     private string $acks = '';
 
-    /** The frozen batch kept across failed sends. */
-    private ?string $pendingBody = null;
+    /** @var array{batchId: string, seq: int, nonce: string, payload: string}|null the batch kept across failed sends, without its H line */
+    private ?array $pending = null;
 
-    private ?string $pendingNonce = null;
+    private int $failures = 0;
+
+    private int $droppedBatches = 0;
+
+    /** @var list<string> uids of the events inside dropped batches */
+    private array $droppedUids = [];
 
     private ?string $deliveredBody = null;
 
@@ -76,7 +81,6 @@ final class RouterSimulator
         private int $clockSkewSeconds = 0,
         private readonly bool $legacyDateFormat = false,
         private readonly string $mode = 'full',
-        private readonly bool $refreshNowOnResend = false,
     ) {
         $this->random = new Randomizer(new Mt19937($seed + $index));
         $this->interpreter = new RouterInterpreter($mode);
@@ -109,6 +113,17 @@ final class RouterSimulator
         return $this->generated;
     }
 
+    public function droppedBatches(): int
+    {
+        return $this->droppedBatches;
+    }
+
+    /** @return list<string> */
+    public function droppedEventUids(): array
+    {
+        return $this->droppedUids;
+    }
+
     public function isActive(SimulatedDevice $device): bool
     {
         return isset($this->active[$device->mac]);
@@ -117,7 +132,7 @@ final class RouterSimulator
     /** True while anything the router still has to deliver is waiting. */
     public function hasPending(): bool
     {
-        return $this->events !== [] || $this->pendingBody !== null || $this->snapshotChunks !== [] || $this->acks !== '';
+        return $this->events !== [] || $this->pending !== null || $this->snapshotChunks !== [] || $this->acks !== '';
     }
 
     public function setClockSkew(int $seconds): void
@@ -152,39 +167,66 @@ final class RouterSimulator
         $this->events = [];
         $this->snapshotChunks = [];
         $this->acks = '';
-        $this->pendingBody = null;
-        $this->pendingNonce = null;
+        $this->pending = null;
+        $this->failures = 0;
         $this->active = [];
         $this->cycles = 0;
     }
 
     public function tick(RouterTransport $transport, int $now): TickResult
     {
-        if ($this->pendingBody === null) {
-            $this->freezeBatch($now);
-        } elseif ($this->refreshNowOnResend) {
-            $this->pendingBody = $this->withHeaderField($this->pendingBody, 4, $this->routerTime($now));
-        }
-
-        $eventCount = substr_count((string) $this->pendingBody, "\nE|");
+        $this->pending ??= $this->freezeBatch();
+        $pending = $this->pending;
+        $eventCount = $this->countEvents($pending['payload']);
+        $body = $this->head($pending['batchId'], $pending['seq'], $pending['nonce'], $now).$pending['payload'];
 
         try {
-            $response = $transport->post($this->code, $this->apiKey, (string) $this->pendingBody);
+            $response = $transport->post($this->code, $this->apiKey, $body);
         } catch (TransportException) {
             return new TickResult(null, false);
         }
 
         if (! $response->successful()) {
+            $this->onRefused($transport, $now);
+
             return new TickResult($response->status, false);
         }
 
-        $this->deliveredBody = $this->pendingBody;
+        $this->deliveredBody = $body;
         $this->persistedSeq = $this->seq;
-        $nonce = (string) $this->pendingNonce;
-        $this->pendingBody = null;
-        $this->interpret($response->body, $nonce);
+        $this->pending = null;
+        $this->failures = 0;
+        $this->interpret($response->body, $pending['nonce']);
 
         return new TickResult($response->status, true, $eventCount);
+    }
+
+    /** Counts a failed send and, once the batch keeps being refused while the server answers, drops it. */
+    private function onRefused(RouterTransport $transport, int $now): void
+    {
+        if (++$this->failures < self::QUARANTINE_AFTER_FAILURES || $this->pending === null) {
+            return;
+        }
+
+        $nonce = $this->randomString(12, 'abcdefghijklmnopqrstuvwxyz0123456789');
+        $probe = $this->head($this->randomString(12, 'abcdef0123456789'), $this->seq, $nonce, $now);
+
+        try {
+            $response = $transport->post($this->code, $this->apiKey, $probe);
+        } catch (TransportException) {
+            return;
+        }
+
+        if (! $response->successful()) {
+            return;
+        }
+
+        $this->droppedBatches++;
+        $this->droppedUids = [...$this->droppedUids, ...$this->pendingEventUids($this->pending['payload'])];
+        $this->pending = null;
+        $this->failures = 0;
+        $this->persistedSeq = $this->seq;
+        $this->interpret($response->body, $nonce);
     }
 
     /**
@@ -206,21 +248,43 @@ final class RouterSimulator
             return new TickResult(null, false);
         }
 
-        return new TickResult($response->status, $response->successful(), substr_count($body, "\nE|"));
+        return new TickResult($response->status, $response->successful(), $this->countEvents($body));
     }
 
-    private function freezeBatch(int $now): void
+    /** @return array{batchId: string, seq: int, nonce: string, payload: string} */
+    private function freezeBatch(): array
     {
         $this->cycles++;
         $chunk = $this->nextSnapshotChunk();
-        $nonce = $this->randomString(12, 'abcdefghijklmnopqrstuvwxyz0123456789');
         $batch = array_splice($this->events, 0, self::MAX_EVENTS_PER_BATCH);
-
-        $head = implode('|', ['H', $this->randomString(12, 'abcdef0123456789'), $this->seq, $this->bootId, $this->routerTime($now), $this->mode, $nonce, self::SCRIPT_VERSION, sprintf('SIM%08d', $this->index), '7.12.1'])."\n";
-
-        $this->pendingBody = $head.implode('', array_map(static fn (array $event): string => $event['line']."\n", $batch)).$chunk.$this->acks;
-        $this->pendingNonce = $nonce;
+        $payload = implode('', array_map(static fn (array $event): string => $event['line']."\n", $batch)).$chunk.$this->acks;
         $this->acks = '';
+
+        return [
+            'batchId' => $this->randomString(12, 'abcdef0123456789'),
+            'seq' => $this->seq,
+            'nonce' => $this->randomString(12, 'abcdefghijklmnopqrstuvwxyz0123456789'),
+            'payload' => $payload,
+        ];
+    }
+
+    /** The H line is rebuilt for every attempt so `now` is always the current clock. */
+    private function head(string $batchId, int $seq, string $nonce, int $now): string
+    {
+        return implode('|', ['H', $batchId, $seq, $this->bootId, $this->routerTime($now), $this->mode, $nonce, self::SCRIPT_VERSION, sprintf('SIM%08d', $this->index), '7.12.1'])."\n";
+    }
+
+    private function countEvents(string $payload): int
+    {
+        return (int) preg_match_all('/^E\|/m', $payload);
+    }
+
+    /** @return list<string> */
+    private function pendingEventUids(string $payload): array
+    {
+        preg_match_all('/^E\|(\d+)\|/m', $payload, $matches);
+
+        return array_map(fn (string $seq): string => $this->bootId.'-'.$seq, $matches[1]);
     }
 
     /** One chunk per cycle, like cwsNextSnapshotChunk; a new snapshot starts on the first cycle and then on cadence. */

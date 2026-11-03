@@ -29,7 +29,7 @@ class HotspotSimulationTest extends TestCase
         parent::tearDown();
     }
 
-    private function simulate(SimulationScenario $scenario, int $routers = 1, int $minutes = 20, int $subscribers = 461, int $devices = 1149, bool $refreshNow = false): SimulationReport
+    private function simulate(SimulationScenario $scenario, int $routers = 1, int $minutes = 20, int $subscribers = 461, int $devices = 1149): SimulationReport
     {
         $workspace = Workspace::factory()->create();
         $service = app(RouterService::class);
@@ -39,7 +39,7 @@ class HotspotSimulationTest extends TestCase
             return new SimulatedRouterTarget($issued->router, (string) $workspace->code, $issued->plainKey);
         }, range(1, $routers));
 
-        $plan = new SimulationPlan($scenario, $targets, $subscribers, $devices, $minutes, seed: 11, refreshNowOnResend: $refreshNow);
+        $plan = new SimulationPlan($scenario, $targets, $subscribers, $devices, $minutes, seed: 11);
 
         return app()->make(SimulationRunner::class, ['transport' => new FakeRouterTransport, 'clock' => SimulationClock::virtual()])->run($plan);
     }
@@ -48,7 +48,7 @@ class HotspotSimulationTest extends TestCase
     {
         $this->assertGreaterThan(0, $report->eventsGenerated);
         $this->assertSame(0, $report->eventsLost, 'lost events');
-        $this->assertSame($report->eventsGenerated, $report->eventsStored);
+        $this->assertSame($report->eventsGenerated, $report->eventsStored + $report->eventsDropped);
         $this->assertSame(0, $report->duplicatesStored);
         $this->assertSame(0, $report->seqGaps);
         $this->assertSame(0, $report->serverErrors());
@@ -66,24 +66,25 @@ class HotspotSimulationTest extends TestCase
         $this->assertSame(3, $report->commandsQueued);
     }
 
-    public function test_a_one_hour_outage_delivers_everything_after_recovery_with_continuous_seq(): void
-    {
-        $report = $this->simulate(SimulationScenario::Outage, refreshNow: true);
-
-        $this->assertClean($report);
-        $this->assertGreaterThanOrEqual(72, $report->unreachable);
-    }
-
-    public function test_sync_rsc_keeps_a_stale_now_on_resend_so_an_outage_shifts_event_times(): void
+    public function test_a_one_hour_outage_delivers_everything_after_recovery_in_order_with_correct_times(): void
     {
         $report = $this->simulate(SimulationScenario::Outage);
 
-        // Nothing is lost or duplicated, but the frozen H line makes the server shift events by the outage length.
-        $this->assertSame(0, $report->eventsLost);
-        $this->assertSame(0, $report->seqGaps);
+        $this->assertClean($report);
+        $this->assertGreaterThanOrEqual(72, $report->unreachable);
+        $this->assertGreaterThan(500, $report->eventsGenerated, 'the outage must buffer more than one batch');
+        $this->assertSame(0, $report->eventsDropped);
+    }
+
+    public function test_a_batch_the_server_refuses_is_dropped_and_later_data_still_flows(): void
+    {
+        $report = $this->simulate(SimulationScenario::RejectedBatch);
+
+        $this->assertClean($report);
+        $this->assertGreaterThan(0, $report->eventsDropped);
+        $this->assertSame($report->eventsGenerated, $report->eventsStored + $report->eventsDropped);
+        $this->assertSame(5, $report->statusCounts[422] ?? 0);
         $this->assertSame(0, $report->serverErrors());
-        $this->assertGreaterThan(SimulationReport::CLOCK_TOLERANCE_SECONDS, $report->maxClockErrorSeconds);
-        $this->assertFalse($report->passes());
     }
 
     public function test_duplicate_deliveries_are_not_stored_twice(): void
