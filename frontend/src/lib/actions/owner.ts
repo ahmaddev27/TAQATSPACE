@@ -494,7 +494,11 @@ export async function deleteLogo(): Promise<ActionResult<Workspace>> {
 
 export interface ExpenseInput {
   title: string;
-  category: ExpenseCategory;
+  /** Legacy category; optional once a catalog category is chosen. */
+  category?: ExpenseCategory;
+  catalog_category_id?: string | null;
+  method?: "cash" | "transfer" | null;
+  reference?: string | null;
   amount: number;
   spent_on: string;
   notes?: string | null;
@@ -529,6 +533,19 @@ export async function deleteExpense(
   const result = await authedMutate(`/workspace/expenses/${expenseId}`, {
     method: "DELETE",
   });
+  if (result.ok) revalidateOwner("expenses");
+  return result;
+}
+
+/** Finance v2: cancel an expense with a reason instead of deleting it. */
+export async function voidExpense(
+  expenseId: string,
+  reason: string,
+): Promise<ActionResult<Expense>> {
+  const result = await authedMutate<Expense>(
+    `/workspace/expenses/${expenseId}/void`,
+    { method: "POST", body: { reason } },
+  );
   if (result.ok) revalidateOwner("expenses");
   return result;
 }

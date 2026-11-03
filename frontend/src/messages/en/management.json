@@ -54,6 +54,19 @@
         "supplies": "Supplies",
         "marketing": "Marketing",
         "other": "Other"
+      },
+      "colMethod": "Method / reference",
+      "void": "Void",
+      "voided": "Expense voided.",
+      "voidFailed": "Could not void the expense.",
+      "voidReason": "Reason for voiding",
+      "voidHint": "Voiding \"{title}\" removes it from the totals but keeps it in the activity log.",
+      "fMethod": "Payment method",
+      "fReference": "Reference (optional)",
+      "noCatalogCategory": "No category",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Transfer"
       }
     },
     "resources": {
