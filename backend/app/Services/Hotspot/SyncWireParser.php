@@ -32,6 +32,25 @@ final class SyncWireParser
     private const TIME_FORMATS = ['!Y-m-d H:i:s', '!M/d/Y H:i:s'];
 
     /**
+     * Reads only the serial of the H line, for the router middleware that must
+     * judge the device before the body is validated. Never throws.
+     */
+    public static function serialOf(string $body): ?string
+    {
+        $position = array_search('serial', self::HEADER_FIELDS, true) + 1;
+
+        foreach (explode("\n", str_replace("\r", '', $body)) as $line) {
+            if (str_starts_with($line, 'H|')) {
+                $serial = trim(explode('|', $line)[$position] ?? '');
+
+                return $serial === '' ? null : $serial;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return array<string, mixed>
      *
      * @throws SyncWireException
