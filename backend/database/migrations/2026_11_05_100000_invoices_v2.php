@@ -46,7 +46,6 @@ return new class extends Migration
             $table->dropForeign(['customer_id']);
             $table->dropIndex(['workspace_id', 'doc_status']);
             $table->dropIndex(['workspace_id', 'payment_status']);
-            $table->dropIndex(['customer_id']);
             $table->dropColumn([
                 'workspace_id', 'customer_id', 'doc_status', 'payment_status', 'subtotal', 'tax_rate',
                 'tax_amount', 'total', 'period_start', 'period_end', 'issued_at', 'voided_at', 'void_reason',

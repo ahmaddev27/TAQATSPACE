@@ -59,13 +59,14 @@ class DocumentNumberService
     }
 
     /**
-     * Workspace-readable and unique: ASCII letters of the name plus a slice of
-     * the id, so two workspaces with the same name never share numbers.
+     * Workspace-readable and unique: ASCII letters of the name plus the random
+     * tail of the id, so two workspaces with the same name never share numbers.
      */
     private function prefixFor(Workspace $workspace, DocumentType $type): string
     {
         $name = strtoupper(substr((string) preg_replace('/[^A-Za-z0-9]/', '', (string) $workspace->name), 0, 6));
-        $idPart = strtoupper(substr((string) preg_replace('/[^A-Za-z0-9]/', '', (string) $workspace->id), 0, 4));
+        // UUIDv7 ids share their leading digits (timestamp), so take the random tail.
+        $idPart = strtoupper(substr((string) preg_replace('/[^A-Za-z0-9]/', '', (string) $workspace->id), -6));
 
         return ($name === '' ? 'WS' : $name).'-'.$idPart.'-'.strtoupper(substr($type->value, 0, 3)).'-';
     }

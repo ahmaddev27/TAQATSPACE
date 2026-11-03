@@ -191,6 +191,25 @@ class OwnerInvoiceEndpointsTest extends TestCase
         $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
     }
 
+    public function test_destroy_endpoint_voids_instead_of_deleting_once_finance_v2_is_on(): void
+    {
+        [$owner, $workspace, $subscription] = $this->ownerWorkspaceSubscription();
+        \App\Models\WorkspaceFeatureFlag::query()->create([
+            'workspace_id' => $workspace->id,
+            'feature' => \App\Enums\WorkspaceFeature::FinanceV2->value,
+            'enabled' => true,
+        ]);
+        $invoice = Invoice::factory()->create(['subscription_id' => $subscription->id]);
+        $invoice->payments()->create(['amount' => 5, 'paid_at' => now()]);
+
+        Sanctum::actingAs($owner);
+
+        $this->deleteJson("/api/workspace/invoices/{$invoice->id}", ['reason' => 'Issued by mistake'])->assertOk();
+
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'doc_status' => 'void', 'status' => 'cancelled']);
+        $this->assertSame(1, $invoice->payments()->count());
+    }
+
     public function test_destroy_endpoint_404s_for_foreign_invoice(): void
     {
         [$owner] = $this->ownerWorkspaceSubscription();
