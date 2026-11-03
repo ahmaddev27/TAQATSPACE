@@ -22,6 +22,8 @@ final class SimulationRunner
 
     private const TAIL_CYCLES = 6;
 
+    private const REJECTED_BATCH_CYCLE = 3;
+
     private const MAX_DRAIN_CYCLES = 300;
 
     private const CLOCK_DRIFT_SECONDS = 3600;
@@ -87,7 +89,6 @@ final class SimulationRunner
                 $plan->seed,
                 $this->clockSkew($plan->scenario, $index),
                 $index % 2 === 1,
-                refreshNowOnResend: $plan->refreshNowOnResend,
             );
             $this->devices[$id] = array_values(array_filter($dataset, static fn (SimulatedDevice $device): bool => $device->routerIndex === $index));
             $this->queueCommands($target);
@@ -134,6 +135,10 @@ final class SimulationRunner
         if ($plan->scenario === SimulationScenario::Outage) {
             $start = self::OUTAGE_START_CYCLE;
             $this->transport->setOnline($cycle < $start || $cycle >= $start + $this->outageCycles($plan));
+        }
+
+        if ($plan->scenario === SimulationScenario::RejectedBatch && $cycle === self::REJECTED_BATCH_CYCLE) {
+            $this->transport->rejectNextEventBatch();
         }
 
         if ($plan->scenario === SimulationScenario::RebootStorm && $cycle === $this->rebootCycle($cycles)) {
@@ -244,6 +249,7 @@ final class SimulationRunner
             eventsGenerated: $generated,
             eventsStored: $result['stored'],
             eventsLost: $result['lost'],
+            eventsDropped: $result['dropped'],
             duplicatesSent: $this->duplicatesSent,
             duplicatesStored: $result['duplicatesStored'],
             seqGaps: $result['seqGaps'],

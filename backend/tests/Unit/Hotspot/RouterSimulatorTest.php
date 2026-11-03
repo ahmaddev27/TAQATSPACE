@@ -106,8 +106,8 @@ class RouterSimulatorTest extends TestCase
         $delivered = $sim->tick($transport, self::NOW + 100);
 
         $this->assertTrue($delivered->delivered);
-        $this->assertSame($bodies[0], $bodies[1]);
-        $this->assertSame($bodies[0], $bodies[2]);
+        $this->assertSame($this->withoutNow($bodies[0]), $this->withoutNow($bodies[1]));
+        $this->assertSame($this->withoutNow($bodies[0]), $this->withoutNow($bodies[2]));
         $this->assertSame(1, substr_count($bodies[2], "\nE|"));
         $this->assertTrue($sim->hasPending());
 
@@ -197,24 +197,71 @@ class RouterSimulatorTest extends TestCase
         $this->assertFalse($sim->hasPending());
     }
 
-    public function test_a_resent_batch_keeps_its_stale_now_unless_the_router_refreshes_it(): void
+    public function test_a_resent_batch_keeps_its_identity_but_carries_the_current_clock(): void
     {
-        foreach ([false, true] as $refresh) {
-            $sim = new RouterSimulator('ABCD2345', 'key', 0, 1, refreshNowOnResend: $refresh);
-            $sim->record('login', $this->device(), self::NOW);
-            $bodies = [];
-            $transport = $this->transport([new TransportException('down')], $bodies);
+        $sim = $this->simulator();
+        $sim->record('login', $this->device(), self::NOW);
+        $bodies = [];
+        $transport = $this->transport([new TransportException('down')], $bodies);
 
-            $sim->tick($transport, self::NOW);
-            $sim->tick($transport, self::NOW + 3600);
+        $sim->tick($transport, self::NOW);
+        $sim->tick($transport, self::NOW + 3600);
 
-            $expected = $refresh ? '2026-11-03 13:00:00' : '2026-11-03 12:00:00';
-            $this->assertSame($expected, explode('|', explode('
-', $bodies[1])[0])[4]);
-            $this->assertSame(explode('|', explode('
-', $bodies[0])[0])[1], explode('|', explode('
-', $bodies[1])[0])[1], 'batch id must not change');
+        $first = explode('|', explode("\n", $bodies[0])[0]);
+        $second = explode('|', explode("\n", $bodies[1])[0]);
+        $this->assertSame('2026-11-03 12:00:00', $first[4]);
+        $this->assertSame('2026-11-03 13:00:00', $second[4]);
+        $this->assertSame([$first[1], $first[2], $first[3], $first[6]], [$second[1], $second[2], $second[3], $second[6]]);
+        $this->assertSame($this->withoutNow($bodies[0]), $this->withoutNow($bodies[1]));
+    }
+
+    public function test_a_batch_the_server_keeps_refusing_is_dropped_once_a_probe_succeeds_and_later_events_flow(): void
+    {
+        $sim = $this->simulator();
+        $sim->record('login', $this->device(1), self::NOW);
+        $bodies = [];
+        $refusals = array_fill(0, RouterSimulator::QUARANTINE_AFTER_FAILURES, new TransportResponse(422, 'no'));
+        $transport = $this->transport($refusals, $bodies);
+
+        for ($i = 0; $i < RouterSimulator::QUARANTINE_AFTER_FAILURES; $i++) {
+            $sim->tick($transport, self::NOW + 50 * $i);
         }
+
+        $this->assertSame(1, $sim->droppedBatches());
+        $this->assertCount(RouterSimulator::QUARANTINE_AFTER_FAILURES + 1, $bodies);
+        $this->assertStringNotContainsString("\nE|", (string) end($bodies), 'the probe carries only the H line');
+
+        $sim->record('login', $this->device(2), self::NOW + 400);
+        $sim->tick($transport, self::NOW + 400);
+
+        $this->assertStringContainsString('|10.0.0.2|', (string) end($bodies));
+        $this->assertCount(1, $sim->droppedEventUids());
+    }
+
+    public function test_a_failing_probe_means_an_outage_so_the_batch_is_kept(): void
+    {
+        $sim = $this->simulator();
+        $sim->record('login', $this->device(1), self::NOW);
+        $replies = array_fill(0, RouterSimulator::QUARANTINE_AFTER_FAILURES, new TransportResponse(422, 'no'));
+        $replies[] = new TransportException('down');
+        $transport = $this->transport($replies);
+
+        for ($i = 0; $i < RouterSimulator::QUARANTINE_AFTER_FAILURES; $i++) {
+            $sim->tick($transport, self::NOW + 50 * $i);
+        }
+
+        $this->assertSame(0, $sim->droppedBatches());
+        $this->assertTrue($sim->hasPending());
+    }
+
+    private function withoutNow(string $body): string
+    {
+        $lines = explode("\n", $body);
+        $head = explode('|', $lines[0]);
+        $head[4] = '';
+        $lines[0] = implode('|', $head);
+
+        return implode("\n", $lines);
     }
 
     public function test_replay_sends_the_same_events_again(): void

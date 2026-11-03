@@ -16,7 +16,7 @@ final class SimulationVerifier
 {
     /**
      * @param  array<string, RouterSimulator>  $simulators  router id => simulator
-     * @return array{stored: int, lost: int, duplicatesStored: int, seqGaps: int, maxClockError: int, commandsQueued: int, commandsAcknowledged: int}
+     * @return array{stored: int, lost: int, dropped: int, duplicatesStored: int, seqGaps: int, maxClockError: int, commandsQueued: int, commandsAcknowledged: int}
      */
     public function verify(array $simulators): array
     {
@@ -41,8 +41,9 @@ final class SimulationVerifier
         return [
             'stored' => count($stored),
             'lost' => $this->lost($simulators, $stored),
+            'dropped' => array_sum(array_map(static fn (RouterSimulator $simulator): int => count($simulator->droppedEventUids()), $simulators)),
             'duplicatesStored' => $rows - count($stored),
-            'seqGaps' => $this->seqGaps(array_keys($stored)),
+            'seqGaps' => $this->seqGaps(array_keys($stored + $this->droppedKeys($simulators))),
             'maxClockError' => $maxClockError,
             'commandsQueued' => array_sum($commands),
             'commandsAcknowledged' => $commands[RouterCommandStatus::Acknowledged->value] ?? 0,
@@ -58,12 +59,33 @@ final class SimulationVerifier
         $lost = 0;
 
         foreach ($simulators as $routerId => $simulator) {
+            $dropped = array_flip($simulator->droppedEventUids());
+
             foreach (array_keys($simulator->generatedEvents()) as $uid) {
-                $lost += isset($stored[$routerId.'|'.$uid]) ? 0 : 1;
+                $lost += isset($stored[$routerId.'|'.$uid]) || isset($dropped[$uid]) ? 0 : 1;
             }
         }
 
         return $lost;
+    }
+
+    /**
+     * Events inside a batch the router gave up on were refused by the server, not lost on the way.
+     *
+     * @param  array<string, RouterSimulator>  $simulators
+     * @return array<string, true>
+     */
+    private function droppedKeys(array $simulators): array
+    {
+        $keys = [];
+
+        foreach ($simulators as $routerId => $simulator) {
+            foreach ($simulator->droppedEventUids() as $uid) {
+                $keys[$routerId.'|'.$uid] = true;
+            }
+        }
+
+        return $keys;
     }
 
     /**
