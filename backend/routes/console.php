@@ -25,6 +25,9 @@ Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 // Router API request logs are only kept for 14 days.
 Schedule::command('router-logs:prune')->dailyAt('03:00');
 
+// Snapshot chunks are raw transport data; keep them for a week only.
+Schedule::command('router-snapshots:prune')->dailyAt('03:15');
+
 // Drain queued jobs (emails, SMS broadcasts, push + DB notifications) every
 // minute. The queue connection is `database` and shared hosting has no
 // persistent worker, so we process the backlog from the scheduler instead:

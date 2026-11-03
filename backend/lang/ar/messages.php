@@ -148,6 +148,8 @@ return [
 
     // Partner integration
     'partner_unauthorized' => 'مفتاح API غير صالح أو مفقود.',
+    'router_unauthorized' => 'مفتاح الراوتر غير صالح أو مفقود.',
+    'router_forbidden' => 'هذا الراوتر غير مسموح له باستخدام هذه الواجهة.',
 
     // الباقات
     'package_created' => 'تم إنشاء الباقة بنجاح.',
