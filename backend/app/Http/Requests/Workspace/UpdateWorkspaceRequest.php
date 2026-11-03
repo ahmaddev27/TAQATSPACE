@@ -45,7 +45,6 @@ class UpdateWorkspaceRequest extends FormRequest
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'amenities' => ['sometimes', 'nullable', 'array'],
             'amenities.*' => ['string', 'max:60'],
-            'working_hours' => ['sometimes', 'nullable', 'array'],
         ];
     }
 }

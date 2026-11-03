@@ -123,6 +123,8 @@ class WorkspaceService
         unset(
             $data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month'],
             $data['slug'], $data['code'], $data['platform_plan'], $data['platform_status'],
+            // Operations settings only change through an approval request.
+            $data['working_hours'], $data['seating_mode'], $data['tax_rate'],
         );
 
         $this->denormalizeCity($data);
@@ -209,6 +211,30 @@ class WorkspaceService
 
             return $updated;
         });
+    }
+
+    /**
+     * Apply a partial change to existing seat-type rows: columns a change omits
+     * keep their live value, so a capacity edit cannot wipe prices.
+     *
+     * @param  array<int, array<string, mixed>>  $changes  Each row carries `type` plus the columns to set.
+     */
+    public function patchSeatTypes(Workspace $workspace, array $changes): Workspace
+    {
+        $live = $workspace->seatTypes()->get()->keyBy(static fn ($row): string => $row->type->value);
+
+        $rows = array_map(static function (array $change) use ($live): array {
+            $existing = $live->get($change['type']);
+
+            return $change + [
+                'price_monthly' => $existing?->price_monthly,
+                'price_daily' => $existing?->price_daily,
+                'capacity' => $existing?->capacity ?? 0,
+                'enabled' => $existing?->enabled ?? true,
+            ];
+        }, $changes);
+
+        return $this->updateSeatTypes($workspace, $rows);
     }
 
     /**

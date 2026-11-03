@@ -16,4 +16,5 @@ enum ApprovalType: string
 
     case Capacity = 'capacity';
     case WorkingHours = 'working_hours';
+    case Pricing = 'pricing';
 }

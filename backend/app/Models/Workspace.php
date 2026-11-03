@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\PlatformPlan;
 use App\Enums\PlatformStatus;
+use App\Enums\SeatingMode;
 use App\Enums\WorkspaceStatus;
 use App\Services\WorkspaceIdentityGenerator;
 use App\Support\MediaUrl;
@@ -52,6 +53,8 @@ class Workspace extends Model
         'photos',
         'logo_path',
         'working_hours',
+        'seating_mode',
+        'tax_rate',
         'messaging',
         'status',
         'published_at',
@@ -98,6 +101,8 @@ class Workspace extends Model
             'amenities' => 'array',
             'photos' => 'array',
             'working_hours' => 'array',
+            'seating_mode' => SeatingMode::class,
+            'tax_rate' => 'decimal:2',
             'messaging' => 'array',
             'wifi_password' => 'encrypted',
             'status' => WorkspaceStatus::class,

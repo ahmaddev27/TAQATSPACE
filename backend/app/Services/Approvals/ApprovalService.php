@@ -106,7 +106,14 @@ class ApprovalService
                 $this->handlers->for($locked->type)->apply($locked);
             }
 
-            $this->audit->log("approval.{$status->value}", $locked, $reason, ['type' => $locked->type->value], $admin);
+            $changes = ['type' => $locked->type->value];
+
+            // The applied values belong in the trail, not only the fact of the decision.
+            if ($status === ApprovalStatus::Approved) {
+                $changes['applied'] = $locked->payload;
+            }
+
+            $this->audit->log("approval.{$status->value}", $locked, $reason, $changes, $admin);
 
             return $locked;
         });
