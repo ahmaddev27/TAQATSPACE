@@ -28,11 +28,15 @@ Schedule::command('router-logs:prune')->dailyAt('03:00');
 // Snapshot chunks are raw transport data; keep them for a week only.
 Schedule::command('router-snapshots:prune')->dailyAt('03:15');
 
+// Late-item fallback for the ingest queue: /sync dispatches ProcessRouterBatch
+// itself; this catches runs that were lost or failed.
+Schedule::command('router-data:process-pending')->everyMinute()->withoutOverlapping();
+
 // Drain queued jobs (emails, SMS broadcasts, push + DB notifications) every
 // minute. The queue connection is `database` and shared hosting has no
 // persistent worker, so we process the backlog from the scheduler instead:
 // run until the queue is empty, cap the runtime so it exits before the next
 // tick, and never overlap with a still-running drain.
-Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3')
+Schedule::command('queue:work --queue=ingest,default --stop-when-empty --max-time=55 --tries=3')
     ->everyMinute()
     ->withoutOverlapping();
