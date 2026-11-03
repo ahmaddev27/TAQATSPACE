@@ -291,6 +291,8 @@ return [
     'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
     'router_not_found' => 'Router not found.',
+    'router_script_update_queued' => 'Script update queued. The router applies it on its next sync.',
+    'router_script_up_to_date' => 'The router scripts are already up to date.',
     'router_install_token_issued' => 'Install command generated. It is valid for 30 minutes and works once.',
     'workspace_reset_confirmation_mismatch' => 'Type the workspace slug exactly to confirm the reset.',
     'workspace_reset_done' => 'The workspace was reset. Its operational data was deleted.',

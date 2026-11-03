@@ -23,6 +23,8 @@ class RouterScriptRepository
         'interpreter.rsc',
     ];
 
+    public const MODES = ['full', 'poll-only'];
+
     public function __construct(private readonly string $directory = '')
     {
     }
@@ -104,7 +106,8 @@ class RouterScriptRepository
     /**
      * The script as the router receives it. The API key is deliberately not
      * injected: the router already holds it (memory and flash), and keeping it
-     * out makes the output, and so its hash, depend on the router alone.
+     * out makes the output, and so its hash, depend on the router alone. The
+     * router's reported mode is kept, so an update never switches it.
      */
     public function renderFor(Router $router, string $name): string
     {
@@ -112,7 +115,7 @@ class RouterScriptRepository
             'SYNC_URL' => rtrim((string) config('services.router.sync_url'), '/'),
             'ROUTER_CODE' => (string) $router->workspace->code,
             'API_KEY' => '',
-            'MODE' => 'full',
+            'MODE' => in_array($router->mode, self::MODES, true) ? $router->mode : 'full',
         ]);
     }
 

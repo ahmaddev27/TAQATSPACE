@@ -291,6 +291,8 @@ return [
     'operations_submitted' => 'تم إرسال تغييراتك للموافقة. ستُطبَّق بعد الموافقة عليها.',
     'operations_no_changes' => 'لا يوجد أي تغيير، لذلك لم يُنشأ طلب موافقة.',
     'router_not_found' => 'الراوتر غير موجود.',
+    'router_script_update_queued' => 'تمت جدولة تحديث السكربتات. سيطبقه الراوتر عند المزامنة القادمة.',
+    'router_script_up_to_date' => 'سكربتات الراوتر محدّثة بالفعل.',
     'router_install_token_issued' => 'تم إنشاء أمر التثبيت. صالح لمدة 30 دقيقة ويعمل مرة واحدة فقط.',
     'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
     'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',

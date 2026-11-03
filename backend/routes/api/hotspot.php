@@ -6,6 +6,7 @@ use App\Http\Controllers\Hotspot\HotspotSyncController;
 use App\Http\Controllers\Hotspot\RouterInstallerController;
 use App\Http\Controllers\Hotspot\RouterScriptController;
 use App\Http\Controllers\Owner\RouterInstallTokenController;
+use App\Http\Controllers\Owner\RouterScriptUpdateController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,4 +42,6 @@ Route::middleware(['auth:sanctum', 'role.owner', 'feature:network'])
     ->prefix('workspace/routers')
     ->group(function (): void {
         Route::post('/{router}/install-token', [RouterInstallTokenController::class, 'store']);
+        Route::get('/{router}/script-update', [RouterScriptUpdateController::class, 'show']);
+        Route::post('/{router}/update-script', [RouterScriptUpdateController::class, 'store']);
     });

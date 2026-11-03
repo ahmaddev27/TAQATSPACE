@@ -6,6 +6,7 @@ namespace App\Services\Hotspot;
 
 use App\Enums\RouterStatus;
 use App\Models\Router;
+use App\Repositories\Eloquent\RouterScriptRepository;
 use App\Services\Router\RouterCommandService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
@@ -84,6 +85,7 @@ class HotspotSyncService
             'serial_number' => $router->serial_number ?? $payload->serial,
             'routeros_version' => $payload->routerosVersion ?? $router->routeros_version,
             'script_version' => $payload->scriptVersion ?? $router->script_version,
+            'mode' => in_array($payload->mode, RouterScriptRepository::MODES, true) ? $payload->mode : $router->mode,
         ]);
     }
 }
