@@ -20,6 +20,7 @@ class PosProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'catalog_item_id' => $this->catalog_item_id,
             'name' => $this->name,
             'category' => $this->category,
             'sku' => $this->sku,

@@ -300,4 +300,15 @@ return [
     'hour_adjustment_recorded' => 'Hour balance adjusted.',
     'hour_adjustment_negative_balance' => 'The adjustment would make the balance negative.',
 
+    'catalog_category_not_found' => 'Catalog category not found.',
+    'catalog_item_not_found' => 'Catalog item not found.',
+    'catalog_category_created' => 'Category created.',
+    'catalog_category_updated' => 'Category updated.',
+    'catalog_category_archived' => 'Category archived.',
+    'catalog_categories_reordered' => 'Categories reordered.',
+    'catalog_item_created' => 'Item created.',
+    'catalog_item_updated' => 'Item updated.',
+    'catalog_item_archived' => 'Item archived.',
+    'feature_not_found' => 'Not found.',
+
 ];

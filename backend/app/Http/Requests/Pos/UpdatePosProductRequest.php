@@ -20,6 +20,7 @@ class UpdatePosProductRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'string', 'max:255'],
+            'catalog_item_id' => ['nullable', 'uuid'],
             'category' => ['nullable', 'string', 'max:100'],
             'sku' => ['nullable', 'string', 'max:100'],
             'price' => ['sometimes', 'numeric', 'min:0', 'max:99999999'],

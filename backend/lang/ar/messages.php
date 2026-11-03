@@ -300,4 +300,15 @@ return [
     'hour_adjustment_recorded' => 'تم تعديل رصيد الساعات.',
     'hour_adjustment_negative_balance' => 'هذا التعديل سيجعل الرصيد سالباً.',
 
+    'catalog_category_not_found' => 'التصنيف غير موجود.',
+    'catalog_item_not_found' => 'العنصر غير موجود.',
+    'catalog_category_created' => 'تم إنشاء التصنيف.',
+    'catalog_category_updated' => 'تم تحديث التصنيف.',
+    'catalog_category_archived' => 'تمت أرشفة التصنيف.',
+    'catalog_categories_reordered' => 'تمت إعادة ترتيب التصنيفات.',
+    'catalog_item_created' => 'تم إنشاء العنصر.',
+    'catalog_item_updated' => 'تم تحديث العنصر.',
+    'catalog_item_archived' => 'تمت أرشفة العنصر.',
+    'feature_not_found' => 'غير موجود.',
+
 ];
