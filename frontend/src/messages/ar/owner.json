@@ -256,7 +256,8 @@
       "renamed": "تم تغيير اسم المقعد",
       "renameFailed": "تعذّر تغيير اسم المقعد",
       "noSeatsTitle": "لا توجد مقاعد بعد",
-      "noSeatsBody": "أضف مقاعد من إعدادات المساحة لعرضها على الخريطة."
+      "noSeatsBody": "أضف مقاعد من إعدادات المساحة لعرضها على الخريطة.",
+      "noSeatsAction": "فتح إعدادات المساحة"
     },
     "bookings": {
       "title": "طلبات الحجز",
@@ -292,6 +293,7 @@
       "reviewFailed": "تعذّرت معالجة الطلب",
       "emptyPending": "لا توجد طلبات معلّقة",
       "emptyPendingBody": "ستظهر طلبات الحجز الجديدة هنا",
+      "emptyAction": "إدارة الموارد",
       "emptyApproved": "لا توجد طلبات مقبولة",
       "emptyRejected": "لا توجد طلبات مرفوضة",
       "rejectedReasonLabel": "سبب الرفض"

@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/providers/ToastProvider";
 import { reviewBooking } from "@/lib/actions/owner";
@@ -123,17 +124,16 @@ export function BookingsManager({
       )}
 
       {rows.length === 0 ? (
-        <div className="empty-state" style={{ minHeight: 280 }}>
-          <div className="st-ico amber" style={{ width: 48, height: 48 }}>
-            <Icon name="inbox" />
-          </div>
-          <div>
-            <div className="h3">{emptyText[tab][0]}</div>
-            <div style={{ fontSize: "var(--fs-sm)", marginTop: 4 }}>
-              {emptyText[tab][1]}
-            </div>
-          </div>
-        </div>
+        <EmptyState
+          icon="inbox"
+          title={emptyText[tab][0]}
+          body={emptyText[tab][1]}
+          action={{
+            label: t("bookings.emptyAction"),
+            href: "/owner/resources",
+            variant: "secondary",
+          }}
+        />
       ) : (
         <div className="stack" style={{ gap: 14 }}>
           {rows.map((b) => (

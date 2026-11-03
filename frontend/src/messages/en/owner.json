@@ -256,7 +256,8 @@
       "renamed": "Seat renamed",
       "renameFailed": "Could not rename seat",
       "noSeatsTitle": "No seats yet",
-      "noSeatsBody": "Add seats from your space settings to see them on the map."
+      "noSeatsBody": "Add seats from your space settings to see them on the map.",
+      "noSeatsAction": "Open space settings"
     },
     "bookings": {
       "title": "Booking requests",
@@ -292,6 +293,7 @@
       "reviewFailed": "Could not process the request",
       "emptyPending": "No pending requests",
       "emptyPendingBody": "New booking requests will appear here",
+      "emptyAction": "Manage resources",
       "emptyApproved": "No approved requests",
       "emptyRejected": "No rejected requests",
       "rejectedReasonLabel": "Rejection reason"
