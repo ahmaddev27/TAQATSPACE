@@ -9,6 +9,7 @@ use App\Models\Router;
 use App\Models\Workspace;
 use App\Services\Audit\AuditLogger;
 use App\Support\Router\RouterKeyHasher;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Owner-facing router management. Keys are generated here and returned in
@@ -20,6 +21,28 @@ class RouterService
     public const KEY_GRACE_MINUTES = 60;
 
     public function __construct(private readonly AuditLogger $audit) {}
+
+    /** Commands shown per router on the integration page. */
+    public const RECENT_COMMANDS = 10;
+
+    /** @return Collection<int, Router> */
+    public function listFor(Workspace $workspace): Collection
+    {
+        return Router::query()
+            ->withoutWorkspaceScope()
+            ->with('workspace')
+            ->where('workspace_id', $workspace->getKey())
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    public function withRecentCommands(Router $router): Router
+    {
+        return $router->load([
+            'workspace',
+            'commands' => fn ($query) => $query->withoutGlobalScopes()->latest()->limit(self::RECENT_COMMANDS),
+        ]);
+    }
 
     public function create(Workspace $workspace, string $name): RouterWithKey
     {

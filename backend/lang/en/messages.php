@@ -290,6 +290,7 @@ return [
     'approval_not_found' => 'Approval request not found.',
     'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
+    'router_created' => 'Router created. Generate the install command to connect it.',
     'router_not_found' => 'Router not found.',
     'router_script_update_queued' => 'Script update queued. The router applies it on its next sync.',
     'router_script_up_to_date' => 'The router scripts are already up to date.',
