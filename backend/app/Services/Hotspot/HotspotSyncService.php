@@ -6,6 +6,7 @@ namespace App\Services\Hotspot;
 
 use App\Enums\RouterStatus;
 use App\Models\Router;
+use App\Repositories\Eloquent\RouterScriptRepository;
 use App\Services\Router\RouterCommandService;
 use App\Services\Router\RouterSecurityService;
 use Carbon\CarbonInterface;
@@ -89,6 +90,7 @@ class HotspotSyncService
             'clock_offset_seconds' => $offset,
             'routeros_version' => $payload->routerosVersion ?? $router->routeros_version,
             'script_version' => $payload->scriptVersion ?? $router->script_version,
+            'mode' => in_array($payload->mode, RouterScriptRepository::MODES, true) ? $payload->mode : $router->mode,
         ]);
     }
 }
