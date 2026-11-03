@@ -1,0 +1,13 @@
+{
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "hint": "Single-key shortcuts are disabled while you are typing in a field.",
+    "close": "Close",
+    "help": "Show this help",
+    "refresh": "Refresh the page data",
+    "save": "Save the open form",
+    "search": "Focus the search box",
+    "goSubscriptions": "Go to subscriptions",
+    "goReceipts": "Go to invoices and receipts"
+  }
+}
