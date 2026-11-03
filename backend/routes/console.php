@@ -25,8 +25,10 @@ Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 // Router API request logs are only kept for 14 days.
 Schedule::command('router-logs:prune')->dailyAt('03:00');
 
-// Snapshot chunks are raw transport data; keep them for a week only.
-Schedule::command('router-snapshots:prune')->dailyAt('03:15');
+// Retention policy (config/retention.php): processed raw events, assembled
+// snapshot chunks and router logs. Replaces the scheduled router-snapshots:prune,
+// which would also delete chunks of snapshots that are not assembled yet.
+Schedule::command('network:prune')->dailyAt('03:15');
 
 // Late-item fallback for the ingest queue: /sync dispatches ProcessRouterBatch
 // itself; this catches runs that were lost or failed.
