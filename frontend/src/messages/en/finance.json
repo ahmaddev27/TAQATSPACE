@@ -1,0 +1,64 @@
+{
+  "finance": {
+    "catalog": {
+      "title": "Catalog",
+      "subtitle": "Items and categories used across invoices, point of sale and expenses.",
+      "tabs": {
+        "items": "Items",
+        "categories": "Categories"
+      },
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "nameAr": "Name (Arabic)",
+        "nameEn": "Name (English)",
+        "category": "Category",
+        "unit": "Unit",
+        "price": "Price",
+        "kind": "Type"
+      },
+      "codeLocked": "The code cannot be changed after creation.",
+      "units": {
+        "piece": "Piece",
+        "hour": "Hour",
+        "day": "Day",
+        "month": "Month",
+        "gb": "GB"
+      },
+      "kinds": {
+        "sales": "Sales",
+        "expense": "Expense"
+      },
+      "items": {
+        "add": "Add item",
+        "empty": "No items yet.",
+        "createTitle": "New item",
+        "editTitle": "Edit item",
+        "created": "Item created",
+        "updated": "Item updated",
+        "archived": "Item archived",
+        "archiveTitle": "Archive item",
+        "archiveConfirm": "Archive \"{name}\"? It will be hidden from lists; existing invoices and orders are not affected."
+      },
+      "categories": {
+        "add": "Add category",
+        "empty": "No categories yet.",
+        "createTitle": "New category",
+        "editTitle": "Edit category",
+        "created": "Category created",
+        "updated": "Category updated",
+        "archived": "Category archived",
+        "reordered": "Order saved",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "archiveTitle": "Archive category",
+        "archiveConfirm": "Archive \"{name}\"? It will be hidden from lists."
+      },
+      "edit": "Edit",
+      "archive": "Archive",
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
+    }
+  }
+}
