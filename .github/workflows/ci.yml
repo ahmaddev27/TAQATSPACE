@@ -46,9 +46,10 @@ jobs:
         run: php artisan test
 
   # The servers run MariaDB, and SQLite ignores what can break there: generated
-  # column limits, column lengths and after(). Runs the migrations a deploy runs.
-  migrations-mariadb:
-    name: Migrations (MariaDB ${{ matrix.mariadb }})
+  # column limits, column lengths, after() and SQL dialect. Runs the migrations a
+  # deploy runs, then the whole backend suite on the real engine.
+  tests-mariadb:
+    name: Tests (MariaDB ${{ matrix.mariadb }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -74,6 +75,10 @@ jobs:
       DB_DATABASE: taqat_ci
       DB_USERNAME: root
       DB_PASSWORD: root
+      # Checked by DatabaseDriverTest: phpunit.xml defaults to sqlite, and this
+      # fails the job if the suite did not really run on MariaDB.
+      EXPECT_DB_DRIVER: mysql
+      EXPECT_DB_SERVER: MariaDB
     defaults:
       run:
         working-directory: backend
@@ -105,8 +110,8 @@ jobs:
       - name: Run all migrations
         run: php artisan migrate --force
 
-      - name: Run tenancy tests (unique default branch and backfill on a real engine)
-        run: php artisan test --filter=TenancyScopeTest
+      - name: Run full backend suite (PHPUnit, MariaDB)
+        run: php artisan test
 
   frontend:
     name: Frontend (Next.js)

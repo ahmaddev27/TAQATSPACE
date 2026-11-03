@@ -12,31 +12,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Tests\Concerns\EmulatesMysqlDateFormat;
 use Tests\TestCase;
 
 class ExpenseServiceTest extends TestCase
 {
     use RefreshDatabase;
+    use EmulatesMysqlDateFormat;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // The monthly breakdown buckets months with MySQL's DATE_FORMAT, which
-        // sqlite lacks — register an equivalent UDF so the summary runs here.
-        DB::connection()->getPdo()->sqliteCreateFunction(
-            'DATE_FORMAT',
-            static function (?string $date, string $format): ?string {
-                if ($date === null) {
-                    return null;
-                }
-
-                $php = str_replace(['%Y', '%m', '%d'], ['Y', 'm', 'd'], $format);
-
-                return date($php, (int) strtotime($date));
-            },
-            2,
-        );
+        $this->emulateMysqlDateFormat();
     }
 
     private function service(): ExpenseService
