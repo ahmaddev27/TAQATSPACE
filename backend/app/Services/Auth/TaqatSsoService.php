@@ -39,6 +39,7 @@ class TaqatSsoService
 
     public function __construct(
         private readonly UserRepositoryInterface $users,
+        private readonly ClaimService $claims,
     ) {}
 
     /**
@@ -242,8 +243,15 @@ class TaqatSsoService
         $phone = $this->resolvePhone($claims);
         $avatar = $this->resolveAvatar($claims);
 
+        // An unclaimed subscriber is merged here (verified email, then phone)
+        // before the plain email lookup.
         $existing = $this->users->findBySsoSub($sub)
+            ?? $this->claims->claimOnSsoLogin($claims)
             ?? ($email !== null ? $this->users->findByEmail($email) : null);
+
+        if ($existing?->isUnclaimed()) {
+            throw new RuntimeException('Cannot sign in to an unclaimed subscriber without a verified identity match.');
+        }
 
         if ($existing !== null) {
             return $this->backfill($existing, $sub, $name, $phone, $avatar);
