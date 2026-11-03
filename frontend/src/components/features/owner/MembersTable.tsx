@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import {
   DataTable,
@@ -14,6 +13,7 @@ import {
   type FilterChip,
   type SortState,
 } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/providers/ToastProvider";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
@@ -267,19 +267,27 @@ export function MembersTable({ members }: MembersTableProps) {
           setSort={setSort}
           onRowClick={(m) => setDrawer(m)}
           empty={
-            <div className="empty-state">
-              <div>
-                <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
-                  {t("members.emptyTitle")}
-                </div>
-                <div style={{ fontSize: "var(--fs-sm)" }}>
-                  {t("members.emptyBody")}
-                </div>
-              </div>
-              <Button variant="secondary" size="sm" onClick={clearAll}>
-                {t("members.reset")}
-              </Button>
-            </div>
+            members.length === 0 ? (
+              <EmptyState
+                icon="users"
+                title={t("members.emptyNoDataTitle")}
+                body={t("members.emptyNoDataBody")}
+                action={{
+                  label: t("members.emptyNoDataAction"),
+                  href: "/owner/requests",
+                }}
+              />
+            ) : (
+              <EmptyState
+                title={t("members.emptyTitle")}
+                body={t("members.emptyBody")}
+                action={{
+                  label: t("members.reset"),
+                  onClick: clearAll,
+                  variant: "secondary",
+                }}
+              />
+            )
           }
         />
         {filtered.length > 0 && (

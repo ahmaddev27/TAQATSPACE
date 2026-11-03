@@ -68,6 +68,12 @@
   },
   "nav": {
     "sectionManage": "Manage",
+    "sectionHome": "Home",
+    "sectionCommercial": "Commercial",
+    "sectionGsg": "GSG program",
+    "sectionAnalytics": "Analytics",
+    "sectionPlaces": "Places",
+    "sectionSettings": "Settings",
     "sectionFinance": "Finance",
     "sectionBilling": "Billing & reports",
     "sectionCommunication": "Communication",
@@ -81,6 +87,8 @@
     "cashierRole": "Cashier",
     "items": {
       "dashboard": "Dashboard",
+      "gsg": "GSG program",
+      "network": "Network",
       "pos": "Point of sale",
       "posReports": "POS reports",
       "posGroup": "Café / POS",

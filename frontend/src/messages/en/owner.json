@@ -140,6 +140,9 @@
       "colJoined": "Joined",
       "colStatus": "Status",
       "noSeat": "—",
+      "emptyNoDataTitle": "No members yet",
+      "emptyNoDataBody": "Members appear here once you approve a booking request.",
+      "emptyNoDataAction": "Review booking requests",
       "emptyTitle": "No matching members",
       "emptyBody": "Try adjusting your search or filter",
       "reset": "Reset filters",
@@ -213,6 +216,9 @@
       "cancelConfirm": "Cancelling will end the subscription and free the seat. Are you sure?",
       "cancelled": "Subscription cancelled",
       "cancelFailed": "Could not cancel the subscription",
+      "emptyNoDataTitle": "No subscriptions yet",
+      "emptyNoDataBody": "Subscriptions are created when a booking request is approved.",
+      "emptyNoDataAction": "Review booking requests",
       "emptyTitle": "No matching subscriptions",
       "emptyBody": "Try adjusting your search or filter",
       "reset": "Reset filters"
@@ -250,7 +256,8 @@
       "renamed": "Seat renamed",
       "renameFailed": "Could not rename seat",
       "noSeatsTitle": "No seats yet",
-      "noSeatsBody": "Add seats from your space settings to see them on the map."
+      "noSeatsBody": "Add seats from your space settings to see them on the map.",
+      "noSeatsAction": "Open space settings"
     },
     "bookings": {
       "title": "Booking requests",
@@ -286,6 +293,7 @@
       "reviewFailed": "Could not process the request",
       "emptyPending": "No pending requests",
       "emptyPendingBody": "New booking requests will appear here",
+      "emptyAction": "Manage resources",
       "emptyApproved": "No approved requests",
       "emptyRejected": "No rejected requests",
       "rejectedReasonLabel": "Rejection reason"
