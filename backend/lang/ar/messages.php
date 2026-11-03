@@ -98,6 +98,7 @@ return [
     'workspace_not_found' => 'مساحة العمل غير موجودة.',
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
+    'invalid_iban' => 'رقم الآيبان غير صالح.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
     'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
     'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',

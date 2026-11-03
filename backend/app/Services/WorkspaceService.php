@@ -15,6 +15,8 @@ use App\Models\Subscription;
 use App\Models\Workspace;
 use App\Notifications\WorkspaceStatusChangedNotification;
 use App\Repositories\Eloquent\WorkspaceRepository;
+use App\Rules\Iban;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +39,7 @@ class WorkspaceService
         private readonly SeatTypePricingService $seatTypePricing,
         private readonly SeatService $seats,
         private readonly WorkspaceIdentityGenerator $identity,
+        private readonly AuditLogger $audit,
     ) {}
 
     /**
@@ -124,7 +127,49 @@ class WorkspaceService
 
         $this->denormalizeCity($data);
 
-        return $this->workspaces->update($workspace, $data);
+        if (isset($data['iban'])) {
+            $data['iban'] = Iban::normalize((string) $data['iban']);
+        }
+
+        $bankChange = $this->bankChange($workspace, $data);
+        $updated = $this->workspaces->update($workspace, $data);
+
+        if ($bankChange !== []) {
+            $this->audit->log('workspace.bank_details.changed', $updated, changes: $bankChange);
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Before/after of the bank fields that actually changed. The IBAN is masked
+     * so the audit trail never stores the full account number.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, array{from: ?string, to: ?string}>
+     */
+    private function bankChange(Workspace $workspace, array $data): array
+    {
+        $changes = [];
+
+        foreach (['bank_name', 'iban'] as $field) {
+            if (! array_key_exists($field, $data) || $data[$field] === $workspace->{$field}) {
+                continue;
+            }
+
+            $mask = $field === 'iban';
+            $changes[$field] = [
+                'from' => $mask ? $this->maskIban($workspace->{$field}) : $workspace->{$field},
+                'to' => $mask ? $this->maskIban($data[$field]) : $data[$field],
+            ];
+        }
+
+        return $changes;
+    }
+
+    private function maskIban(?string $iban): ?string
+    {
+        return $iban === null ? null : '****'.substr($iban, -4);
     }
 
     /**

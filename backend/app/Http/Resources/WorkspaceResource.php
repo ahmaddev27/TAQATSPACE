@@ -73,6 +73,13 @@ class WorkspaceResource extends JsonResource
                     'is_published' => $this->isPublished(),
                     'published_at' => $this->published_at?->toIso8601String(),
                     'messaging' => $this->maskedMessaging(),
+                    'contact_email' => $this->contact_email,
+                    'bank_name' => $this->bank_name,
+                    'iban' => $this->iban,
+                    'timezone' => $this->timezone,
+                    'currency' => $this->currency,
+                    'wifi_ssid' => $this->wifi_ssid,
+                    'wifi_password' => $this->wifi_password,
                 ],
             ),
         ];
