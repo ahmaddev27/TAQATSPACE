@@ -287,5 +287,7 @@ return [
     'approval_not_found' => 'Approval request not found.',
     'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
+    'router_not_found' => 'Router not found.',
+    'router_install_token_issued' => 'Install command generated. It is valid for 30 minutes and works once.',
 
 ];
