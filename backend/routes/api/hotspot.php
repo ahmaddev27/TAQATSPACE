@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Hotspot\HotspotSyncController;
 use App\Http\Controllers\Hotspot\RouterInstallerController;
+use App\Http\Controllers\Hotspot\RouterScriptController;
 use App\Http\Controllers\Owner\RouterInstallTokenController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,11 @@ Route::middleware(['router', 'throttle:router'])
     ->prefix('v1/hotspot/{code}')
     ->group(function (): void {
         Route::post('/sync', [HotspotSyncController::class, 'store']);
+        Route::get('/scripts/{name}', [RouterScriptController::class, 'show'])->where('name', '[A-Za-z0-9._-]+');
     });
+
+// Reachability check used by install-precheck.rsc; public, so it must reveal nothing.
+Route::get('v1/hotspot/ping', [RouterScriptController::class, 'ping'])->middleware('throttle:60,1');
 
 /*
 |--------------------------------------------------------------------------

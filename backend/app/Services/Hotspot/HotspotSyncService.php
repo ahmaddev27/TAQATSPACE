@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
  * Handles one router sync batch: stores the raw events and snapshot chunk in a
  * single transaction (never via the queue) and answers with the plain-text
  * reply. The reply for a (router, batch_id) pair is cached so a retried batch
- * gets the identical answer without being processed twice.
+ * gets the identical answer without being processed twice. The reply echoes
+ * the nonce the router sent; JSON callers without one get a random value.
  */
 class HotspotSyncService
 {
@@ -39,7 +40,7 @@ class HotspotSyncService
 
         $this->persist($router, $payload, now());
 
-        $response = $this->responses->build(Str::lower(Str::random(16)));
+        $response = $this->responses->build($payload->nonce ?? Str::lower(Str::random(16)));
 
         Cache::put($cacheKey, $response, now()->addMinutes(self::RESPONSE_TTL_MINUTES));
 

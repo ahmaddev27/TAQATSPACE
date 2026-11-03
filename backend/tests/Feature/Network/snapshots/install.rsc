@@ -5,6 +5,6 @@
 :global cwsKey "KEY"
 
 :foreach script in={"install-precheck";"hooks";"sync";"snapshot";"interpreter"} do={
-    /tool fetch url=($cwsSyncUrl . "/api/v1/hotspot/scripts/" . $script . ".rsc") http-header-field=("X-Router-Key: " . $cwsKey) check-certificate=yes dst-path=("cws-" . $script . ".rsc")
+    /tool fetch url=($cwsSyncUrl . "/api/v1/hotspot/" . $cwsWorkspace . "/scripts/" . $script . ".rsc") http-header-field=("X-API-Key: " . $cwsKey) check-certificate=yes dst-path=("cws-" . $script . ".rsc")
     /import file-name=("cws-" . $script . ".rsc")
 }
