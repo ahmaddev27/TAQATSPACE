@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Pos;
 
 use App\Enums\StockMovementType;
+use App\Models\CatalogItem;
 use App\Models\PosProduct;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
@@ -42,11 +44,13 @@ class PosProductService
     public function create(Workspace $workspace, array $data, User $actor): PosProduct
     {
         return DB::transaction(function () use ($workspace, $data, $actor): PosProduct {
+            $data = $this->withCatalogItem($workspace, $data);
             $trackStock = (bool) ($data['track_stock'] ?? true);
             $opening = $trackStock ? (int) ($data['stock_qty'] ?? 0) : 0;
 
             $product = PosProduct::query()->create([
                 'workspace_id' => $workspace->id,
+                'catalog_item_id' => $data['catalog_item_id'] ?? null,
                 'name' => $data['name'],
                 'category' => $data['category'] ?? null,
                 'sku' => $data['sku'] ?? null,
@@ -74,9 +78,11 @@ class PosProductService
     public function update(Workspace $workspace, PosProduct $product, array $data): PosProduct
     {
         $this->ensureBelongs($workspace, $product);
+        $data = $this->withCatalogItem($workspace, $data, $product);
 
         $product->fill(array_filter(
             [
+                'catalog_item_id' => $data['catalog_item_id'] ?? null,
                 'name' => $data['name'] ?? null,
                 'category' => $data['category'] ?? null,
                 'sku' => $data['sku'] ?? null,
@@ -180,6 +186,37 @@ class PosProductService
             'note' => $note,
             'created_by' => $actor->id,
         ]);
+    }
+
+    /**
+     * When the product is (or is being) linked to a catalog item, the item is
+     * the source of truth for name and price: its values replace any sent here.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withCatalogItem(Workspace $workspace, array $data, ?PosProduct $product = null): array
+    {
+        $itemId = $data['catalog_item_id'] ?? $product?->catalog_item_id;
+
+        if ($itemId === null) {
+            return $data;
+        }
+
+        $query = CatalogItem::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id);
+
+        // A link that already exists survives the item's archiving; only a NEW link needs a live item.
+        if (isset($data['catalog_item_id'])) {
+            $query->whereNull('archived_at');
+        }
+
+        $item = $query->find($itemId);
+
+        if ($item === null) {
+            throw ValidationException::withMessages(['catalog_item_id' => [__('messages.catalog_item_not_found')]]);
+        }
+
+        return [...$data, 'catalog_item_id' => $item->id, 'name' => $item->name_ar, 'price' => $item->price];
     }
 
     private function ensureBelongs(Workspace $workspace, PosProduct $product): void

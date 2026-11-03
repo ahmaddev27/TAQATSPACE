@@ -20,6 +20,7 @@ class StorePosProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'catalog_item_id' => ['nullable', 'uuid'],
             'category' => ['nullable', 'string', 'max:100'],
             'sku' => ['nullable', 'string', 'max:100'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999'],
