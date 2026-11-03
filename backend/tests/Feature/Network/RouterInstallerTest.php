@@ -31,7 +31,7 @@ class RouterInstallerTest extends TestCase
 
     private function router(array $attributes = []): Router
     {
-        return Router::factory()->create($attributes + ['workspace_id' => Workspace::factory()->create(['code' => 'WS-ABC123'])->id]);
+        return Router::factory()->create($attributes + ['workspace_id' => Workspace::factory()->create(['code' => 'WSABC123'])->id]);
     }
 
     private function tokenOf(IssuedInstallToken $issued): string
@@ -53,7 +53,7 @@ class RouterInstallerTest extends TestCase
         $this->assertStringStartsWith('text/plain', $first->headers->get('Content-Type'));
         $first->assertSee('check-certificate=yes', false);
         $first->assertSee('https://sync.taqat.space', false);
-        $first->assertSee('WS-ABC123', false);
+        $first->assertSee('WSABC123', false);
 
         $this->fetch($issued)->assertStatus(410);
     }
