@@ -105,6 +105,17 @@ class RouterSecurityTest extends TestCase
         $this->sync('SN-1')->assertForbidden();
     }
 
+    public function test_a_sync_without_a_serial_is_rejected_once_the_serial_is_bound(): void
+    {
+        $this->sync('SN-1')->assertOk();
+
+        $this->sync('')->assertForbidden();
+
+        $this->assertSame(RouterStatus::Locked, $this->router->fresh()->status);
+        $this->assertSame('SN-1', $this->router->fresh()->serial_number);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'network.router.locked']);
+    }
+
     public function test_unlock_lets_a_new_serial_bind(): void
     {
         $this->sync('SN-1');

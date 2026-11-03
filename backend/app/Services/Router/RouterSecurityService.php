@@ -48,12 +48,12 @@ class RouterSecurityService
         $this->audit->log('network.router.serial_bound', $router, changes: ['serial_number' => $serial]);
     }
 
-    /** True when the router may talk: it has no serial yet, none was presented, or they match. */
+    /** True when the router may talk: it is not bound yet, or it presented the bound serial. */
     public function serialMatches(Router $router, ?string $presented): bool
     {
+        // Once bound, omitting the serial must not bypass the lock.
         return $router->serial_number === null
-            || $presented === null
-            || hash_equals($router->serial_number, $presented);
+            || ($presented !== null && hash_equals($router->serial_number, $presented));
     }
 
     public function lock(Router $router, ?string $presentedSerial = null): void
