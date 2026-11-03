@@ -266,4 +266,18 @@ return [
     'chat_token_failed' => 'تعذّر بدء جلسة المحادثة. يرجى المحاولة لاحقًا.',
     'chat_attachment_not_found' => 'المرفق غير موجود.',
 
+    // Two-factor authentication
+    'two_factor_challenge_pending' => 'أكمل التحقق بخطوتين للمتابعة.',
+    'two_factor_required' => 'يتطلب هذا الإجراء تحققاً حديثاً بخطوتين.',
+    'two_factor_not_eligible' => 'المصادقة الثنائية غير متاحة لهذا النوع من الحسابات.',
+    'two_factor_already_enabled' => 'المصادقة الثنائية مفعّلة بالفعل.',
+    'two_factor_not_enabled' => 'المصادقة الثنائية غير مفعّلة.',
+    'two_factor_no_pending_enrollment' => 'لا يوجد تفعيل للمصادقة الثنائية قيد الانتظار.',
+    'two_factor_no_challenge' => 'لا يوجد تحقق ثنائي معلّق لهذه الجلسة.',
+    'two_factor_enabled' => 'تم تفعيل المصادقة الثنائية. احتفظ برموز الاسترداد في مكان آمن.',
+    'two_factor_disabled' => 'تم تعطيل المصادقة الثنائية.',
+    'two_factor_verified' => 'تم التحقق بنجاح.',
+    'two_factor_invalid_code' => 'رمز التحقق غير صالح.',
+    'two_factor_throttled' => 'محاولات كثيرة جداً. يرجى المحاولة لاحقاً.',
+
 ];

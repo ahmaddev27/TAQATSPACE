@@ -37,6 +37,8 @@ class UserResource extends JsonResource
             'avatar' => $this->avatarUrl(),
             // Only the local email/password account (the internal admin) may change
             // its password; SSO-provisioned users have their credentials at the IdP.
+            'can_use_two_factor' => $this->canUseTwoFactor(),
+            'two_factor_enabled' => $this->hasTwoFactorEnabled(),
             'can_change_password' => $this->sso_sub === null,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

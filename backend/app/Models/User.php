@@ -52,6 +52,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'documents',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -68,6 +70,9 @@ class User extends Authenticatable
             'staff_group' => StaffGroup::class,
             'status' => UserStatus::class,
             'documents' => 'array',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_recovery_codes' => 'array',
         ];
     }
 
@@ -179,6 +184,17 @@ class User extends Authenticatable
     public function isCashier(): bool
     {
         return $this->role === UserRole::Cashier;
+    }
+
+    /** Two-factor authentication covers owners, staff (cashiers) and admins; freelancers are out of scope. */
+    public function canUseTwoFactor(): bool
+    {
+        return ! $this->isFreelancer();
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null && $this->two_factor_confirmed_at !== null;
     }
 
     public function isActive(): bool
