@@ -90,4 +90,18 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | MikroTik routers (PUSH model)
+    |--------------------------------------------------------------------------
+    |
+    | Public base URL routers call (install.rsc, scripts, sync). Pinned to the
+    | fixed sync domain so a later infrastructure move never needs a reinstall;
+    | override per environment (e.g. staging).
+    |
+    */
+    'router' => [
+        'sync_url' => env('ROUTER_SYNC_URL', 'https://sync.taqat.space'),
+    ],
+
 ];
