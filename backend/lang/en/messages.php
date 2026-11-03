@@ -148,6 +148,8 @@ return [
 
     // Partner integration
     'partner_unauthorized' => 'Invalid or missing API key.',
+    'router_unauthorized' => 'Invalid or missing router key.',
+    'router_forbidden' => 'This router is not allowed to use this endpoint.',
 
     // Packages
     'package_created' => 'Package created successfully.',
