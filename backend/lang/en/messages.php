@@ -313,6 +313,13 @@ return [
     'unbilled_charge_voided' => 'Unbilled charge voided.',
     'unbilled_charge_not_open' => 'This charge can no longer be changed because it is not open.',
     'unbilled_charge_unknown_customer' => 'The customer does not belong to this workspace.',
+    'plan_created' => 'Plan created.',
+    'plan_updated' => 'Plan updated.',
+    'plan_archived' => 'Plan archived.',
+    'plan_deleted' => 'Plan deleted.',
+    'plan_archived_read_only' => 'An archived plan cannot be edited.',
+    'plan_dedicated_seat_not_allowed' => 'A dedicated seat is only available on monthly, weekly or bundle plans.',
+    'plan_not_found' => 'Plan not found.',
     'feature_not_found' => 'Not found.',
 
 ];

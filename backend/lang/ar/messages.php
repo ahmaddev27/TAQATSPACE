@@ -313,6 +313,13 @@ return [
     'unbilled_charge_voided' => 'تم إلغاء الرسم غير المفوتر.',
     'unbilled_charge_not_open' => 'لا يمكن تعديل هذا الرسم لأنه ليس مفتوحاً.',
     'unbilled_charge_unknown_customer' => 'العميل غير تابع لهذا الفضاء.',
+    'plan_created' => 'تم إنشاء الخطة.',
+    'plan_updated' => 'تم تحديث الخطة.',
+    'plan_archived' => 'تمت أرشفة الخطة.',
+    'plan_deleted' => 'تم حذف الخطة.',
+    'plan_archived_read_only' => 'لا يمكن تعديل خطة مؤرشفة.',
+    'plan_dedicated_seat_not_allowed' => 'المقعد المخصص متاح فقط للخطط الشهرية أو الأسبوعية أو الباقات.',
+    'plan_not_found' => 'الخطة غير موجودة.',
     'feature_not_found' => 'غير موجود.',
 
 ];
