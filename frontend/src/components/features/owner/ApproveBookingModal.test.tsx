@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BookingRequest, Package, Seat } from "@/lib/types";
 import { BookingsManager } from "./BookingsManager";
@@ -7,6 +7,11 @@ import { BookingsManager } from "./BookingsManager";
 const reviewBooking = vi.fn();
 vi.mock("@/lib/actions/owner", () => ({
   reviewBooking: (...args: unknown[]) => reviewBooking(...args),
+}));
+
+let searchQuery = "";
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(searchQuery),
 }));
 
 const toast = vi.fn();
@@ -59,9 +64,23 @@ function openApproveModal() {
 }
 
 describe("ApproveBookingModal (via BookingsManager)", () => {
+  afterEach(cleanup);
+
   beforeEach(() => {
     vi.clearAllMocks();
     reviewBooking.mockResolvedValue({ ok: true });
+  });
+
+  it("does not open the form without the new intent", () => {
+    render(
+      <BookingsManager
+        bookings={[booking]}
+        availableSeats={[seat]}
+        packages={[pkg]}
+      />,
+    );
+
+    expect(screen.queryByText("bookings.confirmApprove")).not.toBeInTheDocument();
   });
 
   it("disables approve until a package is selected, then calls reviewBooking with the package id", async () => {
@@ -112,5 +131,18 @@ describe("ApproveBookingModal (via BookingsManager)", () => {
       .closest("button") as HTMLButtonElement;
     expect(confirm).toBeDisabled();
     expect(reviewBooking).not.toHaveBeenCalled();
+  });
+
+  it("opens the approval form for the oldest pending request when ?new=1 is present", () => {
+    searchQuery = "new=1";
+    render(
+      <BookingsManager
+        bookings={[booking]}
+        availableSeats={[seat]}
+        packages={[pkg]}
+      />,
+    );
+
+    expect(screen.getByText("bookings.confirmApprove")).toBeInTheDocument();
   });
 });
