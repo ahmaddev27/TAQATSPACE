@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\WorkspaceFeature;
+use App\Http\Requests\Invoice\DeleteInvoiceRequest;
 use App\Http\Requests\Invoice\MarkPaidRequest;
 use App\Http\Requests\Invoice\PartialPaymentRequest;
 use App\Http\Requests\Invoice\RecordPaymentRequest;
@@ -12,6 +14,10 @@ use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
+use App\Http\Middleware\RequireRecentTwoFactor;
+use App\Services\Auth\TwoFactorService;
+use App\Services\FeatureFlagService;
+use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Support\ApiResponse;
@@ -26,16 +32,25 @@ class InvoiceController extends Controller
     public function __construct(
         private readonly InvoiceService $invoices,
         private readonly InvoicePdfService $pdf,
+        private readonly InvoiceLifecycleService $lifecycle,
+        private readonly FeatureFlagService $features,
+        private readonly TwoFactorService $twoFactor,
     ) {}
 
     /**
      * DELETE /api/workspace/invoices/{invoice} — permanently delete an invoice
      * belonging to the owner's workspace (along with its receipts/payments).
+     * With finance v2 on, only drafts are deleted; an issued invoice is voided
+     * instead (reason and recent 2FA required) and stays on record.
      */
-    public function destroy(Request $request, Invoice $invoice): JsonResponse
+    public function destroy(DeleteInvoiceRequest $request, Invoice $invoice): JsonResponse
     {
         if (! $this->ownsInvoice($request, $invoice)) {
             return ApiResponse::error(__('messages.invoice_not_found'), 404);
+        }
+
+        if (! $invoice->isDraft() && $this->financeV2Enabled($invoice)) {
+            return $this->voidInstead($request, $invoice);
         }
 
         $this->invoices->delete($invoice);
@@ -292,13 +307,30 @@ class InvoiceController extends Controller
     {
         $workspace = $request->user()->workspace;
 
-        if ($workspace === null) {
-            return false;
+        return $workspace !== null && $invoice->belongsToWorkspace($workspace->id);
+    }
+
+    private function financeV2Enabled(Invoice $invoice): bool
+    {
+        return $invoice->workspace_id !== null
+            && $this->features->isEnabled($invoice->workspace_id, WorkspaceFeature::FinanceV2);
+    }
+
+    /** The delete route cannot carry the `2fa.recent` middleware (drafts and legacy deletes do not need it), so the same check runs here. */
+    private function voidInstead(DeleteInvoiceRequest $request, Invoice $invoice): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasTwoFactorEnabled() && ! $this->twoFactor->isRecentlyVerified($user, RequireRecentTwoFactor::WINDOW_MINUTES)) {
+            return response()->json([
+                'message' => __('messages.two_factor_required'),
+                'code' => 'two_factor_required',
+            ], 403);
         }
 
-        $invoice->loadMissing('subscription');
+        $voided = $this->lifecycle->void($invoice, $request->validated()['reason'], $user);
 
-        return $invoice->subscription?->workspace_id === $workspace->id;
+        return ApiResponse::success(new InvoiceResource($voided), __('messages.invoice_voided'));
     }
 
     /**

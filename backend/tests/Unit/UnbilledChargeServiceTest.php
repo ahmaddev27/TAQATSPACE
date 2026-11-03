@@ -6,6 +6,8 @@ namespace Tests\Unit;
 
 use App\Enums\UnbilledChargeStatus;
 use App\Exceptions\UnbilledChargeException;
+use App\Models\Invoice;
+use App\Models\InvoiceLine;
 use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
@@ -85,11 +87,30 @@ class UnbilledChargeServiceTest extends TestCase
         $this->service->void($charge, $actor);
     }
 
+    /** A real invoice line, now that unbilled_charges.invoice_line_id is a foreign key. */
+    private function invoiceLineId(): string
+    {
+        $invoice = Invoice::factory()->create();
+
+        $id = (string) \Illuminate\Support\Str::uuid();
+        // Plain insert: the model observer refuses new lines on an issued invoice.
+        InvoiceLine::query()->insert([
+            'id' => $id,
+            'invoice_id' => $invoice->id,
+            'description' => 'Billed line',
+            'qty' => 1,
+            'unit_price' => 10,
+            'amount' => 10,
+        ]);
+
+        return $id;
+    }
+
     public function test_mark_invoiced_links_the_line_and_blocks_voiding(): void
     {
         $actor = User::factory()->owner()->create();
         $charge = $this->service->record($this->workspace, $this->data());
-        $lineId = (string) \Illuminate\Support\Str::uuid();
+        $lineId = $this->invoiceLineId();
 
         $this->assertSame(1, $this->service->markInvoiced($this->workspace, [$charge->id], $lineId));
         $this->assertSame($lineId, $charge->fresh()->invoice_line_id);
@@ -106,7 +127,7 @@ class UnbilledChargeServiceTest extends TestCase
         $this->service->void($voided, User::factory()->owner()->create());
 
         try {
-            $this->service->markInvoiced($this->workspace, [$open->id, $voided->id], (string) \Illuminate\Support\Str::uuid());
+            $this->service->markInvoiced($this->workspace, [$open->id, $voided->id], $this->invoiceLineId());
             $this->fail('Expected the batch to be rejected.');
         } catch (UnbilledChargeException) {
             $this->assertSame(UnbilledChargeStatus::Open, $open->fresh()->status);
