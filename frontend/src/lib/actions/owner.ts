@@ -654,3 +654,39 @@ export async function deleteStaffInvitation(
   if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Settings — Danger zone                                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface ResetWorkspaceInput {
+  /** The workspace slug, typed by the owner. */
+  confirmation: string;
+  reason: string;
+  /** Authenticator code; proves a recent step-up before the destructive call. */
+  code: string;
+}
+
+/**
+ * Reset the workspace's operational data. The authenticator code is verified
+ * first so the backend's recent-2FA gate passes; owners without 2FA skip it.
+ */
+export async function resetWorkspace(
+  input: ResetWorkspaceInput,
+): Promise<ActionResult<undefined>> {
+  const code = input.code.trim();
+
+  if (code !== "") {
+    const verified = await authedMutate("/auth/two-factor/verify", { body: { code } });
+    if (!verified.ok) {
+      return { ...verified, errors: { code: [verified.message] } };
+    }
+  }
+
+  const result = await authedMutate<undefined>("/workspace/danger/reset", {
+    method: "DELETE",
+    body: { confirmation: input.confirmation, reason: input.reason },
+  });
+  if (result.ok) revalidatePath("/[locale]/(dashboard)/owner", "layout");
+  return result;
+}

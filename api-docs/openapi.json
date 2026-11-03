@@ -994,6 +994,521 @@
                 }
             }
         },
+        "/workspace/approvals": {
+            "get": {
+                "operationId": "owner.approval.index",
+                "summary": "GET /api/workspace/approvals",
+                "tags": [
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "capacity",
+                                "working_hours",
+                                "pricing"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ApprovalRequestResource"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "per_page",
+                                                        "total",
+                                                        "last_page"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "requests",
+                                                "meta"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/approvals/{approvalRequest}/cancel": {
+            "post": {
+                "operationId": "approval.cancel",
+                "summary": "POST /api/workspace/approvals/{approvalRequest}/cancel",
+                "tags": [
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "approvalRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The approval request ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApprovalRequestResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/approvals": {
+            "get": {
+                "operationId": "admin.approval.index",
+                "summary": "GET /api/admin/approvals",
+                "tags": [
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "capacity",
+                                "working_hours",
+                                "pricing"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ApprovalRequestResource"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "per_page",
+                                                        "total",
+                                                        "last_page"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "requests",
+                                                "meta"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/approvals/{approvalRequest}/approve": {
+            "post": {
+                "operationId": "approval.approve",
+                "summary": "POST /api/admin/approvals/{approvalRequest}/approve",
+                "tags": [
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "approvalRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The approval request ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApprovalRequestResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/approvals/{approvalRequest}/reject": {
+            "post": {
+                "operationId": "approval.reject",
+                "summary": "POST /api/admin/approvals/{approvalRequest}/reject",
+                "tags": [
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "approvalRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The approval request ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectApprovalRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApprovalRequestResource"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/workspace/audit-logs": {
             "get": {
                 "operationId": "owner.auditLog.index",
@@ -1393,39 +1908,75 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
+                                    "anyOf": [
+                                        {
                                             "type": "object",
                                             "properties": {
-                                                "user": {
-                                                    "$ref": "#/components/schemas/UserResource"
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "user": {
+                                                            "$ref": "#/components/schemas/UserResource"
+                                                        },
+                                                        "token": {
+                                                            "type": "string"
+                                                        },
+                                                        "token_type": {
+                                                            "type": "string",
+                                                            "const": "Bearer"
+                                                        },
+                                                        "role": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "user",
+                                                        "token",
+                                                        "token_type",
+                                                        "role"
+                                                    ]
                                                 },
-                                                "token": {
-                                                    "type": "string"
-                                                },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "const": "Bearer"
-                                                },
-                                                "role": {
-                                                    "type": "string"
+                                                "message": {
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
-                                                "user",
-                                                "token",
-                                                "token_type",
-                                                "role"
+                                                "data",
+                                                "message"
                                             ]
                                         },
-                                        "message": {
-                                            "type": "null"
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "two_factor_required": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "token": {
+                                                            "type": "string"
+                                                        },
+                                                        "token_type": {
+                                                            "type": "string",
+                                                            "const": "Bearer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "two_factor_required",
+                                                        "token",
+                                                        "token_type"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
                                         }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
                                     ]
                                 }
                             }
@@ -5939,7 +6490,10 @@
                                                             "type": "string"
                                                         },
                                                         "email": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "phone": {
                                                             "type": [
@@ -7618,6 +8172,150 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/workspace/settings/operations": {
+            "put": {
+                "operationId": "operationsSettings.update",
+                "description": "Capacity, seating mode, working hours, prices and tax never apply directly:\neach changed group becomes an approval request (202). Nothing changed \u2192 200.",
+                "summary": "PUT /api/workspace/settings/operations \u2014 owner only",
+                "tags": [
+                    "OperationsSettings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitOperationsSettingsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ApprovalRequestResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "requests"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u062a\u063a\u064a\u064a\u0631\u0627\u062a\u0643 \u0644\u0644\u0645\u0648\u0627\u0641\u0642\u0629. \u0633\u062a\u064f\u0637\u0628\u064e\u0651\u0642 \u0628\u0639\u062f \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u064a\u0647\u0627."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0,
+                                                    "additionalItems": false
+                                                }
+                                            },
+                                            "required": [
+                                                "requests"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u0627 \u064a\u0648\u062c\u062f \u0623\u064a \u062a\u063a\u064a\u064a\u0631\u060c \u0644\u0630\u0644\u0643 \u0644\u0645 \u064a\u064f\u0646\u0634\u0623 \u0637\u0644\u0628 \u0645\u0648\u0627\u0641\u0642\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -11350,103 +12048,6 @@
                 }
             }
         },
-        "/workspace/seat-types": {
-            "put": {
-                "operationId": "seatType.update",
-                "description": "Upserts the per-seat-type pricing for the authenticated owner's workspace,\nrecomputes the derived discovery columns, and returns the refreshed\nworkspace (including all seat_types rows).",
-                "summary": "PUT /api/workspace/seat-types \u2014 owner only, authorized via gate",
-                "tags": [
-                    "SeatType"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateSeatTypesRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/WorkspaceResource"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062a\u0633\u0639\u064a\u0631 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f."
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644 \u0644\u062a\u062d\u062f\u064a\u062b\u0647\u0627."
-                                        },
-                                        "errors": {
-                                            "type": "null"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
         "/content/{key}": {
             "get": {
                 "operationId": "siteContent.show",
@@ -13514,39 +14115,75 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
+                                    "anyOf": [
+                                        {
                                             "type": "object",
                                             "properties": {
-                                                "token": {
-                                                    "type": "string"
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "token": {
+                                                            "type": "string"
+                                                        },
+                                                        "token_type": {
+                                                            "type": "string",
+                                                            "const": "Bearer"
+                                                        },
+                                                        "role": {
+                                                            "type": "string"
+                                                        },
+                                                        "user": {
+                                                            "$ref": "#/components/schemas/UserResource"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "token",
+                                                        "token_type",
+                                                        "role",
+                                                        "user"
+                                                    ]
                                                 },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "const": "Bearer"
-                                                },
-                                                "role": {
-                                                    "type": "string"
-                                                },
-                                                "user": {
-                                                    "$ref": "#/components/schemas/UserResource"
+                                                "message": {
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
-                                                "token",
-                                                "token_type",
-                                                "role",
-                                                "user"
+                                                "data",
+                                                "message"
                                             ]
                                         },
-                                        "message": {
-                                            "type": "null"
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "two_factor_required": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "token": {
+                                                            "type": "string"
+                                                        },
+                                                        "token_type": {
+                                                            "type": "string",
+                                                            "const": "Bearer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "two_factor_required",
+                                                        "token",
+                                                        "token_type"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "data",
+                                                "message"
+                                            ]
                                         }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "message"
                                     ]
                                 }
                             }
@@ -13610,6 +14247,393 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/auth/two-factor": {
+            "get": {
+                "operationId": "twoFactor.status",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "eligible": {
+                                                    "type": "boolean"
+                                                },
+                                                "enabled": {
+                                                    "type": "boolean"
+                                                },
+                                                "pending_confirmation": {
+                                                    "type": "string"
+                                                },
+                                                "recovery_codes_remaining": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "eligible",
+                                                "enabled",
+                                                "pending_confirmation",
+                                                "recovery_codes_remaining"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/two-factor/enable": {
+            "post": {
+                "operationId": "twoFactor.enable",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "secret": {
+                                                    "type": "string"
+                                                },
+                                                "otpauth_url": {
+                                                    "type": "string"
+                                                },
+                                                "qr_svg": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "secret",
+                                                "otpauth_url",
+                                                "qr_svg"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0627\u0644\u0645\u0635\u0627\u062f\u0642\u0629 \u0627\u0644\u062b\u0646\u0627\u0626\u064a\u0629 \u0645\u0641\u0639\u0651\u0644\u0629 \u0628\u0627\u0644\u0641\u0639\u0644."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0627\u0644\u0645\u0635\u0627\u062f\u0642\u0629 \u0627\u0644\u062b\u0646\u0627\u0626\u064a\u0629 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d\u0629 \u0644\u0647\u0630\u0627 \u0627\u0644\u0646\u0648\u0639 \u0645\u0646 \u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/two-factor/confirm": {
+            "post": {
+                "operationId": "twoFactor.confirm",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TwoFactorCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u0627 \u064a\u0648\u062c\u062f \u062a\u0641\u0639\u064a\u0644 \u0644\u0644\u0645\u0635\u0627\u062f\u0642\u0629 \u0627\u0644\u062b\u0646\u0627\u0626\u064a\u0629 \u0642\u064a\u062f \u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/auth/two-factor/challenge": {
+            "post": {
+                "operationId": "twoFactor.challenge",
+                "summary": "Complete the post-login challenge: upgrade the pending token to a full session",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TwoFactorChallengeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0644\u0627 \u064a\u0648\u062c\u062f \u062a\u062d\u0642\u0642 \u062b\u0646\u0627\u0626\u064a \u0645\u0639\u0644\u0651\u0642 \u0644\u0647\u0630\u0647 \u0627\u0644\u062c\u0644\u0633\u0629."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/auth/two-factor/verify": {
+            "post": {
+                "operationId": "twoFactor.verify",
+                "summary": "Step-up: re-verify a code within an authenticated session",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TwoFactorChallengeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0627\u0644\u0645\u0635\u0627\u062f\u0642\u0629 \u0627\u0644\u062b\u0646\u0627\u0626\u064a\u0629 \u063a\u064a\u0631 \u0645\u0641\u0639\u0651\u0644\u0629."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/auth/two-factor/disable": {
+            "post": {
+                "operationId": "twoFactor.disable",
+                "tags": [
+                    "TwoFactor"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TwoFactorChallengeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u0627\u0644\u0645\u0635\u0627\u062f\u0642\u0629 \u0627\u0644\u062b\u0646\u0627\u0626\u064a\u0629 \u063a\u064a\u0631 \u0645\u0641\u0639\u0651\u0644\u0629."
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -14281,7 +15305,10 @@
                                                             "type": "string"
                                                         },
                                                         "email": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "phone": {
                                                             "type": [
@@ -14308,6 +15335,12 @@
                                                     "type": "array",
                                                     "items": {
                                                         "type": "string"
+                                                    }
+                                                },
+                                                "features": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "boolean"
                                                     }
                                                 },
                                                 "seats": {
@@ -14399,6 +15432,7 @@
                                                 "created_at",
                                                 "owner",
                                                 "seat_types",
+                                                "features",
                                                 "seats",
                                                 "subscriptions",
                                                 "invoices",
@@ -14615,6 +15649,193 @@
                     }
                 }
             }
+        },
+        "/admin/workspaces/{workspace}/features": {
+            "put": {
+                "operationId": "workspaceFeature.update",
+                "summary": "PUT /api/admin/workspaces/{workspace}/features \u2014 enable/disable modules",
+                "tags": [
+                    "WorkspaceFeature"
+                ],
+                "parameters": [
+                    {
+                        "name": "workspace",
+                        "in": "path",
+                        "required": true,
+                        "description": "The workspace ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateWorkspaceFeaturesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "features": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "features"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u0645\u064a\u0632\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workspace/danger/reset": {
+            "delete": {
+                "operationId": "workspaceReset.destroy",
+                "summary": "DELETE /api/workspace/danger/reset \u2014 owner only, behind recent 2FA",
+                "tags": [
+                    "WorkspaceReset"
+                ],
+                "parameters": [
+                    {
+                        "name": "confirmation",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "maxLength": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "null"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "\u062a\u0645\u062a \u0625\u0639\u0627\u062f\u0629 \u0636\u0628\u0637 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0648\u062d\u064f\u0630\u0641\u062a \u0628\u064a\u0627\u0646\u0627\u062a\u0647\u0627 \u0627\u0644\u062a\u0634\u063a\u064a\u0644\u064a\u0629."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0645\u0635\u0631\u0651\u062d \u0628\u0647."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0645\u0633\u0627\u062d\u0629 \u0639\u0645\u0644."
+                                                },
+                                                "errors": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -14736,7 +15957,10 @@
                         "type": "string"
                     },
                     "email": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "avatar": {
                         "type": [
@@ -14840,6 +16064,85 @@
                 ],
                 "title": "AnnouncementResource"
             },
+            "ApprovalRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "workspace": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "requester": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "email"
+                        ]
+                    },
+                    "change": {
+                        "type": "string"
+                    },
+                    "decision_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "decided_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "status",
+                    "change",
+                    "decision_reason",
+                    "decided_at",
+                    "created_at"
+                ],
+                "title": "ApprovalRequestResource"
+            },
             "AssignPackageRequest": {
                 "type": "object",
                 "properties": {
@@ -14893,7 +16196,10 @@
                                 "type": "string"
                             },
                             "email": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
@@ -15005,7 +16311,10 @@
                                 "type": "string"
                             },
                             "email": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "specialty": {
                                 "type": [
@@ -15468,7 +16777,10 @@
                                         "type": "string"
                                     },
                                     "email": {
-                                        "type": "string"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
                                     },
                                     "phone": {
                                         "type": [
@@ -16482,6 +17794,21 @@
                 ],
                 "title": "RegisterRequest"
             },
+            "RejectApprovalRequest": {
+                "type": "object",
+                "description": "A rejection must always explain itself to the requester.",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "RejectApprovalRequest"
+            },
             "RejectReceiptRequest": {
                 "type": "object",
                 "description": "Owner rejects a member-submitted payment receipt with a reason. Ownership of\nthe invoice is verified in the controller against the authenticated owner.",
@@ -16697,6 +18024,15 @@
                 ],
                 "title": "SeatResource"
             },
+            "SeatingMode": {
+                "type": "string",
+                "description": "Whether members get an assigned desk or pick any free one.\n",
+                "enum": [
+                    "fixed",
+                    "flexible"
+                ],
+                "title": "SeatingMode"
+            },
             "StaffResource": {
                 "type": "object",
                 "properties": {
@@ -16707,7 +18043,10 @@
                         "type": "string"
                     },
                     "email": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "status": {
                         "type": "string"
@@ -16773,7 +18112,8 @@
                                 "manage_billing",
                                 "manage_content",
                                 "manage_messaging",
-                                "view_reports"
+                                "view_reports",
+                                "approve_requests"
                             ]
                         }
                     }
@@ -17487,6 +18827,77 @@
                 ],
                 "title": "StoreWorkspaceRequest"
             },
+            "SubmitOperationsSettingsRequest": {
+                "type": "object",
+                "properties": {
+                    "seating_mode": {
+                        "$ref": "#/components/schemas/SeatingMode"
+                    },
+                    "working_hours": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1
+                    },
+                    "tax_rate": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    "seat_types": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "fixed",
+                                        "flexible",
+                                        "private_office"
+                                    ]
+                                },
+                                "price_monthly": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0,
+                                    "maximum": 99999999
+                                },
+                                "price_daily": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 0,
+                                    "maximum": 99999999
+                                },
+                                "capacity": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 100000
+                                },
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "type"
+                            ]
+                        },
+                        "maxItems": 3
+                    }
+                },
+                "title": "SubmitOperationsSettingsRequest"
+            },
             "SubmitReceiptRequest": {
                 "type": "object",
                 "description": "A member uploads proof of payment for an invoice. Ownership of the invoice is\nverified in the controller against the authenticated member.",
@@ -17655,6 +19066,39 @@
                 ],
                 "title": "TestMessagingRequest"
             },
+            "TwoFactorChallengeRequest": {
+                "type": "object",
+                "description": "Either an authenticator code or a recovery code (challenge, step-up, disable).",
+                "properties": {
+                    "code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "recovery_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 32
+                    }
+                },
+                "title": "TwoFactorChallengeRequest"
+            },
+            "TwoFactorCodeRequest": {
+                "type": "object",
+                "description": "A single authenticator-app code (enrollment confirmation).",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code"
+                ],
+                "title": "TwoFactorCodeRequest"
+            },
             "UpdateAdminRequest": {
                 "type": "object",
                 "description": "Validates updating an existing admin account: status, role, permissions, and\nan optional password reset. Every field is optional so callers can patch a\nsingle attribute. Self-lockout protection is enforced in the service.",
@@ -17692,7 +19136,8 @@
                                 "manage_billing",
                                 "manage_content",
                                 "manage_messaging",
-                                "view_reports"
+                                "view_reports",
+                                "approve_requests"
                             ]
                         }
                     }
@@ -18704,59 +20149,6 @@
                 },
                 "title": "UpdateSeatRequest"
             },
-            "UpdateSeatTypesRequest": {
-                "type": "object",
-                "properties": {
-                    "seat_types": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "type": {
-                                    "type": "string",
-                                    "enum": [
-                                        "fixed",
-                                        "flexible",
-                                        "private_office"
-                                    ]
-                                },
-                                "price_monthly": {
-                                    "type": [
-                                        "number",
-                                        "null"
-                                    ],
-                                    "minimum": 0
-                                },
-                                "price_daily": {
-                                    "type": [
-                                        "number",
-                                        "null"
-                                    ],
-                                    "minimum": 0
-                                },
-                                "capacity": {
-                                    "type": [
-                                        "integer",
-                                        "null"
-                                    ],
-                                    "minimum": 0
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            },
-                            "required": [
-                                "type"
-                            ]
-                        },
-                        "minItems": 1
-                    }
-                },
-                "required": [
-                    "seat_types"
-                ],
-                "title": "UpdateSeatTypesRequest"
-            },
             "UpdateSiteContentRequest": {
                 "type": "object",
                 "description": "Validates a site-wide CMS payload. The body is `{ \"content\": <blob> }` where\nthe blob is a free-form, bilingual, partial-override array whose shape varies\nper content key (site / faq / about / how_it_works). The nested structure is\nintentionally unconstrained \u2014 the frontend supplies i18n defaults for\nanything omitted, so partial saves must pass. Authorization is handled by the\nroute middleware (auth:sanctum + role.admin).",
@@ -18817,6 +20209,30 @@
                     "status"
                 ],
                 "title": "UpdateUserStatusRequest"
+            },
+            "UpdateWorkspaceFeaturesRequest": {
+                "type": "object",
+                "description": "Validates a partial feature-flag update. Authorization is enforced by the\nroute middleware (auth:sanctum + role.admin + can.permission).",
+                "properties": {
+                    "features": {
+                        "type": "object",
+                        "properties": {
+                            "network": {
+                                "type": "boolean"
+                            },
+                            "finance_v2": {
+                                "type": "boolean"
+                            },
+                            "gsg": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "features"
+                ],
+                "title": "UpdateWorkspaceFeaturesRequest"
             },
             "UpdateWorkspaceMessagingRequest": {
                 "type": "object",
@@ -18960,6 +20376,47 @@
                         ],
                         "maxLength": 30
                     },
+                    "contact_email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 191
+                    },
+                    "bank_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 120
+                    },
+                    "iban": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "timezone": {
+                        "$ref": "#/components/schemas/WorkspaceTimezone"
+                    },
+                    "currency": {
+                        "$ref": "#/components/schemas/WorkspaceCurrency"
+                    },
+                    "wifi_ssid": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    },
+                    "wifi_password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 128
+                    },
                     "latitude": {
                         "type": [
                             "number",
@@ -18975,15 +20432,6 @@
                         ],
                         "minimum": -180,
                         "maximum": 180
-                    },
-                    "working_hours": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {
-                            "type": "string"
-                        }
                     },
                     "amenities": {
                         "type": [
@@ -19080,7 +20528,10 @@
                         "type": "string"
                     },
                     "email": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "phone": {
                         "type": [
@@ -19162,9 +20613,15 @@
                             "null"
                         ]
                     },
-                    "can_change_password": {
+                    "can_use_two_factor": {
                         "type": "boolean",
                         "description": "Only the local email/password account (the internal admin) may change\nits password; SSO-provisioned users have their credentials at the IdP."
+                    },
+                    "two_factor_enabled": {
+                        "type": "boolean"
+                    },
+                    "can_change_password": {
+                        "type": "boolean"
                     },
                     "email_verified_at": {
                         "type": "string"
@@ -19173,22 +20630,7 @@
                         "type": "string"
                     },
                     "": {
-                        "description": "Cashier POS grants so the terminal can hide controls the cashier\nlacks (e.g. the Refund button without `pos_refund`). Resolved only\nfor cashier accounts to keep the common path query-free.",
                         "anyOf": [
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "permissions": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "required": [
-                                    "permissions"
-                                ]
-                            },
                             {
                                 "type": "array",
                                 "items": {
@@ -19197,6 +20639,17 @@
                                 "minItems": 0,
                                 "maxItems": 0,
                                 "additionalItems": false
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "features": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "features"
+                                ]
                             }
                         ]
                     }
@@ -19214,9 +20667,12 @@
                     "specialty",
                     "bio",
                     "avatar",
+                    "can_use_two_factor",
+                    "two_factor_enabled",
                     "can_change_password",
                     "email_verified_at",
                     "created_at",
+                    null,
                     null,
                     null
                 ],
@@ -19230,6 +20686,21 @@
                     "pending_verification"
                 ],
                 "title": "UserStatus"
+            },
+            "WorkspaceCurrency": {
+                "type": "string",
+                "description": "The eight currencies a workspace may price in (SRS NFR-I18N).\n",
+                "enum": [
+                    "ILS",
+                    "USD",
+                    "EUR",
+                    "JOD",
+                    "EGP",
+                    "SAR",
+                    "AED",
+                    "KWD"
+                ],
+                "title": "WorkspaceCurrency"
             },
             "WorkspaceResource": {
                 "type": "object",
@@ -19343,7 +20814,10 @@
                                 "type": "string"
                             },
                             "email": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "phone": {
                                 "type": [
@@ -19365,6 +20839,10 @@
                             "phone",
                             "avatar"
                         ]
+                    },
+                    "features": {
+                        "type": "string",
+                        "description": "Admin listing only: present when the flag rows are eager-loaded."
                     },
                     "slug": {
                         "type": [
@@ -19408,6 +20886,48 @@
                     "messaging": {
                         "type": "object",
                         "additionalProperties": {}
+                    },
+                    "contact_email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "bank_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "iban": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "wifi_ssid": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "wifi_password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "seating_mode": {
+                        "type": "string"
+                    },
+                    "tax_rate": {
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -19434,6 +20954,29 @@
                     "created_at"
                 ],
                 "title": "WorkspaceResource"
+            },
+            "WorkspaceTimezone": {
+                "type": "string",
+                "description": "The sixteen IANA time zones a workspace may operate in (SRS NFR-I18N).\n",
+                "enum": [
+                    "Asia/Gaza",
+                    "Asia/Jerusalem",
+                    "Asia/Amman",
+                    "Asia/Beirut",
+                    "Asia/Damascus",
+                    "Asia/Baghdad",
+                    "Asia/Riyadh",
+                    "Asia/Kuwait",
+                    "Asia/Qatar",
+                    "Asia/Dubai",
+                    "Africa/Cairo",
+                    "Africa/Tripoli",
+                    "Africa/Tunis",
+                    "Africa/Algiers",
+                    "Africa/Casablanca",
+                    "UTC"
+                ],
+                "title": "WorkspaceTimezone"
             }
         },
         "responses": {

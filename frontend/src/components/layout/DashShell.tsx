@@ -29,6 +29,7 @@ import {
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { NavProgress } from "./NavProgress";
+import { ShortcutsProvider } from "./ShortcutsProvider";
 
 export interface DashShellProps {
   role: UserRole;
@@ -178,6 +179,7 @@ export function DashShell({
   }, [mobileOpen]);
 
   return (
+    <ShortcutsProvider role={role}>
     <div
       className="dash"
       style={{
@@ -223,5 +225,6 @@ export function DashShell({
         <div className="dash-scroll">{children}</div>
       </div>
     </div>
+    </ShortcutsProvider>
   );
 }

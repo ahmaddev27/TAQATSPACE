@@ -7,7 +7,7 @@ Multi-tenant coworking platform for Gaza — Arabic-first (RTL) + English. Today
 | | |
 |---|---|
 | **Platform** | Phases 1–4 + platform expansion + realtime (Firebase) + POS/café & cashier — **built** |
-| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 164 tasks, ≈ 138 working days (≈ 27.6 weeks)** |
+| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 168 tasks, ≈ 144 working days (≈ 28.8 weeks)** |
 | **Current milestone** | **M0 — Readiness & discovery** ([milestone](https://github.com/ahmaddev27/TAQATSPACE/milestone/1)) |
 | **Production** | 🟢 [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) — at PR #162 (2026-06-30). POS/cashier and later work are on `dev`, pending release R0 ([#186](https://github.com/ahmaddev27/TAQATSPACE/issues/186)) |
 | **Staging** | 🟢 [staging.taqat.space](https://staging.taqat.space) — deploys from `dev` |
@@ -33,11 +33,11 @@ Planning documents (in [`DOCS/new plan/`](DOCS/new%20plan/)):
 | [M2](https://github.com/ahmaddev27/TAQATSPACE/milestone/3) | MikroTik integration (router PUSH sync, installer, commands) | 14 | 14.5 | R1 |
 | [M3](https://github.com/ahmaddev27/TAQATSPACE/milestone/4) | Data engine: sessions, attendance, stats, scores, alerts | 12 | 12.5 | R1 |
 | [M4](https://github.com/ahmaddev27/TAQATSPACE/milestone/5) | Owner operations: dashboard, live monitor, members hub, contracts, bookings, stations | 17 | 16.25 | R2 |
-| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: plans, invoices, receipts, credit notes, wallet, VAT, imports (no payment gateway) | 23 | 19 | R2 |
+| [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: plans, invoices, receipts, credit notes, wallet, VAT, imports, platform hour packages (no payment gateway) | 25 | 22.25 | R2 |
 | [M6](https://github.com/ahmaddev27/TAQATSPACE/milestone/7) | GSG programme: UR engine, month close, UTR review, programs & claims | 14 | 14.75 | R3 |
-| [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, 19 reports, exports, report builder | 5 | 7.5 | R3 |
+| [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, 19 reports, workspace reports center, exports, report builder | 6 | 9.25 | R3 |
 | [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin: UTR approvals, funded seats, claims, approvals queue, router monitoring | 10 | 7.5 | R3 |
-| [M9](https://github.com/ahmaddev27/TAQATSPACE/milestone/10) | Freelancer portal: status, attendance, wallet, requests, devices | 10 | 6 | R4 |
+| [M9](https://github.com/ahmaddev27/TAQATSPACE/milestone/10) | Freelancer portal: status, attendance, wallet, my hours, requests, devices | 11 | 6.75 | R4 |
 | [M10](https://github.com/ahmaddev27/TAQATSPACE/milestone/11) | Public site `/s/{slug}`, site builder, hotspot guest self-registration | 8 | 5.5 | R4 |
 | [M11](https://github.com/ahmaddev27/TAQATSPACE/milestone/12) | End-to-end flows across all panels | 10 | 5 | R5 |
 | [M12](https://github.com/ahmaddev27/TAQATSPACE/milestone/13) | Hardening: security, performance, localization | 8 | 5.5 | R5 |
@@ -163,7 +163,7 @@ npm run dev                        # http://localhost:3000 (/ar default, /en)
 - **Services.** SMS gateways (HotSMS, MTC), S3 media, and Firebase (Firestore + FCM).
 - **Scheduler.** `invoices:generate-monthly`, `invoices:mark-overdue`, `invoices:remind-overdue`, `subscriptions:notify-expiring`, and a queue drain every minute. See [CRON_AND_NOTIFICATIONS.md](CRON_AND_NOTIFICATIONS.md).
 
-> **Billing model:** no payment gateway — payments happen offline and are recorded in the platform. Platform billing is admin-tracked (mark paid + receipt). Full workspace-owner finance (plans, invoices with lines, receipts, credit notes, wallet, VAT) arrives in M5.
+> **Billing model:** no payment gateway — payments happen offline and are recorded in the platform. Platform billing is admin-tracked (mark paid + receipt). Full workspace-owner finance (plans, invoices with lines, receipts, credit notes, wallet, VAT) and platform-wide hour packages arrive in M5.
 
 ---
 

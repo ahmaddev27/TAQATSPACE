@@ -274,6 +274,7 @@ return [
     // Two-factor authentication
     'two_factor_challenge_pending' => 'أكمل التحقق بخطوتين للمتابعة.',
     'two_factor_required' => 'يتطلب هذا الإجراء تحققاً حديثاً بخطوتين.',
+    'two_factor_enrollment_required' => 'فعّل المصادقة بخطوتين على حسابك قبل تنفيذ هذا الإجراء.',
     'two_factor_not_eligible' => 'المصادقة الثنائية غير متاحة لهذا النوع من الحسابات.',
     'two_factor_already_enabled' => 'المصادقة الثنائية مفعّلة بالفعل.',
     'two_factor_not_enabled' => 'المصادقة الثنائية غير مفعّلة.',
@@ -291,5 +292,7 @@ return [
     'operations_no_changes' => 'لا يوجد أي تغيير، لذلك لم يُنشأ طلب موافقة.',
     'router_not_found' => 'الراوتر غير موجود.',
     'router_install_token_issued' => 'تم إنشاء أمر التثبيت. صالح لمدة 30 دقيقة ويعمل مرة واحدة فقط.',
+    'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
+    'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',
 
 ];

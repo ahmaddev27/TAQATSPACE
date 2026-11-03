@@ -274,6 +274,7 @@ return [
     // Two-factor authentication
     'two_factor_challenge_pending' => 'Complete two-factor verification to continue.',
     'two_factor_required' => 'Recent two-factor verification is required for this action.',
+    'two_factor_enrollment_required' => 'Enable two-factor authentication on your account before performing this action.',
     'two_factor_not_eligible' => 'Two-factor authentication is not available for this account type.',
     'two_factor_already_enabled' => 'Two-factor authentication is already enabled.',
     'two_factor_not_enabled' => 'Two-factor authentication is not enabled.',
@@ -291,5 +292,7 @@ return [
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
     'router_not_found' => 'Router not found.',
     'router_install_token_issued' => 'Install command generated. It is valid for 30 minutes and works once.',
+    'workspace_reset_confirmation_mismatch' => 'Type the workspace slug exactly to confirm the reset.',
+    'workspace_reset_done' => 'The workspace was reset. Its operational data was deleted.',
 
 ];
