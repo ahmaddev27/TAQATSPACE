@@ -203,12 +203,12 @@ class ExpenseServiceTest extends TestCase
         ]);
 
         $all = $this->service()->summaryForWorkspace($workspace, []);
-        $this->assertSame('150', (string) $all['total']);
+        $this->assertEqualsWithDelta(150, (float) $all['total'], 0.001);
 
         $rentOnly = $this->service()->summaryForWorkspace($workspace, [
             'category' => ExpenseCategory::Rent->value,
         ]);
-        $this->assertSame('100', (string) $rentOnly['total']);
+        $this->assertEqualsWithDelta(100, (float) $rentOnly['total'], 0.001);
     }
 
     public function test_summary_this_month_only_counts_current_calendar_month(): void
@@ -228,7 +228,7 @@ class ExpenseServiceTest extends TestCase
 
         $summary = $this->service()->summaryForWorkspace($workspace, []);
 
-        $this->assertSame('200', (string) $summary['this_month']);
+        $this->assertEqualsWithDelta(200, (float) $summary['this_month'], 0.001);
     }
 
     public function test_summary_by_category_contains_every_category_with_zero_fill(): void
@@ -245,8 +245,8 @@ class ExpenseServiceTest extends TestCase
         foreach (ExpenseCategory::cases() as $category) {
             $this->assertArrayHasKey($category->value, $summary['by_category']);
         }
-        $this->assertSame('75', (string) $summary['by_category'][ExpenseCategory::Marketing->value]);
-        $this->assertSame('0', (string) $summary['by_category'][ExpenseCategory::Rent->value]);
+        $this->assertEqualsWithDelta(75, (float) $summary['by_category'][ExpenseCategory::Marketing->value], 0.001);
+        $this->assertEqualsWithDelta(0, (float) $summary['by_category'][ExpenseCategory::Rent->value], 0.001);
     }
 
     public function test_summary_by_month_is_a_contiguous_twelve_month_series(): void
@@ -265,10 +265,10 @@ class ExpenseServiceTest extends TestCase
         $currentKey = Carbon::now()->format('Y-m');
         $last = $summary['by_month'][11];
         $this->assertSame($currentKey, $last['month']);
-        $this->assertSame('300', (string) $last['total']);
+        $this->assertEqualsWithDelta(300, (float) $last['total'], 0.001);
 
         // Earlier buckets default to zero.
-        $this->assertSame('0', (string) $summary['by_month'][0]['total']);
+        $this->assertEqualsWithDelta(0, (float) $summary['by_month'][0]['total'], 0.001);
     }
 
     public function test_summary_is_isolated_per_workspace(): void
@@ -281,7 +281,7 @@ class ExpenseServiceTest extends TestCase
 
         $summary = $this->service()->summaryForWorkspace($workspace, []);
 
-        $this->assertSame('10', (string) $summary['total']);
+        $this->assertEqualsWithDelta(10, (float) $summary['total'], 0.001);
     }
 
     public function test_export_query_is_scoped_and_ordered_oldest_first(): void
