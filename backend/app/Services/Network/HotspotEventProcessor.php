@@ -6,6 +6,7 @@ namespace App\Services\Network;
 
 use App\Events\HotspotEventsProcessed;
 use App\Models\HotspotEvent;
+use App\Models\Router;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -18,15 +19,20 @@ class HotspotEventProcessor
 {
     public const BATCH_SIZE = 500;
 
-    public function __construct(private readonly DevicePresenceService $presence) {}
+    public function __construct(
+        private readonly DevicePresenceService $presence,
+        private readonly DeviceResolver $devices,
+    ) {}
 
     /** @return int number of events processed */
     public function process(string $routerId): int
     {
+        $router = Router::query()->withoutWorkspaceScope()->findOrFail($routerId);
         $total = 0;
 
         while (($events = $this->nextBatch($routerId))->isNotEmpty()) {
-            DB::transaction(function () use ($routerId, $events): void {
+            DB::transaction(function () use ($router, $routerId, $events): void {
+                $this->devices->resolveBatch($router, $events);
                 $this->presence->applyEvents($routerId, $events);
                 $this->markProcessed($events);
             });
