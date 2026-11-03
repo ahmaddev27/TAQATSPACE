@@ -7,6 +7,7 @@ namespace App\Services\Hotspot;
 use App\Enums\RouterStatus;
 use App\Models\Router;
 use App\Services\Router\RouterCommandService;
+use App\Services\Router\RouterSecurityService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ class HotspotSyncService
         private readonly RouterSnapshotStore $snapshots,
         private readonly SyncResponseBuilder $responses,
         private readonly RouterCommandService $commands,
+        private readonly RouterSecurityService $security,
     ) {}
 
     public function handle(Router $router, SyncPayload $payload): string
@@ -69,8 +71,12 @@ class HotspotSyncService
             }
 
             $this->touchRouter($router, $payload, $offset, $receivedAt);
+            $this->security->bindSerial($router, $payload->serial);
 
-            return $this->commands->syncCycle($router, $payload->acks, $commandBudget, $payload->mode === 'poll-only');
+            $lines = $this->commands->syncCycle($router, $payload->acks, $commandBudget, $payload->mode === 'poll-only');
+            $this->security->revokePreviousKeyIfConfirmed($router);
+
+            return $lines;
         });
     }
 
@@ -81,7 +87,6 @@ class HotspotSyncService
             'last_seen_at' => $receivedAt,
             'last_seq' => max((int) $router->last_seq, $payload->seq),
             'clock_offset_seconds' => $offset,
-            'serial_number' => $router->serial_number ?? $payload->serial,
             'routeros_version' => $payload->routerosVersion ?? $router->routeros_version,
             'script_version' => $payload->scriptVersion ?? $router->script_version,
         ]);
