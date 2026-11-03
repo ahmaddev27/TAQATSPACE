@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { loginSchema, type LoginValues } from "@/lib/validations/auth";
-import type { ClientAuthResult } from "@/lib/types/auth";
+import { isTwoFactorRequired, type ClientAuthResult, type ClientTwoFactorRequired } from "@/lib/types/auth";
 
 /**
  * Dedicated email/password sign-in for internal staff (admins). The public site
@@ -59,7 +59,14 @@ export function AdminLoginForm() {
         return;
       }
 
-      const result = (await res.json()) as ClientAuthResult;
+      const result = (await res.json()) as ClientAuthResult | ClientTwoFactorRequired;
+
+      // 2FA-protected account: the code is verified on the challenge page, which
+      // also applies the admin-only check once the session exists.
+      if (isTwoFactorRequired(result)) {
+        router.replace("/auth/two-factor");
+        return;
+      }
 
       // Staff entrance only: any non-admin is signed back out (clears the session
       // cookies just set) and told to use the unified login. We hit the logout

@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\Auth\AuthService;
 use App\Services\Auth\TaqatSsoService;
+use App\Services\Auth\TwoFactorService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +32,7 @@ class TaqatSsoController extends Controller
 
     public function __construct(
         private readonly TaqatSsoService $sso,
+        private readonly TwoFactorService $twoFactor,
     ) {}
 
     /** Kick off the flow: build the authorize URL and redirect the browser to the IdP. */
@@ -60,8 +63,15 @@ class TaqatSsoController extends Controller
             $exchanged = $this->sso->exchangeCode($code, $state);
             $user = $this->sso->findOrProvisionUser($exchanged['claims']);
 
-            $newToken = $user->createToken('sso');
+            // A user with 2FA gets a challenge-only token unless the IdP already
+            // asserted MFA; the SPA redeems it at /auth/two-factor/challenge.
+            $needsChallenge = $user->hasTwoFactorEnabled() && ! $this->sso->assertsMfa($exchanged['claims']);
+            $newToken = $user->createToken('sso', $needsChallenge ? [AuthService::PENDING_ABILITY] : ['*']);
             $token = $newToken->plainTextToken;
+
+            if ($user->hasTwoFactorEnabled() && ! $needsChallenge) {
+                $this->twoFactor->markTokenVerified($newToken->accessToken->getKey());
+            }
 
             // Keep the id_token server-side, keyed to this token, so logout can
             // perform RP-initiated single logout against the IdP.
@@ -72,6 +82,7 @@ class TaqatSsoController extends Controller
                 'token' => $token,
                 'role' => $user->role->value,
                 'user_id' => $user->id,
+                'two_factor_required' => $needsChallenge,
             ], self::EXCHANGE_TTL);
 
             // The finish page lives at /{locale}/taqat/finish — the (auth) route
@@ -104,6 +115,14 @@ class TaqatSsoController extends Controller
 
         if ($user === null) {
             return ApiResponse::error(__('messages.sso_user_not_found'), 401);
+        }
+
+        if (($entry['two_factor_required'] ?? false) === true) {
+            return ApiResponse::success([
+                'two_factor_required' => true,
+                'token' => $entry['token'],
+                'token_type' => 'Bearer',
+            ]);
         }
 
         return ApiResponse::success([

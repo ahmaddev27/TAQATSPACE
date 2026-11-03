@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { ProfileForm, type ProfileFormProps } from "./ProfileForm";
 import { ChangePasswordSection } from "./ChangePasswordSection";
@@ -15,6 +16,8 @@ export interface ProfileScreenProps {
    * password tab is hidden for them entirely.
    */
   canChangePassword?: boolean;
+  /** Show the entry to /settings/security (owner, staff and admin accounts only). */
+  showSecurityLink?: boolean;
 }
 
 /**
@@ -25,8 +28,13 @@ export interface ProfileScreenProps {
  * tabs. The container is width-constrained and centered so the form reads as a
  * focused account page rather than a full-bleed dashboard table.
  */
-export function ProfileScreen({ form, canChangePassword = false }: ProfileScreenProps) {
+export function ProfileScreen({
+  form,
+  canChangePassword = false,
+  showSecurityLink = false,
+}: ProfileScreenProps) {
   const t = useTranslations("profile");
+  const tSecurity = useTranslations("auth.twoFactor");
   const [tab, setTab] = useState<"info" | "password">("info");
 
   if (!canChangePassword) {
@@ -52,6 +60,11 @@ export function ProfileScreen({ form, canChangePassword = false }: ProfileScreen
       <div className="stack" style={{ gap: 4 }}>
         <h1 className="h1">{t("title")}</h1>
         <p className="muted">{t("subtitle")}</p>
+        {showSecurityLink && (
+          <Link className="link" href="/settings/security">
+            {tSecurity("manage")}
+          </Link>
+        )}
       </div>
 
       <Tabs items={tabs} value={tab} onChange={(id) => setTab(id as typeof tab)} />

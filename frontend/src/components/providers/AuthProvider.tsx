@@ -13,14 +13,20 @@ import { useRouter } from "@/i18n/navigation";
 import { dashboardFor } from "@/lib/auth";
 import { unregisterPush } from "@/lib/firebase/messaging";
 import { signOutFromChat } from "@/lib/firebase/chat";
-import type { ClientAuthResult, User, UserRole } from "@/lib/types/auth";
+import {
+  isTwoFactorRequired,
+  type ClientAuthResult,
+  type ClientTwoFactorRequired,
+  type User,
+  type UserRole,
+} from "@/lib/types/auth";
 
 interface AuthContextValue {
   user: User | null;
   role: UserRole | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<ClientAuthResult>;
+  login: (email: string, password: string, remember?: boolean) => Promise<ClientAuthResult | ClientTwoFactorRequired>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -79,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw err;
       }
 
-      const result = payload as ClientAuthResult;
+      const result = payload as ClientAuthResult | ClientTwoFactorRequired;
+      if (isTwoFactorRequired(result)) {
+        router.push("/auth/two-factor");
+        return result;
+      }
       setUser(result.user);
       router.push(dashboardFor(result.role));
       return result;

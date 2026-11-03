@@ -141,6 +141,21 @@ class TaqatSsoService
     }
 
     /**
+     * Whether the IdP vouches that the user completed multi-factor auth
+     * (`amr` contains "mfa"), making the local 2FA challenge redundant.
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    public function assertsMfa(array $claims): bool
+    {
+        if (! config('services.taqat_sso.trust_mfa_claim')) {
+            return false;
+        }
+
+        return is_array($claims['amr'] ?? null) && in_array('mfa', $claims['amr'], true);
+    }
+
+    /**
      * Mark a freshly-issued Sanctum access token as SSO-backed and stash the
      * `id_token` for later single logout. Keyed by the token's server-side id
      * (never the plaintext token), the id_token never reaches the browser.

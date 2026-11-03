@@ -47,6 +47,9 @@ export interface User {
   avatar: string | null;
   /** True only for the local email/password admin; false for SSO accounts. */
   can_change_password: boolean;
+  /** Owners, staff and admins may enroll in TOTP two-factor authentication. */
+  can_use_two_factor?: boolean;
+  two_factor_enabled?: boolean;
   email_verified_at: string | null;
   created_at: string;
   /** Present for admin accounts only: holds the elevated super-admin role. */
@@ -93,8 +96,26 @@ export interface AuthPayload {
   role: UserRole;
 }
 
+/** Backend payload when the account has 2FA: only a challenge-only token is issued. */
+export interface TwoFactorChallengePayload {
+  two_factor_required: true;
+  token: string;
+  token_type: string;
+}
+
 /** What our Next route handlers expose to the client (never the token). */
 export interface ClientAuthResult {
   user: User;
   role: UserRole;
+}
+
+/** Client-side outcome of a sign-in attempt that may require a 2FA challenge. */
+export interface ClientTwoFactorRequired {
+  two_factor_required: true;
+}
+
+export function isTwoFactorRequired(
+  result: ClientAuthResult | ClientTwoFactorRequired,
+): result is ClientTwoFactorRequired {
+  return "two_factor_required" in result && result.two_factor_required === true;
 }
