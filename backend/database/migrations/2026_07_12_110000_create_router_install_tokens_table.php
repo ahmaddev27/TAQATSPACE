@@ -20,7 +20,8 @@ return new class extends Migration
             $table->foreignUuid('router_id')->constrained('routers')->cascadeOnDelete();
             $table->string('token_hash', 64)->unique();
             $table->text('encrypted_key')->nullable();
-            $table->timestamp('expires_at');
+            // DATETIME: before MariaDB 10.10 the first NOT NULL TIMESTAMP is rewritten on every row update.
+            $table->dateTime('expires_at');
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
 
