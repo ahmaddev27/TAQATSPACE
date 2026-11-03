@@ -287,5 +287,7 @@ return [
     'approval_not_found' => 'طلب الموافقة غير موجود.',
     'operations_submitted' => 'تم إرسال تغييراتك للموافقة. ستُطبَّق بعد الموافقة عليها.',
     'operations_no_changes' => 'لا يوجد أي تغيير، لذلك لم يُنشأ طلب موافقة.',
+    'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
+    'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',
 
 ];
