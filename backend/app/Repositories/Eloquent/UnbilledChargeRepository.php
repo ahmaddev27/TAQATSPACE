@@ -25,7 +25,7 @@ class UnbilledChargeRepository
      */
     public function paginate(Workspace $workspace, array $filters): LengthAwarePaginator
     {
-        $query = UnbilledCharge::query()->with('customer:id,name')->where('workspace_id', $workspace->id);
+        $query = UnbilledCharge::query()->withoutWorkspaceScope()->with('customer:id,name')->where('workspace_id', $workspace->id);
 
         foreach (['customer_id', 'source', 'status'] as $column) {
             if (! empty($filters[$column])) {
@@ -41,7 +41,7 @@ class UnbilledChargeRepository
     /** @return Collection<int, UnbilledCharge> */
     public function openForCustomer(Workspace $workspace, string $customerId): Collection
     {
-        return UnbilledCharge::query()
+        return UnbilledCharge::query()->withoutWorkspaceScope()
             ->where('workspace_id', $workspace->id)
             ->where('customer_id', $customerId)
             ->where('status', UnbilledChargeStatus::Open->value)
@@ -51,13 +51,13 @@ class UnbilledChargeRepository
 
     public function find(Workspace $workspace, string $id): UnbilledCharge
     {
-        return UnbilledCharge::query()->with('customer:id,name')->where('workspace_id', $workspace->id)->find($id)
+        return UnbilledCharge::query()->withoutWorkspaceScope()->with('customer:id,name')->where('workspace_id', $workspace->id)->find($id)
             ?? throw (new ModelNotFoundException)->setModel(UnbilledCharge::class, [$id]);
     }
 
     public function findBySourceRef(Workspace $workspace, string $source, string $sourceRef): ?UnbilledCharge
     {
-        return UnbilledCharge::query()
+        return UnbilledCharge::query()->withoutWorkspaceScope()
             ->where('workspace_id', $workspace->id)
             ->where('source', $source)
             ->where('source_ref', $sourceRef)

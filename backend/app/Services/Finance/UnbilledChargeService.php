@@ -60,7 +60,7 @@ class UnbilledChargeService
     public function void(UnbilledCharge $charge, User $actor): UnbilledCharge
     {
         DB::transaction(function () use (&$charge): void {
-            $charge = UnbilledCharge::query()->lockForUpdate()->findOrFail($charge->id);
+            $charge = UnbilledCharge::query()->withoutWorkspaceScope()->lockForUpdate()->findOrFail($charge->id);
 
             if (! $charge->isOpen()) {
                 throw UnbilledChargeException::notOpen();
@@ -91,7 +91,7 @@ class UnbilledChargeService
         $ids = array_values(array_unique($ids));
 
         return DB::transaction(function () use ($workspace, $ids, $invoiceLineId): int {
-            $updated = UnbilledCharge::query()
+            $updated = UnbilledCharge::query()->withoutWorkspaceScope()
                 ->where('workspace_id', $workspace->id)
                 ->whereIn('id', $ids)
                 ->where('status', UnbilledChargeStatus::Open->value)

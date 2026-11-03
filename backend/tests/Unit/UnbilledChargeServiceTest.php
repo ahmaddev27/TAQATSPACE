@@ -10,6 +10,7 @@ use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Finance\UnbilledChargeService;
+use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,6 +30,8 @@ class UnbilledChargeServiceTest extends TestCase
         $this->service = app(UnbilledChargeService::class);
         $this->workspace = Workspace::factory()->create();
         $this->customer = User::factory()->create();
+        // Assertions read through the tenancy scope; the service itself must not need it.
+        app(CurrentWorkspaceContext::class)->set($this->workspace);
     }
 
     /**
