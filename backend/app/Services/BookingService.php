@@ -20,6 +20,7 @@ use App\Notifications\BookingApprovedNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Notifications\NewBookingRequestNotification;
 use App\Services\Audit\AuditLogger;
+use App\Services\Hotspot\HotspotAccountService;
 use App\Services\Partner\WebhookDispatcher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,7 @@ class BookingService
         private readonly PackageService $packages,
         private readonly InternetAccessService $internet,
         private readonly AuditLogger $audit,
+        private readonly HotspotAccountService $hotspot,
     ) {}
 
     /**
@@ -183,7 +185,7 @@ class BookingService
             // branded approval notification below carries the credentials — but
             // let it still send the SMS copy.
             $this->packages->assignMember($package, $booking->member_id);
-            $this->internet->provision($subscription, sendEmail: false);
+            $this->internet->provision($subscription, sendEmail: false, package: $package);
 
             $booking->member->notify(new BookingApprovedNotification(
                 $booking,
@@ -257,6 +259,8 @@ class BookingService
                 'status' => SubscriptionStatus::Cancelled->value,
                 'cancelled_at' => now(),
             ]);
+
+            $this->hotspot->suspend($subscription);
 
             return $subscription->refresh();
         });

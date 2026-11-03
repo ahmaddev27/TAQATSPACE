@@ -47,10 +47,12 @@ class BookingApprovedNotification extends Notification implements ShouldQueue
             "Your booking request to join {$name} has been approved.",
         ];
 
-        if ($this->subscription->internet_username !== null) {
+        $credentials = $this->subscription->internetCredentials();
+
+        if ($credentials !== null) {
             $lines[] = 'بيانات الدخول للإنترنت / Your internet login:';
-            $lines[] = "اسم المستخدم / Username: {$this->subscription->internet_username}";
-            $lines[] = "كلمة المرور / Password: {$this->subscription->internet_password_enc}";
+            $lines[] = "اسم المستخدم / Username: {$credentials['username']}";
+            $lines[] = "كلمة المرور / Password: {$credentials['password']}";
         }
 
         return $this->workspaceMail(

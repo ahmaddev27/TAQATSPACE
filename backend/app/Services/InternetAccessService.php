@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Jobs\SendBroadcastMessage;
+use App\Models\InternetPackage;
 use App\Models\Subscription;
-use Illuminate\Support\Str;
+use App\Services\Hotspot\HotspotAccountService;
 
 /**
  * Issues internet-access credentials (username/password) for a subscription and
  * delivers them to the member by email and SMS using the workspace's configured
- * messaging accounts. Provisioning the credentials on the actual router is a
- * later phase — this service owns generation, storage and delivery only.
+ * messaging accounts. The credentials live in the subscription's hotspot account
+ * (HotspotAccountService), which also pushes them to the workspace's routers.
  */
 class InternetAccessService
 {
     public function __construct(
         private readonly MessagingSettingsService $settings,
+        private readonly HotspotAccountService $accounts,
     ) {}
 
     /**
@@ -25,23 +27,18 @@ class InternetAccessService
      *
      * @return array{username: string, password: string, sent_email: bool, sent_sms: bool}
      */
-    public function provision(Subscription $subscription, bool $sendEmail = true): array
+    public function provision(Subscription $subscription, bool $sendEmail = true, ?InternetPackage $package = null): array
     {
         $subscription->loadMissing('member', 'workspace');
 
-        $username = $subscription->internet_username ?? $this->uniqueUsername($subscription);
         $password = $this->randomPassword();
+        $account = $this->accounts->provision($subscription, $password, $package);
+        $subscription->unsetRelation('hotspotAccount');
 
-        $subscription->forceFill([
-            'internet_username' => $username,
-            'internet_password_enc' => $password, // 'encrypted' cast stores it ciphered
-            'internet_provisioned_at' => now(),
-        ])->save();
-
-        $delivery = $this->deliver($subscription, $username, $password, $sendEmail);
+        $delivery = $this->deliver($subscription, $account->username, $password, $sendEmail);
 
         return [
-            'username' => $username,
+            'username' => $account->username,
             'password' => $password,
             'sent_email' => $delivery['email'],
             'sent_sms' => $delivery['sms'],
@@ -88,33 +85,6 @@ class InternetAccessService
         }
 
         return ['email' => $sentEmail, 'sms' => $sentSms];
-    }
-
-    /**
-     * A stable, readable username derived from the member, made unique across
-     * subscriptions by appending a short suffix on collision.
-     */
-    private function uniqueUsername(Subscription $subscription): string
-    {
-        $member = $subscription->member;
-        $base = Str::of((string) ($member?->name ?? $member?->email ?? 'user'))
-            ->lower()
-            ->ascii()
-            ->replaceMatches('/[^a-z0-9]/', '')
-            ->substr(0, 12)
-            ->value();
-
-        if ($base === '') {
-            $base = 'user';
-        }
-
-        $candidate = $base;
-
-        while (Subscription::query()->where('internet_username', $candidate)->exists()) {
-            $candidate = $base.Str::lower(Str::random(3));
-        }
-
-        return $candidate;
     }
 
     /** A short, human-typeable password (no easily-confused characters). */

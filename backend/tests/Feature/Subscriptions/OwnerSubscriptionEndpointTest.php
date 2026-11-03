@@ -220,7 +220,7 @@ class OwnerSubscriptionEndpointTest extends TestCase
                 'message',
             ]);
 
-        $this->assertNotNull($subscription->refresh()->internet_provisioned_at);
+        $this->assertDatabaseHas("hotspot_accounts", ["subscription_id" => $subscription->id]);
     }
 
     public function test_owner_cannot_provision_internet_for_a_foreign_subscription(): void

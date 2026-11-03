@@ -6,6 +6,7 @@ namespace Tests\Feature\Internet;
 
 use App\Enums\SubscriptionStatus;
 use App\Jobs\SendBroadcastMessage;
+use App\Models\HotspotAccount;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -46,14 +47,14 @@ class InternetAccessTest extends TestCase
         $this->assertNotEmpty($result['username']);
         $this->assertSame(8, strlen($result['password']));
 
-        $subscription->refresh();
-        $this->assertSame($result['username'], $subscription->internet_username);
-        $this->assertNotNull($subscription->internet_provisioned_at);
+        $account = HotspotAccount::query()->withoutWorkspaceScope()->where('subscription_id', $subscription->id)->firstOrFail();
+        $this->assertSame($result['username'], $account->username);
+        $this->assertNotNull($account->provisioned_at);
         // The cast returns the plaintext back...
-        $this->assertSame($result['password'], $subscription->internet_password_enc);
+        $this->assertSame($result['password'], $account->password_enc);
 
         // ...but the column itself is ciphered, never the plaintext.
-        $raw = DB::table('subscriptions')->where('id', $subscription->id)->value('internet_password_enc');
+        $raw = DB::table('hotspot_accounts')->where('id', $account->id)->value('password_enc');
         $this->assertNotSame($result['password'], $raw);
         $this->assertSame($result['password'], Crypt::decryptString($raw));
     }
