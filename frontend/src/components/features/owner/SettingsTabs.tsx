@@ -19,6 +19,7 @@ import { PhotoManager } from "./PhotoManager";
 import { LogoManager } from "./LogoManager";
 import { MessagingTab } from "./MessagingTab";
 import { DomainTab } from "./DomainTab";
+import { DangerTab } from "./DangerTab";
 import { OperationsTab } from "./OperationsTab";
 
 const API_BASE =
@@ -219,6 +220,7 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
     { id: "operations", label: t("settings.tabOperations") },
     { id: "messaging", label: tm("tab") },
     { id: "domain", label: t("settings.tabDomain") },
+    { id: "danger", label: t("settings.tabDanger") },
   ];
 
   return (
@@ -494,9 +496,11 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
             publicUrl={workspace.urls.public}
           />
         )}
+
+        {tab === "danger" && workspace.slug && <DangerTab slug={workspace.slug} />}
       </div>
 
-      {tab !== "photos" && tab !== "operations" && tab !== "messaging" && tab !== "domain" && (
+      {!["photos", "operations", "messaging", "domain", "danger"].includes(tab) && (
         <Button
           variant="primary"
           icon="check"
