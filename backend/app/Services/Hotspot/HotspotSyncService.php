@@ -6,6 +6,7 @@ namespace App\Services\Hotspot;
 
 use App\Enums\RouterStatus;
 use App\Models\Router;
+use App\Services\Router\RouterCommandService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,10 @@ use Illuminate\Support\Str;
  * Handles one router sync batch: stores the raw events and snapshot chunk in a
  * single transaction (never via the queue) and answers with the plain-text
  * reply. The reply for a (router, batch_id) pair is cached so a retried batch
- * gets the identical answer without being processed twice. The reply echoes
- * the nonce the router sent; JSON callers without one get a random value.
+ * gets the identical answer without being processed twice. The same
+ * transaction applies the batch's acknowledgements and claims the queued
+ * commands (RouterCommandService). The reply echoes the nonce the router
+ * sent; JSON callers without one get a random value.
  */
 class HotspotSyncService
 {
@@ -26,6 +29,7 @@ class HotspotSyncService
         private readonly HotspotEventStore $events,
         private readonly RouterSnapshotStore $snapshots,
         private readonly SyncResponseBuilder $responses,
+        private readonly RouterCommandService $commands,
     ) {}
 
     public function handle(Router $router, SyncPayload $payload): string
@@ -38,22 +42,26 @@ class HotspotSyncService
             return $cached;
         }
 
-        $this->persist($router, $payload, now());
+        $nonce = $payload->nonce ?? Str::lower(Str::random(16));
+        $commands = $this->persist($router, $payload, now(), SyncResponseBuilder::commandBudget($nonce));
 
-        $response = $this->responses->build($payload->nonce ?? Str::lower(Str::random(16)));
+        $response = $this->responses->build($nonce, $commands);
 
         Cache::put($cacheKey, $response, now()->addMinutes(self::RESPONSE_TTL_MINUTES));
 
         return $response;
     }
 
-    private function persist(Router $router, SyncPayload $payload, CarbonInterface $receivedAt): void
+    /**
+     * @return list<string> the `C|` lines for the reply
+     */
+    private function persist(Router $router, SyncPayload $payload, CarbonInterface $receivedAt, int $commandBudget): array
     {
         // Routers without a clock battery drift after power cuts: shift every
         // router timestamp by the difference between server and router "now".
         $offset = $receivedAt->getTimestamp() - $payload->routerNow;
 
-        DB::transaction(function () use ($router, $payload, $receivedAt, $offset): void {
+        return DB::transaction(function () use ($router, $payload, $receivedAt, $offset, $commandBudget): array {
             $this->events->store($router, $payload, $payload->events, $offset, $receivedAt);
 
             if ($payload->snapshot !== null) {
@@ -61,6 +69,8 @@ class HotspotSyncService
             }
 
             $this->touchRouter($router, $payload, $offset, $receivedAt);
+
+            return $this->commands->syncCycle($router, $payload->acks, $commandBudget, $payload->mode === 'poll-only');
         });
     }
 

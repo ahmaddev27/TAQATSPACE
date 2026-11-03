@@ -15,6 +15,13 @@ final class SyncResponseBuilder
 
     public const MAX_BYTES = 4096;
 
+    /** Bytes left for `C|` lines once the header is in. */
+    public static function commandBudget(string $nonce): int
+    {
+        return self::MAX_BYTES - strlen(self::HEADER.' '.$nonce."
+");
+    }
+
     /**
      * @param  list<string>  $commands
      */
