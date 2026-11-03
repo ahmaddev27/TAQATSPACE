@@ -59,6 +59,62 @@
       "cancel": "Cancel",
       "save": "Save",
       "error": "Something went wrong"
+    },
+    "plans": {
+      "title": "Plans",
+      "subtitle": "Pricing plans for your workspace: fixed periods, hourly, per GB or bundles.",
+      "add": "Add plan",
+      "empty": "No plans yet.",
+      "createTitle": "New plan",
+      "editTitle": "Edit plan",
+      "created": "Plan created",
+      "updated": "Plan updated",
+      "archived": "Plan archived",
+      "removed": "Plan deleted",
+      "removeTitle": "Delete plan",
+      "removeConfirm": "Delete \"{name}\"? A plan already in use is archived instead and existing subscriptions are not affected.",
+      "promo": "Promo",
+      "dedicated": "Dedicated",
+      "dedicatedHint": "Reserve a dedicated seat for subscribers",
+      "dedicatedNotAllowed": "A dedicated seat is only available on monthly, weekly and bundle plans.",
+      "codeLocked": "The code cannot be changed after creation.",
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "nameAr": "Name (Arabic)",
+        "nameEn": "Name (English)",
+        "method": "Pricing method",
+        "price": "Price",
+        "overagePrice": "Overage price",
+        "includedHours": "Included hours",
+        "includedGb": "Included GB",
+        "validityDays": "Validity (days)",
+        "promoPrice": "Promo price",
+        "promoUntil": "Promo ends on",
+        "dedicatedSeat": "Dedicated seat"
+      },
+      "methods": {
+        "monthly": "Monthly",
+        "weekly": "Weekly",
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "per_gb": "Per GB",
+        "bundle": "Bundle"
+      },
+      "priceLabels": {
+        "monthly": "Monthly price",
+        "weekly": "Weekly price",
+        "daily": "Daily price",
+        "hourly": "Price per hour",
+        "per_gb": "Price per GB",
+        "bundle": "Bundle price"
+      },
+      "edit": "Edit",
+      "archive": "Archive",
+      "remove": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
     }
   }
 }

@@ -309,6 +309,13 @@ return [
     'catalog_item_created' => 'تم إنشاء العنصر.',
     'catalog_item_updated' => 'تم تحديث العنصر.',
     'catalog_item_archived' => 'تمت أرشفة العنصر.',
+    'plan_created' => 'تم إنشاء الخطة.',
+    'plan_updated' => 'تم تحديث الخطة.',
+    'plan_archived' => 'تمت أرشفة الخطة.',
+    'plan_deleted' => 'تم حذف الخطة.',
+    'plan_archived_read_only' => 'لا يمكن تعديل خطة مؤرشفة.',
+    'plan_dedicated_seat_not_allowed' => 'المقعد المخصص متاح فقط للخطط الشهرية أو الأسبوعية أو الباقات.',
+    'plan_not_found' => 'الخطة غير موجودة.',
     'feature_not_found' => 'غير موجود.',
 
 ];
