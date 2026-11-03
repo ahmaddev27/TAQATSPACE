@@ -20,7 +20,12 @@ use Illuminate\Support\Facades\DB;
  */
 class OperationsSettingsService
 {
-    private const CAPACITY_COLUMNS = ['capacity' => 0, 'enabled' => true];
+    // A type without a row is "disabled, no capacity", which is what the form shows for it.
+    private const CAPACITY_COLUMNS = ['capacity' => 0, 'enabled' => false];
+
+    private const DAYS = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+    private const DEFAULT_OPENING = ['open' => false, 'from' => '09:00', 'to' => '18:00'];
 
     private const PRICING_COLUMNS = ['price_monthly' => null, 'price_daily' => null];
 
@@ -73,7 +78,7 @@ class OperationsSettingsService
                 'tax_rate' => $this->changed($data, 'tax_rate', $workspace->tax_rate),
             ]),
             ApprovalType::WorkingHours->value => $this->withoutEmpty([
-                'working_hours' => $this->changed($data, 'working_hours', $workspace->working_hours),
+                'working_hours' => $this->changedHours($data, $workspace->working_hours),
             ]),
         ];
 
@@ -143,6 +148,45 @@ class OperationsSettingsService
         }
 
         return $this->same($data[$key], $live) || $data[$key] == $live ? null : $data[$key];
+    }
+
+    /**
+     * Compared in the form's own shape (all seven days, defaults filled in) so a
+     * form submitted untouched never counts as a change, whatever shape is stored.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>|null  $live
+     * @return array<string, mixed>|null
+     */
+    private function changedHours(array $data, ?array $live): ?array
+    {
+        $proposed = $data['working_hours'] ?? null;
+
+        if ($proposed === null) {
+            return null;
+        }
+
+        return $this->normalizeHours($proposed) === $this->normalizeHours($live) ? null : $proposed;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $hours
+     * @return array<string, array{open: bool, from: string, to: string}>
+     */
+    private function normalizeHours(?array $hours): array
+    {
+        $normalized = [];
+
+        foreach (self::DAYS as $day) {
+            $entry = is_array($hours[$day] ?? null) ? $hours[$day] : [];
+            $normalized[$day] = [
+                'open' => (bool) ($entry['open'] ?? self::DEFAULT_OPENING['open']),
+                'from' => (string) ($entry['from'] ?? self::DEFAULT_OPENING['from']),
+                'to' => (string) ($entry['to'] ?? self::DEFAULT_OPENING['to']),
+            ];
+        }
+
+        return $normalized;
     }
 
     /**

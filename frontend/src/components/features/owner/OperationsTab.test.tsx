@@ -60,6 +60,22 @@ describe("OperationsTab", () => {
     expect(sent.seat_types[0]).toMatchObject({ type: "flexible", capacity: 30, price_monthly: 100 });
   });
 
+  it("submits the full form as the backend compares it: 3 seat types and 7 days, even for sparse live data", async () => {
+    const user = userEvent.setup();
+    render(<OperationsTab workspace={workspace} pending={[]} />);
+    await user.click(screen.getByRole("button", { name: "operations.submit" }));
+
+    await waitFor(() => expect(submitOperationsSettings).toHaveBeenCalled());
+    const sent = submitOperationsSettings.mock.calls[0][0];
+    expect(sent.seat_types).toEqual([
+      { type: "flexible", capacity: 10, price_monthly: 100, price_daily: null, enabled: true },
+      { type: "fixed", capacity: 0, price_monthly: null, price_daily: null, enabled: false },
+      { type: "private_office", capacity: 0, price_monthly: null, price_daily: null, enabled: false },
+    ]);
+    expect(Object.keys(sent.working_hours)).toHaveLength(7);
+    expect(sent.working_hours.saturday).toEqual({ open: false, from: "09:00", to: "18:00" });
+  });
+
   it("shows server validation errors for the tax rate", async () => {
     submitOperationsSettings.mockResolvedValue({ ok: false, message: "x", errors: { tax_rate: ["too high"] } });
     const user = userEvent.setup();

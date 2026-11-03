@@ -189,6 +189,70 @@ class OperationsSettingsTest extends TestCase
         $this->assertSame(0, ApprovalRequest::query()->count());
     }
 
+    /** @return array<string, array<string, mixed>> */
+    private function untouchedFormHours(): array
+    {
+        $hours = [];
+        foreach (['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as $day) {
+            $hours[$day] = ['open' => false, 'from' => '09:00', 'to' => '18:00'];
+        }
+
+        return $hours;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function untouchedFormSeatTypes(): array
+    {
+        return [
+            $this->row(),
+            ['type' => 'fixed', 'capacity' => 0, 'price_monthly' => null, 'price_daily' => null, 'enabled' => false],
+            ['type' => 'private_office', 'capacity' => 0, 'price_monthly' => null, 'price_daily' => null, 'enabled' => false],
+        ];
+    }
+
+    public function test_an_untouched_full_form_creates_nothing_for_null_hours_and_missing_seat_rows(): void
+    {
+        $this->workspace->update(['working_hours' => null]);
+
+        $this->putJson(self::URL, [
+            'seat_types' => $this->untouchedFormSeatTypes(),
+            'working_hours' => $this->untouchedFormHours(),
+            'tax_rate' => (float) $this->workspace->tax_rate,
+        ])->assertOk()->assertJsonCount(0, 'data.requests');
+
+        $this->assertSame(0, ApprovalRequest::query()->count());
+    }
+
+    public function test_an_untouched_full_form_ignores_foreign_shaped_stored_hours(): void
+    {
+        $this->workspace->update(['working_hours' => ['general' => '9-5']]);
+
+        $this->putJson(self::URL, ['working_hours' => $this->untouchedFormHours()])
+            ->assertOk()->assertJsonCount(0, 'data.requests');
+
+        $this->assertSame(0, ApprovalRequest::query()->count());
+    }
+
+    public function test_an_untouched_full_form_ignores_partially_stored_hours(): void
+    {
+        $hours = $this->untouchedFormHours();
+        $hours['saturday']['open'] = true;
+
+        $this->putJson(self::URL, ['working_hours' => $hours])->assertOk()->assertJsonCount(0, 'data.requests');
+        $this->assertSame(0, ApprovalRequest::query()->count());
+    }
+
+    public function test_enabling_a_seat_type_without_a_row_still_creates_a_capacity_request(): void
+    {
+        $rows = $this->untouchedFormSeatTypes();
+        $rows[1] = ['type' => 'fixed', 'capacity' => 4, 'price_monthly' => null, 'price_daily' => null, 'enabled' => true];
+
+        $this->putJson(self::URL, ['seat_types' => $rows])
+            ->assertStatus(202)
+            ->assertJsonCount(1, 'data.requests')
+            ->assertJsonPath('data.requests.0.type', 'capacity');
+    }
+
     public function test_tax_rate_must_be_between_zero_and_one_hundred(): void
     {
         $this->putJson(self::URL, ['tax_rate' => 100.5])->assertUnprocessable()->assertJsonValidationErrors('tax_rate');
