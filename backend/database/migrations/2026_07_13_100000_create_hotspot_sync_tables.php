@@ -26,7 +26,8 @@ return new class extends Migration
             $table->string('ip', 45)->nullable();
             $table->string('username', 100)->nullable();
             $table->json('data')->nullable();
-            $table->timestamp('occurred_at');
+            // DATETIME: before MariaDB 10.10 the first NOT NULL TIMESTAMP is rewritten on every row update.
+            $table->dateTime('occurred_at');
             $table->timestamp('received_at')->useCurrent();
 
             $table->unique(['router_id', 'event_uid']);
@@ -39,7 +40,8 @@ return new class extends Migration
             $table->string('snapshot_id', 64);
             $table->unsignedSmallInteger('total_chunks');
             $table->unsignedSmallInteger('received_chunks')->default(0);
-            $table->timestamp('taken_at');
+            // DATETIME: before MariaDB 10.10 the first NOT NULL TIMESTAMP is rewritten on every row update.
+            $table->dateTime('taken_at');
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
