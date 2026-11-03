@@ -39,6 +39,7 @@
 
 # Replaces one of our own system scripts after verifying the sha256 of the downloaded source.
 :global cwsUpdateScript do={
+  :global cwsKey
   :local url "{{SYNC_URL}}/api/v1/hotspot/{{ROUTER_CODE}}/scripts/$1"
   :local res ""
   :do {
