@@ -14,27 +14,19 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Admin\ReportsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\EmulatesMysqlDateFormat;
 use Tests\TestCase;
 
 class ReportsServiceTest extends TestCase
 {
     use RefreshDatabase;
+    use EmulatesMysqlDateFormat;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // The service uses MySQL DATE_FORMAT for its month buckets. Register an
-        // equivalent UDF on the in-memory sqlite connection so the production
-        // query runs unchanged under test (only the '%Y-%m' bucket is used).
-        $pdo = \DB::connection()->getPdo();
-        $pdo->sqliteCreateFunction('DATE_FORMAT', static function (?string $date, string $format): ?string {
-            if ($date === null) {
-                return null;
-            }
-
-            return date(strtr($format, ['%Y' => 'Y', '%m' => 'm', '%d' => 'd']), strtotime($date));
-        });
+        $this->emulateMysqlDateFormat();
     }
 
     private function service(): ReportsService
