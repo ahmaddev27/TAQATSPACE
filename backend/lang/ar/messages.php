@@ -290,5 +290,14 @@ return [
     'operations_no_changes' => 'لا يوجد أي تغيير، لذلك لم يُنشأ طلب موافقة.',
     'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
     'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',
+    'hour_package_created' => 'تم إنشاء باقة الساعات.',
+    'hour_package_updated' => 'تم تحديث باقة الساعات.',
+    'hour_package_archived' => 'تمت أرشفة باقة الساعات.',
+    'hour_purchase_activated' => 'تم تفعيل الشراء وإضافة الساعات.',
+    'hour_purchase_cancelled' => 'تم إلغاء الشراء.',
+    'hour_purchase_not_requested' => 'تم تفعيل هذا الشراء أو إلغاؤه مسبقاً.',
+    'hour_package_unavailable' => 'هذه الباقة مؤرشفة ولا يمكن طلبها.',
+    'hour_adjustment_recorded' => 'تم تعديل رصيد الساعات.',
+    'hour_adjustment_negative_balance' => 'هذا التعديل سيجعل الرصيد سالباً.',
 
 ];
