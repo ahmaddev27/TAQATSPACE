@@ -25,6 +25,8 @@ class ListExpensesRequest extends FormRequest
     {
         return [
             'category' => ['nullable', 'string', Rule::in([...ExpenseCategory::values(), 'all'])],
+            'catalog_category_id' => ['nullable', 'uuid'],
+            'include_voided' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
