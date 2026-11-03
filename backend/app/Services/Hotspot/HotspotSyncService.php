@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Hotspot;
 
 use App\Enums\RouterStatus;
+use App\Jobs\ProcessRouterBatch;
 use App\Models\Router;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Handles one router sync batch: stores the raw events and snapshot chunk in a
@@ -39,12 +41,26 @@ class HotspotSyncService
         }
 
         $this->persist($router, $payload, now());
+        $this->dispatchProcessing($router);
 
         $response = $this->responses->build($payload->nonce ?? Str::lower(Str::random(16)));
 
         Cache::put($cacheKey, $response, now()->addMinutes(self::RESPONSE_TTL_MINUTES));
 
         return $response;
+    }
+
+    /**
+     * The batch is already stored, so a queue outage must not fail the sync:
+     * the per-minute fallback picks the unprocessed rows up later.
+     */
+    private function dispatchProcessing(Router $router): void
+    {
+        try {
+            ProcessRouterBatch::dispatch((string) $router->getKey());
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private function persist(Router $router, SyncPayload $payload, CarbonInterface $receivedAt): void

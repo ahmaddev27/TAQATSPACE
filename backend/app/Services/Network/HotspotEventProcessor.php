@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Network;
+
+use App\Events\HotspotEventsProcessed;
+use App\Models\HotspotEvent;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Turns stored raw events into state. Each batch is applied and marked
+ * `processed_at` in one transaction, so a failure leaves the batch untouched
+ * for the next run and re-running never applies an event twice.
+ */
+class HotspotEventProcessor
+{
+    public const BATCH_SIZE = 500;
+
+    public function __construct(private readonly DevicePresenceService $presence) {}
+
+    /** @return int number of events processed */
+    public function process(string $routerId): int
+    {
+        $total = 0;
+
+        while (($events = $this->nextBatch($routerId))->isNotEmpty()) {
+            DB::transaction(function () use ($routerId, $events): void {
+                $this->presence->applyEvents($routerId, $events);
+                $this->markProcessed($events);
+            });
+
+            // Session building (3.3) listens for this hand-off.
+            HotspotEventsProcessed::dispatch($routerId, $events->pluck('id')->all());
+            $total += $events->count();
+        }
+
+        return $total;
+    }
+
+    /** @return Collection<int, HotspotEvent> */
+    private function nextBatch(string $routerId): Collection
+    {
+        return HotspotEvent::query()
+            ->where('router_id', $routerId)
+            ->whereNull('processed_at')
+            ->orderBy('id')
+            ->limit(self::BATCH_SIZE)
+            ->get();
+    }
+
+    /** @param Collection<int, HotspotEvent> $events */
+    private function markProcessed(Collection $events): void
+    {
+        HotspotEvent::query()->whereIn('id', $events->pluck('id'))->update(['processed_at' => now()]);
+    }
+}
