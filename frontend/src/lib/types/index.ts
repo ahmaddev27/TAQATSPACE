@@ -71,6 +71,9 @@ export type {
 /* -------------------------------------------------------------------------- */
 
 export type SeatType = "fixed" | "flexible" | "private_office";
+
+/** How members get a desk: assigned (fixed) or any free one (flexible). */
+export type SeatingMode = "fixed" | "flexible";
 export type SeatStatus = "available" | "occupied" | "reserved" | "maintenance";
 export type PlanType = "monthly" | "daily" | "custom";
 export type SubscriptionStatus =
@@ -225,6 +228,9 @@ export interface Workspace {
   currency?: string;
   wifi_ssid?: string | null;
   wifi_password?: string | null;
+  /** Operations settings; changes go through an approval request. Owner/admin payloads only. */
+  seating_mode?: SeatingMode;
+  tax_rate?: string | null;
   /** Absolute dashboard and public-site links; owner/admin payloads only. */
   urls?: { dashboard: string; public: string };
   avg_rating: number | null;

@@ -11,11 +11,13 @@ import type {
   Package,
   Seat,
   SeatType,
+  SeatingMode,
   SubscriptionStatus,
   Workspace,
   WorkspaceMessagingConfig,
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
+import type { ApprovalRequestEntry } from "@/lib/types/approvals";
 import type {
   Expense,
   ExpenseCategory,
@@ -342,7 +344,6 @@ export interface WorkspaceSettingsInput {
   latitude?: number | null;
   longitude?: number | null;
   amenities?: string[];
-  working_hours?: Record<string, unknown> | null;
 }
 
 export async function updateSettings(
@@ -363,7 +364,7 @@ export async function updateSettings(
 /*  Seat types & pricing                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** A single per-seat-type pricing row submitted to `PUT /workspace/seat-types`. */
+/** A single per-seat-type row submitted with the operations settings. */
 export interface SeatTypeInput {
   type: SeatType;
   price_monthly: number | null;
@@ -372,21 +373,37 @@ export interface SeatTypeInput {
   enabled: boolean;
 }
 
+export interface OperationsSettingsInput {
+  seat_types: SeatTypeInput[];
+  seating_mode: SeatingMode;
+  working_hours: Record<string, unknown>;
+  tax_rate: number;
+}
+
 /**
- * Upsert the owner's per-seat-type pricing. The backend returns the refreshed
- * workspace (all rows), so the page can re-render from authoritative data.
+ * Submit the Operations tab for approval (`PUT /workspace/settings/operations`).
+ * Nothing is applied until a platform admin approves; the response lists the
+ * requests that were created (empty when nothing changed).
  */
-export async function updateSeatTypes(
-  rows: SeatTypeInput[],
-): Promise<ActionResult<Workspace>> {
-  const result = await authedMutate<Workspace>("/workspace/seat-types", {
-    method: "PUT",
-    body: { seat_types: rows },
-  });
-  if (result.ok) {
-    revalidateOwner("settings");
-    revalidateOwner("");
-  }
+export async function submitOperationsSettings(
+  input: OperationsSettingsInput,
+): Promise<ActionResult<{ requests: ApprovalRequestEntry[] }>> {
+  const result = await authedMutate<{ requests: ApprovalRequestEntry[] }>(
+    "/workspace/settings/operations",
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
+/** Withdraw one of the owner's own pending requests. */
+export async function cancelApprovalRequest(
+  id: string,
+): Promise<ActionResult<ApprovalRequestEntry>> {
+  const result = await authedMutate<ApprovalRequestEntry>(
+    `/workspace/approvals/${encodeURIComponent(id)}/cancel`,
+  );
+  if (result.ok) revalidateOwner("settings");
   return result;
 }
 
