@@ -50,7 +50,22 @@ CWS-SYNC <nonce>
 C|command_id|verb|arg1|arg2|arg3
 ```
 
-The first line echoes the request nonce; `interpreter.rsc` drops the whole reply otherwise. Resending a `batch_id` returns the identical cached reply and stores nothing new (10 minutes). `C|` lines are produced by the command queue (task 2.5).
+The first line echoes the request nonce; `interpreter.rsc` drops the whole reply otherwise. Resending a `batch_id` returns the identical cached reply and stores nothing new (10 minutes). `C|` lines are produced by the command queue (`RouterCommandService`, task 2.5).
+
+### Command queue
+
+`command_id` is the UUID of the `router_commands` row. Arguments are positional, a missing optional one is left empty, and no value can hold `|` or a line break (the server validates them with the same patterns `interpreter.rsc` applies):
+
+| Verb | arg1 | arg2 | arg3 |
+|---|---|---|---|
+| `upsert-user` | user name | password | profile (optional) |
+| `disable-user`, `remove-active` | user name | | |
+| `block-mac` | MAC, upper case | | |
+| `upsert-profile` | profile name | rate limit (may be empty) | |
+| `set-key` | new key, 32-96 lower case hex | | |
+| `update-script` | system script name | sha256 of the rendered script | |
+
+Lifecycle: `requested` -> `delivered` (sent in a reply) -> `acknowledged` (`A|id|ok` in a later batch). Any other `A|id|reason` marks it `failed` with the reason in `error`. A delivered command that is not acknowledged within 3 syncs is sent again, up to 5 sends, then `failed` (`unacknowledged`). After its ttl (default 60 minutes) a command is `expired` and never sent. Oldest commands go first and only whole lines that fit the 4 KB reply are sent; a `poll-only` router only receives `set-key` and `update-script`. Acknowledgements for unknown ids, other routers' commands or commands no longer delivered are ignored, so a duplicate `A` line changes nothing.
 
 ## Limits
 

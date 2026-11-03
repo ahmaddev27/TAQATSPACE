@@ -32,6 +32,9 @@ Schedule::command('router-snapshots:prune')->dailyAt('03:15');
 // itself; this catches runs that were lost or failed.
 Schedule::command('router-data:process-pending')->everyMinute()->withoutOverlapping();
 
+// Router commands nobody acknowledged before their ttl must stop being resent.
+Schedule::command('router-commands:expire')->everyFiveMinutes();
+
 // Drain queued jobs (emails, SMS broadcasts, push + DB notifications) every
 // minute. The queue connection is `database` and shared hosting has no
 // persistent worker, so we process the backlog from the scheduler instead:

@@ -112,7 +112,7 @@ class AuditLogTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data.logs')
             ->assertJsonPath('data.meta.last_page', 3);
-        $actorQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'from "users" where "users"."id" in'));
+        $actorQueries = collect(DB::getQueryLog())->filter(fn ($q) => preg_match('/from [`"]users[`"] where [`"]users[`"]\.[`"]id[`"] in/', $q['query']));
 
         $this->assertCount(1, $actorQueries);
     }

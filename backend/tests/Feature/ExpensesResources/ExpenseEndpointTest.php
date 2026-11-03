@@ -11,31 +11,19 @@ use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\EmulatesMysqlDateFormat;
 use Tests\TestCase;
 
 class ExpenseEndpointTest extends TestCase
 {
     use RefreshDatabase;
+    use EmulatesMysqlDateFormat;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // The expense summary buckets months with MySQL's DATE_FORMAT, which
-        // sqlite lacks — register an equivalent UDF so /index runs end-to-end.
-        DB::connection()->getPdo()->sqliteCreateFunction(
-            'DATE_FORMAT',
-            static function (?string $date, string $format): ?string {
-                if ($date === null) {
-                    return null;
-                }
-
-                $php = str_replace(['%Y', '%m', '%d'], ['Y', 'm', 'd'], $format);
-
-                return date($php, (int) strtotime($date));
-            },
-            2,
-        );
+        $this->emulateMysqlDateFormat();
     }
 
     /** @return array{0: User, 1: Workspace} */
