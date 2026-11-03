@@ -49,7 +49,7 @@ describe("useKeyboardShortcuts", () => {
   it("navigates with Alt+S for owners", async () => {
     setup(null);
     await userEvent.keyboard("{Alt>}s{/Alt}");
-    expect(push).toHaveBeenCalledWith("/owner/subscriptions");
+    expect(push).toHaveBeenCalledWith("/owner/bookings?new=1");
   });
 
   it("lists active shortcuts in the help dialog on ?", async () => {

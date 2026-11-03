@@ -22,9 +22,13 @@ import {
 } from "@/lib/hooks/useKeyboardShortcuts";
 import { ShortcutsHelpModal } from "./ShortcutsHelpModal";
 
-/** Owner jump targets; only routes that already exist are registered. */
+/**
+ * Owner jump targets; only routes that already exist are registered.
+ * Subscriptions are created by approving a booking request, so Alt+S lands on
+ * the bookings queue with `new=1`, which opens the approval form directly.
+ */
 const OWNER_JUMPS = [
-  { id: "go-subscriptions", combo: "alt+s", href: "/owner/subscriptions", key: "goSubscriptions" },
+  { id: "go-subscriptions", combo: "alt+s", href: "/owner/bookings?new=1", key: "goSubscriptions" },
   { id: "go-receipts", combo: "alt+r", href: "/owner/invoices", key: "goReceipts" },
 ] as const;
 
