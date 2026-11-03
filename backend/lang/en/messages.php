@@ -18,8 +18,11 @@ return [
     // Generic / shared
     'unauthenticated' => 'Unauthenticated.',
     'insufficient_permissions' => 'Insufficient permissions.',
+    'no_workspace_context' => 'No workspace is linked to this account.',
     'unauthorized_action' => 'This action is unauthorized.',
     'no_workspace' => 'You have no workspace.',
+    'feature_disabled' => 'This module is not enabled for your workspace.',
+    'workspace_features_updated' => 'Workspace features updated.',
 
     // POS / cashier staff
     'cashier_invited' => 'Invitation sent.',
@@ -97,6 +100,7 @@ return [
     'workspace_not_found' => 'Workspace not found.',
     'workspace_created' => 'Workspace created and submitted for review.',
     'workspace_updated' => 'Workspace updated.',
+    'invalid_iban' => 'The IBAN is not valid.',
     'workspace_status_updated' => 'Workspace status updated.',
     'workspace_published' => 'Workspace published to public discovery.',
     'workspace_unpublished' => 'Workspace removed from public discovery.',
@@ -264,5 +268,27 @@ return [
     'chat_not_configured' => 'Realtime chat is not available right now.',
     'chat_token_failed' => 'Could not start a chat session. Please try again later.',
     'chat_attachment_not_found' => 'Attachment not found.',
+
+    // Two-factor authentication
+    'two_factor_challenge_pending' => 'Complete two-factor verification to continue.',
+    'two_factor_required' => 'Recent two-factor verification is required for this action.',
+    'two_factor_enrollment_required' => 'Enable two-factor authentication on your account before performing this action.',
+    'two_factor_not_eligible' => 'Two-factor authentication is not available for this account type.',
+    'two_factor_already_enabled' => 'Two-factor authentication is already enabled.',
+    'two_factor_not_enabled' => 'Two-factor authentication is not enabled.',
+    'two_factor_no_pending_enrollment' => 'There is no pending two-factor enrollment.',
+    'two_factor_no_challenge' => 'No two-factor challenge is pending for this session.',
+    'two_factor_enabled' => 'Two-factor authentication enabled. Store your recovery codes safely.',
+    'two_factor_disabled' => 'Two-factor authentication disabled.',
+    'two_factor_verified' => 'Verification successful.',
+    'two_factor_invalid_code' => 'The verification code is invalid.',
+    'two_factor_throttled' => 'Too many attempts. Please try again later.',
+
+    'approval_not_pending' => 'This request has already been decided or cancelled.',
+    'approval_not_found' => 'Approval request not found.',
+    'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
+    'operations_no_changes' => 'Nothing changed, so no approval request was created.',
+    'workspace_reset_confirmation_mismatch' => 'Type the workspace slug exactly to confirm the reset.',
+    'workspace_reset_done' => 'The workspace was reset. Its operational data was deleted.',
 
 ];

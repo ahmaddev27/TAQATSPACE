@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\WorkspaceFeatureController;
 use App\Http\Controllers\LogoController;
+use App\Http\Controllers\Owner\OperationsSettingsController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('workspaces')->group(function (): void {
     Route::get('/', [WorkspaceController::class, 'index']);
     Route::get('/cities', [WorkspaceController::class, 'cities']);
+    Route::get('/by-slug/{slug}', [WorkspaceController::class, 'bySlug']);
     Route::get('/{workspace}', [WorkspaceController::class, 'show']);
 });
 
@@ -26,6 +29,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
     ->group(function (): void {
         Route::post('/create', [WorkspaceController::class, 'store']);
         Route::put('/settings', [WorkspaceController::class, 'update']);
+        Route::put('/settings/operations', [OperationsSettingsController::class, 'update']);
         Route::post('/photos', [PhotoController::class, 'store']);
         Route::delete('/photos', [PhotoController::class, 'destroy']);
         Route::post('/logo', [LogoController::class, 'store']);
@@ -41,4 +45,5 @@ Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_workspac
         Route::put('/{workspace}/status', [WorkspaceController::class, 'adminUpdateStatus']);
         Route::put('/{workspace}/publish', [WorkspaceController::class, 'adminPublish']);
         Route::put('/{workspace}/unpublish', [WorkspaceController::class, 'adminUnpublish']);
+        Route::put('/{workspace}/features', [WorkspaceFeatureController::class, 'update']);
     });

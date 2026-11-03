@@ -36,6 +36,14 @@ class AuthController extends Controller
             return ApiResponse::error(__('messages.account_pending'), 403);
         }
 
+        if ($user->hasTwoFactorEnabled()) {
+            return ApiResponse::success([
+                'two_factor_required' => true,
+                'token' => $this->auth->issueChallengeToken($user),
+                'token_type' => 'Bearer',
+            ]);
+        }
+
         return ApiResponse::success([
             'user' => new UserResource($user),
             'token' => $this->auth->issueToken($user),

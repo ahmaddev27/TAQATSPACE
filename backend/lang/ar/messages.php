@@ -18,7 +18,10 @@ return [
     // عام / مشترك
     'unauthenticated' => 'غير مصادق.',
     'insufficient_permissions' => 'الصلاحيات غير كافية.',
+    'no_workspace_context' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
     'unauthorized_action' => 'هذا الإجراء غير مصرّح به.',
+    'feature_disabled' => 'هذه الوحدة غير مفعّلة لمساحة عملك.',
+    'workspace_features_updated' => 'تم تحديث ميزات مساحة العمل.',
     'no_workspace' => 'ليس لديك مساحة عمل.',
 
     // POS / cashier staff
@@ -97,6 +100,7 @@ return [
     'workspace_not_found' => 'مساحة العمل غير موجودة.',
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
+    'invalid_iban' => 'رقم الآيبان غير صالح.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
     'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
     'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',
@@ -264,5 +268,27 @@ return [
     'chat_not_configured' => 'المحادثة الفورية غير متاحة حاليًا.',
     'chat_token_failed' => 'تعذّر بدء جلسة المحادثة. يرجى المحاولة لاحقًا.',
     'chat_attachment_not_found' => 'المرفق غير موجود.',
+
+    // Two-factor authentication
+    'two_factor_challenge_pending' => 'أكمل التحقق بخطوتين للمتابعة.',
+    'two_factor_required' => 'يتطلب هذا الإجراء تحققاً حديثاً بخطوتين.',
+    'two_factor_enrollment_required' => 'فعّل المصادقة بخطوتين على حسابك قبل تنفيذ هذا الإجراء.',
+    'two_factor_not_eligible' => 'المصادقة الثنائية غير متاحة لهذا النوع من الحسابات.',
+    'two_factor_already_enabled' => 'المصادقة الثنائية مفعّلة بالفعل.',
+    'two_factor_not_enabled' => 'المصادقة الثنائية غير مفعّلة.',
+    'two_factor_no_pending_enrollment' => 'لا يوجد تفعيل للمصادقة الثنائية قيد الانتظار.',
+    'two_factor_no_challenge' => 'لا يوجد تحقق ثنائي معلّق لهذه الجلسة.',
+    'two_factor_enabled' => 'تم تفعيل المصادقة الثنائية. احتفظ برموز الاسترداد في مكان آمن.',
+    'two_factor_disabled' => 'تم تعطيل المصادقة الثنائية.',
+    'two_factor_verified' => 'تم التحقق بنجاح.',
+    'two_factor_invalid_code' => 'رمز التحقق غير صالح.',
+    'two_factor_throttled' => 'محاولات كثيرة جداً. يرجى المحاولة لاحقاً.',
+
+    'approval_not_pending' => 'تم البت في هذا الطلب مسبقاً أو إلغاؤه.',
+    'approval_not_found' => 'طلب الموافقة غير موجود.',
+    'operations_submitted' => 'تم إرسال تغييراتك للموافقة. ستُطبَّق بعد الموافقة عليها.',
+    'operations_no_changes' => 'لا يوجد أي تغيير، لذلك لم يُنشأ طلب موافقة.',
+    'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
+    'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',
 
 ];

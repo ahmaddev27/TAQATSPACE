@@ -21,6 +21,7 @@ import {
   ROLE_NAV,
   applyActionBadges,
   applyChatBadge,
+  filterNavByFeatures,
   filterNavByPermissions,
   filterNavByRealtime,
   type NavActionCounts,
@@ -28,6 +29,7 @@ import {
 import { Sidebar } from "./Sidebar";
 import { TopNav } from "./TopNav";
 import { NavProgress } from "./NavProgress";
+import { ShortcutsProvider } from "./ShortcutsProvider";
 
 export interface DashShellProps {
   role: UserRole;
@@ -95,10 +97,13 @@ export function DashShell({
       applyActionBadges(
         applyChatBadge(
           filterNavByRealtime(
-            filterNavByPermissions(
-              ROLE_NAV[role],
-              user?.permissions,
-              user?.is_super_admin,
+            filterNavByFeatures(
+              filterNavByPermissions(
+                ROLE_NAV[role],
+                user?.permissions,
+                user?.is_super_admin,
+              ),
+              user?.features,
             ),
             firebaseReady,
           ),
@@ -110,6 +115,7 @@ export function DashShell({
       role,
       user?.permissions,
       user?.is_super_admin,
+      user?.features,
       firebaseReady,
       chatUnread,
       actionCounts,
@@ -173,6 +179,7 @@ export function DashShell({
   }, [mobileOpen]);
 
   return (
+    <ShortcutsProvider role={role}>
     <div
       className="dash"
       style={{
@@ -218,5 +225,6 @@ export function DashShell({
         <div className="dash-scroll">{children}</div>
       </div>
     </div>
+    </ShortcutsProvider>
   );
 }

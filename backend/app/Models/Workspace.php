@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PlatformPlan;
+use App\Enums\PlatformStatus;
+use App\Enums\SeatingMode;
 use App\Enums\WorkspaceStatus;
+use App\Services\WorkspaceIdentityGenerator;
 use App\Support\MediaUrl;
 use Database\Factories\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use LogicException;
 
 class Workspace extends Model
 {
@@ -24,11 +29,22 @@ class Workspace extends Model
     protected $fillable = [
         'owner_id',
         'name',
+        'slug',
+        'code',
+        'platform_plan',
+        'platform_status',
         'description',
         'address',
         'city',
         'city_id',
         'phone',
+        'contact_email',
+        'bank_name',
+        'iban',
+        'timezone',
+        'currency',
+        'wifi_ssid',
+        'wifi_password',
         'latitude',
         'longitude',
         'total_seats',
@@ -37,11 +53,44 @@ class Workspace extends Model
         'photos',
         'logo_path',
         'working_hours',
+        'seating_mode',
+        'tax_rate',
         'messaging',
         'status',
         'published_at',
         'avg_rating',
     ];
+
+    /** Tenant identity that never changes once assigned. */
+    private const IMMUTABLE_IDENTITY = ['slug', 'code'];
+
+    protected static function booted(): void
+    {
+        // Fallback for rows created outside WorkspaceService (factories, seeders).
+        static::creating(function (Workspace $workspace): void {
+            $generator = app(WorkspaceIdentityGenerator::class);
+            $workspace->slug ??= $generator->generateSlug((string) $workspace->name);
+            $workspace->code ??= $generator->generateCode();
+        });
+
+        // Keeps the "every workspace has one default branch" invariant for new tenants.
+        static::created(function (Workspace $workspace): void {
+            Branch::create([
+                'workspace_id' => $workspace->id,
+                'name' => $workspace->name,
+                'address' => $workspace->address,
+                'is_default' => true,
+            ]);
+        });
+
+        static::updating(function (Workspace $workspace): void {
+            foreach (self::IMMUTABLE_IDENTITY as $attribute) {
+                if ($workspace->isDirty($attribute) && $workspace->getOriginal($attribute) !== null) {
+                    throw new LogicException("Workspace {$attribute} is immutable once assigned.");
+                }
+            }
+        });
+    }
 
     /**
      * @return array<string, string>
@@ -52,8 +101,13 @@ class Workspace extends Model
             'amenities' => 'array',
             'photos' => 'array',
             'working_hours' => 'array',
+            'seating_mode' => SeatingMode::class,
+            'tax_rate' => 'decimal:2',
             'messaging' => 'array',
+            'wifi_password' => 'encrypted',
             'status' => WorkspaceStatus::class,
+            'platform_plan' => PlatformPlan::class,
+            'platform_status' => PlatformStatus::class,
             'published_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
@@ -77,6 +131,12 @@ class Workspace extends Model
     public function cashiers(): HasMany
     {
         return $this->hasMany(User::class, 'workspace_id');
+    }
+
+    /** @return HasMany<WorkspaceFeatureFlag, $this> */
+    public function featureFlags(): HasMany
+    {
+        return $this->hasMany(WorkspaceFeatureFlag::class);
     }
 
     /**

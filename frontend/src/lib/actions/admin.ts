@@ -17,6 +17,8 @@ import type {
   User,
   UserStatus,
   Workspace,
+  WorkspaceFeature,
+  WorkspaceFeatureFlags,
   WorkspaceStatus,
 } from "@/lib/types";
 import type { AboutContent } from "@/lib/types/content";
@@ -268,8 +270,27 @@ export async function setWorkspacePublished(
   return result;
 }
 
+/**
+ * Enable or disable one module for a workspace (`PUT /admin/workspaces/{id}/features`).
+ * The owner sees the menu after their next page load.
+ */
+export async function setWorkspaceFeature(
+  workspaceId: string,
+  feature: WorkspaceFeature,
+  enabled: boolean,
+): Promise<ActionResult<{ features: WorkspaceFeatureFlags }>> {
+  const result = await authedMutate<{ features: WorkspaceFeatureFlags }>(
+    `/admin/workspaces/${workspaceId}/features`,
+    { method: "PUT", body: { features: { [feature]: enabled } } },
+  );
+  if (result.ok) {
+    revalidatePath("/[locale]/(dashboard)/admin/workspaces", "page");
+  }
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
-/*  User moderation (PUT /admin/users/{id}/status)                            */
+/*  User moderation (PUT /admin/users/{id}/status)                          */
 /* -------------------------------------------------------------------------- */
 
 /** Activate or suspend a user account. */

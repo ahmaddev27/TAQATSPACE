@@ -11,7 +11,7 @@ use App\Models\CashierInvitation;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\CashierInvitationNotification;
-use App\Services\Pos\CashierManagementService;
+use App\Services\Pos\StaffManagementService;
 use Database\Seeders\PosPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -83,7 +83,7 @@ class CashierManagementTest extends TestCase
             'email' => 'barista@cafe.ps',
         ]);
 
-        $found = app(CashierManagementService::class)->pendingForEmail('Barista@Cafe.ps');
+        $found = app(StaffManagementService::class)->pendingForEmail('Barista@Cafe.ps');
 
         $this->assertNotNull($found);
         $this->assertSame('barista@cafe.ps', $found->email);
@@ -164,7 +164,7 @@ class CashierManagementTest extends TestCase
 
         $this->assertNotNull($invitation->fresh()->declined_at);
         $this->assertNull(
-            app(CashierManagementService::class)->pendingForEmail('barista@cafe.ps')
+            app(StaffManagementService::class)->pendingForEmail('barista@cafe.ps')
         );
     }
 

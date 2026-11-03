@@ -24,6 +24,7 @@ export default async function AdminProfilePage({
 
   return (
     <ProfileScreen
+      showSecurityLink
       canChangePassword={user.can_change_password}
       form={{
         defaults: {

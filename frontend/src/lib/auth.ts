@@ -3,6 +3,13 @@ import type { UserRole } from "./types/auth";
 /** httpOnly bearer-token cookie (set only by Route Handlers / Server Actions). */
 export const TOKEN_COOKIE = "taqat_token";
 
+/**
+ * httpOnly cookie holding the challenge-only token between password / SSO
+ * sign-in and a passed 2FA challenge. Kept apart from TOKEN_COOKIE so the
+ * middleware never treats a half-authenticated browser as signed in.
+ */
+export const PENDING_TWO_FACTOR_COOKIE = "taqat_2fa_token";
+
 /** Non-httpOnly companion cookie so middleware can route by role. */
 export const ROLE_COOKIE = "taqat_role";
 

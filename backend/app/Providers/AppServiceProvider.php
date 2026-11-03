@@ -7,6 +7,17 @@ namespace App\Providers;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\Channels\SafeMailChannel;
+use App\Services\Approvals\ApprovalHandlerRegistry;
+use App\Services\Approvals\Handlers\CapacityApprovalHandler;
+use App\Services\Approvals\Handlers\PricingApprovalHandler;
+use App\Services\Approvals\Handlers\WorkingHoursApprovalHandler;
+use App\Services\Workspace\Reset\Steps\BookingsResetStep;
+use App\Services\Workspace\Reset\Steps\ExpensesResetStep;
+use App\Services\Workspace\Reset\Steps\InvoicesResetStep;
+use App\Services\Workspace\Reset\Steps\MembersResetStep;
+use App\Services\Workspace\Reset\Steps\PosResetStep;
+use App\Services\Workspace\Reset\WorkspaceResetter;
+use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +26,29 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->scoped(CurrentWorkspaceContext::class);
+
+        // Add a handler here when a new ApprovalType is introduced.
+        $this->app->singleton(ApprovalHandlerRegistry::class, fn ($app) => new ApprovalHandlerRegistry([
+            $app->make(CapacityApprovalHandler::class),
+            $app->make(WorkingHoursApprovalHandler::class),
+            $app->make(PricingApprovalHandler::class),
+        ]));
+
+        // Later modules (network, finance, GSG) tag their own WorkspaceResetStep
+        // with `workspace.reset` from their provider; nothing here changes.
+        $this->app->tag([
+            InvoicesResetStep::class,
+            BookingsResetStep::class,
+            MembersResetStep::class,
+            ExpensesResetStep::class,
+            PosResetStep::class,
+        ], 'workspace.reset');
+
+        $this->app->singleton(
+            WorkspaceResetter::class,
+            fn ($app) => new WorkspaceResetter($app->tagged('workspace.reset')),
+        );
     }
 
     public function boot(): void

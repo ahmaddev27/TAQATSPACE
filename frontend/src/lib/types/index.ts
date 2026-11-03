@@ -11,6 +11,8 @@ export type {
   Gender,
   AdminRole,
   AdminPermission,
+  WorkspaceFeature,
+  WorkspaceFeatureFlags,
   ApiEnvelope,
   ApiErrorBody,
 } from "./auth";
@@ -49,6 +51,7 @@ export type {
   BroadcastResult,
 } from "./messaging";
 import type { WorkspaceMessagingConfig } from "./messaging";
+import type { WorkspaceFeatureFlags } from "./auth";
 
 export type {
   ContentKey,
@@ -68,6 +71,9 @@ export type {
 /* -------------------------------------------------------------------------- */
 
 export type SeatType = "fixed" | "flexible" | "private_office";
+
+/** How members get a desk: assigned (fixed) or any free one (flexible). */
+export type SeatingMode = "fixed" | "flexible";
 export type SeatStatus = "available" | "occupied" | "reserved" | "maintenance";
 export type PlanType = "monthly" | "daily" | "custom";
 export type SubscriptionStatus =
@@ -211,6 +217,22 @@ export interface Workspace {
    */
   is_published?: boolean;
   published_at?: string | null;
+  /** Immutable URL identity; owner/admin payloads only. */
+  slug?: string;
+  code?: string;
+  /** General settings (contact, bank, locale, Wi-Fi); owner/admin payloads only. */
+  contact_email?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  timezone?: string;
+  currency?: string;
+  wifi_ssid?: string | null;
+  wifi_password?: string | null;
+  /** Operations settings; changes go through an approval request. Owner/admin payloads only. */
+  seating_mode?: SeatingMode;
+  tax_rate?: string | null;
+  /** Absolute dashboard and public-site links; owner/admin payloads only. */
+  urls?: { dashboard: string; public: string };
   avg_rating: number | null;
   /**
    * Per-seat-type pricing. All three types may be present; disabled ones are
@@ -223,6 +245,8 @@ export interface Workspace {
   recent_reviews?: RecentReview[];
   /** Present on the admin listing only. */
   owner?: WorkspaceOwnerSummary;
+  /** Per-workspace module flags; present on the admin listing only. */
+  features?: WorkspaceFeatureFlags;
   /**
    * Masked messaging config. Present only for requests that may manage the
    * workspace (its owner or an admin); absent on public discovery responses.

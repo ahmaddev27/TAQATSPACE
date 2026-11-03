@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\SeatingMode;
 use App\Models\SeatTypePrice;
 use App\Models\Workspace;
+use App\Services\FeatureFlagService;
 use App\Services\MessagingSettingsService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
@@ -60,16 +62,51 @@ class WorkspaceResource extends JsonResource
                 'avatar' => MediaUrl::resolve($this->owner->avatar),
             ]),
 
+            // Admin listing only: present when the flag rows are eager-loaded.
+            'features' => $this->whenLoaded(
+                'featureFlags',
+                fn (): array => app(FeatureFlagService::class)->flagMap($this->featureFlags),
+            ),
+
             // Owner/Admin-only: publish state + masked messaging config (never
             // the secrets). The public discovery payload never exposes these.
             $this->mergeWhen(
                 $this->canManage($request),
                 fn (): array => [
+                    'slug' => $this->slug,
+                    'code' => $this->code,
+                    'urls' => $this->urls(),
+                    'platform_plan' => $this->platform_plan?->value,
+                    'platform_status' => $this->platform_status?->value,
                     'is_published' => $this->isPublished(),
                     'published_at' => $this->published_at?->toIso8601String(),
                     'messaging' => $this->maskedMessaging(),
+                    'contact_email' => $this->contact_email,
+                    'bank_name' => $this->bank_name,
+                    'iban' => $this->iban,
+                    'timezone' => $this->timezone,
+                    'currency' => $this->currency,
+                    'wifi_ssid' => $this->wifi_ssid,
+                    'wifi_password' => $this->wifi_password,
+                    'seating_mode' => $this->seating_mode?->value ?? SeatingMode::Flexible->value,
+                    'tax_rate' => $this->tax_rate,
                 ],
             ),
+        ];
+    }
+
+    /**
+     * The workspace's dashboard and public-site links on the frontend.
+     *
+     * @return array{dashboard: string, public: string}
+     */
+    private function urls(): array
+    {
+        $base = rtrim((string) config('app.frontend_url'), '/');
+
+        return [
+            'dashboard' => $base.'/owner',
+            'public' => $base.'/w/'.$this->slug,
         ];
     }
 

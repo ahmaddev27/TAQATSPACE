@@ -1,12 +1,19 @@
 {
   "owner": {
-    "cashiers": {
-      "title": "Cashiers",
-      "subtitle": "Invite café staff and manage what they can do in the POS.",
-      "invite": "Invite cashier",
-      "inviteTitle": "Invite a cashier",
+    "staff": {
+      "title": "Staff",
+      "subtitle": "Invite staff by group and fine-tune what each member can do.",
+      "invite": "Invite staff",
+      "inviteTitle": "Invite a staff member",
       "email": "Email",
       "name": "Name",
+      "group": "Group",
+      "groupHint": "The group sets the default permissions; you can adjust them below.",
+      "groups": {
+        "cashier": "Cashier",
+        "hospitality": "Hospitality",
+        "finance_supervisor": "Finance supervisor"
+      },
       "permissions": "Permissions",
       "permsHint": "Choose what this staff member may do in the POS.",
       "perms": {
@@ -18,9 +25,9 @@
       "send": "Send invitation",
       "cancel": "Cancel",
       "save": "Save",
-      "cashiersHeading": "Staff",
+      "staffHeading": "Staff",
       "invitationsHeading": "Pending invitations",
-      "noCashiers": "No staff yet.",
+      "noStaff": "No staff yet.",
       "noInvitations": "No pending invitations.",
       "status": {
         "active": "Active",
@@ -133,6 +140,9 @@
       "colJoined": "Joined",
       "colStatus": "Status",
       "noSeat": "—",
+      "emptyNoDataTitle": "No members yet",
+      "emptyNoDataBody": "Members appear here once you approve a booking request.",
+      "emptyNoDataAction": "Review booking requests",
       "emptyTitle": "No matching members",
       "emptyBody": "Try adjusting your search or filter",
       "reset": "Reset filters",
@@ -206,6 +216,9 @@
       "cancelConfirm": "Cancelling will end the subscription and free the seat. Are you sure?",
       "cancelled": "Subscription cancelled",
       "cancelFailed": "Could not cancel the subscription",
+      "emptyNoDataTitle": "No subscriptions yet",
+      "emptyNoDataBody": "Subscriptions are created when a booking request is approved.",
+      "emptyNoDataAction": "Review booking requests",
       "emptyTitle": "No matching subscriptions",
       "emptyBody": "Try adjusting your search or filter",
       "reset": "Reset filters"
@@ -243,7 +256,8 @@
       "renamed": "Seat renamed",
       "renameFailed": "Could not rename seat",
       "noSeatsTitle": "No seats yet",
-      "noSeatsBody": "Add seats from your space settings to see them on the map."
+      "noSeatsBody": "Add seats from your space settings to see them on the map.",
+      "noSeatsAction": "Open space settings"
     },
     "bookings": {
       "title": "Booking requests",
@@ -279,6 +293,7 @@
       "reviewFailed": "Could not process the request",
       "emptyPending": "No pending requests",
       "emptyPendingBody": "New booking requests will appear here",
+      "emptyAction": "Manage resources",
       "emptyApproved": "No approved requests",
       "emptyRejected": "No rejected requests",
       "rejectedReasonLabel": "Rejection reason"
@@ -332,11 +347,43 @@
       "title": "Space settings",
       "subtitle": "Manage your space information and services",
       "tabBasic": "Basic",
+      "tabGeneral": "General",
+      "contactEmail": "Contact email",
+      "bankName": "Bank name",
+      "iban": "IBAN",
+      "timezone": "Time zone",
+      "currency": "Currency",
+      "wifiSsid": "Wi-Fi network name",
+      "wifiPassword": "Wi-Fi password",
       "tabLocation": "Location",
-      "tabSeatTypes": "Seat types & pricing",
       "tabAmenities": "Amenities",
       "tabPhotos": "Photos",
-      "tabHours": "Hours",
+      "tabDomain": "Domain & DNS",
+      "domainHint": "Your space links on TAQAT.space. Custom domains are not available yet.",
+      "domainDashboard": "Dashboard link",
+      "domainPublic": "Public site link",
+      "domainSlug": "Slug",
+      "domainCode": "Space code",
+      "domainCopy": "Copy",
+      "domainCopied": "Copied",
+      "tabDanger": "Danger zone",
+      "danger": {
+        "title": "Reset workspace",
+        "description": "Deletes all operational data: members and subscriptions, bookings, invoices and payments, expenses and POS sales. Your space identity, owner account and settings are kept. This cannot be undone.",
+        "reset": "Reset workspace",
+        "warnTitle": "Reset this workspace?",
+        "warnMessage": "All members, subscriptions, bookings, invoices, payments, expenses and POS sales will be permanently deleted.",
+        "warnContinue": "Continue",
+        "modalTitle": "Confirm workspace reset",
+        "confirmationLabel": "Type the slug \"{slug}\" to confirm",
+        "reasonLabel": "Reason for the reset",
+        "codeLabel": "Authenticator code",
+        "codeHint": "Required if two-factor authentication is enabled on your account.",
+        "cancel": "Cancel",
+        "confirm": "Reset workspace",
+        "done": "Workspace reset",
+        "failed": "Could not reset the workspace"
+      },
       "name": "Space name",
       "description": "Description",
       "phone": "Phone number",
@@ -408,7 +455,8 @@
         "lockers": "Lockers",
         "reception": "Reception",
         "security": "24/7 security"
-      }
+      },
+      "tabOperations": "Operations"
     },
     "common": {
       "currency": "₪",
@@ -496,6 +544,27 @@
         "cancelled": "Cancelled",
         "refunded": "Refunded"
       }
+    },
+    "operations": {
+      "hint": "Changes to capacity, prices, tax and working hours are reviewed by the platform team. They apply only after approval.",
+      "capacityTitle": "Capacity, prices and tax",
+      "hoursTitle": "Working hours",
+      "seatingMode": "Seating mode",
+      "modes": {
+        "flexible": "Flexible (any free seat)",
+        "fixed": "Fixed (assigned seat)"
+      },
+      "taxRate": "Tax rate (%)",
+      "taxHint": "A value between 0 and 100.",
+      "enabled": "Enabled",
+      "submit": "Submit for approval",
+      "submitted": "Submitted for approval",
+      "noChanges": "Nothing changed",
+      "pendingTitle": "Pending approval",
+      "pendingBadge": "Pending approval",
+      "cancelRequest": "Cancel request",
+      "cancelled": "Request cancelled",
+      "hoursProposed": "New working hours are awaiting approval."
     }
   }
 }

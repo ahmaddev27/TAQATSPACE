@@ -59,6 +59,9 @@ return [
         // discovery document does NOT advertise an end_session_endpoint (e.g.
         // Laravel Passport), so single logout still works.
         'end_session_endpoint' => env('TAQAT_SSO_END_SESSION_URL'),
+        // When the IdP asserts MFA (`amr` contains "mfa"), skip the local 2FA
+        // challenge. Pending confirmation from the identity provider.
+        'trust_mfa_claim' => env('TAQAT_SSO_TRUST_MFA', true),
     ],
 
     /*

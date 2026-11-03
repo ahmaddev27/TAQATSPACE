@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
 import { deletePackage } from "@/lib/actions/owner";
@@ -51,24 +52,16 @@ export function PackagesManager({ packages, members }: PackagesManagerProps) {
   return (
     <div className="stack" style={{ gap: 18 }}>
       {packages.length === 0 ? (
-        <div className="empty-state" style={{ minHeight: 260 }}>
-          <div className="st-ico" style={{ width: 48, height: 48 }}>
-            <Icon name="wifi" />
-          </div>
-          <div>
-            <div className="h3">{t("packages.emptyTitle")}</div>
-            <div style={{ fontSize: "var(--fs-sm)", marginTop: 4 }}>
-              {t("packages.emptyBody")}
-            </div>
-          </div>
-          <Button
-            variant="primary"
-            icon="plus"
-            onClick={() => setEditing({ mode: "create" })}
-          >
-            {t("packages.addPackage")}
-          </Button>
-        </div>
+        <EmptyState
+          icon="wifi"
+          title={t("packages.emptyTitle")}
+          body={t("packages.emptyBody")}
+          action={{
+            label: t("packages.addPackage"),
+            icon: "plus",
+            onClick: () => setEditing({ mode: "create" }),
+          }}
+        />
       ) : (
         <>
           <div className="pkg-grid">

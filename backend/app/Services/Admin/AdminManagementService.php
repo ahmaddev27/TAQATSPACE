@@ -9,6 +9,7 @@ use App\Enums\AdminRole;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,10 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class AdminManagementService
 {
+    public function __construct(
+        private readonly AuditLogger $audit,
+    ) {}
+
     /**
      * Filtered, paginated directory of admin accounts (every account whose
      * `users.role` is `admin`), newest first, with roles + permissions loaded.
@@ -83,7 +88,9 @@ class AdminManagementService
         $this->guardSelfDowngrade($admin, $actor, $status, $role, $permissions);
         $this->guardLastSuperAdmin($admin, $status, $role, $permissions);
 
-        return DB::transaction(function () use ($admin, $status, $role, $permissions, $password): User {
+        $before = $this->accessSnapshot($admin);
+
+        $updated = DB::transaction(function () use ($admin, $status, $role, $permissions, $password): User {
             if ($status !== null) {
                 $admin->forceFill(['status' => $status->value])->save();
             }
@@ -109,6 +116,26 @@ class AdminManagementService
 
             return $admin->fresh() ?? $admin;
         });
+
+        $this->audit->log('permissions.changed', $updated, changes: [
+            'before' => $before,
+            'after' => $this->accessSnapshot($updated),
+            'password_changed' => $password !== null,
+        ], actor: $actor);
+
+        return $updated;
+    }
+
+    /**
+     * @return array{status: string, roles: array<int, string>, permissions: array<int, string>}
+     */
+    private function accessSnapshot(User $admin): array
+    {
+        return [
+            'status' => $admin->status->value,
+            'roles' => $admin->getRoleNames()->sort()->values()->all(),
+            'permissions' => $admin->getPermissionNames()->sort()->values()->all(),
+        ];
     }
 
     /**
@@ -127,6 +154,8 @@ class AdminManagementService
         $this->guardLastSuperAdmin($admin, UserStatus::Suspended, null, null);
 
         $admin->forceFill(['status' => UserStatus::Suspended->value])->save();
+
+        $this->audit->log('staff.deactivated', $admin, actor: $actor);
 
         return $admin->fresh() ?? $admin;
     }

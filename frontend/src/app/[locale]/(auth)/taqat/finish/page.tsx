@@ -7,7 +7,11 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { dashboardFor } from "@/lib/auth";
 import { Alert } from "@/components/ui/Alert";
-import type { ClientAuthResult } from "@/lib/types/auth";
+import {
+  isTwoFactorRequired,
+  type ClientAuthResult,
+  type ClientTwoFactorRequired,
+} from "@/lib/types/auth";
 
 /**
  * Landing target after the IdP round-trip. Redeems the one-time `code` for a
@@ -46,7 +50,11 @@ function TaqatFinish() {
           throw new Error("exchange_failed");
         }
 
-        const result = (await res.json()) as ClientAuthResult;
+        const result = (await res.json()) as ClientAuthResult | ClientTwoFactorRequired;
+        if (isTwoFactorRequired(result)) {
+          router.replace("/auth/two-factor");
+          return;
+        }
         await refreshUser();
         // Freshly-provisioned SSO accounts have not chosen a role yet — send them
         // to onboarding before any dashboard.

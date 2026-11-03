@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOwnerWorkspace } from "@/lib/actions/owner";
+import { ownerPendingApprovals } from "@/lib/api/approvals";
 import { Icon } from "@/components/ui/Icon";
 import { SettingsTabs } from "@/components/features/owner/SettingsTabs";
 
@@ -14,7 +15,10 @@ export default async function OwnerSettingsPage({
   setRequestLocale(locale);
   const t = await getTranslations("owner");
 
-  const workspace = await getOwnerWorkspace();
+  const [workspace, pendingApprovals] = await Promise.all([
+    getOwnerWorkspace(),
+    ownerPendingApprovals(),
+  ]);
 
   return (
     <div className="page">
@@ -29,7 +33,11 @@ export default async function OwnerSettingsPage({
 
       <div style={{ marginTop: 16 }}>
         {workspace ? (
-          <SettingsTabs workspace={workspace} locale={locale} />
+          <SettingsTabs
+            workspace={workspace}
+            locale={locale}
+            pendingApprovals={pendingApprovals}
+          />
         ) : (
           <div className="empty-state" style={{ minHeight: 280 }}>
             <div className="st-ico amber" style={{ width: 48, height: 48 }}>

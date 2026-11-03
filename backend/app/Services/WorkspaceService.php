@@ -15,6 +15,8 @@ use App\Models\Subscription;
 use App\Models\Workspace;
 use App\Notifications\WorkspaceStatusChangedNotification;
 use App\Repositories\Eloquent\WorkspaceRepository;
+use App\Rules\Iban;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +38,8 @@ class WorkspaceService
         private readonly WorkspaceRepository $workspaces,
         private readonly SeatTypePricingService $seatTypePricing,
         private readonly SeatService $seats,
+        private readonly WorkspaceIdentityGenerator $identity,
+        private readonly AuditLogger $audit,
     ) {}
 
     /**
@@ -67,6 +71,11 @@ class WorkspaceService
         return $this->workspaces->findActiveById($id);
     }
 
+    public function findActivePublicBySlug(string $slug): ?Workspace
+    {
+        return $this->workspaces->findActiveBySlug($slug);
+    }
+
     /**
      * Create the owner's single workspace. Status starts as pending.
      *
@@ -86,6 +95,8 @@ class WorkspaceService
 
         $data['owner_id'] = $ownerId;
         $data['status'] = WorkspaceStatus::Pending->value;
+        $data['slug'] = $this->identity->generateSlug((string) ($data['name'] ?? ''));
+        $data['code'] = $this->identity->generateCode();
         $this->denormalizeCity($data);
 
         return DB::transaction(function () use ($data, $seatTypes): Workspace {
@@ -109,11 +120,58 @@ class WorkspaceService
      */
     public function updateSettings(Workspace $workspace, array $data): Workspace
     {
-        unset($data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month']);
+        unset(
+            $data['status'], $data['owner_id'], $data['total_seats'], $data['price_per_month'],
+            $data['slug'], $data['code'], $data['platform_plan'], $data['platform_status'],
+            // Operations settings only change through an approval request.
+            $data['working_hours'], $data['seating_mode'], $data['tax_rate'],
+        );
 
         $this->denormalizeCity($data);
 
-        return $this->workspaces->update($workspace, $data);
+        if (isset($data['iban'])) {
+            $data['iban'] = Iban::normalize((string) $data['iban']);
+        }
+
+        $bankChange = $this->bankChange($workspace, $data);
+        $updated = $this->workspaces->update($workspace, $data);
+
+        if ($bankChange !== []) {
+            $this->audit->log('workspace.bank_details.changed', $updated, changes: $bankChange);
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Before/after of the bank fields that actually changed. The IBAN is masked
+     * so the audit trail never stores the full account number.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, array{from: ?string, to: ?string}>
+     */
+    private function bankChange(Workspace $workspace, array $data): array
+    {
+        $changes = [];
+
+        foreach (['bank_name', 'iban'] as $field) {
+            if (! array_key_exists($field, $data) || $data[$field] === $workspace->{$field}) {
+                continue;
+            }
+
+            $mask = $field === 'iban';
+            $changes[$field] = [
+                'from' => $mask ? $this->maskIban($workspace->{$field}) : $workspace->{$field},
+                'to' => $mask ? $this->maskIban($data[$field]) : $data[$field],
+            ];
+        }
+
+        return $changes;
+    }
+
+    private function maskIban(?string $iban): ?string
+    {
+        return $iban === null ? null : '****'.substr($iban, -4);
     }
 
     /**
@@ -153,6 +211,30 @@ class WorkspaceService
 
             return $updated;
         });
+    }
+
+    /**
+     * Apply a partial change to existing seat-type rows: columns a change omits
+     * keep their live value, so a capacity edit cannot wipe prices.
+     *
+     * @param  array<int, array<string, mixed>>  $changes  Each row carries `type` plus the columns to set.
+     */
+    public function patchSeatTypes(Workspace $workspace, array $changes): Workspace
+    {
+        $live = $workspace->seatTypes()->get()->keyBy(static fn ($row): string => $row->type->value);
+
+        $rows = array_map(static function (array $change) use ($live): array {
+            $existing = $live->get($change['type']);
+
+            return $change + [
+                'price_monthly' => $existing?->price_monthly,
+                'price_daily' => $existing?->price_daily,
+                'capacity' => $existing?->capacity ?? 0,
+                'enabled' => $existing?->enabled ?? true,
+            ];
+        }, $changes);
+
+        return $this->updateSeatTypes($workspace, $rows);
     }
 
     /**

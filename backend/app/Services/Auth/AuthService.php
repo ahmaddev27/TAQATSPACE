@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
+    public const PENDING_ABILITY = '2fa-pending';
+
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly TaqatSsoService $sso,
@@ -23,7 +25,7 @@ class AuthService
     {
         $user = $this->users->findByEmail($email);
 
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        if ($user === null || $user->isUnclaimed() || $user->password === null || ! Hash::check($password, $user->password)) {
             return null;
         }
 
@@ -33,6 +35,15 @@ class AuthService
     public function issueToken(User $user): string
     {
         return $user->createToken('auth_token')->plainTextToken;
+    }
+
+    /**
+     * A token that can only complete the 2FA challenge (see RejectPendingTwoFactor);
+     * the challenge upgrades it in place to a full-access token.
+     */
+    public function issueChallengeToken(User $user): string
+    {
+        return $user->createToken('auth_token', [self::PENDING_ABILITY])->plainTextToken;
     }
 
     /**

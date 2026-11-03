@@ -11,11 +11,13 @@ import type {
   Package,
   Seat,
   SeatType,
+  SeatingMode,
   SubscriptionStatus,
   Workspace,
   WorkspaceMessagingConfig,
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
+import type { ApprovalRequestEntry } from "@/lib/types/approvals";
 import type {
   Expense,
   ExpenseCategory,
@@ -24,11 +26,12 @@ import type {
   ResourceType,
 } from "@/lib/types/management";
 import type {
-  Cashier,
-  CashierInvitation,
-  InviteCashierInput,
+  Staff,
+  StaffInvitation,
+  InviteStaffInput,
   PosPermission,
-} from "@/lib/types/cashier";
+  StaffGroup,
+} from "@/lib/types/staff";
 
 /* -------------------------------------------------------------------------- */
 /*  Revalidation                                                              */
@@ -331,10 +334,16 @@ export interface WorkspaceSettingsInput {
   /** Id of an existing {@link City}; the backend resolves the display name. */
   city_id?: string;
   phone?: string | null;
+  contact_email?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  timezone?: string;
+  currency?: string;
+  wifi_ssid?: string | null;
+  wifi_password?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   amenities?: string[];
-  working_hours?: Record<string, unknown> | null;
 }
 
 export async function updateSettings(
@@ -355,7 +364,7 @@ export async function updateSettings(
 /*  Seat types & pricing                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** A single per-seat-type pricing row submitted to `PUT /workspace/seat-types`. */
+/** A single per-seat-type row submitted with the operations settings. */
 export interface SeatTypeInput {
   type: SeatType;
   price_monthly: number | null;
@@ -364,21 +373,37 @@ export interface SeatTypeInput {
   enabled: boolean;
 }
 
+export interface OperationsSettingsInput {
+  seat_types: SeatTypeInput[];
+  seating_mode: SeatingMode;
+  working_hours: Record<string, unknown>;
+  tax_rate: number;
+}
+
 /**
- * Upsert the owner's per-seat-type pricing. The backend returns the refreshed
- * workspace (all rows), so the page can re-render from authoritative data.
+ * Submit the Operations tab for approval (`PUT /workspace/settings/operations`).
+ * Nothing is applied until a platform admin approves; the response lists the
+ * requests that were created (empty when nothing changed).
  */
-export async function updateSeatTypes(
-  rows: SeatTypeInput[],
-): Promise<ActionResult<Workspace>> {
-  const result = await authedMutate<Workspace>("/workspace/seat-types", {
-    method: "PUT",
-    body: { seat_types: rows },
-  });
-  if (result.ok) {
-    revalidateOwner("settings");
-    revalidateOwner("");
-  }
+export async function submitOperationsSettings(
+  input: OperationsSettingsInput,
+): Promise<ActionResult<{ requests: ApprovalRequestEntry[] }>> {
+  const result = await authedMutate<{ requests: ApprovalRequestEntry[] }>(
+    "/workspace/settings/operations",
+    { method: "PUT", body: input },
+  );
+  if (result.ok) revalidateOwner("settings");
+  return result;
+}
+
+/** Withdraw one of the owner's own pending requests. */
+export async function cancelApprovalRequest(
+  id: string,
+): Promise<ActionResult<ApprovalRequestEntry>> {
+  const result = await authedMutate<ApprovalRequestEntry>(
+    `/workspace/approvals/${encodeURIComponent(id)}/cancel`,
+  );
+  if (result.ok) revalidateOwner("settings");
   return result;
 }
 
@@ -554,77 +579,114 @@ export async function deleteResource(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Cashiers (POS / café staff)                                               */
+/*  Workspace staff (POS / café)                                             */
 /* -------------------------------------------------------------------------- */
 
-/** Email a cashier invitation for the owner's workspace. */
-export async function inviteCashier(
-  input: InviteCashierInput,
-): Promise<ActionResult<CashierInvitation>> {
-  const result = await authedMutate<CashierInvitation>(
-    "/workspace/cashiers/invite",
+/** Email a staff invitation for the owner's workspace. */
+export async function inviteStaff(
+  input: InviteStaffInput,
+): Promise<ActionResult<StaffInvitation>> {
+  const result = await authedMutate<StaffInvitation>(
+    "/workspace/staff/invite",
     { method: "POST", body: input },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Re-scope a cashier's POS permission grant. */
-export async function updateCashierPermissions(
-  cashierId: string,
+/** Re-scope a staff member's group and permission grant. */
+export async function updateStaffPermissions(
+  staffId: string,
   permissions: PosPermission[],
-): Promise<ActionResult<Cashier>> {
-  const result = await authedMutate<Cashier>(
-    `/workspace/cashiers/${cashierId}/permissions`,
-    { method: "PUT", body: { permissions } },
+  staffGroup?: StaffGroup,
+): Promise<ActionResult<Staff>> {
+  const result = await authedMutate<Staff>(
+    `/workspace/staff/${staffId}/permissions`,
+    { method: "PUT", body: { permissions, staff_group: staffGroup } },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Deactivate (suspend) a cashier account. */
-export async function deactivateCashier(
-  cashierId: string,
+/** Deactivate (suspend) a staff account. */
+export async function deactivateStaff(
+  staffId: string,
 ): Promise<ActionResult> {
-  const result = await authedMutate(`/workspace/cashiers/${cashierId}`, {
+  const result = await authedMutate(`/workspace/staff/${staffId}`, {
     method: "DELETE",
   });
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Permanently delete a cashier account (history is preserved with a null actor). */
-export async function deleteCashierAccount(
-  cashierId: string,
+/** Permanently delete a staff account (history is preserved with a null actor). */
+export async function deleteStaffAccount(
+  staffId: string,
 ): Promise<ActionResult> {
   const result = await authedMutate(
-    `/workspace/cashiers/${cashierId}/permanent`,
+    `/workspace/staff/${staffId}/permanent`,
     { method: "DELETE" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Re-send a pending cashier invitation email (refreshes its expiry). */
-export async function resendCashierInvitation(
+/** Re-send a pending staff invitation email (refreshes its expiry). */
+export async function resendStaffInvitation(
   invitationId: string,
-): Promise<ActionResult<CashierInvitation>> {
-  const result = await authedMutate<CashierInvitation>(
-    `/workspace/cashiers/invitations/${invitationId}/resend`,
+): Promise<ActionResult<StaffInvitation>> {
+  const result = await authedMutate<StaffInvitation>(
+    `/workspace/staff/invitations/${invitationId}/resend`,
     { method: "POST" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
   return result;
 }
 
-/** Revoke (delete) a pending cashier invitation. */
-export async function deleteCashierInvitation(
+/** Revoke (delete) a pending staff invitation. */
+export async function deleteStaffInvitation(
   invitationId: string,
 ): Promise<ActionResult> {
   const result = await authedMutate(
-    `/workspace/cashiers/invitations/${invitationId}`,
+    `/workspace/staff/invitations/${invitationId}`,
     { method: "DELETE" },
   );
-  if (result.ok) revalidateOwner("cashiers");
+  if (result.ok) revalidateOwner("settings/staff");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Settings — Danger zone                                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface ResetWorkspaceInput {
+  /** The workspace slug, typed by the owner. */
+  confirmation: string;
+  reason: string;
+  /** Authenticator code; proves a recent step-up before the destructive call. */
+  code: string;
+}
+
+/**
+ * Reset the workspace's operational data. The authenticator code is verified
+ * first so the backend's recent-2FA gate passes; owners without 2FA skip it.
+ */
+export async function resetWorkspace(
+  input: ResetWorkspaceInput,
+): Promise<ActionResult<undefined>> {
+  const code = input.code.trim();
+
+  if (code !== "") {
+    const verified = await authedMutate("/auth/two-factor/verify", { body: { code } });
+    if (!verified.ok) {
+      return { ...verified, errors: { code: [verified.message] } };
+    }
+  }
+
+  const result = await authedMutate<undefined>("/workspace/danger/reset", {
+    method: "DELETE",
+    body: { confirmation: input.confirmation, reason: input.reason },
+  });
+  if (result.ok) revalidatePath("/[locale]/(dashboard)/owner", "layout");
   return result;
 }

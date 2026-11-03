@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AdminPermission;
 use App\Enums\AdminRole;
 use App\Enums\Gender;
+use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
@@ -36,8 +37,10 @@ class User extends Authenticatable
         'gender',
         'role',
         'workspace_id',
+        'staff_group',
         'status',
         'sso_sub',
+        'claimed_at',
         'onboarding_completed_at',
         'avatar',
         'specialty',
@@ -50,6 +53,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'documents',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -60,12 +65,28 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'password' => 'hashed',
             'gender' => Gender::class,
             'role' => UserRole::class,
+            'staff_group' => StaffGroup::class,
             'status' => UserStatus::class,
             'documents' => 'array',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_recovery_codes' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Self-created accounts are claimed from the start; only the unclaimed
+        // subscriber flow passes `claimed_at` explicitly (as null).
+        static::creating(function (self $user): void {
+            if (! array_key_exists('claimed_at', $user->getAttributes())) {
+                $user->claimed_at = now();
+            }
+        });
     }
 
     // ---- Relationships ----
@@ -176,6 +197,26 @@ class User extends Authenticatable
     public function isCashier(): bool
     {
         return $this->role === UserRole::Cashier;
+    }
+
+    /** Two-factor authentication covers owners, staff (cashiers) and admins; freelancers are out of scope. */
+    public function canUseTwoFactor(): bool
+    {
+        return ! $this->isFreelancer();
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null && $this->two_factor_confirmed_at !== null;
+    }
+
+    /**
+     * An unclaimed subscriber exists only as a record (import, discovery, guest
+     * registration); it has no credentials and must never get a session.
+     */
+    public function isUnclaimed(): bool
+    {
+        return $this->claimed_at === null;
     }
 
     public function isActive(): bool

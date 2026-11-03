@@ -1,0 +1,37 @@
+{
+  "approvals": {
+    "title": "Approvals",
+    "subtitle": "Review sensitive workspace changes before they take effect",
+    "colWorkspace": "Workspace",
+    "colType": "Type",
+    "colChange": "Change (current → proposed)",
+    "colRequester": "Requested by",
+    "colRequested": "Requested on",
+    "colStatus": "Status",
+    "approve": "Approve",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "approveTitle": "Approve this request?",
+    "approveMessage": "The change will be applied to the workspace immediately.",
+    "rejectTitle": "Reject this request",
+    "reasonLabel": "Reason",
+    "reasonHint": "Required. The owner will see this reason.",
+    "empty": "No requests in this view",
+    "types": {
+      "capacity": "Capacity",
+      "working_hours": "Working hours",
+      "pricing": "Pricing"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "toast": {
+      "approved": "Request approved",
+      "rejected": "Request rejected",
+      "failed": "Could not complete the action"
+    }
+  }
+}

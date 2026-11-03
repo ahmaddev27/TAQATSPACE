@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -13,16 +12,15 @@ import { Badge, StatusBadge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/providers/ToastProvider";
-import {
-  updateSeatTypes,
-  updateSettings,
-  type SeatTypeInput,
-  type WorkspaceSettingsInput,
-} from "@/lib/actions/owner";
-import type { City, SeatType, Workspace } from "@/lib/types";
+import { updateSettings, type WorkspaceSettingsInput } from "@/lib/actions/owner";
+import type { City, Workspace } from "@/lib/types";
+import type { ApprovalRequestEntry } from "@/lib/types/approvals";
 import { PhotoManager } from "./PhotoManager";
 import { LogoManager } from "./LogoManager";
 import { MessagingTab } from "./MessagingTab";
+import { DomainTab } from "./DomainTab";
+import { DangerTab } from "./DangerTab";
+import { OperationsTab } from "./OperationsTab";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -30,6 +28,8 @@ const API_BASE =
 export interface SettingsTabsProps {
   workspace: Workspace;
   locale: string;
+  /** The owner's operations requests still awaiting a decision. */
+  pendingApprovals?: ApprovalRequestEntry[];
 }
 
 // MapLibre touches `window`, so load the picker on the client only.
@@ -58,77 +58,44 @@ const AMENITY_KEYS = [
   "security",
 ] as const;
 
-const DAY_KEYS = [
-  "saturday",
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
+/** Mirrors the backend WorkspaceTimezone / WorkspaceCurrency enums. */
+const TIMEZONES = [
+  "Asia/Gaza",
+  "Asia/Jerusalem",
+  "Asia/Amman",
+  "Asia/Beirut",
+  "Asia/Damascus",
+  "Asia/Baghdad",
+  "Asia/Riyadh",
+  "Asia/Kuwait",
+  "Asia/Qatar",
+  "Asia/Dubai",
+  "Africa/Cairo",
+  "Africa/Tripoli",
+  "Africa/Tunis",
+  "Africa/Algiers",
+  "Africa/Casablanca",
+  "UTC",
 ] as const;
 
-/** The three backend seat types, in display order. */
-const SEAT_TYPE_KEYS: SeatType[] = ["flexible", "fixed", "private_office"];
-
-interface DayHours {
-  open: boolean;
-  from: string;
-  to: string;
-}
-
-/** Editable per-seat-type pricing row (strings keep inputs controlled). */
-interface SeatTypeRow {
-  type: SeatType;
-  enabled: boolean;
-  priceMonthly: string;
-  priceDaily: string;
-  capacity: string;
-}
+const CURRENCIES = ["ILS", "USD", "EUR", "JOD", "EGP", "SAR", "AED", "KWD"] as const;
 
 interface FormState {
   name: string;
   description: string;
   phone: string;
+  contactEmail: string;
+  bankName: string;
+  iban: string;
+  timezone: string;
+  currency: string;
+  wifiSsid: string;
+  wifiPassword: string;
   address: string;
   cityId: string;
   latitude: string;
   longitude: string;
   amenities: string[];
-  hours: Record<string, DayHours>;
-  seatTypes: SeatTypeRow[];
-}
-
-/**
- * Build one editable row per backend seat type, seeded from the workspace's
- * saved rows when present and defaulted (disabled, empty) otherwise.
- */
-function parseSeatTypes(raw: Workspace["seat_types"]): SeatTypeRow[] {
-  const byType = new Map((raw ?? []).map((row) => [row.type, row]));
-  return SEAT_TYPE_KEYS.map((type) => {
-    const row = byType.get(type);
-    return {
-      type,
-      enabled: row?.enabled ?? false,
-      priceMonthly: row?.price_monthly ?? "",
-      priceDaily: row?.price_daily ?? "",
-      capacity: row?.capacity != null ? String(row.capacity) : "",
-    };
-  });
-}
-
-function parseHours(raw: Workspace["working_hours"]): Record<string, DayHours> {
-  const source = (raw ?? {}) as Record<string, Partial<DayHours>>;
-  const out: Record<string, DayHours> = {};
-  for (const day of DAY_KEYS) {
-    const d = source[day];
-    out[day] = {
-      open: d?.open ?? false,
-      from: d?.from ?? "09:00",
-      to: d?.to ?? "18:00",
-    };
-  }
-  return out;
 }
 
 function buildInitial(ws: Workspace): FormState {
@@ -136,18 +103,23 @@ function buildInitial(ws: Workspace): FormState {
     name: ws.name ?? "",
     description: ws.description ?? "",
     phone: ws.phone ?? "",
+    contactEmail: ws.contact_email ?? "",
+    bankName: ws.bank_name ?? "",
+    iban: ws.iban ?? "",
+    timezone: ws.timezone ?? TIMEZONES[0],
+    currency: ws.currency ?? CURRENCIES[0],
+    wifiSsid: ws.wifi_ssid ?? "",
+    wifiPassword: ws.wifi_password ?? "",
     address: ws.address ?? "",
     cityId: ws.city_id ?? "",
     latitude: ws.latitude != null ? String(ws.latitude) : "",
     longitude: ws.longitude != null ? String(ws.longitude) : "",
     amenities: ws.amenities ?? [],
-    hours: parseHours(ws.working_hours),
-    seatTypes: parseSeatTypes(ws.seat_types),
   };
 }
 
 /** Tabbed workspace settings editor. One Save persists the whole form. */
-export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
+export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: SettingsTabsProps) {
   const t = useTranslations("owner");
   const tm = useTranslations("messaging.settings.owner");
   const localeTag = useLocale();
@@ -209,31 +181,23 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
   const presetAmenities = new Set<string>(AMENITY_KEYS);
   const customAmenities = form.amenities.filter((a) => !presetAmenities.has(a));
 
-  const setDay = (day: string, patch: Partial<DayHours>) =>
-    setForm((f) => ({
-      ...f,
-      hours: { ...f.hours, [day]: { ...f.hours[day], ...patch } },
-    }));
-
-  const setSeatType = (type: SeatType, patch: Partial<SeatTypeRow>) =>
-    setForm((f) => ({
-      ...f,
-      seatTypes: f.seatTypes.map((row) =>
-        row.type === type ? { ...row, ...patch } : row,
-      ),
-    }));
-
   const save = () => {
     const payload: WorkspaceSettingsInput = {
       name: form.name.trim(),
       description: form.description.trim() || null,
       phone: form.phone.trim() || null,
+      contact_email: form.contactEmail.trim() || null,
+      bank_name: form.bankName.trim() || null,
+      iban: form.iban.trim() || null,
+      timezone: form.timezone,
+      currency: form.currency,
+      wifi_ssid: form.wifiSsid.trim() || null,
+      wifi_password: form.wifiPassword || null,
       address: form.address.trim(),
       city_id: form.cityId,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
       amenities: form.amenities,
-      working_hours: form.hours,
     };
 
     startTransition(async () => {
@@ -247,42 +211,16 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
     });
   };
 
-  const toNullableNumber = (value: string): number | null => {
-    const trimmed = value.trim();
-    if (trimmed === "") return null;
-    const n = Number(trimmed);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  const saveSeatTypes = () => {
-    const rows: SeatTypeInput[] = form.seatTypes.map((row) => ({
-      type: row.type,
-      price_monthly: toNullableNumber(row.priceMonthly),
-      price_daily: toNullableNumber(row.priceDaily),
-      capacity: Math.max(0, Math.trunc(Number(row.capacity) || 0)),
-      enabled: row.enabled,
-    }));
-
-    startTransition(async () => {
-      const res = await updateSeatTypes(rows);
-      if (res.ok) {
-        setErrors({});
-        toast({ tone: "ok", title: t("settings.saved") });
-      } else {
-        setErrors(res.errors ?? {});
-        toast({ tone: "err", title: t("settings.saveFailed"), body: res.message });
-      }
-    });
-  };
-
   const tabs = [
     { id: "basic", label: t("settings.tabBasic") },
+    { id: "general", label: t("settings.tabGeneral") },
     { id: "location", label: t("settings.tabLocation") },
-    { id: "seatTypes", label: t("settings.tabSeatTypes") },
     { id: "amenities", label: t("settings.tabAmenities") },
     { id: "photos", label: t("settings.tabPhotos") },
-    { id: "hours", label: t("settings.tabHours") },
+    { id: "operations", label: t("settings.tabOperations") },
     { id: "messaging", label: tm("tab") },
+    { id: "domain", label: t("settings.tabDomain") },
+    { id: "danger", label: t("settings.tabDanger") },
   ];
 
   return (
@@ -331,6 +269,63 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 className="ltr"
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
+
+        {tab === "general" && (
+          <div className="stack" style={{ gap: 16 }}>
+            <Field label={t("settings.contactEmail")} error={errors.contact_email?.[0]}>
+              <Input
+                className="ltr"
+                type="email"
+                value={form.contactEmail}
+                onChange={(e) => set("contactEmail", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.bankName")} error={errors.bank_name?.[0]}>
+              <Input value={form.bankName} onChange={(e) => set("bankName", e.target.value)} />
+            </Field>
+            <Field label={t("settings.iban")} error={errors.iban?.[0]}>
+              <Input
+                className="ltr"
+                value={form.iban}
+                onChange={(e) => set("iban", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.timezone")} error={errors.timezone?.[0]}>
+              <Select value={form.timezone} onChange={(e) => set("timezone", e.target.value)}>
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t("settings.currency")} error={errors.currency?.[0]}>
+              <Select value={form.currency} onChange={(e) => set("currency", e.target.value)}>
+                {CURRENCIES.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t("settings.wifiSsid")} error={errors.wifi_ssid?.[0]}>
+              <Input
+                className="ltr"
+                value={form.wifiSsid}
+                onChange={(e) => set("wifiSsid", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.wifiPassword")} error={errors.wifi_password?.[0]}>
+              <Input
+                className="ltr"
+                type="password"
+                autoComplete="new-password"
+                value={form.wifiPassword}
+                onChange={(e) => set("wifiPassword", e.target.value)}
               />
             </Field>
           </div>
@@ -396,81 +391,6 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 />
               </Field>
             </div>
-          </div>
-        )}
-
-        {tab === "seatTypes" && (
-          <div className="stack" style={{ gap: 14 }}>
-            <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
-              {t("settings.seatTypesHint")}
-            </p>
-            <div className="stack" style={{ gap: 12 }}>
-              {form.seatTypes.map((row) => (
-                <div
-                  key={row.type}
-                  className={`seat-type-card ${row.enabled ? "is-on" : ""}`}
-                >
-                  <div className="seat-type-head">
-                    <Checkbox
-                      checked={row.enabled}
-                      onChange={(e) =>
-                        setSeatType(row.type, { enabled: e.target.checked })
-                      }
-                    >
-                      <span className="hours-day">
-                        {t(`settings.seatTypeNames.${row.type}` as never)}
-                      </span>
-                    </Checkbox>
-                  </div>
-                  {row.enabled && (
-                    <div className="seat-type-fields">
-                      <Field label={t("settings.seatMonthlyPrice")}>
-                        <Input
-                          className="tnum"
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={row.priceMonthly}
-                          onChange={(e) =>
-                            setSeatType(row.type, { priceMonthly: e.target.value })
-                          }
-                        />
-                      </Field>
-                      <Field label={t("settings.seatDailyPrice")}>
-                        <Input
-                          className="tnum"
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={row.priceDaily}
-                          onChange={(e) =>
-                            setSeatType(row.type, { priceDaily: e.target.value })
-                          }
-                        />
-                      </Field>
-                      <Field label={t("settings.seatCapacity")}>
-                        <Input
-                          className="tnum"
-                          inputMode="numeric"
-                          placeholder="0"
-                          value={row.capacity}
-                          onChange={(e) =>
-                            setSeatType(row.type, { capacity: e.target.value })
-                          }
-                        />
-                      </Field>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button
-              variant="primary"
-              icon="check"
-              loading={pending}
-              onClick={saveSeatTypes}
-              style={{ alignSelf: "flex-start" }}
-            >
-              {pending ? t("settings.saving") : t("settings.save")}
-            </Button>
           </div>
         )}
 
@@ -560,56 +480,27 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
           </div>
         )}
 
-        {tab === "hours" && (
-          <div className="stack" style={{ gap: 12 }}>
-            <p className="muted" style={{ fontSize: "var(--fs-sm)" }}>
-              {t("settings.hoursHint")}
-            </p>
-            <div className="stack" style={{ gap: 8 }}>
-              {DAY_KEYS.map((day) => {
-                const d = form.hours[day];
-                return (
-                  <div key={day} className={`hours-row ${d.open ? "is-open" : ""}`}>
-                    <Checkbox
-                      checked={d.open}
-                      onChange={(e) => setDay(day, { open: e.target.checked })}
-                    >
-                      <span className="hours-day">
-                        {t(`settings.days.${day}` as never)}
-                      </span>
-                    </Checkbox>
-                    {d.open ? (
-                      <div className="hours-times">
-                        <Input
-                          type="time"
-                          className="tnum ltr"
-                          value={d.from}
-                          onChange={(e) => setDay(day, { from: e.target.value })}
-                        />
-                        <span className="muted">{t("settings.to")}</span>
-                        <Input
-                          type="time"
-                          className="tnum ltr"
-                          value={d.to}
-                          onChange={(e) => setDay(day, { to: e.target.value })}
-                        />
-                      </div>
-                    ) : (
-                      <span className="muted-3 hours-closed">{t("settings.closed")}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        {tab === "operations" && (
+          <OperationsTab workspace={workspace} pending={pendingApprovals} />
         )}
 
         {tab === "messaging" && (
           <MessagingTab messaging={workspace.messaging} />
         )}
+
+        {tab === "domain" && workspace.slug && workspace.urls && (
+          <DomainTab
+            slug={workspace.slug}
+            code={workspace.code ?? ""}
+            dashboardUrl={workspace.urls.dashboard}
+            publicUrl={workspace.urls.public}
+          />
+        )}
+
+        {tab === "danger" && workspace.slug && <DangerTab slug={workspace.slug} />}
       </div>
 
-      {tab !== "photos" && tab !== "seatTypes" && tab !== "messaging" && (
+      {!["photos", "operations", "messaging", "domain", "danger"].includes(tab) && (
         <Button
           variant="primary"
           icon="check"

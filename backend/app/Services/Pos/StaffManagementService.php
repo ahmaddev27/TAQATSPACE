@@ -1,0 +1,316 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Pos;
+
+use App\Enums\PosPermission;
+use App\Enums\StaffGroup;
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
+use App\Models\CashierInvitation;
+use App\Models\User;
+use App\Models\Workspace;
+use App\Notifications\CashierInvitationNotification;
+use App\Services\Admin\AdminManagementService;
+use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Spatie\Permission\PermissionRegistrar;
+
+/**
+ * Owner-facing administration of a workspace's staff (cashier, hospitality and
+ * finance-supervisor groups): email invitations, SSO-onboarding acceptance, the staff directory, and
+ * deactivation. Mirrors {@see AdminManagementService} but
+ * scoped to a single workspace via `users.workspace_id`.
+ *
+ * Acceptance follows the SSO model: the invitee signs in to Taqat normally
+ * (email verified by the IdP) and, during onboarding, accepts or declines a
+ * pending invitation matching their address — there is no local password.
+ */
+class StaffManagementService
+{
+    /** How long an emailed invitation stays valid. */
+    private const INVITE_TTL_DAYS = 7;
+
+    public function __construct(
+        private readonly AuditLogger $audit,
+    ) {}
+
+    /**
+     * Create + email a cashier invitation for a workspace. The invitation is just
+     * a record: the invitee signs in via SSO and accepts it during onboarding.
+     *
+     * An email is rejected only when it already belongs to an ONBOARDED account —
+     * a not-yet-onboarded SSO account (or no account at all) is fine, since that
+     * account can still adopt the cashier role during onboarding.
+     *
+     * @param  array{email: string, name?: string|null, staff_group?: string|null, permissions?: array<int, string>|null}  $data
+     */
+    public function invite(Workspace $workspace, User $inviter, array $data): CashierInvitation
+    {
+        $email = mb_strtolower(trim($data['email']));
+
+        $alreadyOnboarded = User::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->whereNotNull('onboarding_completed_at')
+            ->exists();
+
+        if ($alreadyOnboarded) {
+            throw new RuntimeException(__('messages.cashier_email_taken'));
+        }
+
+        // One open invite per email — re-inviting an already-invited address is
+        // rejected; the owner uses "resend" (or deletes it) instead.
+        $hasOpenInvite = CashierInvitation::query()
+            ->where('workspace_id', $workspace->id)
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->whereNull('accepted_at')
+            ->whereNull('declined_at')
+            ->where('expires_at', '>', Carbon::now())
+            ->exists();
+
+        if ($hasOpenInvite) {
+            throw new RuntimeException(__('messages.cashier_already_invited'));
+        }
+
+        $group = StaffGroup::tryFrom((string) ($data['staff_group'] ?? '')) ?? StaffGroup::Cashier;
+        // Explicit permissions refine the group; absent ones fall back to the group's map.
+        $permissions = $this->sanitizePermissions($data['permissions'] ?? null) ?? $group->permissions();
+        $token = Str::random(48);
+
+        $invitation = DB::transaction(function () use ($workspace, $inviter, $email, $data, $group, $permissions, $token): CashierInvitation {
+            // Clear any stale (expired/declined) invites for this address first.
+            CashierInvitation::query()
+                ->where('workspace_id', $workspace->id)
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->whereNull('accepted_at')
+                ->delete();
+
+            return CashierInvitation::query()->create([
+                'workspace_id' => $workspace->id,
+                'invited_by' => $inviter->id,
+                'email' => $email,
+                'name' => $data['name'] ?? null,
+                'token_hash' => $this->hashToken($token),
+                'permissions' => $permissions,
+                'staff_group' => $group->value,
+                'expires_at' => Carbon::now()->addDays(self::INVITE_TTL_DAYS),
+            ]);
+        });
+
+        Notification::route('mail', $email)->notify(
+            new CashierInvitationNotification($workspace, $invitation->name)
+        );
+
+        $this->audit->log('staff.invited', $invitation, changes: [
+            'email' => $email,
+            'permissions' => $permissions,
+        ], actor: $inviter);
+
+        return $invitation;
+    }
+
+    /**
+     * The newest still-open invitation addressed to the given email, if any. Used
+     * during onboarding to offer the authenticated (IdP-verified) user an
+     * accept/decline choice.
+     */
+    public function pendingForEmail(string $email): ?CashierInvitation
+    {
+        return CashierInvitation::query()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))])
+            ->whereNull('accepted_at')
+            ->whereNull('declined_at')
+            ->where('expires_at', '>', Carbon::now())
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Accept an invitation for the authenticated (SSO) user: adopt the cashier
+     * role + workspace + permission grant, complete onboarding, and consume the
+     * invite. The user's IdP-verified email must match the invitation's.
+     */
+    public function acceptForUser(User $user, CashierInvitation $invitation): User
+    {
+        $matches = $invitation->isPending()
+            && strcasecmp($invitation->email, (string) $user->email) === 0
+            && $user->needsOnboarding();
+
+        if (! $matches) {
+            throw new RuntimeException(__('messages.cashier_invite_invalid'));
+        }
+
+        $group = $invitation->staff_group ?? StaffGroup::Cashier;
+
+        return DB::transaction(function () use ($user, $invitation, $group): User {
+            $user->forceFill([
+                'role' => UserRole::Cashier->value,
+                'workspace_id' => $invitation->workspace_id,
+                'staff_group' => $group->value,
+                'status' => UserStatus::Active->value,
+                'onboarding_completed_at' => now(),
+            ])->save();
+
+            $user->syncRoles([UserRole::Cashier->value]);
+            $user->syncPermissions($invitation->permissions ?? $group->permissions());
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            $invitation->forceFill([
+                'accepted_at' => now(),
+                'accepted_user_id' => $user->id,
+            ])->save();
+
+            return $user->fresh() ?? $user;
+        });
+    }
+
+    /**
+     * Decline an invitation for the authenticated user, freeing them to proceed
+     * to the normal freelancer/owner onboarding choice.
+     */
+    public function declineForUser(User $user, CashierInvitation $invitation): void
+    {
+        $matches = $invitation->isPending()
+            && strcasecmp($invitation->email, (string) $user->email) === 0;
+
+        if (! $matches) {
+            abort(404, __('messages.cashier_invite_invalid'));
+        }
+
+        $invitation->forceFill(['declined_at' => now()])->save();
+    }
+
+    /**
+     * Re-send the invitation email for a still-open invite and refresh its expiry.
+     */
+    public function resendInvitation(Workspace $workspace, CashierInvitation $invitation): CashierInvitation
+    {
+        $this->ensureInvitationBelongs($workspace, $invitation);
+
+        if ($invitation->accepted_at !== null) {
+            throw new RuntimeException(__('messages.cashier_invite_invalid'));
+        }
+
+        $invitation->forceFill([
+            'declined_at' => null,
+            'expires_at' => Carbon::now()->addDays(self::INVITE_TTL_DAYS),
+        ])->save();
+
+        Notification::route('mail', $invitation->email)->notify(
+            new CashierInvitationNotification($workspace, $invitation->name)
+        );
+
+        return $invitation;
+    }
+
+    /** Revoke a pending invitation. */
+    public function deleteInvitation(Workspace $workspace, CashierInvitation $invitation): void
+    {
+        $this->ensureInvitationBelongs($workspace, $invitation);
+
+        $invitation->delete();
+    }
+
+    /** Reject (404) an invitation that does not belong to the given workspace. */
+    private function ensureInvitationBelongs(Workspace $workspace, CashierInvitation $invitation): void
+    {
+        if ((string) $invitation->workspace_id !== (string) $workspace->id) {
+            abort(404, __('messages.cashier_invite_invalid'));
+        }
+    }
+
+    /**
+     * Update a staff member's permission grant (owner curates what they can do).
+     * An optional group re-labels the member; the explicit list still decides the
+     * effective grant, so single permissions can be added or removed on top.
+     *
+     * @param  array<int, string>  $permissions
+     */
+    public function updatePermissions(User $cashier, Workspace $workspace, array $permissions, ?StaffGroup $group = null): User
+    {
+        $this->ensureBelongsToWorkspace($cashier, $workspace);
+
+        $before = $cashier->getPermissionNames()->sort()->values()->all();
+        $groupBefore = $cashier->staff_group;
+
+        if ($group !== null) {
+            $cashier->forceFill(['staff_group' => $group->value])->save();
+        }
+
+        $cashier->syncPermissions($this->sanitizePermissions($permissions) ?? []);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->audit->log('permissions.changed', $cashier, changes: [
+            'before' => $before,
+            'after' => $cashier->fresh()?->getPermissionNames()->sort()->values()->all(),
+            'group_before' => $groupBefore?->value,
+            'group_after' => ($group ?? $groupBefore)?->value,
+        ], workspaceId: (string) $workspace->id);
+
+        return $cashier->fresh() ?? $cashier;
+    }
+
+    /**
+     * Suspend a cashier account (preferred over deletion so order history keeps
+     * its cashier reference).
+     */
+    public function deactivate(User $cashier, Workspace $workspace): User
+    {
+        $this->ensureBelongsToWorkspace($cashier, $workspace);
+
+        $cashier->forceFill(['status' => UserStatus::Suspended->value])->save();
+
+        $this->audit->log('staff.deactivated', $cashier, workspaceId: (string) $workspace->id);
+
+        return $cashier->fresh() ?? $cashier;
+    }
+
+    /**
+     * Permanently delete a cashier account. Safe for history: POS orders,
+     * payments and stock movements reference the cashier with `nullOnDelete`, so
+     * the records survive with a null actor.
+     */
+    public function deleteStaff(User $cashier, Workspace $workspace): void
+    {
+        $this->ensureBelongsToWorkspace($cashier, $workspace);
+
+        $cashier->delete();
+    }
+
+    /** Reject (404) a user that is not a cashier of the given workspace. */
+    private function ensureBelongsToWorkspace(User $cashier, Workspace $workspace): void
+    {
+        if (! $cashier->isCashier() || (string) $cashier->workspace_id !== (string) $workspace->id) {
+            abort(404, __('messages.cashier_not_found'));
+        }
+    }
+
+    /**
+     * Keep only recognised POS permission names; null when nothing valid was
+     * given so callers fall back to the cashier defaults.
+     *
+     * @param  array<int, string>|null  $permissions
+     * @return array<int, string>|null
+     */
+    private function sanitizePermissions(?array $permissions): ?array
+    {
+        if ($permissions === null) {
+            return null;
+        }
+
+        $valid = array_values(array_intersect($permissions, PosPermission::values()));
+
+        return $valid === [] ? null : $valid;
+    }
+
+    /** Deterministic hash for token lookup (the raw token is never stored). */
+    private function hashToken(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+}

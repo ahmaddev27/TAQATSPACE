@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/providers/ToastProvider";
 import { reviewBooking } from "@/lib/actions/owner";
@@ -42,6 +44,26 @@ export function BookingsManager({
   const [tab, setTab] = useState<string>("pending");
   const [approveFor, setApproveFor] = useState<BookingRequest | null>(null);
   const [rejectFor, setRejectFor] = useState<BookingRequest | null>(null);
+
+  // `?new=1` (the Alt+S shortcut) opens the approval form for the oldest
+  // pending request; the param is then dropped so a refresh does not reopen it.
+  const searchParams = useSearchParams();
+  const startNew = searchParams?.get("new") === "1";
+  const [intentHandled, setIntentHandled] = useState(false);
+  if (startNew !== intentHandled) {
+    setIntentHandled(startNew);
+    const oldest = bookings.find((b) => b.status === "pending");
+    if (startNew && oldest) {
+      setTab("pending");
+      setApproveFor(oldest);
+    }
+  }
+  useEffect(() => {
+    if (!startNew) return;
+    const next = new URL(window.location.href);
+    next.searchParams.delete("new");
+    window.history.replaceState(null, "", next);
+  }, [startNew]);
 
   const rows = useMemo(
     () => bookings.filter((b) => b.status === TAB_STATUS[tab]),
@@ -123,17 +145,16 @@ export function BookingsManager({
       )}
 
       {rows.length === 0 ? (
-        <div className="empty-state" style={{ minHeight: 280 }}>
-          <div className="st-ico amber" style={{ width: 48, height: 48 }}>
-            <Icon name="inbox" />
-          </div>
-          <div>
-            <div className="h3">{emptyText[tab][0]}</div>
-            <div style={{ fontSize: "var(--fs-sm)", marginTop: 4 }}>
-              {emptyText[tab][1]}
-            </div>
-          </div>
-        </div>
+        <EmptyState
+          icon="inbox"
+          title={emptyText[tab][0]}
+          body={emptyText[tab][1]}
+          action={{
+            label: t("bookings.emptyAction"),
+            href: "/owner/resources",
+            variant: "secondary",
+          }}
+        />
       ) : (
         <div className="stack" style={{ gap: 14 }}>
           {rows.map((b) => (

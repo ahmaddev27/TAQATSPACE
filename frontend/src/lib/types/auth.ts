@@ -16,7 +16,8 @@ export type AdminPermission =
   | "manage_billing"
   | "manage_content"
   | "manage_messaging"
-  | "view_reports";
+  | "view_reports"
+  | "approve_requests";
 
 /** Named permissions that gate the POS (café) area for a cashier account. */
 export type PosPermission =
@@ -24,6 +25,11 @@ export type PosPermission =
   | "pos_refund"
   | "pos_manage_products"
   | "pos_view_reports";
+
+/** Modules rolled out per workspace; every flag is off until a super admin enables it. */
+export type WorkspaceFeature = "network" | "finance_v2" | "gsg";
+
+export type WorkspaceFeatureFlags = Record<WorkspaceFeature, boolean>;
 
 export interface User {
   id: string;
@@ -41,6 +47,9 @@ export interface User {
   avatar: string | null;
   /** True only for the local email/password admin; false for SSO accounts. */
   can_change_password: boolean;
+  /** Owners, staff and admins may enroll in TOTP two-factor authentication. */
+  can_use_two_factor?: boolean;
+  two_factor_enabled?: boolean;
   email_verified_at: string | null;
   created_at: string;
   /** Present for admin accounts only: holds the elevated super-admin role. */
@@ -51,6 +60,8 @@ export interface User {
    * roles with no permission tier (owner/freelancer).
    */
   permissions?: (AdminPermission | PosPermission)[];
+  /** Feature flags of the account's workspace; absent for admins and freelancers. */
+  features?: WorkspaceFeatureFlags;
   /**
    * A pending cashier invitation matching this account's email, surfaced during
    * onboarding so the user can Accept/Decline. Present only while
@@ -85,8 +96,26 @@ export interface AuthPayload {
   role: UserRole;
 }
 
+/** Backend payload when the account has 2FA: only a challenge-only token is issued. */
+export interface TwoFactorChallengePayload {
+  two_factor_required: true;
+  token: string;
+  token_type: string;
+}
+
 /** What our Next route handlers expose to the client (never the token). */
 export interface ClientAuthResult {
   user: User;
   role: UserRole;
+}
+
+/** Client-side outcome of a sign-in attempt that may require a 2FA challenge. */
+export interface ClientTwoFactorRequired {
+  two_factor_required: true;
+}
+
+export function isTwoFactorRequired(
+  result: ClientAuthResult | ClientTwoFactorRequired,
+): result is ClientTwoFactorRequired {
+  return "two_factor_required" in result && result.two_factor_required === true;
 }

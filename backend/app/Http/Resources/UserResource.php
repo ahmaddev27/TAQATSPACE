@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Enums\PosPermission;
+use App\Enums\StaffGroup;
 use App\Models\User;
-use App\Services\Pos\CashierManagementService;
+use App\Services\FeatureFlagService;
+use App\Services\Pos\StaffManagementService;
 use App\Support\MediaUrl;
+use App\Support\Tenancy\CurrentWorkspaceResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,6 +39,8 @@ class UserResource extends JsonResource
             'avatar' => $this->avatarUrl(),
             // Only the local email/password account (the internal admin) may change
             // its password; SSO-provisioned users have their credentials at the IdP.
+            'can_use_two_factor' => $this->canUseTwoFactor(),
+            'two_factor_enabled' => $this->hasTwoFactorEnabled(),
             'can_change_password' => $this->sso_sub === null,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
@@ -47,7 +52,28 @@ class UserResource extends JsonResource
             // lacks (e.g. the Refund button without `pos_refund`). Resolved only
             // for cashier accounts to keep the common path query-free.
             ...$this->cashierContext(),
+            ...$this->featureContext($request),
         ];
+    }
+
+    /**
+     * The workspace's feature flags so the SPA can hide menus of modules that
+     * are not enabled. Resolved only for the authenticated user's own payload
+     * (never for directory lists) to avoid per-row lookups.
+     *
+     * @return array<string, mixed>
+     */
+    private function featureContext(Request $request): array
+    {
+        if ($this->isAdmin() || ! $this->resource->is($request->user())) {
+            return [];
+        }
+
+        $workspace = app(CurrentWorkspaceResolver::class)->resolve($request);
+
+        return $workspace === null
+            ? []
+            : ['features' => app(FeatureFlagService::class)->flagsFor($workspace->id)];
     }
 
     /**
@@ -91,7 +117,7 @@ class UserResource extends JsonResource
      * they still need onboarding so the SPA can offer accept/decline. Resolved
      * lazily to keep the common (already-onboarded) path query-free.
      *
-     * @return array{id: string, workspace_name: ?string, permissions: array<int, string>}|null
+     * @return array{id: string, workspace_name: ?string, staff_group: string, permissions: array<int, string>}|null
      */
     private function pendingCashierInvitation(): ?array
     {
@@ -99,7 +125,7 @@ class UserResource extends JsonResource
             return null;
         }
 
-        $invitation = app(CashierManagementService::class)->pendingForEmail((string) $this->email);
+        $invitation = app(StaffManagementService::class)->pendingForEmail((string) $this->email);
 
         if ($invitation === null) {
             return null;
@@ -108,6 +134,7 @@ class UserResource extends JsonResource
         return [
             'id' => $invitation->id,
             'workspace_name' => $invitation->workspace?->name,
+            'staff_group' => ($invitation->staff_group ?? StaffGroup::Cashier)->value,
             'permissions' => $invitation->permissions ?? PosPermission::defaultsForCashier(),
         ];
     }

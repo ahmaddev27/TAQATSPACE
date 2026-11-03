@@ -1,5 +1,11 @@
 import type { IconName } from "@/components/ui/Icon";
-import type { AdminPermission, PosPermission, UserRole } from "@/lib/types/auth";
+import type {
+  AdminPermission,
+  PosPermission,
+  UserRole,
+  WorkspaceFeature,
+  WorkspaceFeatureFlags,
+} from "@/lib/types/auth";
 
 /** Any permission that can gate a nav item (admin areas or POS/cashier areas). */
 export type NavPermission = AdminPermission | PosPermission;
@@ -31,6 +37,11 @@ export interface NavItem {
    * Items without it are visible to everyone in the role.
    */
   permission?: NavPermission;
+  /**
+   * When set, the item is shown only for workspaces that have this module
+   * enabled (see `filterNavByFeatures`). Items without it are unaffected.
+   */
+  feature?: WorkspaceFeature;
   /**
    * Gates the item on realtime-chat (Firebase) availability so the in-app 1:1
    * surface is never duplicated. `"primary"` items (the realtime Chat) show only
@@ -74,6 +85,37 @@ export function filterNavByPermissions(
   // filtered recursively so a nested, permission-gated item is hidden too.
   const keep = (item: NavItem): NavItem | null => {
     if (item.permission && !granted.has(item.permission)) return null;
+
+    if (item.children) {
+      const children = item.children.map(keep).filter((c): c is NavItem => c !== null);
+      if (children.length === 0) return null;
+      return { ...item, children };
+    }
+
+    return item;
+  };
+
+  const groups = nav.groups
+    .map((group) => ({
+      ...group,
+      items: group.items.map(keep).filter((i): i is NavItem => i !== null),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { ...nav, groups };
+}
+
+/**
+ * Drop items of modules the workspace has not enabled (`feature`), pruning
+ * parents whose children all vanish and groups left empty. A missing `features`
+ * map means every flag is off, so gated items stay hidden.
+ */
+export function filterNavByFeatures(
+  nav: RoleNav,
+  features: Partial<WorkspaceFeatureFlags> | undefined,
+): RoleNav {
+  const keep = (item: NavItem): NavItem | null => {
+    if (item.feature && !features?.[item.feature]) return null;
 
     if (item.children) {
       const children = item.children.map(keep).filter((c): c is NavItem => c !== null);
@@ -196,18 +238,23 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
   workspace_owner: {
     roleLabelKey: "ownerRole",
     groups: [
+      // The SRS §2.1 structure. The first item of the first group is the
+      // dashboard — Sidebar uses it as the "index" link — so keep it there.
       {
-        items: [{ key: "dashboard", href: "/owner", icon: "home" }],
+        titleKey: "sectionHome",
+        items: [
+          { key: "dashboard", href: "/owner", icon: "home" },
+          { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
+          { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
+        ],
       },
       {
-        titleKey: "sectionManage",
+        titleKey: "sectionCommercial",
         items: [
           { key: "members", href: "/owner/members", icon: "users" },
           { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
-          { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "packages", href: "/owner/packages", icon: "wifi" },
-          { key: "resources", href: "/owner/resources", icon: "layers" },
           {
             key: "posGroup",
             href: "#",
@@ -216,9 +263,10 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
               { key: "posSell", href: "/owner/pos/terminal", icon: "receipt" },
               { key: "posProducts", href: "/owner/pos", icon: "coffee" },
               { key: "posReports", href: "/owner/pos/reports", icon: "chart" },
-              { key: "cashiers", href: "/owner/cashiers", icon: "shield" },
             ],
           },
+          { key: "broadcast", href: "/owner/messaging", icon: "send" },
+          { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
         ],
       },
       {
@@ -229,19 +277,29 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         ],
       },
       {
-        titleKey: "sectionCommunication",
+        titleKey: "sectionGsg",
+        items: [{ key: "gsg", href: "/owner/gsg", icon: "flag", feature: "gsg" }],
+      },
+      {
+        titleKey: "sectionAnalytics",
         items: [
-          { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
-          { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
-          { key: "broadcast", href: "/owner/messaging", icon: "send" },
-          { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
+          { key: "reports", href: "/owner/reports", icon: "chart" },
+          { key: "network", href: "/owner/network", icon: "zap", feature: "network" },
         ],
       },
       {
-        titleKey: "sectionReports",
+        titleKey: "sectionPlaces",
         items: [
-          { key: "reports", href: "/owner/reports", icon: "chart" },
+          { key: "seats", href: "/owner/seats", icon: "grid" },
+          { key: "resources", href: "/owner/resources", icon: "layers" },
+        ],
+      },
+      {
+        titleKey: "sectionSettings",
+        items: [
           { key: "settings", href: "/owner/settings", icon: "settings" },
+          { key: "staff", href: "/owner/settings/staff", icon: "shield" },
+          { key: "auditLog", href: "/owner/settings/audit", icon: "shield" },
         ],
       },
     ],
@@ -313,6 +371,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             href: "/admin/admins",
             icon: "shield",
             permission: "manage_admins",
+          },
+          {
+            key: "approvals",
+            href: "/admin/approvals",
+            icon: "check",
+            permission: "approve_requests",
           },
         ],
       },

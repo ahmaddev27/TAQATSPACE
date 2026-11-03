@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { Select } from "@/components/ui/Select";
 import { Tabs } from "@/components/ui/Tabs";
@@ -266,23 +267,24 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
           sort={sort}
           setSort={setSort}
           empty={
-            <div className="empty-state">
-              <div>
-                <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
-                  {isFiltered
-                    ? t("emptyFiltered.title")
-                    : t("empty.title")}
-                </div>
-                <div style={{ fontSize: "var(--fs-sm)" }}>
-                  {isFiltered ? t("emptyFiltered.body") : t("empty.body")}
-                </div>
-              </div>
-              {isFiltered && (
-                <Button variant="secondary" size="sm" onClick={resetFilters}>
-                  {t("emptyFiltered.reset")}
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon="receipt"
+              title={isFiltered ? t("emptyFiltered.title") : t("empty.title")}
+              body={isFiltered ? t("emptyFiltered.body") : t("empty.body")}
+              action={
+                isFiltered
+                  ? {
+                      label: t("emptyFiltered.reset"),
+                      variant: "secondary",
+                      onClick: resetFilters,
+                    }
+                  : {
+                      label: t("newInvoice"),
+                      icon: "plus",
+                      onClick: () => setIssueOpen(true),
+                    }
+              }
+            />
           }
         />
         {filtered.length > 0 && (

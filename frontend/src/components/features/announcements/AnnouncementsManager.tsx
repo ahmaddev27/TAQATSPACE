@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { Icon } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Segmented } from "@/components/ui/Segmented";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -104,30 +104,24 @@ export function AnnouncementsManager({
       </div>
 
       {visible.length === 0 ? (
-        <div className="card empty-state" style={{ minHeight: 260 }}>
-          <span className="st-ico" style={{ width: 48, height: 48 }}>
-            <Icon name="megaphone" />
-          </span>
-          <div>
-            <div className="h3">
-              {announcements.length === 0 ? t("emptyTitle") : t("emptyFiltered")}
-            </div>
-            <div style={{ fontSize: "var(--fs-sm)", marginTop: 4 }}>
-              {announcements.length === 0
-                ? t("emptyBody")
-                : t("emptyFilteredBody")}
-            </div>
-          </div>
-          {announcements.length === 0 && (
-            <Button
-              variant="primary"
-              icon="plus"
-              onClick={() => setEditing({ mode: "create" })}
-            >
-              {t("create")}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon="megaphone"
+          title={announcements.length === 0 ? t("emptyTitle") : t("emptyFiltered")}
+          body={
+            announcements.length === 0
+              ? t("emptyBody")
+              : t("emptyFilteredBody")
+          }
+          action={
+            announcements.length === 0
+              ? {
+                  label: t("create"),
+                  icon: "plus",
+                  onClick: () => setEditing({ mode: "create" }),
+                }
+              : undefined
+          }
+        />
       ) : (
         <div className="stack" style={{ gap: 14 }}>
           {visible.map((item) => (
