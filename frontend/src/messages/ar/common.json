@@ -68,6 +68,12 @@
   },
   "nav": {
     "sectionManage": "الإدارة",
+    "sectionHome": "الرئيسية",
+    "sectionCommercial": "التجاري",
+    "sectionGsg": "برنامج GSG",
+    "sectionAnalytics": "التحليلات",
+    "sectionPlaces": "الأماكن",
+    "sectionSettings": "الإعدادات",
     "sectionFinance": "المالية",
     "sectionBilling": "الفوترة والتقارير",
     "sectionCommunication": "التواصل",
@@ -81,6 +87,8 @@
     "cashierRole": "أمين الصندوق",
     "items": {
       "dashboard": "لوحة التحكم",
+      "gsg": "برنامج GSG",
+      "network": "الشبكة",
       "pos": "نقطة البيع",
       "posReports": "تقارير نقطة البيع",
       "posGroup": "الكافيه / نقطة البيع",

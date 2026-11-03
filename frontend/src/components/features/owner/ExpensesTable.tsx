@@ -12,8 +12,8 @@ import {
   type FilterChip,
   type SortState,
 } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
-import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
@@ -325,25 +325,16 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
             sort={sort}
             setSort={setSort}
             empty={
-              <div className="empty-state">
-                <div className="st-ico" style={{ width: 48, height: 48 }}>
-                  <Icon name="wallet" />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
-                    {t("emptyTitle")}
-                  </div>
-                  <div style={{ fontSize: "var(--fs-sm)" }}>{t("emptyBody")}</div>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon="plus"
-                  onClick={() => setEditing({ mode: "create" })}
-                >
-                  {t("add")}
-                </Button>
-              </div>
+              <EmptyState
+                icon="wallet"
+                title={t("emptyTitle")}
+                body={t("emptyBody")}
+                action={{
+                  label: t("add"),
+                  icon: "plus",
+                  onClick: () => setEditing({ mode: "create" }),
+                }}
+              />
             }
           />
           {filtered.length > 0 && (

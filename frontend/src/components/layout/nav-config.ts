@@ -238,18 +238,23 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
   workspace_owner: {
     roleLabelKey: "ownerRole",
     groups: [
+      // The SRS §2.1 structure. The first item of the first group is the
+      // dashboard — Sidebar uses it as the "index" link — so keep it there.
       {
-        items: [{ key: "dashboard", href: "/owner", icon: "home" }],
+        titleKey: "sectionHome",
+        items: [
+          { key: "dashboard", href: "/owner", icon: "home" },
+          { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
+          { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
+        ],
       },
       {
-        titleKey: "sectionManage",
+        titleKey: "sectionCommercial",
         items: [
           { key: "members", href: "/owner/members", icon: "users" },
           { key: "subscriptions", href: "/owner/subscriptions", icon: "card" },
-          { key: "seats", href: "/owner/seats", icon: "grid" },
           { key: "requests", href: "/owner/requests", icon: "inbox" },
           { key: "packages", href: "/owner/packages", icon: "wifi" },
-          { key: "resources", href: "/owner/resources", icon: "layers" },
           {
             key: "posGroup",
             href: "#",
@@ -258,9 +263,10 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
               { key: "posSell", href: "/owner/pos/terminal", icon: "receipt" },
               { key: "posProducts", href: "/owner/pos", icon: "coffee" },
               { key: "posReports", href: "/owner/pos/reports", icon: "chart" },
-              { key: "staff", href: "/owner/settings/staff", icon: "shield" },
             ],
           },
+          { key: "broadcast", href: "/owner/messaging", icon: "send" },
+          { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
         ],
       },
       {
@@ -271,19 +277,28 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         ],
       },
       {
-        titleKey: "sectionCommunication",
+        titleKey: "sectionGsg",
+        items: [{ key: "gsg", href: "/owner/gsg", icon: "flag", feature: "gsg" }],
+      },
+      {
+        titleKey: "sectionAnalytics",
         items: [
-          { key: "chat", href: "/owner/chat", icon: "chat", realtime: "primary" },
-          { key: "messages", href: "/owner/messages", icon: "chat", realtime: "fallback" },
-          { key: "broadcast", href: "/owner/messaging", icon: "send" },
-          { key: "announcements", href: "/owner/announcements", icon: "megaphone" },
+          { key: "reports", href: "/owner/reports", icon: "chart" },
+          { key: "network", href: "/owner/network", icon: "zap", feature: "network" },
         ],
       },
       {
-        titleKey: "sectionReports",
+        titleKey: "sectionPlaces",
         items: [
-          { key: "reports", href: "/owner/reports", icon: "chart" },
+          { key: "seats", href: "/owner/seats", icon: "grid" },
+          { key: "resources", href: "/owner/resources", icon: "layers" },
+        ],
+      },
+      {
+        titleKey: "sectionSettings",
+        items: [
           { key: "settings", href: "/owner/settings", icon: "settings" },
+          { key: "staff", href: "/owner/settings/staff", icon: "shield" },
           { key: "auditLog", href: "/owner/settings/audit", icon: "shield" },
         ],
       },

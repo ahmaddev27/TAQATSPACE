@@ -13,6 +13,7 @@ import {
   type FilterChip,
   type SortState,
 } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -397,17 +398,24 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
           sort={sort}
           setSort={setSort}
           empty={
-            <div className="empty-state">
-              <div>
-                <div style={{ fontWeight: 600, color: "var(--text-2)" }}>
-                  {t("emptyTitle")}
-                </div>
-                <div style={{ fontSize: "var(--fs-sm)" }}>{t("emptyBody")}</div>
-              </div>
-              <Button variant="secondary" size="sm" onClick={clearAll}>
-                {t("reset")}
-              </Button>
-            </div>
+            subscriptions.length === 0 ? (
+              <EmptyState
+                icon="card"
+                title={t("emptyNoDataTitle")}
+                body={t("emptyNoDataBody")}
+                action={{ label: t("emptyNoDataAction"), href: "/owner/requests" }}
+              />
+            ) : (
+              <EmptyState
+                title={t("emptyTitle")}
+                body={t("emptyBody")}
+                action={{
+                  label: t("reset"),
+                  onClick: clearAll,
+                  variant: "secondary",
+                }}
+              />
+            )
           }
         />
         {filtered.length > 0 && (
