@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\Router;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -86,6 +87,39 @@ class RouterScriptRepository
         }
 
         return $rendered;
+    }
+
+    /**
+     * Maps a requested name ("hooks", "hooks.rsc" or the system script name
+     * "cws-hooks") to a file listed in version.json, or null when it is not one.
+     */
+    public function resolve(string $requested): ?string
+    {
+        $stem = preg_replace('/\.rsc$/', '', preg_replace('/^cws-/', '', $requested));
+        $name = $stem.'.rsc';
+
+        return in_array($name, self::SCRIPTS, true) && isset($this->declaredHashes()[$name]) ? $name : null;
+    }
+
+    /**
+     * The script as the router receives it. The API key is deliberately not
+     * injected: the router already holds it (memory and flash), and keeping it
+     * out makes the output, and so its hash, depend on the router alone.
+     */
+    public function renderFor(Router $router, string $name): string
+    {
+        return $this->render($name, [
+            'SYNC_URL' => rtrim((string) config('services.router.sync_url'), '/'),
+            'ROUTER_CODE' => (string) $router->workspace->code,
+            'API_KEY' => '',
+            'MODE' => 'full',
+        ]);
+    }
+
+    /** sha256 of the rendered script: what `update-script` commands (2.8) must send. */
+    public function renderedSha(Router $router, string $name): string
+    {
+        return hash('sha256', $this->renderFor($router, $name));
     }
 
     /** @return list<string> names whose content no longer matches version.json */

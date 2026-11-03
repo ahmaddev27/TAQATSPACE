@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Hotspot;
 
+use App\Exceptions\SyncWireException;
 use App\Services\Hotspot\SyncPayload;
+use App\Services\Hotspot\SyncWireParser;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Validates a router sync batch. Authorization is the `router` middleware's
  * job (key + workspace code); the limits here keep a batch small enough for
- * a single transaction.
+ * a single transaction. Routers post `text/plain` lines, parsed into the same
+ * array shape the JSON form uses before the rules run.
  */
 class SyncRequest extends FormRequest
 {
@@ -23,6 +27,19 @@ class SyncRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->getContentTypeFormat() !== 'txt') {
+            return;
+        }
+
+        try {
+            $this->merge(app(SyncWireParser::class)->parse($this->getContent()));
+        } catch (SyncWireException $e) {
+            throw ValidationException::withMessages(['body' => [$e->getMessage()]]);
+        }
     }
 
     /**
@@ -38,6 +55,9 @@ class SyncRequest extends FormRequest
             'serial' => ['nullable', 'string', 'max:100'],
             'routeros_version' => ['nullable', 'string', 'max:50'],
             'script_version' => ['nullable', 'string', 'max:50'],
+            'mode' => ['nullable', 'string', 'in:full,poll-only'],
+            // Echoed into the reply header, so it must not be able to carry a line break.
+            'nonce' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9]+$/'],
             'events' => ['nullable', 'array', 'max:'.self::MAX_EVENTS],
             'events.*.seq' => ['required', 'integer', 'min:0'],
             'events.*.type' => ['required', 'string', 'max:30', 'alpha_dash'],
@@ -51,10 +71,12 @@ class SyncRequest extends FormRequest
             'snapshot.index' => ['required_with:snapshot', 'integer', 'min:0'],
             'snapshot.total' => ['required_with:snapshot', 'integer', 'min:1', 'max:'.self::MAX_SNAPSHOT_CHUNKS],
             'snapshot.taken_at' => ['required_with:snapshot', 'integer', 'min:0'],
-            'snapshot.data' => ['required_with:snapshot', 'string', 'max:'.self::MAX_CHUNK_BYTES],
+            // An empty chunk is valid: it tells the server nobody is online.
+            'snapshot.data' => ['exclude_without:snapshot', 'present', 'nullable', 'string', 'max:'.self::MAX_CHUNK_BYTES],
             // Command acknowledgements; consumed by the command queue (2.5).
             'acks' => ['nullable', 'array', 'max:100'],
-            'acks.*' => ['string', 'max:64'],
+            'acks.*.command_id' => ['required', 'string', 'max:64'],
+            'acks.*.status' => ['required', 'string', 'max:64'],
         ];
     }
 

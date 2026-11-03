@@ -1,8 +1,9 @@
 # CoWorkSpaces sync cycle (RouterOS 7.12+), script version {{SCRIPT_VERSION}}.
 # Stored as the system script "cws-sync"; the scheduler "cws-sync" runs it every 50 seconds.
 #
+# Wire format reference: DOCS/integration/router-protocol.md (keep both in sync; a contract test reads this file).
 # Request (plain text, POST {{SYNC_URL}}/api/v1/hotspot/{{ROUTER_CODE}}/sync, header X-API-Key):
-#   H|batch_id|seq|boot_id|now|mode|nonce|script_version
+#   H|batch_id|seq|boot_id|now|mode|nonce|script_version|serial|routeros_version
 #   E|seq|type|date time|user|mac|ip|uptime|bytes-in|bytes-out      (zero or more events)
 #   S|snapshot_id|index|total  + rows "user|mac|ip|uptime|bytes-in|bytes-out"   (at most one chunk)
 #   A|command_id|status                                           (acknowledgments, status ok|<reason>)
@@ -56,7 +57,8 @@
   /system script run cws-snapshot
   /system script run cws-interpreter
   :global cwsSeq; :global cwsLoadState
-  :set cwsKey "{{API_KEY}}"
+  # The served script carries no key, so an update keeps the key already in memory or in flash.
+  :if ([:typeof $cwsKey] = "nothing" || $cwsKey = "") do={ :set cwsKey "{{API_KEY}}" }
   $cwsLoadState
   :set cwsReady true
 }
@@ -79,7 +81,10 @@
   :local nonce [:rndstr length=12 from="abcdefghijklmnopqrstuvwxyz0123456789"]
   :set cwsLastBatch [:rndstr length=12 from="abcdef0123456789"]
   :local now "$[/system clock get date] $[/system clock get time]"
-  :local head "H|$cwsLastBatch|$cwsSeq|$cwsBootId|$now|$cwsMode|$nonce|{{SCRIPT_VERSION}}\n"
+  :local serial ""
+  :do { :set serial [/system routerboard get serial-number] } on-error={ :set serial "" }
+  :local rosVersion [/system resource get version]
+  :local head "H|$cwsLastBatch|$cwsSeq|$cwsBootId|$now|$cwsMode|$nonce|{{SCRIPT_VERSION}}|$serial|$rosVersion\n"
   :set cwsLastBody ($head . $cwsEvents . $pending . $cwsAcks)
   :global cwsLastNonce $nonce
   :set cwsEvents ""

@@ -62,7 +62,7 @@ class HotspotSyncTest extends TestCase
 
         $response->assertOk();
         $this->assertStringStartsWith('text/plain', (string) $response->headers->get('Content-Type'));
-        $this->assertMatchesRegularExpression('/^# CWS-SYNC [a-z0-9]{16}\n/', $response->getContent());
+        $this->assertMatchesRegularExpression('/^CWS-SYNC [a-z0-9]{16}\n/', $response->getContent());
         $this->assertLessThanOrEqual(4096, strlen($response->getContent()));
         $this->assertSame(2, HotspotEvent::query()->where('router_id', $this->router->id)->count());
         $this->assertDatabaseHas('hotspot_events', ['event_uid' => 'b7-1', 'workspace_id' => $this->workspace->id, 'type' => 'login']);

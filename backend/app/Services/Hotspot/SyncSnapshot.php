@@ -27,7 +27,7 @@ final readonly class SyncSnapshot
             index: (int) $data['index'],
             total: (int) $data['total'],
             routerTakenAt: (int) $data['taken_at'],
-            data: (string) $data['data'],
+            data: (string) ($data['data'] ?? ''),
         );
     }
 }

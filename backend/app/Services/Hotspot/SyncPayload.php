@@ -11,6 +11,7 @@ final readonly class SyncPayload
 {
     /**
      * @param  list<SyncEvent>  $events
+     * @param  list<array{command_id: string, status: string}>  $acks
      */
     public function __construct(
         public string $batchId,
@@ -22,6 +23,9 @@ final readonly class SyncPayload
         public ?string $scriptVersion,
         public array $events,
         public ?SyncSnapshot $snapshot,
+        public ?string $nonce = null,
+        public ?string $mode = null,
+        public array $acks = [],
     ) {}
 
     /**
@@ -39,6 +43,9 @@ final readonly class SyncPayload
             scriptVersion: $data['script_version'] ?? null,
             events: array_map(SyncEvent::fromValidated(...), array_values($data['events'] ?? [])),
             snapshot: isset($data['snapshot']) ? SyncSnapshot::fromValidated($data['snapshot']) : null,
+            nonce: $data['nonce'] ?? null,
+            mode: $data['mode'] ?? null,
+            acks: array_values($data['acks'] ?? []),
         );
     }
 }
