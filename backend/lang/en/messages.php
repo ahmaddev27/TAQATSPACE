@@ -272,6 +272,7 @@ return [
     // Two-factor authentication
     'two_factor_challenge_pending' => 'Complete two-factor verification to continue.',
     'two_factor_required' => 'Recent two-factor verification is required for this action.',
+    'two_factor_enrollment_required' => 'Enable two-factor authentication on your account before performing this action.',
     'two_factor_not_eligible' => 'Two-factor authentication is not available for this account type.',
     'two_factor_already_enabled' => 'Two-factor authentication is already enabled.',
     'two_factor_not_enabled' => 'Two-factor authentication is not enabled.',

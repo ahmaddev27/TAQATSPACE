@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace.current' => \App\Http\Middleware\CurrentWorkspace::class,
             // Step-up: users with 2FA must have verified a code in the last 10 minutes.
             '2fa.recent' => \App\Http\Middleware\RequireRecentTwoFactor::class,
+            '2fa.enrolled' => \App\Http\Middleware\RequireTwoFactorEnrollment::class,
             // Per-workspace module gate: `feature:<network|finance_v2|gsg>` (403 when off).
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
             // Server-to-server partner auth via `X-Api-Key`.

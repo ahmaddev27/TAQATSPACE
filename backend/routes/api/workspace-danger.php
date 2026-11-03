@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Owner-only destructive actions, each behind a recent two-factor check.
 */
-Route::middleware(['auth:sanctum', 'role.owner', '2fa.recent'])
+Route::middleware(['auth:sanctum', 'role.owner', '2fa.enrolled', '2fa.recent'])
     ->prefix('workspace/danger')
     ->group(function (): void {
         Route::delete('/reset', [WorkspaceResetController::class, 'destroy']);

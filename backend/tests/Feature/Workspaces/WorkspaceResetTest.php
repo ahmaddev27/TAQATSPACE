@@ -31,12 +31,16 @@ class WorkspaceResetTest extends TestCase
     private const URL = '/api/workspace/danger/reset';
 
     /** @return array{0: User, 1: Workspace} */
-    private function ownerWithWorkspace(bool $twoFactor = false): array
+    private function ownerWithWorkspace(bool $twoFactor = true, bool $verified = true): array
     {
         $owner = User::factory()->owner()->create();
 
         if ($twoFactor) {
             $owner->forceFill(['two_factor_secret' => 'SECRET', 'two_factor_confirmed_at' => now()])->save();
+
+            if ($verified) {
+                app(TwoFactorService::class)->markVerified($owner);
+            }
         }
 
         $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
@@ -222,7 +226,7 @@ class WorkspaceResetTest extends TestCase
 
     public function test_enrolled_owner_without_recent_two_factor_is_forbidden(): void
     {
-        [$owner, $workspace] = $this->ownerWithWorkspace(twoFactor: true);
+        [$owner, $workspace] = $this->ownerWithWorkspace(verified: false);
         $this->seedOperationalData($workspace);
         $before = $this->counts($workspace);
 
@@ -233,10 +237,22 @@ class WorkspaceResetTest extends TestCase
 
     public function test_enrolled_owner_with_recent_two_factor_can_reset(): void
     {
-        [$owner, $workspace] = $this->ownerWithWorkspace(twoFactor: true);
-        app(TwoFactorService::class)->markVerified($owner);
+        [$owner, $workspace] = $this->ownerWithWorkspace();
 
         $this->reset($owner, $workspace)->assertOk();
+    }
+
+    public function test_owner_without_two_factor_enabled_cannot_reset(): void
+    {
+        [$owner, $workspace] = $this->ownerWithWorkspace(twoFactor: false);
+        $this->seedOperationalData($workspace);
+        $before = $this->counts($workspace);
+
+        $this->reset($owner, $workspace)
+            ->assertForbidden()
+            ->assertJsonPath('code', 'two_factor_enrollment_required');
+
+        $this->assertSame($before, $this->counts($workspace));
     }
 
     public function test_non_owners_are_forbidden(): void
