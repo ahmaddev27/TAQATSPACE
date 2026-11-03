@@ -14,6 +14,7 @@ export default async function CashierProfilePage() {
 
   return (
     <ProfileScreen
+      showSecurityLink
       canChangePassword={user.can_change_password}
       form={{
         defaults: {

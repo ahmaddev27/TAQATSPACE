@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { serverFetch, ApiError } from "@/lib/api";
-import { ROLE_COOKIE, TOKEN_COOKIE, TOKEN_MAX_AGE } from "@/lib/auth";
-import type { ApiEnvelope, AuthPayload } from "@/lib/types/auth";
+import {
+  PENDING_TWO_FACTOR_COOKIE,
+  ROLE_COOKIE,
+  TOKEN_COOKIE,
+  TOKEN_MAX_AGE,
+} from "@/lib/auth";
+import type {
+  ApiEnvelope,
+  AuthPayload,
+  TwoFactorChallengePayload,
+} from "@/lib/types/auth";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -24,15 +33,30 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await serverFetch<ApiEnvelope<AuthPayload>>("/auth/taqat/exchange", {
+    const result = await serverFetch<
+      ApiEnvelope<AuthPayload | TwoFactorChallengePayload>
+    >("/auth/taqat/exchange", {
       method: "POST",
       auth: false,
       body: JSON.stringify({ code: body.code }),
     });
 
+    const store = await cookies();
+
+    if ("two_factor_required" in result.data) {
+      // Park the challenge-only token until the 2FA code is verified.
+      store.set(PENDING_TWO_FACTOR_COOKIE, result.data.token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+        path: "/",
+        maxAge: 60 * 15,
+      });
+      return NextResponse.json({ two_factor_required: true });
+    }
+
     const { user, token, role } = result.data;
 
-    const store = await cookies();
     store.set(TOKEN_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
