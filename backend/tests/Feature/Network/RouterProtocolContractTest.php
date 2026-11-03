@@ -369,7 +369,7 @@ class RouterProtocolContractTest extends TestCase
     {
         $this->assertEqualsCanonicalizing(RouterCommandVerb::values(), $this->interpreterList('cwsAllowedVerbs'));
         $this->assertEqualsCanonicalizing(
-            array_map(static fn (RouterCommandVerb $verb): string => $verb->value, array_filter(RouterCommandVerb::cases(), static fn (RouterCommandVerb $verb): bool => $verb->allowedInPollOnly())),
+            array_values(array_map(static fn (RouterCommandVerb $verb): string => $verb->value, array_filter(RouterCommandVerb::cases(), static fn (RouterCommandVerb $verb): bool => $verb->allowedInPollOnly()))),
             $this->interpreterList('cwsPollOnlyVerbs'),
         );
         $this->assertEqualsCanonicalizing(RouterCommandVerb::SCRIPT_NAMES, $this->interpreterList('cwsScriptNames'));
