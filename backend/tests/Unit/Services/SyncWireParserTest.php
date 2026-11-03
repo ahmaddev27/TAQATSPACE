@@ -6,6 +6,7 @@ namespace Tests\Unit\Services;
 
 use App\Exceptions\SyncWireException;
 use App\Services\Hotspot\SyncWireParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SyncWireParserTest extends TestCase
@@ -90,7 +91,7 @@ class SyncWireParserTest extends TestCase
 
     public function test_events_after_a_snapshot_are_still_read_and_crlf_is_tolerated(): void
     {
-        $body = self::HEADER."\r\nS|s|0|1\r\nu|m|i|1|2|3\r\nE|1|login|2026-11-03 09:59:00|u||||||\r\n";
+        $body = self::HEADER."\r\nS|s|0|1\r\nu|m|i|1|2|3\r\nE|1|login|2026-11-03 09:59:00|u|||||\r\n";
 
         $result = (new SyncWireParser)->parse($body);
 
@@ -98,7 +99,7 @@ class SyncWireParserTest extends TestCase
         $this->assertCount(1, $result['events']);
     }
 
-    /** @dataProvider malformedBodies */
+    #[DataProvider('malformedBodies')]
     public function test_malformed_input_is_rejected(string $body): void
     {
         $this->expectException(SyncWireException::class);
@@ -111,7 +112,7 @@ class SyncWireParserTest extends TestCase
     {
         return [
             'empty body' => [''],
-            'no header' => ['E|1|login|2026-11-03 09:59:00|u||||||'],
+            'no header' => ['E|1|login|2026-11-03 09:59:00|u|||||'],
             'unknown line type' => [self::HEADER."\nX|1|2"],
             'duplicate header' => [self::HEADER."\n".self::HEADER],
             'short header' => ['H|b|1|boot|2026-11-03 10:00:00|full'],
@@ -119,7 +120,7 @@ class SyncWireParserTest extends TestCase
             'unreadable time' => ['H|b|1|boot|yesterday|full|n|1.0.0'],
             'impossible date' => ['H|b|1|boot|2026-02-31 10:00:00|full|n|1.0.0'],
             'short event' => [self::HEADER."\nE|1|login|2026-11-03 09:59:00|u"],
-            'event with bad time' => [self::HEADER."\nE|1|login|soon|u||||||"],
+            'event with bad time' => [self::HEADER."\nE|1|login|soon|u|||||"],
             'short snapshot head' => [self::HEADER."\nS|snap|0"],
             'two snapshot chunks' => [self::HEADER."\nS|a|0|1\nS|b|0|1"],
             'ack without status' => [self::HEADER."\nA|cmd1|"],
