@@ -116,6 +116,16 @@ class RouterSecurityTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'network.router.locked']);
     }
 
+    public function test_a_bound_router_can_still_download_its_scripts(): void
+    {
+        $this->sync('SN-1')->assertOk();
+
+        $this->get('/api/v1/hotspot/'.self::CODE.'/scripts/hooks', ['X-API-Key' => $this->key])->assertOk();
+
+        $this->assertNotSame(RouterStatus::Locked, $this->router->fresh()->status);
+        $this->sync('SN-1')->assertOk();
+    }
+
     public function test_unlock_lets_a_new_serial_bind(): void
     {
         $this->sync('SN-1');

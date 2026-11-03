@@ -51,13 +51,29 @@ final class AuthenticateRouter
             return ApiResponse::error(__('messages.router_forbidden'), 403);
         }
 
-        if (! $this->security->serialMatches($router, $this->presentedSerial($request))) {
-            $this->security->lock($router, $this->presentedSerial($request));
+        $serial = $this->presentedSerial($request);
+
+        if ($this->serialRefused($request, $router, $serial)) {
+            $this->security->lock($router, $serial);
 
             return ApiResponse::error(__('messages.router_forbidden'), 403);
         }
 
         return $next($request);
+    }
+
+    /**
+     * A bound router must send its serial when it syncs. Script downloads have
+     * no body to carry one and return nothing secret, so refusing them for that
+     * would lock a router on its first script update.
+     */
+    private function serialRefused(Request $request, Router $router, ?string $serial): bool
+    {
+        if ($serial === null && $request->isMethodSafe()) {
+            return false;
+        }
+
+        return ! $this->security->serialMatches($router, $serial);
     }
 
     public function terminate(Request $request, Response $response): void
