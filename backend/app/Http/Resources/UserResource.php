@@ -7,8 +7,10 @@ namespace App\Http\Resources;
 use App\Enums\PosPermission;
 use App\Enums\StaffGroup;
 use App\Models\User;
+use App\Services\FeatureFlagService;
 use App\Services\Pos\StaffManagementService;
 use App\Support\MediaUrl;
+use App\Support\Tenancy\CurrentWorkspaceResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -48,7 +50,28 @@ class UserResource extends JsonResource
             // lacks (e.g. the Refund button without `pos_refund`). Resolved only
             // for cashier accounts to keep the common path query-free.
             ...$this->cashierContext(),
+            ...$this->featureContext($request),
         ];
+    }
+
+    /**
+     * The workspace's feature flags so the SPA can hide menus of modules that
+     * are not enabled. Resolved only for the authenticated user's own payload
+     * (never for directory lists) to avoid per-row lookups.
+     *
+     * @return array<string, mixed>
+     */
+    private function featureContext(Request $request): array
+    {
+        if ($this->isAdmin() || ! $this->resource->is($request->user())) {
+            return [];
+        }
+
+        $workspace = app(CurrentWorkspaceResolver::class)->resolve($request);
+
+        return $workspace === null
+            ? []
+            : ['features' => app(FeatureFlagService::class)->flagsFor($workspace->id)];
     }
 
     /**

@@ -1,5 +1,11 @@
 import type { IconName } from "@/components/ui/Icon";
-import type { AdminPermission, PosPermission, UserRole } from "@/lib/types/auth";
+import type {
+  AdminPermission,
+  PosPermission,
+  UserRole,
+  WorkspaceFeature,
+  WorkspaceFeatureFlags,
+} from "@/lib/types/auth";
 
 /** Any permission that can gate a nav item (admin areas or POS/cashier areas). */
 export type NavPermission = AdminPermission | PosPermission;
@@ -31,6 +37,11 @@ export interface NavItem {
    * Items without it are visible to everyone in the role.
    */
   permission?: NavPermission;
+  /**
+   * When set, the item is shown only for workspaces that have this module
+   * enabled (see `filterNavByFeatures`). Items without it are unaffected.
+   */
+  feature?: WorkspaceFeature;
   /**
    * Gates the item on realtime-chat (Firebase) availability so the in-app 1:1
    * surface is never duplicated. `"primary"` items (the realtime Chat) show only
@@ -74,6 +85,37 @@ export function filterNavByPermissions(
   // filtered recursively so a nested, permission-gated item is hidden too.
   const keep = (item: NavItem): NavItem | null => {
     if (item.permission && !granted.has(item.permission)) return null;
+
+    if (item.children) {
+      const children = item.children.map(keep).filter((c): c is NavItem => c !== null);
+      if (children.length === 0) return null;
+      return { ...item, children };
+    }
+
+    return item;
+  };
+
+  const groups = nav.groups
+    .map((group) => ({
+      ...group,
+      items: group.items.map(keep).filter((i): i is NavItem => i !== null),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return { ...nav, groups };
+}
+
+/**
+ * Drop items of modules the workspace has not enabled (`feature`), pruning
+ * parents whose children all vanish and groups left empty. A missing `features`
+ * map means every flag is off, so gated items stay hidden.
+ */
+export function filterNavByFeatures(
+  nav: RoleNav,
+  features: Partial<WorkspaceFeatureFlags> | undefined,
+): RoleNav {
+  const keep = (item: NavItem): NavItem | null => {
+    if (item.feature && !features?.[item.feature]) return null;
 
     if (item.children) {
       const children = item.children.map(keep).filter((c): c is NavItem => c !== null);

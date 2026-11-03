@@ -20,6 +20,8 @@ return [
     'insufficient_permissions' => 'الصلاحيات غير كافية.',
     'no_workspace_context' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
     'unauthorized_action' => 'هذا الإجراء غير مصرّح به.',
+    'feature_disabled' => 'هذه الوحدة غير مفعّلة لمساحة عملك.',
+    'workspace_features_updated' => 'تم تحديث ميزات مساحة العمل.',
     'no_workspace' => 'ليس لديك مساحة عمل.',
 
     // POS / cashier staff

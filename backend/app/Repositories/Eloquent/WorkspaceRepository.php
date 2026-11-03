@@ -37,7 +37,7 @@ class WorkspaceRepository
      */
     public function paginateForAdmin(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Workspace::query()->with(['owner', 'seatTypes']);
+        $query = Workspace::query()->with(['owner', 'seatTypes', 'featureFlags']);
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
