@@ -8,6 +8,8 @@ use App\Enums\RouterStatus;
 use App\Models\Router;
 use App\Models\RouterApiLog;
 use App\Models\Workspace;
+use App\Services\Hotspot\SyncWireParser;
+use App\Services\Router\RouterSecurityService;
 use App\Support\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
@@ -23,6 +25,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class AuthenticateRouter
 {
+    public function __construct(private readonly RouterSecurityService $security) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $request->attributes->set('router_started_at', microtime(true));
@@ -47,7 +51,29 @@ final class AuthenticateRouter
             return ApiResponse::error(__('messages.router_forbidden'), 403);
         }
 
+        $serial = $this->presentedSerial($request);
+
+        if ($this->serialRefused($request, $router, $serial)) {
+            $this->security->lock($router, $serial);
+
+            return ApiResponse::error(__('messages.router_forbidden'), 403);
+        }
+
         return $next($request);
+    }
+
+    /**
+     * A bound router must send its serial when it syncs. Script downloads have
+     * no body to carry one and return nothing secret, so refusing them for that
+     * would lock a router on its first script update.
+     */
+    private function serialRefused(Request $request, Router $router, ?string $serial): bool
+    {
+        if ($serial === null && $request->isMethodSafe()) {
+            return false;
+        }
+
+        return ! $this->security->serialMatches($router, $serial);
     }
 
     public function terminate(Request $request, Response $response): void
@@ -84,6 +110,15 @@ final class AuthenticateRouter
         $workspaceId = Workspace::query()->where('code', $code)->value('id');
 
         return $workspaceId !== null && (string) $workspaceId === (string) $router->workspace_id;
+    }
+
+    private function presentedSerial(Request $request): ?string
+    {
+        $serial = $request->getContentTypeFormat() === 'txt'
+            ? SyncWireParser::serialOf($request->getContent())
+            : $request->input('serial');
+
+        return is_string($serial) && $serial !== '' ? $serial : null;
     }
 
     private function durationMs(Request $request): int

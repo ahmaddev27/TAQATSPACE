@@ -13,6 +13,7 @@ use App\Models\Seat;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Hotspot\HotspotAccountService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\DB;
 
 class MemberService
 {
+    public function __construct(private readonly HotspotAccountService $hotspot) {}
+
     /** @var array<string, string> */
     private const SORTABLE = [
         'join_date' => 'subscriptions.start_date',
@@ -171,11 +174,13 @@ class MemberService
                 ]);
 
                 $this->freeSeat($workspace, $subscription);
+                $this->hotspot->suspend($subscription);
             } else {
                 $subscription->update([
                     'status' => SubscriptionStatus::Active->value,
                     'cancelled_at' => null,
                 ]);
+                $this->hotspot->resume($subscription);
             }
         });
 

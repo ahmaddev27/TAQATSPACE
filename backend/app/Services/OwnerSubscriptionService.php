@@ -8,6 +8,7 @@ use App\Enums\PlanType;
 use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\Workspace;
+use App\Services\Hotspot\HotspotAccountService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -37,6 +38,7 @@ class OwnerSubscriptionService
 
     public function __construct(
         private readonly InvoiceService $invoices,
+        private readonly HotspotAccountService $hotspot,
     ) {}
 
     /**
@@ -90,6 +92,7 @@ class OwnerSubscriptionService
             ]);
 
             $this->invoices->createForRenewal($subscription, $nextEnd);
+            $this->hotspot->resume($subscription);
 
             Cache::forget("workspace:{$workspace->id}:dashboard_stats");
 
@@ -133,6 +136,7 @@ class OwnerSubscriptionService
                 'member.internetPackages' => fn ($q) => $q
                     ->where('internet_packages.workspace_id', $workspace->id),
                 'seat:id,seat_number,type,status',
+                'hotspotAccount',
             ])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
             ->where('subscriptions.workspace_id', $workspace->id)
