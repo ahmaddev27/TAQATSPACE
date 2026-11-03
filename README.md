@@ -6,15 +6,15 @@ Multi-tenant coworking platform for Gaza — Arabic-first (RTL) + English. Today
 
 | | |
 |---|---|
-| **Platform** | Phases 1–4 + platform expansion + realtime (Firebase) + POS/café & cashier — **built** |
-| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 168 tasks, ≈ 144 working days (≈ 28.8 weeks)** |
-| **Current milestone** | **M0 — Readiness & discovery** ([milestone](https://github.com/ahmaddev27/TAQATSPACE/milestone/1)) |
-| **Production** | 🟢 [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) — at PR #162 (2026-06-30). POS/cashier and later work are on `dev`, pending release R0 ([#186](https://github.com/ahmaddev27/TAQATSPACE/issues/186)) |
+| **Platform** | Phases 1–4 + platform expansion + realtime (Firebase) + POS/café & cashier + M1 foundation — **built** |
+| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 169 tasks, ≈ 145 working days (≈ 28.9 weeks)** |
+| **Current milestone** | **M2 — MikroTik integration** ([milestone](https://github.com/ahmaddev27/TAQATSPACE/milestone/3)). M1 is done and on staging; the open M0 items wait on owner decisions |
+| **Production** | 🟢 [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) — at PR #162 (2026-06-30). POS/cashier, M1 and later work are on `dev`, pending release R0 ([#186](https://github.com/ahmaddev27/TAQATSPACE/issues/186)) |
 | **Staging** | 🟢 [staging.taqat.space](https://staging.taqat.space) — deploys from `dev` |
 | **Default branch** | `dev` |
 | **Board** | [TaqatSpace Roadmap](https://github.com/users/ahmaddev27/projects/1) |
 | **API docs** | Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) + Postman collection (`composer api:docs`) |
-| **Last updated** | 2026-10-29 |
+| **Last updated** | 2026-11-03 |
 
 ---
 
@@ -67,7 +67,7 @@ Everything in git and on GitHub (commits, PRs, issues, docs) is written in Engli
 
 ## Stack & repo
 
-Laravel 13 (PHP 8.3 on the server, 8.4 locally) · Next.js 16 + React 19 (App Router, TypeScript) · MySQL 8 · AWS S3 (presigned URLs) · Sanctum + Spatie Permission · next-intl (ar default RTL / en) · Firebase (Firestore chat + FCM push) · mPDF (Arabic PDFs) · Scramble (OpenAPI) + Postman.
+Laravel 13 (PHP 8.3 on the server, 8.4 locally) · Next.js 16 + React 19 (App Router, TypeScript) · MariaDB on the servers (SQLite in tests, MariaDB in CI) · AWS S3 (presigned URLs) · Sanctum + Spatie Permission · next-intl (ar default RTL / en) · Firebase (Firestore chat + FCM push) · mPDF (Arabic PDFs) · Scramble (OpenAPI) + Postman.
 
 | Path | What |
 |------|------|
