@@ -73,7 +73,7 @@ class SyncRequest extends FormRequest
             'snapshot.taken_at' => ['required_with:snapshot', 'integer', 'min:0'],
             // An empty chunk is valid: it tells the server nobody is online.
             'snapshot.data' => ['exclude_without:snapshot', 'present', 'nullable', 'string', 'max:'.self::MAX_CHUNK_BYTES],
-            // Command acknowledgements; consumed by the command queue (2.5).
+            // Command acknowledgements; applied by RouterCommandService.
             'acks' => ['nullable', 'array', 'max:100'],
             'acks.*.command_id' => ['required', 'string', 'max:64'],
             'acks.*.status' => ['required', 'string', 'max:64'],

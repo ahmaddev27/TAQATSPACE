@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Network;
 
+use App\Enums\RouterCommandStatus;
+use App\Enums\RouterCommandVerb;
 use App\Models\HotspotEvent;
 use App\Models\Router;
 use App\Models\RouterSnapshot;
 use App\Models\Workspace;
 use App\Repositories\Eloquent\RouterScriptRepository;
+use App\Services\Router\RouterCommandService;
 use App\Services\Hotspot\SyncWireParser;
 use App\Support\Router\RouterKeyHasher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -302,6 +306,136 @@ class RouterProtocolContractTest extends TestCase
         $this->get('/api/v1/hotspot/'.self::CODE.'/scripts/..%2F.env', $headers)->assertNotFound();
         $this->get('/api/v1/hotspot/'.self::CODE.'/scripts/hooks', ['X-API-Key' => 'wrong'])->assertUnauthorized();
         $this->get('/api/v1/hotspot/'.self::CODE.'/scripts/hooks')->assertUnauthorized();
+    }
+
+    /** @return list<string> the items of a `:global name {"a"; "b"}` array in interpreter.rsc */
+    private function interpreterList(string $name): array
+    {
+        $this->assertSame(1, preg_match('/:global '.$name.' \{([^}]*)\}/', $this->readFile('routeros/interpreter.rsc'), $match), "interpreter.rsc has no {$name}");
+        preg_match_all('/"([^"]+)"/', $match[1], $items);
+
+        return $items[1];
+    }
+
+    /** RouterOS regex text (`\$` escapes) as a PCRE pattern. */
+    private function pcre(string $routerOsPattern): string
+    {
+        return '~'.str_replace('\\$', '$', $routerOsPattern).'~D';
+    }
+
+    /**
+     * What interpreter.rsc checks per verb: argument position (1 based) => PCRE pattern.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function interpreterArgumentPatterns(): array
+    {
+        $script = $this->readFile('routeros/interpreter.rsc');
+        preg_match_all('/:local (\w+Pattern) "((?:[^"\\\\]|\\\\.)*)"/', $script, $named);
+        $named = array_combine($named[1], $named[2]);
+
+        preg_match_all('/:if \(\$verb = "([a-z-]+)"\) do=\{(.*?)\n  \}/s', $script, $blocks, PREG_SET_ORDER);
+        $this->assertCount(count(RouterCommandVerb::cases()), $blocks, 'interpreter.rsc must have one block per verb');
+
+        $patterns = [];
+        foreach ($blocks as [, $verb, $body]) {
+            preg_match_all('/\$a(\d) ~ (\$\w+|"((?:[^"\\\\]|\\\\.)*)")/', $body, $checks, PREG_SET_ORDER);
+            foreach ($checks as $check) {
+                $source = $check[2][0] === '$' ? $named[ltrim($check[2], '$')] : $check[3];
+                $patterns[$verb][(int) $check[1]] = $this->pcre($source);
+            }
+        }
+
+        return $patterns;
+    }
+
+    /** @return array<string, array{0: RouterCommandVerb, 1: array<string, mixed>}> */
+    private function validPayloads(): array
+    {
+        return [
+            'upsert-user' => [RouterCommandVerb::UpsertUser, ['username' => 'a.b-c@d_1', 'password' => 'p4$$w0rd!', 'profile' => 'visitor']],
+            'upsert-user without a profile' => [RouterCommandVerb::UpsertUser, ['username' => 'alice', 'password' => 'secret']],
+            'disable-user' => [RouterCommandVerb::DisableUser, ['username' => 'alice']],
+            'remove-active' => [RouterCommandVerb::RemoveActive, ['username' => 'alice']],
+            'block-mac' => [RouterCommandVerb::BlockMac, ['mac' => 'AA:BB:CC:DD:EE:01']],
+            'upsert-profile' => [RouterCommandVerb::UpsertProfile, ['name' => 'gold', 'rate_limit' => '5M/10M']],
+            'upsert-profile unlimited' => [RouterCommandVerb::UpsertProfile, ['name' => 'gold', 'rate_limit' => '']],
+            'set-key' => [RouterCommandVerb::SetKey, ['key' => RouterKeyHasher::generate()]],
+            'update-script' => [RouterCommandVerb::UpdateScript, ['script' => 'cws-interpreter', 'sha256' => str_repeat('0f', 32)]],
+        ];
+    }
+
+    public function test_the_verb_allowlist_is_the_one_interpreter_rsc_accepts(): void
+    {
+        $this->assertEqualsCanonicalizing(RouterCommandVerb::values(), $this->interpreterList('cwsAllowedVerbs'));
+        $this->assertEqualsCanonicalizing(
+            array_map(static fn (RouterCommandVerb $verb): string => $verb->value, array_filter(RouterCommandVerb::cases(), static fn (RouterCommandVerb $verb): bool => $verb->allowedInPollOnly())),
+            $this->interpreterList('cwsPollOnlyVerbs'),
+        );
+        $this->assertEqualsCanonicalizing(RouterCommandVerb::SCRIPT_NAMES, $this->interpreterList('cwsScriptNames'));
+    }
+
+    public function test_every_command_line_has_the_shape_and_arguments_interpreter_rsc_accepts(): void
+    {
+        $patterns = $this->interpreterArgumentPatterns();
+        $service = app(RouterCommandService::class);
+
+        foreach ($this->validPayloads() as $label => [$verb, $payload]) {
+            $command = $service->enqueue($this->router, $verb, $payload);
+            $line = $service->wireLine($command);
+            $fields = explode('|', $line);
+
+            $this->assertDoesNotMatchRegularExpression('/[\r\n]/', $line, $label);
+            $this->assertLessThanOrEqual(6, count($fields), "{$label}: the interpreter reads C, id, verb and three arguments");
+            $this->assertSame(['C', $command->id, $verb->value], array_slice($fields, 0, 3), $label);
+            $this->assertNotEmpty($patterns[$verb->value] ?? [], "{$label}: no argument pattern found in interpreter.rsc");
+
+            foreach ($patterns[$verb->value] as $position => $pattern) {
+                $this->assertMatchesRegularExpression($pattern, $fields[2 + $position] ?? '', "{$label}: argument {$position}");
+            }
+        }
+    }
+
+    public function test_the_interpreter_patterns_reject_what_the_service_rejects(): void
+    {
+        $patterns = $this->interpreterArgumentPatterns();
+
+        $this->assertDoesNotMatchRegularExpression($patterns['disable-user'][1], "alice\n");
+        $this->assertDoesNotMatchRegularExpression($patterns['block-mac'][1], 'aa:bb:cc:dd:ee:01');
+        $this->assertDoesNotMatchRegularExpression($patterns['set-key'][1], 'short');
+        $this->assertDoesNotMatchRegularExpression($patterns['upsert-profile'][2], '1M 2M');
+    }
+
+    public function test_a_command_line_from_the_reply_is_acknowledged_by_the_ack_line_the_interpreter_builds(): void
+    {
+        $command = app(RouterCommandService::class)->enqueue($this->router, RouterCommandVerb::DisableUser, ['username' => 'alice']);
+        $header = "H|batchC1|1|boot7|2026-11-03 12:30:00|full|nonceC1|1.0.0|SN1|7.14.3\n";
+
+        $reply = $this->postText($header)->getContent();
+        $this->assertStringContainsString("\nC|{$command->id}|disable-user|alice\n", $reply);
+
+        // interpreter.rsc: "A|$($fields->1)|$result" where $fields->1 is the id of the C line.
+        $this->postText(str_replace('batchC1', 'batchC2', $header)."A|{$command->id}|ok\n")->assertOk();
+
+        $this->assertSame(RouterCommandStatus::Acknowledged, $command->refresh()->status);
+    }
+
+    public function test_every_rejection_reason_the_interpreter_returns_is_recorded_as_a_failure(): void
+    {
+        $this->withoutMiddleware(ThrottleRequests::class);
+        preg_match_all('/:return "([a-z-]+)"/', $this->readFile('routeros/interpreter.rsc'), $returned);
+        $reasons = array_values(array_diff(array_unique($returned[1]), ['ok']));
+        $this->assertNotEmpty($reasons);
+
+        foreach ($reasons as $index => $reason) {
+            $command = app(RouterCommandService::class)->enqueue($this->router, RouterCommandVerb::DisableUser, ['username' => 'alice']);
+            $this->postText("H|batchR{$index}a|1|boot7|2026-11-03 12:30:00|full|nonceR|1.0.0|SN1|7.14.3\n")->assertOk();
+            $this->postText("H|batchR{$index}b|2|boot7|2026-11-03 12:30:00|full|nonceR|1.0.0|SN1|7.14.3\nA|{$command->id}|{$reason}\n")->assertOk();
+
+            $command->refresh();
+            $this->assertSame(RouterCommandStatus::Failed, $command->status, $reason);
+            $this->assertSame($reason, $command->error);
+        }
     }
 
     public function test_ping_is_public_and_answers_ok(): void
