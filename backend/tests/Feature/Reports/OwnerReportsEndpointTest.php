@@ -9,6 +9,7 @@ use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\EmulatesMysqlDateFormat;
 use Tests\TestCase;
 
 /**
@@ -18,26 +19,13 @@ use Tests\TestCase;
 class OwnerReportsEndpointTest extends TestCase
 {
     use RefreshDatabase;
+    use EmulatesMysqlDateFormat;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // OwnerReportsService groups P&L months with MySQL's DATE_FORMAT; sqlite
-        // lacks it, so register an equivalent UDF for the happy-path request.
-        DB::connection()->getPdo()->sqliteCreateFunction(
-            'DATE_FORMAT',
-            static function (?string $date, string $format): ?string {
-                if ($date === null) {
-                    return null;
-                }
-
-                $php = str_replace(['%Y', '%m', '%d'], ['Y', 'm', 'd'], $format);
-
-                return date($php, (int) strtotime($date));
-            },
-            2,
-        );
+        $this->emulateMysqlDateFormat();
     }
 
     /** Create an owner that actually owns a workspace. */

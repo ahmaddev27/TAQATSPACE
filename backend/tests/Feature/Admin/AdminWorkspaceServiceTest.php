@@ -90,8 +90,8 @@ class AdminWorkspaceServiceTest extends TestCase
         $this->assertSame(3, $summary['total_count']);
         $this->assertSame(1, $summary['pending_count']);
         $this->assertSame(1, $summary['overdue_count']);
-        $this->assertSame('50', (string) $summary['total_unpaid']);
-        $this->assertSame('20', (string) $summary['total_overdue']);
+        $this->assertEqualsWithDelta(50, (float) $summary['total_unpaid'], 0.001); // MariaDB returns decimal sums as "50.00"
+        $this->assertEqualsWithDelta(20, (float) $summary['total_overdue'], 0.001);
     }
 
     public function test_detail_only_covers_the_given_workspace(): void
