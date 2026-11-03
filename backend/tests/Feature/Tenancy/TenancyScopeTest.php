@@ -10,9 +10,11 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -98,6 +100,43 @@ class TenancyScopeTest extends TestCase
         $this->expectException(QueryException::class);
 
         Branch::factory()->default()->create(['workspace_id' => $workspace->id]);
+    }
+
+    public function test_a_workspace_can_have_many_non_default_branches(): void
+    {
+        $workspace = Workspace::factory()->create();
+
+        Branch::factory()->count(2)->create(['workspace_id' => $workspace->id]);
+
+        $this->assertSame(3, Branch::withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+    }
+
+    public function test_moving_the_default_frees_the_first_branch(): void
+    {
+        $workspace = Workspace::factory()->create();
+        $first = Branch::withoutWorkspaceScope()->where('workspace_id', $workspace->id)->sole();
+
+        $first->update(['is_default' => false]);
+        $second = Branch::factory()->default()->create(['workspace_id' => $workspace->id]);
+
+        $this->assertNull($first->fresh()->default_workspace_id);
+        $this->assertSame($workspace->id, $second->default_workspace_id);
+    }
+
+    public function test_migration_recovers_from_the_table_a_failed_run_left_behind(): void
+    {
+        $workspace = Workspace::factory()->create();
+        $migration = require database_path('migrations/2026_07_08_100000_create_branches_table.php');
+        $migration->down();
+        Schema::create('branches', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->boolean('is_default')->default(false);
+        });
+
+        $migration->up();
+
+        $default = DB::table('branches')->where('workspace_id', $workspace->id)->where('is_default', true)->sole();
+        $this->assertSame($workspace->id, $default->default_workspace_id);
     }
 
     public function test_backfill_gives_every_existing_workspace_exactly_one_default_branch(): void
