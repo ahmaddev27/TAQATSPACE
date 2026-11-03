@@ -22,6 +22,9 @@ Schedule::command('subscriptions:expire')->dailyAt('00:30');
 // Remind members 3 days before their subscription expires.
 Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 
+// Router API request logs are only kept for 14 days.
+Schedule::command('router-logs:prune')->dailyAt('03:00');
+
 // Drain queued jobs (emails, SMS broadcasts, push + DB notifications) every
 // minute. The queue connection is `database` and shared hosting has no
 // persistent worker, so we process the backlog from the scheduler instead:
