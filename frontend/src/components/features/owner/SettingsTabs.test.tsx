@@ -12,13 +12,17 @@ vi.mock("@/components/providers/ToastProvider", () => ({
 }));
 vi.mock("@/lib/actions/owner", () => ({
   updateSettings: (...args: unknown[]) => updateSettings(...args),
-  updateSeatTypes: vi.fn(),
 }));
 vi.mock("next/dynamic", () => ({ default: () => () => null }));
 vi.mock("./PhotoManager", () => ({ PhotoManager: () => null }));
 vi.mock("./LogoManager", () => ({ LogoManager: () => null }));
 vi.mock("./MessagingTab", () => ({ MessagingTab: () => null }));
 vi.mock("./DomainTab", () => ({ DomainTab: () => null }));
+vi.mock("./OperationsTab", () => ({
+  OperationsTab: ({ pending }: { pending: unknown[] }) => (
+    <div data-testid="operations">{pending.length}</div>
+  ),
+}));
 
 const workspace = {
   id: "w1",
@@ -89,5 +93,14 @@ describe("SettingsTabs general tab", () => {
     await user.click(screen.getByRole("button", { name: "settings.save" }));
 
     expect(await screen.findByText("bad iban")).toBeInTheDocument();
+  });
+
+  it("keeps the operations tab out of the direct-save flow", async () => {
+    const user = userEvent.setup();
+    render(<SettingsTabs workspace={workspace} locale="en" pendingApprovals={[]} />);
+    await user.click(screen.getByRole("tab", { name: "settings.tabOperations" }));
+
+    expect(screen.getByTestId("operations")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "settings.save" })).not.toBeInTheDocument();
   });
 });

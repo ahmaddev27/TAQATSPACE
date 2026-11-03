@@ -1,6 +1,6 @@
 /** Approvals framework (FR-SA-05) — mirrors the ApprovalRequestResource payload. */
 
-export type ApprovalType = "capacity" | "working_hours";
+export type ApprovalType = "capacity" | "working_hours" | "pricing";
 
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "cancelled";
 

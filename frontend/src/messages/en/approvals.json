@@ -19,7 +19,8 @@
     "empty": "No requests in this view",
     "types": {
       "capacity": "Capacity",
-      "working_hours": "Working hours"
+      "working_hours": "Working hours",
+      "pricing": "Pricing"
     },
     "status": {
       "pending": "Pending",

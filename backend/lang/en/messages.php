@@ -285,5 +285,7 @@ return [
 
     'approval_not_pending' => 'This request has already been decided or cancelled.',
     'approval_not_found' => 'Approval request not found.',
+    'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
+    'operations_no_changes' => 'Nothing changed, so no approval request was created.',
 
 ];

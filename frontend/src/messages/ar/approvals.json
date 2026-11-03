@@ -19,7 +19,8 @@
     "empty": "لا توجد طلبات في هذا العرض",
     "types": {
       "capacity": "السعة",
-      "working_hours": "ساعات العمل"
+      "working_hours": "ساعات العمل",
+      "pricing": "الأسعار"
     },
     "status": {
       "pending": "قيد الانتظار",

@@ -356,10 +356,8 @@
       "wifiSsid": "Wi-Fi network name",
       "wifiPassword": "Wi-Fi password",
       "tabLocation": "Location",
-      "tabSeatTypes": "Seat types & pricing",
       "tabAmenities": "Amenities",
       "tabPhotos": "Photos",
-      "tabHours": "Hours",
       "tabDomain": "Domain & DNS",
       "domainHint": "Your space links on TAQAT.space. Custom domains are not available yet.",
       "domainDashboard": "Dashboard link",
@@ -439,7 +437,8 @@
         "lockers": "Lockers",
         "reception": "Reception",
         "security": "24/7 security"
-      }
+      },
+      "tabOperations": "Operations"
     },
     "common": {
       "currency": "₪",
@@ -527,6 +526,27 @@
         "cancelled": "Cancelled",
         "refunded": "Refunded"
       }
+    },
+    "operations": {
+      "hint": "Changes to capacity, prices, tax and working hours are reviewed by the platform team. They apply only after approval.",
+      "capacityTitle": "Capacity, prices and tax",
+      "hoursTitle": "Working hours",
+      "seatingMode": "Seating mode",
+      "modes": {
+        "flexible": "Flexible (any free seat)",
+        "fixed": "Fixed (assigned seat)"
+      },
+      "taxRate": "Tax rate (%)",
+      "taxHint": "A value between 0 and 100.",
+      "enabled": "Enabled",
+      "submit": "Submit for approval",
+      "submitted": "Submitted for approval",
+      "noChanges": "Nothing changed",
+      "pendingTitle": "Pending approval",
+      "pendingBadge": "Pending approval",
+      "cancelRequest": "Cancel request",
+      "cancelled": "Request cancelled",
+      "hoursProposed": "New working hours are awaiting approval."
     }
   }
 }

@@ -220,15 +220,15 @@ class ApprovalFlowTest extends TestCase
     public function test_real_capacity_and_working_hours_handlers_apply_the_change(): void
     {
         $registry = new ApprovalHandlerRegistry([
-            new \App\Services\Approvals\Handlers\CapacityApprovalHandler,
-            new \App\Services\Approvals\Handlers\WorkingHoursApprovalHandler,
+            app(\App\Services\Approvals\Handlers\CapacityApprovalHandler::class),
+            app(\App\Services\Approvals\Handlers\WorkingHoursApprovalHandler::class),
         ]);
         $this->app->instance(ApprovalHandlerRegistry::class, $registry);
         $admin = $this->superAdmin();
         [$owner, $workspace] = $this->ownerWithWorkspace();
         $service = app(ApprovalService::class);
 
-        $capacity = $service->submit($workspace, ApprovalType::Capacity, ['total_seats' => 40], $owner);
+        $capacity = $service->submit($workspace, ApprovalType::Capacity, ['seat_types' => [['type' => 'flexible', 'capacity' => 40, 'enabled' => true]]], $owner);
         $hours = $service->submit($workspace, ApprovalType::WorkingHours, ['working_hours' => ['sat' => ['open' => '09:00', 'close' => '17:00']]], $owner);
         $service->approve($capacity, $admin);
         $service->approve($hours, $admin);

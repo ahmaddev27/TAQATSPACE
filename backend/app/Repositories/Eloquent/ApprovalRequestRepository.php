@@ -19,7 +19,11 @@ class ApprovalRequestRepository
     public function paginate(?string $workspaceId, array $filters): LengthAwarePaginator
     {
         return ApprovalRequest::query()
-            ->with(['workspace:id,name,total_seats,working_hours', 'requester:id,name,email'])
+            ->with([
+                'workspace:id,name,total_seats,working_hours,seating_mode,tax_rate',
+                'workspace.seatTypes',
+                'requester:id,name,email',
+            ])
             ->when($workspaceId, fn ($q, string $id) => $q->where('workspace_id', $id))
             ->when($filters['status'] ?? null, fn ($q, string $v) => $q->where('status', $v))
             ->when($filters['type'] ?? null, fn ($q, string $v) => $q->where('type', $v))

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\SeatingMode;
 use App\Models\SeatTypePrice;
 use App\Models\Workspace;
 use App\Services\FeatureFlagService;
@@ -87,6 +88,8 @@ class WorkspaceResource extends JsonResource
                     'currency' => $this->currency,
                     'wifi_ssid' => $this->wifi_ssid,
                     'wifi_password' => $this->wifi_password,
+                    'seating_mode' => $this->seating_mode?->value ?? SeatingMode::Flexible->value,
+                    'tax_rate' => $this->tax_rate,
                 ],
             ),
         ];

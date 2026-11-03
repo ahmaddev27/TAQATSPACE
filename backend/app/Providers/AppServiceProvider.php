@@ -9,6 +9,7 @@ use App\Models\Workspace;
 use App\Notifications\Channels\SafeMailChannel;
 use App\Services\Approvals\ApprovalHandlerRegistry;
 use App\Services\Approvals\Handlers\CapacityApprovalHandler;
+use App\Services\Approvals\Handlers\PricingApprovalHandler;
 use App\Services\Approvals\Handlers\WorkingHoursApprovalHandler;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Notifications\ChannelManager;
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ApprovalHandlerRegistry::class, fn ($app) => new ApprovalHandlerRegistry([
             $app->make(CapacityApprovalHandler::class),
             $app->make(WorkingHoursApprovalHandler::class),
+            $app->make(PricingApprovalHandler::class),
         ]));
     }
 
