@@ -309,6 +309,10 @@ return [
     'catalog_item_created' => 'تم إنشاء العنصر.',
     'catalog_item_updated' => 'تم تحديث العنصر.',
     'catalog_item_archived' => 'تمت أرشفة العنصر.',
+    'unbilled_charge_recorded' => 'تم تسجيل الرسم غير المفوتر.',
+    'unbilled_charge_voided' => 'تم إلغاء الرسم غير المفوتر.',
+    'unbilled_charge_not_open' => 'لا يمكن تعديل هذا الرسم لأنه ليس مفتوحاً.',
+    'unbilled_charge_unknown_customer' => 'العميل غير تابع لهذا الفضاء.',
     'feature_not_found' => 'غير موجود.',
 
 ];

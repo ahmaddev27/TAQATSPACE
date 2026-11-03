@@ -309,6 +309,10 @@ return [
     'catalog_item_created' => 'Item created.',
     'catalog_item_updated' => 'Item updated.',
     'catalog_item_archived' => 'Item archived.',
+    'unbilled_charge_recorded' => 'Unbilled charge recorded.',
+    'unbilled_charge_voided' => 'Unbilled charge voided.',
+    'unbilled_charge_not_open' => 'This charge can no longer be changed because it is not open.',
+    'unbilled_charge_unknown_customer' => 'The customer does not belong to this workspace.',
     'feature_not_found' => 'Not found.',
 
 ];
