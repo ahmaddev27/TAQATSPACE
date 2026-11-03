@@ -396,6 +396,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             permission: "manage_billing",
           },
           {
+            key: "hourPackages",
+            href: "/admin/hour-packages",
+            icon: "clock",
+            permission: "manage_billing",
+          },
+          {
             key: "reports",
             href: "/admin/reports",
             icon: "chart",
