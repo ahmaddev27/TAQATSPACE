@@ -14,6 +14,11 @@ use Random\Randomizer;
  * reply is read by the interpreter twin, which queues `A|` acknowledgements.
  * The wire text is built field by field from DOCS/integration/router-protocol.md.
  *
+ * sync.rsc freezes the whole batch, including the `now` in its H line, so after
+ * an outage the resent batch carries a stale `now` and the server shifts every
+ * event by the outage length. `$refreshNowOnResend` models a router that
+ * rewrites `now` on resend; it is off by default to stay faithful to the script.
+ *
  * One deliberate difference: sync.rsc never splits its event buffer, so a long
  * outage would exceed the server's 500-event limit; the simulator sends at
  * most that many events per batch and keeps the rest for the next cycle.
@@ -71,6 +76,7 @@ final class RouterSimulator
         private int $clockSkewSeconds = 0,
         private readonly bool $legacyDateFormat = false,
         private readonly string $mode = 'full',
+        private readonly bool $refreshNowOnResend = false,
     ) {
         $this->random = new Randomizer(new Mt19937($seed + $index));
         $this->interpreter = new RouterInterpreter($mode);
@@ -156,6 +162,8 @@ final class RouterSimulator
     {
         if ($this->pendingBody === null) {
             $this->freezeBatch($now);
+        } elseif ($this->refreshNowOnResend) {
+            $this->pendingBody = $this->withHeaderField($this->pendingBody, 4, $this->routerTime($now));
         }
 
         $eventCount = substr_count((string) $this->pendingBody, "\nE|");
@@ -283,10 +291,16 @@ final class RouterSimulator
 
     private function withFreshBatchId(string $body): string
     {
+        $fresh = $this->withHeaderField($body, 1, $this->randomString(12, 'abcdef0123456789'));
+
+        return $this->withHeaderField($fresh, 6, $this->randomString(12, 'abcdefghijklmnopqrstuvwxyz0123456789'));
+    }
+
+    private function withHeaderField(string $body, int $position, string $value): string
+    {
         $lines = explode("\n", $body);
         $head = explode('|', $lines[0]);
-        $head[1] = $this->randomString(12, 'abcdef0123456789');
-        $head[6] = $this->randomString(12, 'abcdefghijklmnopqrstuvwxyz0123456789');
+        $head[$position] = $value;
         $lines[0] = implode('|', $head);
 
         return implode("\n", $lines);

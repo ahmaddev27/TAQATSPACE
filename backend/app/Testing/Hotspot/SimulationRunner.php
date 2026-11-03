@@ -87,6 +87,7 @@ final class SimulationRunner
                 $plan->seed,
                 $this->clockSkew($plan->scenario, $index),
                 $index % 2 === 1,
+                refreshNowOnResend: $plan->refreshNowOnResend,
             );
             $this->devices[$id] = array_values(array_filter($dataset, static fn (SimulatedDevice $device): bool => $device->routerIndex === $index));
             $this->queueCommands($target);

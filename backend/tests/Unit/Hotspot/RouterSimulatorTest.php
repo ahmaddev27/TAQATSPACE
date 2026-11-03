@@ -197,6 +197,26 @@ class RouterSimulatorTest extends TestCase
         $this->assertFalse($sim->hasPending());
     }
 
+    public function test_a_resent_batch_keeps_its_stale_now_unless_the_router_refreshes_it(): void
+    {
+        foreach ([false, true] as $refresh) {
+            $sim = new RouterSimulator('ABCD2345', 'key', 0, 1, refreshNowOnResend: $refresh);
+            $sim->record('login', $this->device(), self::NOW);
+            $bodies = [];
+            $transport = $this->transport([new TransportException('down')], $bodies);
+
+            $sim->tick($transport, self::NOW);
+            $sim->tick($transport, self::NOW + 3600);
+
+            $expected = $refresh ? '2026-11-03 13:00:00' : '2026-11-03 12:00:00';
+            $this->assertSame($expected, explode('|', explode('
+', $bodies[1])[0])[4]);
+            $this->assertSame(explode('|', explode('
+', $bodies[0])[0])[1], explode('|', explode('
+', $bodies[1])[0])[1], 'batch id must not change');
+        }
+    }
+
     public function test_replay_sends_the_same_events_again(): void
     {
         $sim = $this->simulator();
