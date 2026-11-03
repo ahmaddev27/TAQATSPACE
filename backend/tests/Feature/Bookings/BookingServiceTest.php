@@ -168,7 +168,8 @@ class BookingServiceTest extends TestCase
             'member_id' => $member->id,
         ]);
         $subscription = Subscription::query()->where('member_id', $member->id)->firstOrFail();
-        $this->assertNotNull($subscription->internet_username);
+        $this->assertNotNull($subscription->internetCredentials());
+        $this->assertDatabaseHas('hotspot_accounts', ['subscription_id' => $subscription->id]);
     }
 
     public function test_approve_requires_a_package_from_the_bookings_workspace(): void

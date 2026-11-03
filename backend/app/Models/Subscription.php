@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Subscription extends Model
 {
@@ -73,5 +74,31 @@ class Subscription extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /** @return HasOne<HotspotAccount, $this> */
+    public function hotspotAccount(): HasOne
+    {
+        return $this->hasOne(HotspotAccount::class)->withoutGlobalScopes();
+    }
+
+    /**
+     * The member's internet login: the hotspot account, falling back to the
+     * legacy columns for rows the data migration has not reached yet.
+     *
+     * @return array{username: string, password: string}|null
+     */
+    public function internetCredentials(): ?array
+    {
+        $this->loadMissing('hotspotAccount');
+        $account = $this->hotspotAccount;
+
+        if ($account !== null) {
+            return ['username' => $account->username, 'password' => $account->password_enc];
+        }
+
+        return $this->internet_username === null
+            ? null
+            : ['username' => $this->internet_username, 'password' => (string) $this->internet_password_enc];
     }
 }
