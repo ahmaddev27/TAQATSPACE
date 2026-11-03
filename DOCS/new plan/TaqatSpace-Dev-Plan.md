@@ -18,16 +18,16 @@
 | 2 | Network | MikroTik integration (installer, sync, commands, locking, updates, diagnostics) |
 | 3 | Data engine | Devices, sessions, attendance in four modes, statistics, gaps, loyalty and segments, alerts, safety tools |
 | 4 | Operations | Executive dashboard, live monitor, members hub, contracts, Roster, booking hub, stations and rooms, subscription requests |
-| 5 | Finance | Catalog, plans, invoices, receipts and vouchers, credit notes, wallet, POS, collections, expenses, cash box, tax, import, organizations, after-hours, activity log |
+| 5 | Finance | Catalog, plans, invoices, receipts and vouchers, credit notes, wallet, POS, collections, expenses, cash box, tax, import, organizations, after-hours, activity log, platform-wide hour packages |
 | 6 | GSG program | Parameters, holidays, UR formula, Tracker, month close, UTR review, utilization, programs, claims |
-| 7 | Analytics | Analytics tabs, 19 reports, report builder, PDF/Word/Excel/CSV/JSON export |
+| 7 | Analytics | Analytics tabs, 19 reports, workspace reports center (subscribers, hours, attendance, finance, subscriptions), report builder, PDF/Word/Excel/CSV/JSON export |
 | 8 | Super admin | Workspaces and plans, UTR approval, agreements and funded seats, claims, approvals, router monitoring, consolidated reports |
-| 9 | Freelancer | My status, attendance, invoices and wallet, requests, disputes, devices, profile, notifications |
+| 9 | Freelancer | My status, attendance, invoices and wallet, my hours (package balance and usage), requests, disputes, devices, profile, notifications |
 | 10 | Public | The `/s/{slug}` site, site builder, forms, hotspot guest registration, custom domain |
 | 11 | Existing | Discovery, booking, chat, CMS, reviews, announcements, broadcast, Academy API, notifications — retained and integrated (§8) |
 | 12 | Quality and migration | E2E, hardening, localization, data migration, UAT, cutover from CoWorkSpaces |
 
-**Out of scope (by decision):** online payment gateway, OTP login, self-serve purchase of platform plans.
+**Out of scope (by decision):** online payment gateway, OTP login. Platform hour packages are requested in the portal and activated by the super admin after an offline payment (D13).
 
 ---
 
@@ -47,6 +47,7 @@
 | D10 | UR | Pure calculator `UrCalculator` + versioned parameters + frozen results | Provable accuracy towards the donor |
 | D11 | Shared components | Custom `audit_logs` and `approval_requests`, TOTP, `phpoffice/phpspreadsheet` and `phpoffice/phpword` | Simpler than generic packages and fits the workspace scope |
 | D12 | Deliverables | Markdown + Excel in `DOCS/new plan/` | Readable reference + tracking copy |
+| D13 | Hour packages (2026-11-03) | Platform-wide prepaid hour packages, by hours rather than by time (e.g. $10 = 8 hours, $100 = 100 hours), usable at any participating workspace; the super admin chooses the participating workspaces and sets the hour price per workspace or as one unified price; offline payment recorded by the super admin | Requested by the product owner; separate from workspace plans (5.2). Tasks 5.24, 5.25, 9.11 |
 
 ---
 
@@ -478,7 +479,7 @@ sequenceDiagram
 | Network | `routers`, `router_install_tokens`, `router_commands`, `router_api_logs`, `hotspot_accounts` | `subscriptions.internet_*` → migrated to `hotspot_accounts` |
 | Data | `devices`, `hotspot_events`, `router_snapshots`, `router_snapshot_chunks`, `device_presence`, `hotspot_sessions`, `router_gaps`, `attendance_daily`, `stats_daily_workspace`, `stats_monthly_subscriber`, `alert_rules`, `alerts` | — |
 | Operations | `subscription_status_history`, `roster_entries`, `bookings` (station/room, by the hour, with attendance status), `room_bookings` | `subscriptions` (+contract_type, billing_mode, plan_id, custom_price, contracted_hours, grace_days, auto_renew, renewed_from_id, organization_id, draft), `seats` (+zone, branch_id, kind, capacity, is_private, parent_id), `users` (+education, specialization, employment_status), `booking_requests` (+statuses, requests without an account) |
-| Finance | `catalog_categories`, `catalog_items`, `plans`, `unbilled_charges`, `invoice_lines`, `document_sequences`, `receipts`, `receipt_allocations`, `credit_notes`, `wallet_entries`, `payment_vouchers`, `organizations`, `organization_members`, `invoice_runs`, `import_batches`, `after_hours_rules` | `invoices` (+workspace_id, customer_id, doc_status, payment_status, totals, tax, period), `pos_products` (+catalog_item_id), `workspace_expenses` (+method, reference, voided_at) |
+| Finance | `catalog_categories`, `catalog_items`, `plans`, `unbilled_charges`, `invoice_lines`, `document_sequences`, `receipts`, `receipt_allocations`, `credit_notes`, `wallet_entries`, `payment_vouchers`, `organizations`, `organization_members`, `invoice_runs`, `import_batches`, `after_hours_rules`, `hour_packages`, `hour_package_purchases`, `hour_ledger_entries` | `invoices` (+workspace_id, customer_id, doc_status, payment_status, totals, tax, period), `pos_products` (+catalog_item_id), `workspace_expenses` (+method, reference, voided_at) |
 | GSG | `ur_parameter_sets`, `capacity_versions`, `holidays`, `ur_month_runs`, `utr_records`, `programs`, `agreements`, `funded_seat_assignments`, `agreement_governance_events`, `program_claims` | — |
 | Freelancer and public | `member_requests` (renewal/plan change/room booking), `disputes`, `site_sections` (site builder), `custom_domains` | — |
 
