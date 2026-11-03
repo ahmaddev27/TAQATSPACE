@@ -79,6 +79,7 @@ class ReportsService
             ->pluck('total', 'bucket');
 
         $outstanding = Invoice::query()
+            ->notDraft()
             ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
             ->where('due_date', '>=', $start)
             ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(amount) as total")

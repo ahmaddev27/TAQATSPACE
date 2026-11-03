@@ -10,6 +10,8 @@ use App\Http\Requests\Auth\CompleteOnboardingRequest;
 use App\Http\Requests\Auth\OnboardingSeatsRequest;
 use App\Http\Resources\SeatResource;
 use App\Http\Resources\UserResource;
+use App\Models\User;
+use App\Models\Workspace;
 use App\Services\Auth\RegistrationService;
 use App\Services\SeatService;
 use App\Support\ApiResponse;
@@ -30,7 +32,7 @@ class OnboardingController extends Controller
 
     public function complete(CompleteOnboardingRequest $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $user = $this->registration->completeOnboarding($user, $request->validated());
@@ -50,10 +52,10 @@ class OnboardingController extends Controller
      */
     public function seats(OnboardingSeatsRequest $request, SeatService $seats): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
-        /** @var \App\Models\Workspace $workspace */
+        /** @var Workspace $workspace */
         $workspace = $user->workspace;
 
         $created = $seats->setupFromCounts($workspace, $request->validated()['seats']);

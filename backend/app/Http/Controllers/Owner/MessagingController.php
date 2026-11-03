@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\UpdateWorkspaceMessagingRequest;
+use App\Http\Resources\WorkspaceResource;
 use App\Services\MessagingSettingsService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Workspace-owner management of their own messaging accounts. An owner either
  * inherits Taqat's platform accounts (`use_platform = true`) or supplies their
- * own SMTP/SMS. Secrets are never returned (the {@see \App\Http\Resources\WorkspaceResource}
+ * own SMTP/SMS. Secrets are never returned (the {@see WorkspaceResource}
  * masks them). Behind auth:sanctum + role.owner; ownership re-checked via gate.
  */
 class MessagingController extends Controller

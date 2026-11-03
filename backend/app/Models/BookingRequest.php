@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\BookingStatus;
 use App\Enums\PlanType;
 use App\Enums\SeatType;
+use Database\Factories\BookingRequestFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BookingRequest extends Model
 {
-    /** @use HasFactory<\Database\Factories\BookingRequestFactory> */
+    /** @use HasFactory<BookingRequestFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */

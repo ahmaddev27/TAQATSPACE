@@ -8,6 +8,7 @@ use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentStatus;
 use App\Observers\InvoiceImmutabilityObserver;
+use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -26,7 +27,7 @@ use Illuminate\Support\Carbon;
 #[ObservedBy([InvoiceImmutabilityObserver::class])]
 class Invoice extends Model
 {
-    /** @use HasFactory<\Database\Factories\InvoiceFactory> */
+    /** @use HasFactory<InvoiceFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */

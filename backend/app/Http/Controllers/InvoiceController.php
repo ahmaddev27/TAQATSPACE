@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\WorkspaceFeature;
+use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Requests\Invoice\DeleteInvoiceRequest;
 use App\Http\Requests\Invoice\MarkPaidRequest;
 use App\Http\Requests\Invoice\PartialPaymentRequest;
@@ -14,13 +15,13 @@ use App\Http\Requests\Invoice\StoreInvoiceRequest;
 use App\Http\Requests\Invoice\SubmitReceiptRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
-use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Services\Auth\TwoFactorService;
 use App\Services\FeatureFlagService;
 use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Support\ApiResponse;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -334,7 +335,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, Invoice>  $paginator
+     * @param  LengthAwarePaginator<int, Invoice>  $paginator
      * @return array<string, int>
      */
     private function meta($paginator): array

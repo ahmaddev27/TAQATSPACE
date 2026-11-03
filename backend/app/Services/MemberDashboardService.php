@@ -156,6 +156,7 @@ class MemberDashboardService
     private function nextInvoiceSummary(User $member): ?array
     {
         $invoice = Invoice::query()
+            ->notDraft()
             ->whereHas('subscription', static fn ($query) => $query->where('member_id', $member->id))
             ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
             ->orderBy('due_date')

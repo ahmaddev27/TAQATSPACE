@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\WorkspaceFeature;
+use App\Services\FeatureFlagService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One feature flag row of a workspace. Read through
- * {@see \App\Services\FeatureFlagService}, which caches the per-workspace map.
+ * {@see FeatureFlagService}, which caches the per-workspace map.
  *
  * @property string $workspace_id
  * @property WorkspaceFeature $feature
