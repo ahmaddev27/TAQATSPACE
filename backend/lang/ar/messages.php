@@ -272,6 +272,7 @@ return [
     // Two-factor authentication
     'two_factor_challenge_pending' => 'أكمل التحقق بخطوتين للمتابعة.',
     'two_factor_required' => 'يتطلب هذا الإجراء تحققاً حديثاً بخطوتين.',
+    'two_factor_enrollment_required' => 'فعّل المصادقة بخطوتين على حسابك قبل تنفيذ هذا الإجراء.',
     'two_factor_not_eligible' => 'المصادقة الثنائية غير متاحة لهذا النوع من الحسابات.',
     'two_factor_already_enabled' => 'المصادقة الثنائية مفعّلة بالفعل.',
     'two_factor_not_enabled' => 'المصادقة الثنائية غير مفعّلة.',
