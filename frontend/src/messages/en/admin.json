@@ -378,6 +378,95 @@
         "cancelled": "Cancelled"
       }
     },
+    "hourPackages": {
+      "title": "Hour packages",
+      "subtitle": "Platform-wide prepaid hour packages. Hours belong to the subscriber, not to one workspace.",
+      "purchasesLink": "Purchase queue",
+      "create": "New package",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "empty": "No hour packages yet.",
+      "colCode": "Code",
+      "colName": "Name",
+      "colHours": "Hours",
+      "colPrice": "Price",
+      "colValidity": "Validity",
+      "colStatus": "Status",
+      "nameAr": "Name (Arabic)",
+      "nameEn": "Name (English)",
+      "currency": "Currency",
+      "validityHint": "Leave empty if the hours never expire.",
+      "days": "{count} days",
+      "noExpiry": "No expiry",
+      "active": "Active",
+      "archived": "Archived",
+      "archive": {
+        "action": "Archive",
+        "title": "Archive package",
+        "message": "\"{name}\" can no longer be requested. Existing purchases keep working.",
+        "confirm": "Archive"
+      },
+      "toast": {
+        "saved": "Package saved",
+        "archived": "Package archived",
+        "failed": "Could not save the package"
+      }
+    },
+    "hourPurchases": {
+      "title": "Hour purchase queue",
+      "subtitle": "Activate a purchase after the payment was received outside the platform, cancel it, or adjust a balance.",
+      "empty": "No purchases yet.",
+      "colUser": "Subscriber",
+      "colPackage": "Package",
+      "colHours": "Hours",
+      "colPrice": "Price",
+      "colRequested": "Requested",
+      "colStatus": "Status",
+      "activate": "Activate",
+      "cancel": "Cancel",
+      "adjust": "Adjust balance",
+      "close": "Close",
+      "status": {
+        "requested": "Requested",
+        "active": "Active",
+        "exhausted": "Exhausted",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "activateDialog": {
+        "title": "Activate purchase",
+        "body": "Record the payment received outside the platform. {hours} hours will be credited once.",
+        "method": "Payment method",
+        "transfer": "Bank transfer",
+        "cash": "Cash",
+        "paidAt": "Paid on",
+        "receipt": "Payment receipt",
+        "dropLabel": "Drop the receipt here",
+        "dropHint": "PDF, JPG or PNG up to 5 MB",
+        "remove": "Remove",
+        "confirm": "Activate and credit hours"
+      },
+      "cancelDialog": {
+        "title": "Cancel purchase",
+        "message": "Cancel the purchase request of {name}?",
+        "confirm": "Cancel purchase"
+      },
+      "adjustDialog": {
+        "title": "Adjust hour balance",
+        "body": "Manual correction for {name}.",
+        "hours": "Hours (negative to deduct)",
+        "hoursHint": "For example 1.5 or -2.",
+        "reason": "Reason (required)",
+        "confirm": "Apply adjustment"
+      },
+      "toast": {
+        "activated": "Purchase activated",
+        "cancelled": "Purchase cancelled",
+        "adjusted": "Balance adjusted",
+        "failed": "The action failed"
+      }
+    },
     "invoices": {
       "title": "Invoices",
       "subtitle": "Track invoices, record payments manually and upload payment receipts.",

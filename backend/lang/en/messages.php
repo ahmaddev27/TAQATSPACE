@@ -290,5 +290,14 @@ return [
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
     'workspace_reset_confirmation_mismatch' => 'Type the workspace slug exactly to confirm the reset.',
     'workspace_reset_done' => 'The workspace was reset. Its operational data was deleted.',
+    'hour_package_created' => 'Hour package created.',
+    'hour_package_updated' => 'Hour package updated.',
+    'hour_package_archived' => 'Hour package archived.',
+    'hour_purchase_activated' => 'Purchase activated and hours credited.',
+    'hour_purchase_cancelled' => 'Purchase cancelled.',
+    'hour_purchase_not_requested' => 'This purchase has already been activated or cancelled.',
+    'hour_package_unavailable' => 'This hour package is archived and cannot be requested.',
+    'hour_adjustment_recorded' => 'Hour balance adjusted.',
+    'hour_adjustment_negative_balance' => 'The adjustment would make the balance negative.',
 
 ];
