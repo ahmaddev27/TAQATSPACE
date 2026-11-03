@@ -69,6 +69,28 @@ const DAY_KEYS = [
   "friday",
 ] as const;
 
+/** Mirrors the backend WorkspaceTimezone / WorkspaceCurrency enums. */
+const TIMEZONES = [
+  "Asia/Gaza",
+  "Asia/Jerusalem",
+  "Asia/Amman",
+  "Asia/Beirut",
+  "Asia/Damascus",
+  "Asia/Baghdad",
+  "Asia/Riyadh",
+  "Asia/Kuwait",
+  "Asia/Qatar",
+  "Asia/Dubai",
+  "Africa/Cairo",
+  "Africa/Tripoli",
+  "Africa/Tunis",
+  "Africa/Algiers",
+  "Africa/Casablanca",
+  "UTC",
+] as const;
+
+const CURRENCIES = ["ILS", "USD", "EUR", "JOD", "EGP", "SAR", "AED", "KWD"] as const;
+
 /** The three backend seat types, in display order. */
 const SEAT_TYPE_KEYS: SeatType[] = ["flexible", "fixed", "private_office"];
 
@@ -91,6 +113,13 @@ interface FormState {
   name: string;
   description: string;
   phone: string;
+  contactEmail: string;
+  bankName: string;
+  iban: string;
+  timezone: string;
+  currency: string;
+  wifiSsid: string;
+  wifiPassword: string;
   address: string;
   cityId: string;
   latitude: string;
@@ -137,6 +166,13 @@ function buildInitial(ws: Workspace): FormState {
     name: ws.name ?? "",
     description: ws.description ?? "",
     phone: ws.phone ?? "",
+    contactEmail: ws.contact_email ?? "",
+    bankName: ws.bank_name ?? "",
+    iban: ws.iban ?? "",
+    timezone: ws.timezone ?? TIMEZONES[0],
+    currency: ws.currency ?? CURRENCIES[0],
+    wifiSsid: ws.wifi_ssid ?? "",
+    wifiPassword: ws.wifi_password ?? "",
     address: ws.address ?? "",
     cityId: ws.city_id ?? "",
     latitude: ws.latitude != null ? String(ws.latitude) : "",
@@ -229,6 +265,13 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
       name: form.name.trim(),
       description: form.description.trim() || null,
       phone: form.phone.trim() || null,
+      contact_email: form.contactEmail.trim() || null,
+      bank_name: form.bankName.trim() || null,
+      iban: form.iban.trim() || null,
+      timezone: form.timezone,
+      currency: form.currency,
+      wifi_ssid: form.wifiSsid.trim() || null,
+      wifi_password: form.wifiPassword || null,
       address: form.address.trim(),
       city_id: form.cityId,
       latitude: form.latitude ? Number(form.latitude) : null,
@@ -278,6 +321,7 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
 
   const tabs = [
     { id: "basic", label: t("settings.tabBasic") },
+    { id: "general", label: t("settings.tabGeneral") },
     { id: "location", label: t("settings.tabLocation") },
     { id: "seatTypes", label: t("settings.tabSeatTypes") },
     { id: "amenities", label: t("settings.tabAmenities") },
@@ -333,6 +377,63 @@ export function SettingsTabs({ workspace, locale }: SettingsTabsProps) {
                 className="ltr"
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
+
+        {tab === "general" && (
+          <div className="stack" style={{ gap: 16 }}>
+            <Field label={t("settings.contactEmail")} error={errors.contact_email?.[0]}>
+              <Input
+                className="ltr"
+                type="email"
+                value={form.contactEmail}
+                onChange={(e) => set("contactEmail", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.bankName")} error={errors.bank_name?.[0]}>
+              <Input value={form.bankName} onChange={(e) => set("bankName", e.target.value)} />
+            </Field>
+            <Field label={t("settings.iban")} error={errors.iban?.[0]}>
+              <Input
+                className="ltr"
+                value={form.iban}
+                onChange={(e) => set("iban", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.timezone")} error={errors.timezone?.[0]}>
+              <Select value={form.timezone} onChange={(e) => set("timezone", e.target.value)}>
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t("settings.currency")} error={errors.currency?.[0]}>
+              <Select value={form.currency} onChange={(e) => set("currency", e.target.value)}>
+                {CURRENCIES.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t("settings.wifiSsid")} error={errors.wifi_ssid?.[0]}>
+              <Input
+                className="ltr"
+                value={form.wifiSsid}
+                onChange={(e) => set("wifiSsid", e.target.value)}
+              />
+            </Field>
+            <Field label={t("settings.wifiPassword")} error={errors.wifi_password?.[0]}>
+              <Input
+                className="ltr"
+                type="password"
+                autoComplete="new-password"
+                value={form.wifiPassword}
+                onChange={(e) => set("wifiPassword", e.target.value)}
               />
             </Field>
           </div>

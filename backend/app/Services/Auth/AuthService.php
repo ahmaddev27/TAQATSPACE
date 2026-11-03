@@ -25,7 +25,7 @@ class AuthService
     {
         $user = $this->users->findByEmail($email);
 
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        if ($user === null || $user->isUnclaimed() || $user->password === null || ! Hash::check($password, $user->password)) {
             return null;
         }
 

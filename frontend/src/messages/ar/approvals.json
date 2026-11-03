@@ -1,0 +1,36 @@
+{
+  "approvals": {
+    "title": "الموافقات",
+    "subtitle": "راجع التغييرات الحساسة على المساحات قبل أن تصبح سارية",
+    "colWorkspace": "المساحة",
+    "colType": "النوع",
+    "colChange": "التغيير (الحالي ← المقترح)",
+    "colRequester": "مقدم الطلب",
+    "colRequested": "تاريخ الطلب",
+    "colStatus": "الحالة",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "cancel": "إلغاء",
+    "approveTitle": "الموافقة على هذا الطلب؟",
+    "approveMessage": "سيُطبَّق التغيير على المساحة فوراً.",
+    "rejectTitle": "رفض هذا الطلب",
+    "reasonLabel": "السبب",
+    "reasonHint": "مطلوب. سيرى المالك هذا السبب.",
+    "empty": "لا توجد طلبات في هذا العرض",
+    "types": {
+      "capacity": "السعة",
+      "working_hours": "ساعات العمل"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "approved": "تمت الموافقة",
+      "rejected": "مرفوض",
+      "cancelled": "ملغى"
+    },
+    "toast": {
+      "approved": "تمت الموافقة على الطلب",
+      "rejected": "تم رفض الطلب",
+      "failed": "تعذّر إتمام الإجراء"
+    }
+  }
+}

@@ -21,6 +21,8 @@ return [
     'no_workspace_context' => 'No workspace is linked to this account.',
     'unauthorized_action' => 'This action is unauthorized.',
     'no_workspace' => 'You have no workspace.',
+    'feature_disabled' => 'This module is not enabled for your workspace.',
+    'workspace_features_updated' => 'Workspace features updated.',
 
     // POS / cashier staff
     'cashier_invited' => 'Invitation sent.',
@@ -98,6 +100,7 @@ return [
     'workspace_not_found' => 'Workspace not found.',
     'workspace_created' => 'Workspace created and submitted for review.',
     'workspace_updated' => 'Workspace updated.',
+    'invalid_iban' => 'The IBAN is not valid.',
     'workspace_status_updated' => 'Workspace status updated.',
     'workspace_published' => 'Workspace published to public discovery.',
     'workspace_unpublished' => 'Workspace removed from public discovery.',
@@ -279,5 +282,8 @@ return [
     'two_factor_verified' => 'Verification successful.',
     'two_factor_invalid_code' => 'The verification code is invalid.',
     'two_factor_throttled' => 'Too many attempts. Please try again later.',
+
+    'approval_not_pending' => 'This request has already been decided or cancelled.',
+    'approval_not_found' => 'Approval request not found.',
 
 ];

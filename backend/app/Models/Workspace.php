@@ -37,6 +37,13 @@ class Workspace extends Model
         'city',
         'city_id',
         'phone',
+        'contact_email',
+        'bank_name',
+        'iban',
+        'timezone',
+        'currency',
+        'wifi_ssid',
+        'wifi_password',
         'latitude',
         'longitude',
         'total_seats',
@@ -92,6 +99,7 @@ class Workspace extends Model
             'photos' => 'array',
             'working_hours' => 'array',
             'messaging' => 'array',
+            'wifi_password' => 'encrypted',
             'status' => WorkspaceStatus::class,
             'platform_plan' => PlatformPlan::class,
             'platform_status' => PlatformStatus::class,
@@ -118,6 +126,12 @@ class Workspace extends Model
     public function cashiers(): HasMany
     {
         return $this->hasMany(User::class, 'workspace_id');
+    }
+
+    /** @return HasMany<WorkspaceFeatureFlag, $this> */
+    public function featureFlags(): HasMany
+    {
+        return $this->hasMany(WorkspaceFeatureFlag::class);
     }
 
     /**

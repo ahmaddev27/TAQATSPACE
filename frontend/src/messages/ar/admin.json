@@ -44,6 +44,12 @@
       "colCity": "المدينة",
       "colStatus": "الحالة",
       "colPublished": "النشر",
+      "colFeatures": "الوحدات",
+      "features": {
+        "network": "الشبكة",
+        "finance_v2": "المالية v2",
+        "gsg": "GSG"
+      },
       "colCreated": "تاريخ الإنشاء",
       "approve": "موافقة",
       "suspend": "إيقاف",
@@ -80,7 +86,9 @@
         "statusFailed": "تعذّر تحديث حالة المساحة",
         "published": "تم نشر المساحة",
         "unpublished": "تم إلغاء نشر المساحة",
-        "publishFailed": "تعذّر تحديث حالة النشر"
+        "publishFailed": "تعذّر تحديث حالة النشر",
+        "featureUpdated": "تم تحديث إعداد الوحدة",
+        "featureFailed": "تعذّر تحديث إعداد الوحدة"
       }
     },
     "workspaceDetail": {

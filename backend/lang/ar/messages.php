@@ -20,6 +20,8 @@ return [
     'insufficient_permissions' => 'الصلاحيات غير كافية.',
     'no_workspace_context' => 'لا توجد مساحة عمل مرتبطة بهذا الحساب.',
     'unauthorized_action' => 'هذا الإجراء غير مصرّح به.',
+    'feature_disabled' => 'هذه الوحدة غير مفعّلة لمساحة عملك.',
+    'workspace_features_updated' => 'تم تحديث ميزات مساحة العمل.',
     'no_workspace' => 'ليس لديك مساحة عمل.',
 
     // POS / cashier staff
@@ -98,6 +100,7 @@ return [
     'workspace_not_found' => 'مساحة العمل غير موجودة.',
     'workspace_created' => 'تم إنشاء مساحة العمل وإرسالها للمراجعة.',
     'workspace_updated' => 'تم تحديث مساحة العمل.',
+    'invalid_iban' => 'رقم الآيبان غير صالح.',
     'workspace_status_updated' => 'تم تحديث حالة مساحة العمل.',
     'workspace_published' => 'تم نشر مساحة العمل في الاستكشاف العام.',
     'workspace_unpublished' => 'تمت إزالة مساحة العمل من الاستكشاف العام.',
@@ -279,5 +282,8 @@ return [
     'two_factor_verified' => 'تم التحقق بنجاح.',
     'two_factor_invalid_code' => 'رمز التحقق غير صالح.',
     'two_factor_throttled' => 'محاولات كثيرة جداً. يرجى المحاولة لاحقاً.',
+
+    'approval_not_pending' => 'تم البت في هذا الطلب مسبقاً أو إلغاؤه.',
+    'approval_not_found' => 'طلب الموافقة غير موجود.',
 
 ];

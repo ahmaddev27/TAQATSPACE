@@ -332,6 +332,13 @@ export interface WorkspaceSettingsInput {
   /** Id of an existing {@link City}; the backend resolves the display name. */
   city_id?: string;
   phone?: string | null;
+  contact_email?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  timezone?: string;
+  currency?: string;
+  wifi_ssid?: string | null;
+  wifi_password?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   amenities?: string[];

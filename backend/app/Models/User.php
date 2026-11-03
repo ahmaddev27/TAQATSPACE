@@ -40,6 +40,7 @@ class User extends Authenticatable
         'staff_group',
         'status',
         'sso_sub',
+        'claimed_at',
         'onboarding_completed_at',
         'avatar',
         'specialty',
@@ -64,6 +65,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'password' => 'hashed',
             'gender' => Gender::class,
             'role' => UserRole::class,
@@ -74,6 +76,17 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Self-created accounts are claimed from the start; only the unclaimed
+        // subscriber flow passes `claimed_at` explicitly (as null).
+        static::creating(function (self $user): void {
+            if (! array_key_exists('claimed_at', $user->getAttributes())) {
+                $user->claimed_at = now();
+            }
+        });
     }
 
     // ---- Relationships ----
@@ -195,6 +208,15 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return $this->two_factor_secret !== null && $this->two_factor_confirmed_at !== null;
+    }
+
+    /**
+     * An unclaimed subscriber exists only as a record (import, discovery, guest
+     * registration); it has no credentials and must never get a session.
+     */
+    public function isUnclaimed(): bool
+    {
+        return $this->claimed_at === null;
     }
 
     public function isActive(): bool

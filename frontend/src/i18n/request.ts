@@ -27,6 +27,7 @@ const NAMESPACES = [
   "cashier",
   "posReports",
   "audit",
+  "approvals",
 ] as const;
 
 /** Recursively merge `source` into `target` (objects deep, scalars overwrite). */

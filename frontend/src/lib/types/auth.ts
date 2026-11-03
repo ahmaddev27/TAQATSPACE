@@ -16,7 +16,8 @@ export type AdminPermission =
   | "manage_billing"
   | "manage_content"
   | "manage_messaging"
-  | "view_reports";
+  | "view_reports"
+  | "approve_requests";
 
 /** Named permissions that gate the POS (café) area for a cashier account. */
 export type PosPermission =
@@ -24,6 +25,11 @@ export type PosPermission =
   | "pos_refund"
   | "pos_manage_products"
   | "pos_view_reports";
+
+/** Modules rolled out per workspace; every flag is off until a super admin enables it. */
+export type WorkspaceFeature = "network" | "finance_v2" | "gsg";
+
+export type WorkspaceFeatureFlags = Record<WorkspaceFeature, boolean>;
 
 export interface User {
   id: string;
@@ -54,6 +60,8 @@ export interface User {
    * roles with no permission tier (owner/freelancer).
    */
   permissions?: (AdminPermission | PosPermission)[];
+  /** Feature flags of the account's workspace; absent for admins and freelancers. */
+  features?: WorkspaceFeatureFlags;
   /**
    * A pending cashier invitation matching this account's email, surfaced during
    * onboarding so the user can Accept/Decline. Present only while

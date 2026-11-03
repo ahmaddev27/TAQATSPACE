@@ -21,6 +21,7 @@ import {
   ROLE_NAV,
   applyActionBadges,
   applyChatBadge,
+  filterNavByFeatures,
   filterNavByPermissions,
   filterNavByRealtime,
   type NavActionCounts,
@@ -95,10 +96,13 @@ export function DashShell({
       applyActionBadges(
         applyChatBadge(
           filterNavByRealtime(
-            filterNavByPermissions(
-              ROLE_NAV[role],
-              user?.permissions,
-              user?.is_super_admin,
+            filterNavByFeatures(
+              filterNavByPermissions(
+                ROLE_NAV[role],
+                user?.permissions,
+                user?.is_super_admin,
+              ),
+              user?.features,
             ),
             firebaseReady,
           ),
@@ -110,6 +114,7 @@ export function DashShell({
       role,
       user?.permissions,
       user?.is_super_admin,
+      user?.features,
       firebaseReady,
       chatUnread,
       actionCounts,
