@@ -15,4 +15,5 @@ enum SimulationScenario: string
     case Duplicates = 'duplicates';
     case ClockDrift = 'clock-drift';
     case RebootStorm = 'reboot-storm';
+    case RejectedBatch = 'rejected-batch';
 }

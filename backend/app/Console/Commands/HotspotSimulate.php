@@ -32,10 +32,9 @@ class HotspotSimulate extends Command
         {--subscribers=461}
         {--devices=1149}
         {--duration=60 : Minutes of traffic (simulated minutes unless --url is given)}
-        {--scenario=normal : normal, outage, duplicates, clock-drift or reboot-storm}
+        {--scenario=normal : normal, outage, duplicates, clock-drift, reboot-storm or rejected-batch}
         {--seed=1}
         {--interval=50 : Seconds between sync cycles}
-        {--refresh-now : Resent batches carry a fresh router clock (sync.rsc keeps the stale one)}
         {--url= : Post to this base URL over HTTP and in real time; omit to run in-process on a virtual clock}';
 
     protected $description = 'Simulate MikroTik routers pushing to the hotspot sync endpoint';
@@ -84,7 +83,6 @@ class HotspotSimulate extends Command
             durationMinutes: max(1, (int) $this->option('duration')),
             seed: (int) $this->option('seed'),
             intervalSeconds: max(1, (int) $this->option('interval')),
-            refreshNowOnResend: (bool) $this->option('refresh-now'),
         );
     }
 

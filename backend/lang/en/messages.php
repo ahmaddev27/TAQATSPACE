@@ -291,6 +291,8 @@ return [
     'operations_submitted' => 'Your changes were submitted for approval. They apply once approved.',
     'operations_no_changes' => 'Nothing changed, so no approval request was created.',
     'router_not_found' => 'Router not found.',
+    'router_script_update_queued' => 'Script update queued. The router applies it on its next sync.',
+    'router_script_up_to_date' => 'The router scripts are already up to date.',
     'router_unlocked' => 'Router unlocked. The next router that syncs with its key will be bound to it.',
     'router_key_rotated' => 'A new key was generated. Copy it now, it is shown once. The router receives it automatically.',
     'router_rotation_in_progress' => 'The previous key rotation has not been confirmed by the router yet.',

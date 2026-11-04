@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property string $workspace_id
  * @property RouterStatus $status
+ * @property string|null $mode
+ * @property string|null $script_version
  */
 class Router extends Model
 {
@@ -35,6 +37,7 @@ class Router extends Model
         'serial_number',
         'routeros_version',
         'script_version',
+        'mode',
         'status',
         'last_seen_at',
         'last_seq',
