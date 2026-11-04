@@ -116,6 +116,45 @@ class HotspotAccountService
         }
     }
 
+    /**
+     * Change the login of an existing account: the old user is disabled and
+     * dropped from the routers and the new one is pushed in its place.
+     * Returns null when the subscription has no account yet.
+     */
+    public function rename(Subscription $subscription, string $username): ?HotspotAccount
+    {
+        $account = $this->accountOf($subscription);
+
+        if ($account === null || $account->username === $username) {
+            return $account;
+        }
+
+        $previous = $account->username;
+        $routers = $this->routersOf([$account->workspace_id])->get($account->workspace_id, []);
+        $this->pushDisable($routers, $account);
+
+        $account->update(['username' => $username]);
+
+        if ($account->status === HotspotAccountStatus::Active) {
+            foreach ($routers as $router) {
+                $this->pushUser($router, $account);
+            }
+        }
+
+        $this->audit->log('network.hotspot_account.renamed', $account, changes: ['from' => $previous] + $this->summary($account, $routers));
+
+        return $account;
+    }
+
+    public function usernameTaken(string $workspaceId, string $username, ?string $exceptSubscriptionId = null): bool
+    {
+        return HotspotAccount::query()->withoutWorkspaceScope()
+            ->where('workspace_id', $workspaceId)
+            ->where('username', $username)
+            ->when($exceptSubscriptionId !== null, fn ($q) => $q->where('subscription_id', '!=', $exceptSubscriptionId))
+            ->exists();
+    }
+
     /** Disable the user on the routers and free the username. */
     public function remove(Subscription $subscription): void
     {

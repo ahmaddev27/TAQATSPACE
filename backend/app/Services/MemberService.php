@@ -14,15 +14,20 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Hotspot\HotspotAccountService;
+use App\Services\Owner\ProfileCompletionService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class MemberService
 {
-    public function __construct(private readonly HotspotAccountService $hotspot) {}
+    public function __construct(
+        private readonly HotspotAccountService $hotspot,
+        private readonly ProfileCompletionService $completion,
+    ) {}
 
     /** @var array<string, string> */
     private const SORTABLE = [
@@ -34,7 +39,7 @@ class MemberService
     /**
      * Paginated roster of this workspace's members (one row per subscription).
      *
-     * @param  array{status?: string|null, search?: string|null, sort?: string|null, direction?: string|null, per_page?: int|null}  $filters
+     * @param  array{status?: string|null, search?: string|null, profile?: string|null, sort?: string|null, direction?: string|null, per_page?: int|null}  $filters
      * @return LengthAwarePaginator<int, Subscription>
      */
     public function paginateMembers(Workspace $workspace, array $filters): LengthAwarePaginator
@@ -68,7 +73,7 @@ class MemberService
     private function rosterQuery(Workspace $workspace, array $filters): Builder
     {
         $query = Subscription::query()
-            ->with(['member.internetPackages:id,name,price', 'seat'])
+            ->with(['member.internetPackages:id,name,price', 'seat', 'hotspotAccount:id,subscription_id,username'])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')
             ->where('subscriptions.workspace_id', $workspace->id)
             ->select('subscriptions.*');
@@ -90,6 +95,7 @@ class MemberService
 
         $this->applyStatusFilter($query, $filters['status'] ?? null);
         $this->applySearch($query, $filters['search'] ?? null);
+        $this->applyProfileFilter($query, $filters['profile'] ?? null);
         $this->applySort($query, $filters['sort'] ?? null, $filters['direction'] ?? null);
 
         return $query;
@@ -113,13 +119,19 @@ class MemberService
             ->orderByDesc('due_date')
             ->get();
 
+        $mikrotik = $subscription->internetCredentials()['username'] ?? null;
+
         return [
             'user' => [
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
                 'phone' => $member->phone,
+                'gender' => $member->gender?->value,
                 'specialty' => $member->specialty,
+                'education_level' => $member->education_level?->value,
+                'specialization' => $member->specialization?->value,
+                'employment_status' => $member->employment_status?->value,
                 'bio' => $member->bio,
                 'avatar' => $member->avatar,
             ],
@@ -133,6 +145,8 @@ class MemberService
                 'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
                 'package' => $this->memberPackageName($workspace, $member),
             ],
+            'mikrotik_username' => $mikrotik,
+            'profile_completion' => $this->completion->completion($member, $mikrotik),
             'seat' => $subscription->seat === null ? null : [
                 'id' => $subscription->seat->id,
                 'seat_number' => $subscription->seat->seat_number,
@@ -146,6 +160,45 @@ class MemberService
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * Save the donor fields (and the MikroTik username) of a member of THIS
+     * workspace, then return the refreshed detail.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null  null when the user is not a member of this workspace
+     *
+     * @throws ValidationException when the username is taken or the member has no internet account
+     */
+    public function updateProfile(Workspace $workspace, User $member, array $data): ?array
+    {
+        $subscription = $this->resolveSubscription($workspace, $member);
+
+        if ($subscription === null) {
+            return null;
+        }
+
+        DB::transaction(function () use ($workspace, $subscription, $member, $data): void {
+            $member->fill(array_intersect_key($data, array_flip(ProfileCompletionService::USER_FIELDS)))->save();
+
+            if (isset($data['mikrotik_username'])) {
+                $this->renameHotspotAccount($workspace, $subscription, (string) $data['mikrotik_username']);
+            }
+        });
+
+        return $this->memberDetail($workspace, $member->refresh());
+    }
+
+    private function renameHotspotAccount(Workspace $workspace, Subscription $subscription, string $username): void
+    {
+        if ($this->hotspot->usernameTaken($workspace->id, $username, $subscription->id)) {
+            throw ValidationException::withMessages(['mikrotik_username' => __('messages.mikrotik_username_taken')]);
+        }
+
+        if ($this->hotspot->rename($subscription, $username) === null) {
+            throw ValidationException::withMessages(['mikrotik_username' => __('messages.member_has_no_internet_account')]);
+        }
     }
 
     /**
@@ -263,6 +316,25 @@ class MemberService
         $query->where(function (Builder $q) use ($like): void {
             $q->where('users.name', 'like', $like)
                 ->orWhere('users.email', 'like', $like);
+        });
+    }
+
+    /**
+     * `incomplete` keeps members missing any donor field or an internet login.
+     *
+     * @param  Builder<Subscription>  $query
+     */
+    private function applyProfileFilter(Builder $query, ?string $profile): void
+    {
+        if ($profile !== 'incomplete') {
+            return;
+        }
+
+        $query->where(function (Builder $q): void {
+            foreach (ProfileCompletionService::USER_FIELDS as $field) {
+                $q->orWhereNull('users.'.$field);
+            }
+            $q->orDoesntHave('hotspotAccount');
         });
     }
 

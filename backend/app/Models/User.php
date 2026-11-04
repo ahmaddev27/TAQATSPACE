@@ -6,7 +6,10 @@ namespace App\Models;
 
 use App\Enums\AdminPermission;
 use App\Enums\AdminRole;
+use App\Enums\EducationLevel;
+use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
+use App\Enums\Specialization;
 use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -44,6 +47,9 @@ class User extends Authenticatable
         'onboarding_completed_at',
         'avatar',
         'specialty',
+        'education_level',
+        'specialization',
+        'employment_status',
         'bio',
         'documents',
     ];
@@ -68,6 +74,9 @@ class User extends Authenticatable
             'claimed_at' => 'datetime',
             'password' => 'hashed',
             'gender' => Gender::class,
+            'education_level' => EducationLevel::class,
+            'specialization' => Specialization::class,
+            'employment_status' => EmploymentStatus::class,
             'role' => UserRole::class,
             'staff_group' => StaffGroup::class,
             'status' => UserStatus::class,
