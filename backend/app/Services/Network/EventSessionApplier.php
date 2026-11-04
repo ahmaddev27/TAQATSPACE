@@ -26,14 +26,14 @@ class EventSessionApplier
     /**
      * @param  Collection<int, HotspotEvent>  $events  ordered by time
      * @param  Collection<string, Device>  $devices  keyed by normalized MAC
-     * @return string|null the boot the ledger is now built under
+     * @return BootMark the boot the ledger is now built under
      */
-    public function apply(Router $router, SessionLedger $ledger, Collection $events, Collection $devices): ?string
+    public function apply(Router $router, SessionLedger $ledger, Collection $events, Collection $devices): BootMark
     {
-        $boot = $router->sessions_boot_id;
+        $mark = new BootMark($router->sessions_boot_id, $router->sessions_boot_since);
 
         foreach ($events as $event) {
-            $boot = $this->followBoot($ledger, $boot, $this->bootOf($event));
+            $mark = $this->followBoot($ledger, $mark, $this->bootOf($event), $event);
             $device = $devices->get((string) MacAddress::normalize($event->mac));
 
             if ($device === null) {
@@ -45,19 +45,31 @@ class EventSessionApplier
                 : $this->logout($router, $ledger, $device, $event);
         }
 
-        return $boot;
+        return $mark;
     }
 
-    /** A new boot means every session still open lost its router: close them where the router last vouched for them. */
-    private function followBoot(SessionLedger $ledger, ?string $current, string $eventBoot): string
+    /**
+     * A newer boot means every session still open lost its router: close them
+     * where the router last vouched for them. A late event of an older boot
+     * says nothing about the current one and moves nothing.
+     */
+    private function followBoot(SessionLedger $ledger, BootMark $current, string $eventBoot, HotspotEvent $event): BootMark
     {
-        if ($current !== null && $current !== $eventBoot) {
+        if ($current->id === $eventBoot) {
+            return $current;
+        }
+
+        if ($current->since !== null && $event->occurred_at->lessThan($current->since)) {
+            return $current;
+        }
+
+        if ($current->id !== null) {
             foreach ($ledger->openSessions() as $session) {
                 $ledger->endAtLastContact($session, SessionEndReason::Reboot);
             }
         }
 
-        return $eventBoot;
+        return new BootMark($eventBoot, $event->occurred_at);
     }
 
     /** The event identity is `boot_id-seq`. */

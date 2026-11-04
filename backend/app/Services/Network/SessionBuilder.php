@@ -58,7 +58,7 @@ class SessionBuilder
 
             $ledger = new SessionLedger($router->sessions_boot_id === null ? [] : $this->sessions->openForRouter($routerId));
             $this->closeAll($ledger);
-            $this->persist($router, $ledger, $router->boot_id);
+            $this->persist($router, $ledger, new BootMark($router->boot_id, now()));
         });
     }
 
@@ -86,18 +86,26 @@ class SessionBuilder
         $router = $this->router($routerId);
         $events = $this->eventsFor($routerId, $eventIds);
 
-        if ($events->isEmpty()) {
-            return;
-        }
+        // Marked in the same transaction as the sessions: a failure leaves the events unbuilt for the retry.
+        DB::transaction(function () use ($router, $routerId, $eventIds, $events): void {
+            if ($events->isNotEmpty()) {
+                $this->buildLedger($router, $events);
+            }
 
+            HotspotEvent::query()->where('router_id', $routerId)->whereIn('id', $eventIds)->update(['sessions_built_at' => now()]);
+        });
+    }
+
+    /** @param Collection<int, HotspotEvent> $events */
+    private function buildLedger(Router $router, Collection $events): void
+    {
         $devices = $this->sessions->devicesByMac($router->workspace_id, $this->macsOf($events));
         $since = $events->first()->occurred_at->copy()->subMinutes((int) config('network.sessions.late_event_window_minutes'));
-        $ledger = new SessionLedger($this->sessions->openAndRecent($routerId, $devices->pluck('id')->all(), $since));
+        $ledger = new SessionLedger($this->sessions->openAndRecent($router->getKey(), $devices->pluck('id')->all(), $since));
 
-        $boot = $this->eventApplier->apply($router, $ledger, $events, $devices);
-
-        $this->persist($router, $ledger, $boot);
+        $this->persist($router, $ledger, $this->eventApplier->apply($router, $ledger, $events, $devices));
     }
+
 
     private function buildFromSnapshot(AssembledSnapshot $snapshot): void
     {
@@ -108,7 +116,14 @@ class SessionBuilder
 
         $this->snapshotApplier->apply($router, $ledger, $snapshot, $devices, $this->sessions->latestEnds($snapshot->routerId, $withoutOpen));
 
-        $this->persist($router, $ledger, $router->sessions_boot_id ?? $router->boot_id);
+        $this->persist($router, $ledger, $this->snapshotBoot($router, $snapshot));
+    }
+
+    private function snapshotBoot(Router $router, AssembledSnapshot $snapshot): BootMark
+    {
+        return $router->sessions_boot_id === null
+            ? new BootMark($router->boot_id, $snapshot->takenAt)
+            : new BootMark($router->sessions_boot_id, $router->sessions_boot_since);
     }
 
     private function closeAll(SessionLedger $ledger): void
@@ -118,14 +133,17 @@ class SessionBuilder
         }
     }
 
-    private function persist(Router $router, SessionLedger $ledger, ?string $bootId): void
+    private function persist(Router $router, SessionLedger $ledger, BootMark $boot): void
     {
-        DB::transaction(function () use ($router, $ledger, $bootId): void {
+        DB::transaction(function () use ($router, $ledger, $boot): void {
             $this->sessions->insert($ledger->created());
             $this->sessions->saveChanges($ledger->changed());
 
-            if ($bootId !== $router->sessions_boot_id) {
-                Router::query()->withoutWorkspaceScope()->whereKey($router->getKey())->update(['sessions_boot_id' => $bootId]);
+            if ($boot->id !== $router->sessions_boot_id) {
+                Router::query()->withoutWorkspaceScope()->whereKey($router->getKey())->update([
+                    'sessions_boot_id' => $boot->id,
+                    'sessions_boot_since' => $boot->since,
+                ]);
             }
         });
     }

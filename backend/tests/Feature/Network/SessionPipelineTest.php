@@ -153,6 +153,44 @@ class SessionPipelineTest extends TestCase
         }
     }
 
+    public function test_events_applied_while_the_lock_was_held_are_built_by_the_next_run(): void
+    {
+        $this->event('login', self::MAC, $this->at('10:00:00'));
+        $this->event('logout', self::MAC, $this->at('10:20:00'));
+        $held = Cache::lock("router:{$this->router->id}:sessions", 30);
+        $this->assertTrue($held->get());
+
+        try {
+            app(HotspotEventProcessor::class)->process($this->router->id);
+            $this->fail('The build should have timed out on the held lock.');
+        } catch (LockTimeoutException) {
+            // The job died after the events were marked processed.
+        } finally {
+            $held->release();
+        }
+
+        $this->assertSame([], $this->sessions());
+
+        app(HotspotEventProcessor::class)->process($this->router->id);
+
+        $this->assertSame(1200, $this->sessions()[0]->durationSeconds());
+        $this->assertSame(0, HotspotEvent::query()->whereNull('sessions_built_at')->count());
+    }
+
+    public function test_a_late_event_of_an_older_boot_leaves_the_new_boots_sessions_alone(): void
+    {
+        $this->feed($this->event('login', self::MAC, $this->at('10:00:00')));
+        $this->feed($this->event('login', 'AA:AA:AA:AA:AA:02', $this->at('10:40:00'), boot: 'boot2'));
+
+        $this->feed($this->event('logout', self::MAC, $this->at('10:10:00'), data: ['uptime' => '10m']));
+
+        [$old, $new] = $this->sessions();
+        $this->assertEquals($this->at('10:10:00'), $old->ended_at);
+        $this->assertTrue($new->isOpen());
+        $this->assertNull($new->end_reason);
+        $this->assertSame('boot2', $this->router->fresh()->sessions_boot_id);
+    }
+
     public function test_the_lock_is_released_after_a_build_and_another_router_is_never_blocked(): void
     {
         $other = Router::factory()->create();

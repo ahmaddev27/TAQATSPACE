@@ -44,6 +44,7 @@ class Router extends Model
         'clock_offset_seconds',
         'boot_id',
         'sessions_boot_id',
+        'sessions_boot_since',
     ];
 
     /** @var list<string> */
@@ -61,6 +62,7 @@ class Router extends Model
             'status' => RouterStatus::class,
             'previous_key_expires_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'sessions_boot_since' => 'datetime',
             'last_seq' => 'integer',
             'clock_offset_seconds' => 'integer',
         ];
