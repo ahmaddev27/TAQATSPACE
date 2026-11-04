@@ -5,15 +5,21 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\PlanType;
+use App\Enums\PricingMethod;
 use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
+use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Audit\AuditLogger;
+use App\Services\Finance\SubscriptionPricingService;
 use App\Services\Hotspot\HotspotAccountService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
@@ -36,10 +42,84 @@ class OwnerSubscriptionService
         'monthly_price' => 'subscriptions.monthly_price',
     ];
 
+    /** @var list<string> */
+    private const FINANCIAL_TERMS = [
+        'plan_id', 'billing_mode', 'custom_price', 'contracted_hours', 'grace_days', 'auto_renew',
+    ];
+
     public function __construct(
         private readonly InvoiceService $invoices,
+        private readonly SubscriptionPricingService $pricing,
+        private readonly AuditLogger $audit,
         private readonly HotspotAccountService $hotspot,
     ) {}
+
+    /**
+     * Set the financial terms (plan, billing mode, negotiated price, hours,
+     * grace days, auto-renew). The legacy `monthly_price` is never touched, so
+     * clearing the plan and custom price falls back to it.
+     *
+     * @param  array<string, mixed>  $terms  only the keys present are changed
+     *
+     * @throws ValidationException when the terms do not fit the plan or seat
+     * @throws RuntimeException when the subscription belongs to another workspace
+     */
+    public function updateFinancialTerms(Workspace $workspace, Subscription $subscription, array $terms, User $actor): Subscription
+    {
+        $this->assertOwnedBy($workspace, $subscription);
+
+        $priceBefore = $this->pricing->effectivePrice($subscription);
+        $subscription->fill(Arr::only($terms, self::FINANCIAL_TERMS))->load('plan');
+        $this->assertTermsFit($subscription);
+
+        $changes = $subscription->getDirty();
+        $subscription->save();
+
+        if ($changes !== []) {
+            $this->auditTerms($subscription, $actor, $priceBefore, $changes);
+        }
+
+        return $subscription->refresh()->load(['member', 'seat', 'plan']);
+    }
+
+    /**
+     * Contracted hours only make sense on an hourly plan; a dedicated-seat
+     * plan needs a seat to reserve (BR-FIN-04, 5.17).
+     *
+     * @throws ValidationException
+     */
+    private function assertTermsFit(Subscription $subscription): void
+    {
+        $plan = $subscription->plan;
+
+        if ($plan?->isArchived() && $subscription->isDirty('plan_id')) {
+            throw ValidationException::withMessages(['plan_id' => __('messages.plan_archived_read_only')]);
+        }
+
+        if ($subscription->contracted_hours !== null && $plan?->pricing_method !== PricingMethod::Hourly) {
+            throw ValidationException::withMessages(['contracted_hours' => __('messages.subscription_hours_need_hourly_plan')]);
+        }
+
+        if ($plan?->is_dedicated_seat && $subscription->seat_id === null) {
+            throw ValidationException::withMessages(['plan_id' => __('messages.subscription_plan_needs_seat')]);
+        }
+    }
+
+    /** @param array<string, mixed> $changes */
+    private function auditTerms(Subscription $subscription, User $actor, string $priceBefore, array $changes): void
+    {
+        $subscription->load('plan');
+        $priceAfter = $this->pricing->effectivePrice($subscription);
+
+        if ($priceAfter !== $priceBefore) {
+            $this->audit->log('finance.subscription.price_changed', $subscription, actor: $actor, changes: [
+                'from' => $priceBefore,
+                'to' => $priceAfter,
+            ]);
+        }
+
+        $this->audit->log('finance.subscription.terms_updated', $subscription, actor: $actor, changes: $changes);
+    }
 
     /**
      * Paginated subscriptions for THIS workspace, with the member + seat loaded.
@@ -136,6 +216,7 @@ class OwnerSubscriptionService
                 'member.internetPackages' => fn ($q) => $q
                     ->where('internet_packages.workspace_id', $workspace->id),
                 'seat:id,seat_number,type,status',
+                'plan',
                 'hotspotAccount',
             ])
             ->join('users', 'users.id', '=', 'subscriptions.member_id')

@@ -36,6 +36,31 @@ class InvoiceResource extends JsonResource
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,
+            'doc_status' => $this->doc_status->value,
+            'payment_status' => $this->payment_status->value,
+            'customer_id' => $this->customer_id,
+            'subtotal' => $this->subtotal,
+            'tax_rate' => $this->tax_rate,
+            'tax_amount' => $this->tax_amount,
+            'total' => $this->total,
+            'period_start' => $this->period_start?->toDateString(),
+            'period_end' => $this->period_end?->toDateString(),
+            'issued_at' => $this->issued_at?->toIso8601String(),
+            'voided_at' => $this->voided_at?->toIso8601String(),
+            'void_reason' => $this->void_reason,
+            'customer' => $this->whenLoaded('customer', fn (): ?array => $this->customer === null ? null : [
+                'id' => $this->customer->id,
+                'name' => $this->customer->name,
+            ]),
+            'lines' => $this->whenLoaded('lines', fn () => $this->lines->map(static fn ($line): array => [
+                'id' => $line->id,
+                'description' => $line->description,
+                'qty' => $line->qty,
+                'unit_price' => $line->unit_price,
+                'amount' => $line->amount,
+                'unbilled_charge_id' => $line->unbilled_charge_id,
+                'catalog_item_id' => $line->catalog_item_id,
+            ])->all()),
             'due_date' => $this->due_date?->toDateString(),
             'paid_at' => $this->paid_at?->toIso8601String(),
             'is_overdue' => $this->isOverdue(),
@@ -47,7 +72,10 @@ class InvoiceResource extends JsonResource
                 'id' => $p->id,
                 'amount' => $p->amount,
                 'paid_at' => $p->paid_at?->toIso8601String(),
-                'receipt_url' => MediaUrl::resolve($p->receipt_path),
+                // Once a receipt mirrors the payment its proof is private: a signed link, never a public one.
+                'receipt_url' => $p->relationLoaded('receipt') && $p->receipt !== null
+                    ? $p->receipt->fileUrl()
+                    : MediaUrl::resolve($p->receipt_path),
             ])->all()),
             'receipt_rejected_reason' => $this->receipt_rejected_reason,
             'receipt_reviewed_at' => $this->receipt_reviewed_at?->toIso8601String(),
@@ -60,7 +88,7 @@ class InvoiceResource extends JsonResource
             'workspace' => $this->flatWorkspace(),
 
             // Present only when the controller eager-loads the subscription chain.
-            'subscription' => $this->whenLoaded('subscription', fn (): array => [
+            'subscription' => $this->whenLoaded('subscription', fn (): ?array => $this->subscription === null ? null : [
                 'id' => $this->subscription->id,
                 'plan_type' => $this->subscription->plan_type->value,
                 'monthly_price' => $this->subscription->monthly_price,

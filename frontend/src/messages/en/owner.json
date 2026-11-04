@@ -20,7 +20,21 @@
         "pos_sell": "Sell",
         "pos_refund": "Refund",
         "pos_manage_products": "Manage products",
-        "pos_view_reports": "View reports"
+        "pos_view_reports": "View reports",
+        "finance_view_pos": "View POS",
+        "finance_withdrawals": "On-account charges",
+        "finance_collect": "Record collections",
+        "finance_issue_void": "Issue and void invoices (needs 2FA)",
+        "finance_expenses": "Manage expenses",
+        "finance_items": "Manage items",
+        "finance_import": "Import data",
+        "finance_reports": "Financial reports"
+      },
+      "permCategories": {
+        "pos": "POS",
+        "collections": "Collections and charges",
+        "catalog": "Catalog and import",
+        "reporting": "Expenses and reports"
       },
       "send": "Send invitation",
       "cancel": "Cancel",

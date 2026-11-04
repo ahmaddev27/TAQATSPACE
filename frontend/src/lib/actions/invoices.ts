@@ -59,6 +59,30 @@ export async function deleteInvoice(
   return result;
 }
 
+/**
+ * Owner (finance v2): void an issued invoice. Voiding is a sensitive step, so a
+ * fresh two-factor code is verified first when one is supplied; the backend
+ * answers 403 `two_factor_required` when the step-up is still missing.
+ */
+export async function voidInvoice(
+  invoiceId: string,
+  reason: string,
+  twoFactorCode?: string,
+): Promise<ActionResult<Invoice>> {
+  if (twoFactorCode) {
+    const verified = await authedMutate("/auth/two-factor/verify", {
+      body: { code: twoFactorCode },
+    });
+    if (!verified.ok) return verified;
+  }
+
+  const result = await authedMutate<Invoice>(`/workspace/invoices/${invoiceId}/void`, {
+    body: { reason },
+  });
+  if (result.ok) revalidateInvoices();
+  return result;
+}
+
 /** Owner: record a manual payment. `paidAt` is an optional ISO date. */
 export async function markPaid(
   invoiceId: string,

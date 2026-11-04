@@ -1,5 +1,5 @@
 import { serverFetch } from "@/lib/api";
-import type { ApiEnvelope, InvoiceStatus, SimpleMeta } from "@/lib/types";
+import type { ApiEnvelope, DocStatus, InvoiceStatus, SimpleMeta } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Types (owned by the invoicing area — mirrors App\Http\Resources\Invoice*)  */
@@ -59,6 +59,11 @@ export interface Invoice {
   amount_formatted: string;
   currency: string;
   status: InvoiceStatus;
+  /** Finance v2 lifecycle; legacy invoices are migrated to `issued`. */
+  doc_status?: DocStatus;
+  payment_status?: "unpaid" | "partial" | "paid";
+  customer_id?: string | null;
+  void_reason?: string | null;
   due_date: string | null;
   paid_at: string | null;
   is_overdue: boolean;

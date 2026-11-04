@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { serverFetch } from "@/lib/api";
 import { ownerInvoices } from "@/lib/api/invoices";
+import type { ApiEnvelope, User } from "@/lib/types";
 import { listMembers } from "@/lib/api/members";
 import { StatTile } from "@/components/ui/StatTile";
 import { InvoicesTable } from "@/components/features/invoices/InvoicesTable";
@@ -18,10 +20,12 @@ export default async function OwnerInvoicesPage({
   const t = await getTranslations("invoices.owner");
 
   // Members feed the "Issue invoice" modal; only active members can be billed.
-  const [{ invoices, summary }, memberList] = await Promise.all([
+  const [{ invoices, summary }, memberList, me] = await Promise.all([
     ownerInvoices({ per_page: 200 }),
     listMembers({ status: "active", per_page: 200 }),
+    serverFetch<ApiEnvelope<{ user: User }>>("/auth/me"),
   ]);
+  const financeV2 = me.data.user.features?.finance_v2 === true;
 
   const memberOptions: InvoiceMemberOption[] = memberList.members.map((m) => ({
     id: String(m.user.id),
@@ -69,7 +73,7 @@ export default async function OwnerInvoicesPage({
           />
         </div>
 
-        <InvoicesTable invoices={invoices} members={memberOptions} />
+        <InvoicesTable invoices={invoices} members={memberOptions} financeV2={financeV2} />
       </div>
     </div>
   );

@@ -91,6 +91,7 @@ export type InvoiceStatus =
   | "paid"
   | "overdue"
   | "cancelled";
+export type DocStatus = "draft" | "issued" | "void";
 export type WorkspaceStatus = "pending" | "active" | "suspended" | "rejected";
 
 /* -------------------------------------------------------------------------- */

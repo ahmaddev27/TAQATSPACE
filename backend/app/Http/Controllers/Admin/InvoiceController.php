@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\InvoiceLifecycleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\MarkInvoicePaidRequest;
 use App\Http\Requests\Admin\UploadReceiptRequest;
@@ -47,6 +48,8 @@ class InvoiceController extends Controller
                 $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
                 $request->file('receipt'),
             );
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }

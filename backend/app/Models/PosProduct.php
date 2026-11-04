@@ -25,6 +25,7 @@ class PosProduct extends Model
     /** @var list<string> */
     protected $fillable = [
         'workspace_id',
+        'catalog_item_id',
         'name',
         'category',
         'sku',
@@ -52,6 +53,12 @@ class PosProduct extends Model
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);
+    }
+
+    /** @return BelongsTo<CatalogItem, $this> */
+    public function catalogItem(): BelongsTo
+    {
+        return $this->belongsTo(CatalogItem::class);
     }
 
     /** @return HasMany<PosStockMovement, $this> */

@@ -29,6 +29,7 @@ const NAMESPACES = [
   "audit",
   "approvals",
   "shortcuts",
+  "finance",
   "integration",
 ] as const;
 

@@ -31,18 +31,18 @@ enum StaffGroup: string
     public function permissions(): array
     {
         return match ($this) {
-            self::Cashier => [
+            self::Cashier => array_merge([
                 PosPermission::Sell->value,
                 PosPermission::ViewReports->value,
-            ],
+            ], FinancePermission::defaultsForCashier()),
             self::Hospitality => [
                 PosPermission::Sell->value,
                 PosPermission::ManageProducts->value,
             ],
-            self::FinanceSupervisor => [
+            self::FinanceSupervisor => array_merge([
                 PosPermission::Refund->value,
                 PosPermission::ViewReports->value,
-            ],
+            ], FinancePermission::defaultsForFinanceSupervisor()),
         };
     }
 }

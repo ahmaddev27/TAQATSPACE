@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import {
   DataTable,
@@ -28,6 +28,7 @@ import {
   createExpense,
   deleteExpense,
   updateExpense,
+  voidExpense,
   type ExpenseInput,
 } from "@/lib/actions/owner";
 import {
@@ -36,6 +37,7 @@ import {
   type ExpenseCategory,
   type ExpenseSummary,
 } from "@/lib/types/management";
+import type { CatalogCategory } from "@/lib/types/finance";
 import { money, shortDate } from "./format";
 
 const CATEGORY_CLASS: Record<ExpenseCategory, string> = {
@@ -54,11 +56,19 @@ const PAGE_SIZE = 8;
 export interface ExpensesTableProps {
   expenses: Expense[];
   summary: ExpenseSummary;
+  /** Expense categories from the catalog; null while Finance v2 is off. */
+  catalogCategories?: CatalogCategory[] | null;
 }
 
 /** Owner operating expenses: summary, category + date-range filters, CRUD. */
-export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
+export function ExpensesTable({
+  expenses,
+  summary,
+  catalogCategories = null,
+}: ExpensesTableProps) {
   const t = useTranslations("management.expenses");
+  const locale = useLocale();
+  const v2 = catalogCategories !== null;
   const tc = useTranslations();
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -67,6 +77,7 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
   const [editing, setEditing] = useState<
     { mode: "create" } | { mode: "edit"; expense: Expense } | null
   >(null);
+  const [voiding, setVoiding] = useState<Expense | null>(null);
 
   const { filters, setFilter, clearFilters } = useUrlFilters(FILTER_KEYS);
   const category = (filters.category as ExpenseCategory | "") || "all";
@@ -137,6 +148,10 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
   };
 
   const askDelete = async (expense: Expense) => {
+    if (v2) {
+      setVoiding(expense);
+      return;
+    }
     const ok = await confirm({
       title: t("delete"),
       message: t("deleteConfirm"),
@@ -177,10 +192,28 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
       sortable: true,
       cell: (e) => (
         <span className={`badge ${CATEGORY_CLASS[e.category]}`}>
-          {categoryLabel(e.category)}
+          {e.catalog_category
+            ? locale === "ar"
+              ? e.catalog_category.name_ar
+              : e.catalog_category.name_en
+            : categoryLabel(e.category)}
         </span>
       ),
     },
+    ...(v2
+      ? [
+          {
+            id: "method",
+            header: t("colMethod"),
+            cell: (e: Expense) => (
+              <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
+                {e.method ? t(`method.${e.method}`) : "—"}
+                {e.reference ? ` · ${e.reference}` : ""}
+              </span>
+            ),
+          } satisfies DataTableColumn<Expense>,
+        ]
+      : []),
     {
       id: "amount",
       header: t("colAmount"),
@@ -219,7 +252,7 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
             icon="trash"
             loading={pending && busyId === e.id}
             onClick={() => void askDelete(e)}
-            aria-label={t("delete")}
+            aria-label={v2 ? t("void") : t("delete")}
           />
         </div>
       ),
@@ -351,10 +384,76 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
       {editing && (
         <ExpenseForm
           expense={editing.mode === "edit" ? editing.expense : null}
+          catalogCategories={catalogCategories}
           onClose={() => setEditing(null)}
         />
       )}
+      {voiding && (
+        <VoidExpenseModal expense={voiding} onClose={() => setVoiding(null)} />
+      )}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Void modal (Finance v2)                                                   */
+/* -------------------------------------------------------------------------- */
+
+function VoidExpenseModal({
+  expense,
+  onClose,
+}: {
+  expense: Expense;
+  onClose: () => void;
+}) {
+  const t = useTranslations("management.expenses");
+  const { toast } = useToast();
+  const [pending, startTransition] = useTransition();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | undefined>();
+
+  const submit = () => {
+    startTransition(async () => {
+      const res = await voidExpense(expense.id, reason.trim());
+      if (res.ok) {
+        toast({ tone: "ok", title: t("voided") });
+        onClose();
+      } else {
+        setError(res.errors?.reason?.[0]);
+        toast({ tone: "err", title: t("voidFailed"), body: res.message });
+      }
+    });
+  };
+
+  return (
+    <Modal
+      title={t("void")}
+      icon="trash"
+      onClose={onClose}
+      closeLabel={t("cancel")}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            {t("cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            loading={pending}
+            disabled={reason.trim() === ""}
+            onClick={submit}
+          >
+            {t("void")}
+          </Button>
+        </>
+      }
+    >
+      <div className="stack" style={{ gap: 16 }}>
+        <p className="muted">{t("voidHint", { title: expense.title })}</p>
+        <Field label={t("voidReason")} error={error}>
+          <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Field>
+      </div>
+    </Modal>
   );
 }
 
@@ -364,12 +463,16 @@ export function ExpensesTable({ expenses, summary }: ExpensesTableProps) {
 
 interface ExpenseFormProps {
   expense: Expense | null;
+  catalogCategories: CatalogCategory[] | null;
   onClose: () => void;
 }
 
 interface ExpenseFormState {
   title: string;
   category: ExpenseCategory;
+  catalogCategoryId: string;
+  method: "" | "cash" | "transfer";
+  reference: string;
   amount: string;
   spentOn: string;
   notes: string;
@@ -379,14 +482,19 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
+function ExpenseForm({ expense, catalogCategories, onClose }: ExpenseFormProps) {
   const t = useTranslations("management.expenses");
+  const locale = useLocale();
+  const v2 = catalogCategories !== null;
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
   const [form, setForm] = useState<ExpenseFormState>(() => ({
     title: expense?.title ?? "",
     category: expense?.category ?? "other",
+    catalogCategoryId: expense?.catalog_category_id ?? "",
+    method: expense?.method ?? "",
+    reference: expense?.reference ?? "",
     amount: expense ? String(expense.amount) : "",
     spentOn: expense?.spent_on ?? todayIso(),
     notes: expense?.notes ?? "",
@@ -400,7 +508,14 @@ function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
   const submit = () => {
     const payload: ExpenseInput = {
       title: form.title.trim(),
-      category: form.category,
+      ...(v2
+        ? {
+            catalog_category_id: form.catalogCategoryId || null,
+            method: form.method || null,
+            reference: form.reference.trim() || null,
+          }
+        : {}),
+      ...(v2 && form.catalogCategoryId ? {} : { category: form.category }),
       amount: Number(form.amount) || 0,
       spent_on: form.spentOn,
       notes: form.notes.trim() || null,
@@ -444,18 +559,37 @@ function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
         </Field>
 
         <div className="grid2">
-          <Field label={t("fCategory")} error={errors.category?.[0]}>
-            <Select
-              value={form.category}
-              onChange={(e) => set("category", e.target.value as ExpenseCategory)}
+          {v2 ? (
+            <Field
+              label={t("fCategory")}
+              error={errors.catalog_category_id?.[0] ?? errors.category?.[0]}
             >
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {t(`category.${c}`)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+              <Select
+                value={form.catalogCategoryId}
+                onChange={(e) => set("catalogCategoryId", e.target.value)}
+              >
+                <option value="">{t("noCatalogCategory")}</option>
+                {catalogCategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {locale === "ar" ? c.name_ar : c.name_en}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : (
+            <Field label={t("fCategory")} error={errors.category?.[0]}>
+              <Select
+                value={form.category}
+                onChange={(e) => set("category", e.target.value as ExpenseCategory)}
+              >
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`category.${c}`)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field label={t("fAmount")} error={errors.amount?.[0]}>
             <Input
               className="tnum"
@@ -473,6 +607,27 @@ function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
             onChange={(e) => set("spentOn", e.target.value)}
           />
         </Field>
+
+        {v2 && (
+          <div className="grid2">
+            <Field label={t("fMethod")} error={errors.method?.[0]}>
+              <Select
+                value={form.method}
+                onChange={(e) => set("method", e.target.value as ExpenseFormState["method"])}
+              >
+                <option value="">—</option>
+                <option value="cash">{t("method.cash")}</option>
+                <option value="transfer">{t("method.transfer")}</option>
+              </Select>
+            </Field>
+            <Field label={t("fReference")} error={errors.reference?.[0]}>
+              <Input
+                value={form.reference}
+                onChange={(e) => set("reference", e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
 
         <Field label={t("fNotes")} error={errors.notes?.[0]}>
           <Textarea

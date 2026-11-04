@@ -274,6 +274,9 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
         items: [
           { key: "invoices", href: "/owner/invoices", icon: "receipt" },
           { key: "expenses", href: "/owner/expenses", icon: "wallet" },
+          { key: "catalog", href: "/owner/finance/catalog", icon: "layers", feature: "finance_v2" },
+          { key: "plans", href: "/owner/finance/plans", icon: "grid", feature: "finance_v2" },
+          { key: "receipts", href: "/owner/finance/receipts", icon: "receipt", feature: "finance_v2" },
         ],
       },
       {
@@ -394,6 +397,12 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
             key: "invoices",
             href: "/admin/invoices",
             icon: "receipt",
+            permission: "manage_billing",
+          },
+          {
+            key: "hourPackages",
+            href: "/admin/hour-packages",
+            icon: "clock",
             permission: "manage_billing",
           },
           {

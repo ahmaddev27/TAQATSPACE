@@ -55,6 +55,7 @@ class OwnerReportsService
 
         $invoices = Invoice::query()
             ->forWorkspace($workspace->id)
+            ->notDraft()
             ->whereIn('status', [
                 InvoiceStatus::Pending->value,
                 InvoiceStatus::Overdue->value,
@@ -139,6 +140,7 @@ class OwnerReportsService
             ->pluck('total', 'ym');
 
         $expensesByMonth = Expense::query()
+            ->notVoided()
             ->where('workspace_id', $workspace->id)
             ->where('spent_on', '>=', $start->toDateString())
             ->selectRaw("DATE_FORMAT(spent_on, '%Y-%m') as ym, SUM(amount) as total")

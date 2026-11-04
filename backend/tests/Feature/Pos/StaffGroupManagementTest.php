@@ -122,9 +122,11 @@ class StaffGroupManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.staff_group', StaffGroup::Cashier->value)
             ->assertJsonFragment(['permissions' => [
+                'finance_collect',
+                'finance_view_pos',
+                PosPermission::Refund->value,
                 PosPermission::Sell->value,
                 PosPermission::ViewReports->value,
-                PosPermission::Refund->value,
             ]]);
 
         Sanctum::actingAs($staff->fresh());

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Enums;
 
+use App\Enums\FinancePermission;
 use App\Enums\PosPermission;
 use App\Enums\StaffGroup;
+use App\Enums\StaffPermission;
 use PHPUnit\Framework\TestCase;
 
 class StaffGroupTest extends TestCase
@@ -19,13 +21,16 @@ class StaffGroupTest extends TestCase
     {
         foreach (StaffGroup::cases() as $group) {
             $this->assertNotEmpty($group->permissions());
-            $this->assertSame([], array_diff($group->permissions(), PosPermission::values()));
+            $this->assertSame([], array_diff($group->permissions(), StaffPermission::values()));
         }
     }
 
-    public function test_the_cashier_group_matches_the_legacy_default_grant(): void
+    public function test_the_cashier_group_keeps_the_legacy_default_grant_and_adds_collections(): void
     {
-        $this->assertSame(PosPermission::defaultsForCashier(), StaffGroup::Cashier->permissions());
+        $this->assertSame(
+            [...PosPermission::defaultsForCashier(), ...FinancePermission::defaultsForCashier()],
+            StaffGroup::Cashier->permissions(),
+        );
     }
 
     public function test_groups_grant_distinct_permission_sets(): void

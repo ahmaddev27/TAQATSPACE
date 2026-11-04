@@ -1,0 +1,207 @@
+{
+  "finance": {
+    "catalog": {
+      "title": "الكتالوج",
+      "subtitle": "العناصر والتصنيفات المستخدمة في الفواتير ونقطة البيع والمصروفات.",
+      "tabs": {
+        "items": "العناصر",
+        "categories": "التصنيفات"
+      },
+      "fields": {
+        "code": "الرمز",
+        "name": "الاسم",
+        "nameAr": "الاسم (عربي)",
+        "nameEn": "الاسم (إنجليزي)",
+        "category": "التصنيف",
+        "unit": "الوحدة",
+        "price": "السعر",
+        "kind": "النوع"
+      },
+      "codeLocked": "لا يمكن تغيير الرمز بعد الإنشاء.",
+      "units": {
+        "piece": "قطعة",
+        "hour": "ساعة",
+        "day": "يوم",
+        "month": "شهر",
+        "gb": "جيجابايت"
+      },
+      "kinds": {
+        "sales": "مبيعات",
+        "expense": "مصروفات"
+      },
+      "items": {
+        "add": "إضافة عنصر",
+        "empty": "لا توجد عناصر بعد.",
+        "createTitle": "عنصر جديد",
+        "editTitle": "تعديل العنصر",
+        "created": "تم إنشاء العنصر",
+        "updated": "تم تحديث العنصر",
+        "archived": "تمت أرشفة العنصر",
+        "archiveTitle": "أرشفة العنصر",
+        "archiveConfirm": "أرشفة \"{name}\"؟ سيُخفى من القوائم ولا تتأثر الفواتير والطلبات السابقة."
+      },
+      "categories": {
+        "add": "إضافة تصنيف",
+        "empty": "لا توجد تصنيفات بعد.",
+        "createTitle": "تصنيف جديد",
+        "editTitle": "تعديل التصنيف",
+        "created": "تم إنشاء التصنيف",
+        "updated": "تم تحديث التصنيف",
+        "archived": "تمت أرشفة التصنيف",
+        "reordered": "تم حفظ الترتيب",
+        "moveUp": "أعلى",
+        "moveDown": "أسفل",
+        "archiveTitle": "أرشفة التصنيف",
+        "archiveConfirm": "أرشفة \"{name}\"؟ سيُخفى من القوائم."
+      },
+      "edit": "تعديل",
+      "archive": "أرشفة",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "error": "حدث خطأ ما"
+    },
+    "plans": {
+      "title": "الخطط",
+      "subtitle": "خطط التسعير لمساحة العمل: فترات ثابتة أو بالساعة أو بالجيجابايت أو باقات.",
+      "add": "إضافة خطة",
+      "empty": "لا توجد خطط بعد.",
+      "createTitle": "خطة جديدة",
+      "editTitle": "تعديل الخطة",
+      "created": "تم إنشاء الخطة",
+      "updated": "تم تحديث الخطة",
+      "archived": "تمت أرشفة الخطة",
+      "removed": "تم حذف الخطة",
+      "removeTitle": "حذف الخطة",
+      "removeConfirm": "حذف \"{name}\"؟ الخطة المستخدمة تُؤرشف بدلاً من حذفها ولا تتأثر الاشتراكات الحالية.",
+      "promo": "عرض",
+      "dedicated": "مخصص",
+      "dedicatedHint": "حجز مقعد مخصص للمشتركين",
+      "dedicatedNotAllowed": "المقعد المخصص متاح فقط للخطط الشهرية والأسبوعية والباقات.",
+      "codeLocked": "لا يمكن تغيير الرمز بعد الإنشاء.",
+      "fields": {
+        "code": "الرمز",
+        "name": "الاسم",
+        "nameAr": "الاسم (عربي)",
+        "nameEn": "الاسم (إنجليزي)",
+        "method": "طريقة التسعير",
+        "price": "السعر",
+        "overagePrice": "سعر التجاوز",
+        "includedHours": "الساعات المشمولة",
+        "includedGb": "الجيجابايت المشمولة",
+        "validityDays": "مدة الصلاحية (أيام)",
+        "promoPrice": "سعر العرض",
+        "promoUntil": "ينتهي العرض في",
+        "dedicatedSeat": "مقعد مخصص"
+      },
+      "methods": {
+        "monthly": "شهري",
+        "weekly": "أسبوعي",
+        "daily": "يومي",
+        "hourly": "بالساعة",
+        "per_gb": "بالجيجابايت",
+        "bundle": "باقة"
+      },
+      "priceLabels": {
+        "monthly": "السعر الشهري",
+        "weekly": "السعر الأسبوعي",
+        "daily": "السعر اليومي",
+        "hourly": "سعر الساعة",
+        "per_gb": "سعر الجيجابايت",
+        "bundle": "سعر الباقة"
+      },
+      "edit": "تعديل",
+      "archive": "أرشفة",
+      "remove": "حذف",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "error": "حدث خطأ ما"
+    },
+    "receipts": {
+      "title": "الإيصالات",
+      "subtitle": "المبالغ المستلمة من العملاء موزعة على فواتيرهم. الشيك يُحتسب مدفوعاً بعد صرفه.",
+      "add": "إيصال جديد",
+      "empty": "لا توجد إيصالات بعد.",
+      "createTitle": "إيصال جديد",
+      "created": "تم تسجيل الإيصال",
+      "chequeUpdated": "تم تحديث حالة الشيك",
+      "voided": "تم إلغاء الإيصال",
+      "voidTitle": "إلغاء الإيصال",
+      "voidReason": "السبب",
+      "voidHint": "إلغاء {number} يعيد مبلغه من الفواتير.",
+      "void": "إلغاء",
+      "viewProof": "الإثبات",
+      "chooseCustomer": "اختر العميل",
+      "proofHint": "ملف PDF أو صورة حتى 5 ميجابايت. يُحفظ بشكل خاص.",
+      "optional": "اختياري",
+      "allocations": "التوزيع على الفواتير",
+      "addAllocation": "إضافة فاتورة",
+      "removeAllocation": "إزالة",
+      "overAllocated": "مجموع التوزيع يتجاوز مبلغ الإيصال.",
+      "surplus": "غير موزّع (رصيد للعميل): {amount}",
+      "sort": {
+        "receivedAt": "حسب تاريخ الإيصال",
+        "collectedAt": "حسب تاريخ التحصيل"
+      },
+      "fields": {
+        "number": "الرقم",
+        "customer": "العميل",
+        "method": "الطريقة",
+        "amount": "المبلغ",
+        "unallocated": "غير موزّع",
+        "receivedAt": "تاريخ الإيصال",
+        "collectedAt": "تاريخ التحصيل",
+        "reference": "المرجع",
+        "chequeNumber": "رقم الشيك",
+        "proof": "الإثبات",
+        "status": "الحالة"
+      },
+      "methods": {
+        "cash": "نقداً",
+        "card": "بطاقة",
+        "transfer": "تحويل",
+        "cheque": "شيك"
+      },
+      "statuses": {
+        "collected": "محصّل",
+        "voided": "ملغى"
+      },
+      "cheque": {
+        "received": "مستلم",
+        "deposited": "مودَع",
+        "cleared": "مصروف",
+        "bounced": "مرتجع"
+      },
+      "chequeActions": {
+        "deposited": "تم الإيداع",
+        "cleared": "تم الصرف",
+        "bounced": "ارتجع"
+      },
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "error": "حدث خطأ ما"
+    },
+    "subscriptionTerms": {
+      "button": "الشروط المالية",
+      "title": "الشروط المالية",
+      "saved": "تم حفظ الشروط المالية",
+      "error": "تعذر حفظ الشروط",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "noPlan": "بدون خطة (السعر القديم)",
+      "fields": {
+        "plan": "الخطة",
+        "billingMode": "نمط الفوترة",
+        "customPrice": "سعر خاص",
+        "customPriceHint": "اتركه فارغاً لاستخدام سعر الخطة.",
+        "contractedHours": "الساعات المتعاقد عليها",
+        "contractedHoursHint": "للخطط بالساعة فقط.",
+        "graceDays": "أيام السماح بعد الاستحقاق",
+        "autoRenew": "تجديد تلقائي"
+      },
+      "modes": {
+        "prepaid": "مدفوع مسبقاً",
+        "postpaid": "مدفوع لاحقاً"
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Owner;
 
-use App\Enums\PosPermission;
+use App\Enums\StaffPermission;
 use App\Enums\StaffGroup;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,7 +24,7 @@ class UpdateStaffPermissionsRequest extends FormRequest
         return [
             'staff_group' => ['nullable', Rule::in(StaffGroup::values())],
             'permissions' => ['present', 'array'],
-            'permissions.*' => [Rule::in(PosPermission::values())],
+            'permissions.*' => [Rule::in(StaffPermission::values())],
         ];
     }
 }

@@ -22,10 +22,10 @@ import {
 import { formatDate } from "@/lib/dates";
 import {
   DEFAULT_STAFF_GROUP,
-  POS_PERMISSIONS,
+  PERMISSION_CATEGORIES,
   STAFF_GROUPS,
   STAFF_GROUP_PERMISSIONS,
-  type PosPermission,
+  type StaffPermission,
   type Staff,
   type StaffGroup,
   type StaffInvitation,
@@ -242,20 +242,25 @@ function PermissionPicker({
   value,
   onChange,
 }: {
-  value: PosPermission[];
-  onChange: (next: PosPermission[]) => void;
+  value: StaffPermission[];
+  onChange: (next: StaffPermission[]) => void;
 }) {
   const t = useTranslations("owner.staff");
-  const toggle = (perm: PosPermission) =>
+  const toggle = (perm: StaffPermission) =>
     onChange(value.includes(perm) ? value.filter((p) => p !== perm) : [...value, perm]);
 
   return (
     <Field label={t("permissions")} hint={t("permsHint")}>
       <div className="stack" style={{ gap: 8 }}>
-        {POS_PERMISSIONS.map((perm) => (
-          <Checkbox key={perm} checked={value.includes(perm)} onChange={() => toggle(perm)}>
-            {t(`perms.${perm}`)}
-          </Checkbox>
+        {PERMISSION_CATEGORIES.map((category) => (
+          <div key={category.key} className="stack" style={{ gap: 6 }}>
+            <strong>{t(`permCategories.${category.key}`)}</strong>
+            {category.permissions.map((perm) => (
+              <Checkbox key={perm} checked={value.includes(perm)} onChange={() => toggle(perm)}>
+                {t(`perms.${perm}`)}
+              </Checkbox>
+            ))}
+          </div>
         ))}
       </div>
     </Field>
@@ -269,7 +274,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [group, setGroup] = useState<StaffGroup>(DEFAULT_STAFF_GROUP);
-  const [permissions, setPermissions] = useState<PosPermission[]>(
+  const [permissions, setPermissions] = useState<StaffPermission[]>(
     STAFF_GROUP_PERMISSIONS[DEFAULT_STAFF_GROUP],
   );
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -327,7 +332,7 @@ function PermissionsModal({ member, onClose }: { member: Staff; onClose: () => v
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
   const [group, setGroup] = useState<StaffGroup>(member.staff_group);
-  const [permissions, setPermissions] = useState<PosPermission[]>(member.permissions);
+  const [permissions, setPermissions] = useState<StaffPermission[]>(member.permissions);
 
   const pickGroup = (next: StaffGroup) => {
     setGroup(next);

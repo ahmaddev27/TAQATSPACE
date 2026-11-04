@@ -28,6 +28,7 @@ import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
 import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
+import { VoidInvoiceButton } from "./VoidInvoiceButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
 type StatusTab = "all" | InvoiceStatus;
@@ -39,10 +40,12 @@ const PAGE_SIZE = 8;
 export interface InvoicesTableProps {
   invoices: Invoice[];
   members: InvoiceMemberOption[];
+  /** Finance v2 flag: issued invoices can only be voided, never deleted. */
+  financeV2?: boolean;
 }
 
 /** Owner invoices: status/month filters, sortable table, issue modal. */
-export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, members, financeV2 = false }: InvoicesTableProps) {
   const t = useTranslations("invoices.owner");
   const locale = useLocale();
 
@@ -162,14 +165,16 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
       id: "status",
       header: t("table.status"),
       sortable: true,
-      cell: (inv) => <InvoiceStatusBadge status={inv.status} locale={locale} />,
+      cell: (inv) => (
+        <InvoiceStatusBadge status={inv.status} docStatus={inv.doc_status} locale={locale} />
+      ),
     },
     {
       id: "actions",
       header: "",
       cell: (inv) => (
         <div className="row-actions">
-          {inv.status === "under_review" ? (
+          {inv.doc_status === "void" ? null : inv.status === "under_review" ? (
             <ReceiptReviewActions
               invoiceId={inv.id}
               invoiceNumber={inv.invoice_number}
@@ -197,10 +202,14 @@ export function InvoicesTable({ invoices, members }: InvoicesTableProps) {
             />
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
-          <DeleteInvoiceButton
-            invoiceId={inv.id}
-            invoiceNumber={inv.invoice_number}
-          />
+          {inv.doc_status === "void" ? null : financeV2 && inv.doc_status === "issued" ? (
+            <VoidInvoiceButton invoiceId={inv.id} invoiceNumber={inv.invoice_number} />
+          ) : (
+            <DeleteInvoiceButton
+              invoiceId={inv.id}
+              invoiceNumber={inv.invoice_number}
+            />
+          )}
         </div>
       ),
     },

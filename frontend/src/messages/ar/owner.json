@@ -20,7 +20,21 @@
         "pos_sell": "البيع",
         "pos_refund": "الاسترجاع",
         "pos_manage_products": "إدارة المنتجات",
-        "pos_view_reports": "عرض التقارير"
+        "pos_view_reports": "عرض التقارير",
+        "finance_view_pos": "عرض نقطة البيع",
+        "finance_withdrawals": "السحوبات على الحساب",
+        "finance_collect": "تسجيل التحصيلات",
+        "finance_issue_void": "إصدار وإلغاء الفواتير (يتطلب المصادقة الثنائية)",
+        "finance_expenses": "إدارة المصروفات",
+        "finance_items": "إدارة الأصناف",
+        "finance_import": "استيراد البيانات",
+        "finance_reports": "التقارير المالية"
+      },
+      "permCategories": {
+        "pos": "نقطة البيع",
+        "collections": "التحصيل والسحوبات",
+        "catalog": "الأصناف والاستيراد",
+        "reporting": "المصروفات والتقارير"
       },
       "send": "إرسال الدعوة",
       "cancel": "إلغاء",

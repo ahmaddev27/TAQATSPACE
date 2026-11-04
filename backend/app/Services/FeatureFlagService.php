@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceFeatureFlag;
 use App\Services\Audit\AuditLogger;
+use App\Services\Finance\CatalogDefaultsService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,10 @@ class FeatureFlagService
 {
     private const CACHE_TTL_SECONDS = 3600;
 
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly CatalogDefaultsService $catalogDefaults,
+    ) {}
 
     public function isEnabled(string $workspaceId, WorkspaceFeature $feature): bool
     {
@@ -90,6 +94,10 @@ class FeatureFlagService
         });
 
         Cache::forget($this->cacheKey($workspace->id));
+
+        if ($diff[WorkspaceFeature::FinanceV2->value] ?? false) {
+            $this->catalogDefaults->seedExpenseCategories($workspace);
+        }
 
         $this->audit->log(
             'workspace.features.updated',

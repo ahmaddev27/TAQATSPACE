@@ -1,0 +1,207 @@
+{
+  "finance": {
+    "catalog": {
+      "title": "Catalog",
+      "subtitle": "Items and categories used across invoices, point of sale and expenses.",
+      "tabs": {
+        "items": "Items",
+        "categories": "Categories"
+      },
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "nameAr": "Name (Arabic)",
+        "nameEn": "Name (English)",
+        "category": "Category",
+        "unit": "Unit",
+        "price": "Price",
+        "kind": "Type"
+      },
+      "codeLocked": "The code cannot be changed after creation.",
+      "units": {
+        "piece": "Piece",
+        "hour": "Hour",
+        "day": "Day",
+        "month": "Month",
+        "gb": "GB"
+      },
+      "kinds": {
+        "sales": "Sales",
+        "expense": "Expense"
+      },
+      "items": {
+        "add": "Add item",
+        "empty": "No items yet.",
+        "createTitle": "New item",
+        "editTitle": "Edit item",
+        "created": "Item created",
+        "updated": "Item updated",
+        "archived": "Item archived",
+        "archiveTitle": "Archive item",
+        "archiveConfirm": "Archive \"{name}\"? It will be hidden from lists; existing invoices and orders are not affected."
+      },
+      "categories": {
+        "add": "Add category",
+        "empty": "No categories yet.",
+        "createTitle": "New category",
+        "editTitle": "Edit category",
+        "created": "Category created",
+        "updated": "Category updated",
+        "archived": "Category archived",
+        "reordered": "Order saved",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "archiveTitle": "Archive category",
+        "archiveConfirm": "Archive \"{name}\"? It will be hidden from lists."
+      },
+      "edit": "Edit",
+      "archive": "Archive",
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
+    },
+    "plans": {
+      "title": "Plans",
+      "subtitle": "Pricing plans for your workspace: fixed periods, hourly, per GB or bundles.",
+      "add": "Add plan",
+      "empty": "No plans yet.",
+      "createTitle": "New plan",
+      "editTitle": "Edit plan",
+      "created": "Plan created",
+      "updated": "Plan updated",
+      "archived": "Plan archived",
+      "removed": "Plan deleted",
+      "removeTitle": "Delete plan",
+      "removeConfirm": "Delete \"{name}\"? A plan already in use is archived instead and existing subscriptions are not affected.",
+      "promo": "Promo",
+      "dedicated": "Dedicated",
+      "dedicatedHint": "Reserve a dedicated seat for subscribers",
+      "dedicatedNotAllowed": "A dedicated seat is only available on monthly, weekly and bundle plans.",
+      "codeLocked": "The code cannot be changed after creation.",
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "nameAr": "Name (Arabic)",
+        "nameEn": "Name (English)",
+        "method": "Pricing method",
+        "price": "Price",
+        "overagePrice": "Overage price",
+        "includedHours": "Included hours",
+        "includedGb": "Included GB",
+        "validityDays": "Validity (days)",
+        "promoPrice": "Promo price",
+        "promoUntil": "Promo ends on",
+        "dedicatedSeat": "Dedicated seat"
+      },
+      "methods": {
+        "monthly": "Monthly",
+        "weekly": "Weekly",
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "per_gb": "Per GB",
+        "bundle": "Bundle"
+      },
+      "priceLabels": {
+        "monthly": "Monthly price",
+        "weekly": "Weekly price",
+        "daily": "Daily price",
+        "hourly": "Price per hour",
+        "per_gb": "Price per GB",
+        "bundle": "Bundle price"
+      },
+      "edit": "Edit",
+      "archive": "Archive",
+      "remove": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
+    },
+    "receipts": {
+      "title": "Receipts",
+      "subtitle": "Money received from customers, spread over their invoices. A cheque counts as paid once it clears.",
+      "add": "New receipt",
+      "empty": "No receipts yet.",
+      "createTitle": "New receipt",
+      "created": "Receipt recorded",
+      "chequeUpdated": "Cheque status updated",
+      "voided": "Receipt voided",
+      "voidTitle": "Void receipt",
+      "voidReason": "Reason",
+      "voidHint": "Voiding {number} takes its money back off the invoices.",
+      "void": "Void",
+      "viewProof": "Proof",
+      "chooseCustomer": "Choose a customer",
+      "proofHint": "PDF or image, up to 5 MB. Stored privately.",
+      "optional": "optional",
+      "allocations": "Allocation across invoices",
+      "addAllocation": "Add invoice",
+      "removeAllocation": "Remove",
+      "overAllocated": "The allocations exceed the receipt amount.",
+      "surplus": "Not allocated (credit on account): {amount}",
+      "sort": {
+        "receivedAt": "By receipt date",
+        "collectedAt": "By collection date"
+      },
+      "fields": {
+        "number": "Number",
+        "customer": "Customer",
+        "method": "Method",
+        "amount": "Amount",
+        "unallocated": "Unallocated",
+        "receivedAt": "Receipt date",
+        "collectedAt": "Collection date",
+        "reference": "Reference",
+        "chequeNumber": "Cheque number",
+        "proof": "Proof",
+        "status": "Status"
+      },
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "transfer": "Transfer",
+        "cheque": "Cheque"
+      },
+      "statuses": {
+        "collected": "Collected",
+        "voided": "Voided"
+      },
+      "cheque": {
+        "received": "Received",
+        "deposited": "Deposited",
+        "cleared": "Cleared",
+        "bounced": "Bounced"
+      },
+      "chequeActions": {
+        "deposited": "Mark deposited",
+        "cleared": "Mark cleared",
+        "bounced": "Mark bounced"
+      },
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
+    },
+    "subscriptionTerms": {
+      "button": "Financial terms",
+      "title": "Financial terms",
+      "saved": "Financial terms saved",
+      "error": "Could not save the terms",
+      "cancel": "Cancel",
+      "save": "Save",
+      "noPlan": "No plan (legacy price)",
+      "fields": {
+        "plan": "Plan",
+        "billingMode": "Billing mode",
+        "customPrice": "Custom price",
+        "customPriceHint": "Leave empty to use the plan price.",
+        "contractedHours": "Contracted hours",
+        "contractedHoursHint": "Only for hourly plans.",
+        "graceDays": "Grace days after due date",
+        "autoRenew": "Renew automatically"
+      },
+      "modes": {
+        "prepaid": "Prepaid",
+        "postpaid": "Postpaid"
+      }
+    }
+  }
+}
