@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\SeatKind;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
 use App\Enums\SubscriptionStatus;
@@ -13,6 +14,8 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\SeatAssignedNotification;
+use App\Services\Audit\AuditLogger;
+use App\Services\Seat\BulkSeatCreator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -23,15 +26,27 @@ use Illuminate\Support\Facades\DB;
  */
 class SeatService
 {
+    /** Attributes an owner may set when creating or editing a station. */
+    private const STATION_FIELDS = ['zone', 'kind', 'capacity', 'is_private', 'branch_id', 'parent_id'];
+
+    public function __construct(
+        private readonly BulkSeatCreator $bulkCreator,
+        private readonly BranchService $branches,
+        private readonly AuditLogger $audit,
+    ) {}
+
     /**
      * Build the seat-map payload for a workspace: every seat plus an aggregate
      * status summary. The assignee is exposed by name only.
      *
+     * @param  array{branch_id?: string|null, zone?: string|null}  $filters
      * @return array{seats: \Illuminate\Database\Eloquent\Collection<int, Seat>, summary: array<string, int>}
      */
-    public function seatMap(Workspace $workspace): array
+    public function seatMap(Workspace $workspace, array $filters = []): array
     {
         $seats = $workspace->seats()
+            ->when($filters['branch_id'] ?? null, fn ($query, $branchId) => $query->where('branch_id', $branchId))
+            ->when($filters['zone'] ?? null, fn ($query, $zone) => $query->where('zone', $zone))
             ->with('assignedMember:id,name,avatar')
             ->orderBy('seat_number')
             ->get();
@@ -178,6 +193,7 @@ class SeatService
         $taken = $workspace->seats()
             ->pluck('seat_number')
             ->flip();
+        $branchId = $this->branches->defaultBranchId($workspace);
 
         $index = 0;
         $created = 0;
@@ -194,6 +210,7 @@ class SeatService
                 'seat_number' => $number,
                 'type' => $type->value,
                 'status' => SeatStatus::Available->value,
+                'branch_id' => $branchId,
             ]);
 
             $taken->put($number, true);
@@ -254,22 +271,53 @@ class SeatService
             abort(422, __('messages.seat_number_exists'));
         }
 
+        $given = array_filter(
+            array_intersect_key($data, array_flip(self::STATION_FIELDS)),
+            static fn (mixed $value): bool => $value !== null,
+        );
+        $station = $given + [
+            'kind' => SeatKind::Desk->value,
+            'capacity' => 1,
+            'is_private' => false,
+            'branch_id' => $this->branches->defaultBranchId($workspace),
+        ];
+
         return $workspace->seats()->create([
             'seat_number' => $data['seat_number'],
             'type' => $data['type'],
             'status' => $data['status'] ?? SeatStatus::Available->value,
             'notes' => $data['notes'] ?? null,
-        ]);
+        ] + $station);
     }
 
     /**
-     * Update mutable seat attributes (type, status, notes).
+     * Add up to BulkSeatCreator::MAX_COUNT stations at once, all or nothing.
+     *
+     * @param  array<string, mixed>  $data
+     * @return Collection<int, Seat>
+     */
+    public function bulkCreate(Workspace $workspace, array $data): Collection
+    {
+        $created = $this->bulkCreator->create($workspace, $data, $this->branches->defaultBranchId($workspace));
+
+        $this->audit->log('seat.bulk_created', $workspace, changes: [
+            'count' => $created->count(),
+            'first' => $created->first()?->seat_number,
+            'last' => $created->last()?->seat_number,
+        ]);
+
+        return $created;
+    }
+
+    /**
+     * Update mutable seat attributes (type, status, notes and station fields).
      *
      * @param  array<string, mixed>  $data
      */
     public function update(Seat $seat, array $data): Seat
     {
-        $seat->fill(array_intersect_key($data, array_flip(['seat_number', 'type', 'status', 'notes'])));
+        $allowed = array_merge(['seat_number', 'type', 'status', 'notes'], self::STATION_FIELDS);
+        $seat->fill(array_intersect_key($data, array_flip($allowed)));
         $seat->save();
 
         return $seat->refresh();

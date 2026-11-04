@@ -26,6 +26,12 @@ class SeatResource extends JsonResource
             'type' => $this->type->value,
             'status' => $this->status->value,
             'notes' => $this->notes,
+            'kind' => $this->kind->value,
+            'zone' => $this->zone,
+            'capacity' => $this->capacity,
+            'is_private' => $this->is_private,
+            'branch_id' => $this->branch_id,
+            'parent_id' => $this->parent_id,
             'assigned_member' => $this->whenLoaded('assignedMember', fn () => $this->assignedMember === null ? null : [
                 'id' => $this->assignedMember->id,
                 'name' => $this->assignedMember->name,
