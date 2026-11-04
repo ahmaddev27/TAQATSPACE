@@ -37,6 +37,8 @@ jobs:
       E2E_BASE_URL: ${{ vars.STAGING_WEB_URL || 'https://staging.taqat.space' }}
       E2E_API_URL: ${{ vars.STAGING_API_URL }}
       E2E_DEMO_PASSWORD: ${{ secrets.STAGING_DEMO_PASSWORD }}
+      E2E_SSO_EMAIL: ${{ secrets.STAGING_SSO_EMAIL }}
+      E2E_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,10 +46,12 @@ jobs:
 
       - name: Staging only
         run: |
-          case "$E2E_BASE_URL $E2E_API_URL" in
-            *staging*) ;;
-            *) echo "::error::E2E_BASE_URL and STAGING_API_URL must point at staging."; exit 1 ;;
-          esac
+          for url in "$E2E_BASE_URL" "$E2E_API_URL"; do
+            case "$url" in
+              *staging*) ;;
+              *) echo "::error::E2E_BASE_URL and STAGING_API_URL must both point at staging."; exit 1 ;;
+            esac
+          done
 
       - uses: actions/setup-node@v4
         with:

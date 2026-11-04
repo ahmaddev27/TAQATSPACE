@@ -114,6 +114,7 @@ class DemoSeedCommandTest extends TestCase
         $this->assertSame(3, User::query()->where('role', UserRole::Cashier)->count());
         $this->assertSame(2, User::query()->where('role', UserRole::Admin)->count());
         $this->assertSame(0, Workspace::query()->where('slug', 'not like', 'demo-%')->count());
+        $this->assertSame(0, Workspace::query()->whereNull('city_id')->count());
         $this->assertSame(0, User::query()->whereNotNull('phone')->count());
     }
 
@@ -204,6 +205,16 @@ class DemoSeedCommandTest extends TestCase
         $this->assertNotNull(User::query()->find($member->id));
         $this->assertSame(1, Subscription::query()->where('workspace_id', $workspace->id)->count());
         $this->assertSame(1, AuditLog::query()->where('action', 'real.action')->count());
+    }
+
+    public function test_fresh_keeps_a_real_workspace_whose_slug_starts_with_demo(): void
+    {
+        $owner = User::factory()->owner()->create(['email' => 'real.owner@mail.ps']);
+        $workspace = Workspace::factory()->create(['owner_id' => $owner->id, 'name' => 'Demo Hub', 'slug' => 'demo-hub']);
+
+        $this->artisan('demo:seed --fresh')->assertSuccessful();
+
+        $this->assertNotNull(Workspace::query()->find($workspace->id));
     }
 
     /** @return array<string, int> */

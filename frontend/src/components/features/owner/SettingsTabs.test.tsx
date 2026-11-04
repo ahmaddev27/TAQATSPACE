@@ -95,6 +95,30 @@ describe("SettingsTabs general tab", () => {
     expect(await screen.findByText("bad iban")).toBeInTheDocument();
   });
 
+  it("opens the tab holding a field that failed elsewhere", async () => {
+    updateSettings.mockResolvedValue({ ok: false, errors: { city_id: ["needs a city"] }, message: "x" });
+    const user = userEvent.setup();
+    render(<SettingsTabs workspace={workspace} locale="en" />);
+    await user.click(screen.getByRole("tab", { name: "settings.tabGeneral" }));
+    await user.click(screen.getByRole("button", { name: "settings.save" }));
+
+    expect(await screen.findByText("needs a city")).toBeInTheDocument();
+  });
+
+  it("stays on the current tab when one of the failed fields is on it", async () => {
+    updateSettings.mockResolvedValue({
+      ok: false,
+      errors: { city_id: ["needs a city"], iban: ["bad iban"] },
+      message: "x",
+    });
+    const user = userEvent.setup();
+    render(<SettingsTabs workspace={workspace} locale="en" />);
+    await user.click(screen.getByRole("tab", { name: "settings.tabGeneral" }));
+    await user.click(screen.getByRole("button", { name: "settings.save" }));
+
+    expect(await screen.findByText("bad iban")).toBeInTheDocument();
+  });
+
   it("keeps the operations tab out of the direct-save flow", async () => {
     const user = userEvent.setup();
     render(<SettingsTabs workspace={workspace} locale="en" pendingApprovals={[]} />);

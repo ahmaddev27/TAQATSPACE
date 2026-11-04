@@ -10,7 +10,8 @@ import { freshTotp } from "./support/totp";
 const THROWAWAY = "owner_throwaway" as const;
 const THROWAWAY_SLUG = "demo-throwaway";
 
-test.describe.configure({ mode: "serial" });
+// No retries: these steps change the account, so a retry would fail on the changed state and hide the real error.
+test.describe.configure({ mode: "serial", retries: 0 });
 
 let secret = "";
 let recoveryCodes: string[] = [];
