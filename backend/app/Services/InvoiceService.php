@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceFeature;
 use App\Exceptions\InvoiceLifecycleException;
@@ -21,6 +22,7 @@ use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use App\Services\Finance\DocumentNumberService;
+use App\Services\Finance\ReceiptService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -39,6 +41,7 @@ class InvoiceService
         private readonly FileUploadService $uploads,
         private readonly FeatureFlagService $features,
         private readonly DocumentNumberService $documentNumbers,
+        private readonly ReceiptService $receipts,
     ) {}
 
     /**
@@ -87,6 +90,13 @@ class InvoiceService
         }
 
         $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
+
+        if ($this->financeV2($invoice->workspace_id) && $this->outstanding($invoice) > 0) {
+            return $this->payThroughReceipt($invoice, $this->outstanding($invoice), PaymentMethod::Transfer, $paidAt ?? Carbon::now(), proof: [
+                'receipt_path' => $invoice->receipt_path,
+                'receipt_disk' => (string) config('filesystems.media', 'public'),
+            ]);
+        }
 
         return $this->markPaid($invoice, $paidAt);
     }
@@ -380,6 +390,10 @@ class InvoiceService
             ]));
         }
 
+        if ($this->financeV2($invoice->workspace_id)) {
+            return $this->payThroughReceipt($invoice, $amount, PaymentMethod::Cash, $paidAt ?? Carbon::now());
+        }
+
         $newPaid = (float) $invoice->amount_paid + $amount;
         $fullyPaid = $newPaid >= $total;
         $paymentDate = $paidAt ?? Carbon::now();
@@ -442,6 +456,10 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
                 'remaining' => number_format($remaining, 2),
             ]));
+        }
+
+        if ($this->financeV2($invoice->workspace_id)) {
+            return $this->payThroughReceipt($invoice, $amount, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), $receipt);
         }
 
         $newPaid = (float) $invoice->amount_paid + $amount;
@@ -749,6 +767,40 @@ class InvoiceService
      * than the platform's. Locks the latest row for that prefix to keep the
      * sequence collision-safe under concurrent generation.
      */
+    private function outstanding(Invoice $invoice): float
+    {
+        return round((float) $invoice->amount - (float) $invoice->amount_paid, 2);
+    }
+
+    /**
+     * With finance v2 on, a payment is a numbered receipt allocated to the
+     * invoice (the receipt moves the invoice's totals and notifies the member).
+     * The legacy payment row is still written, and linked, so existing payment
+     * history keeps working; its proof file lives on the receipt, privately.
+     *
+     * @param  array{receipt_path?: string|null, receipt_disk?: string}  $proof  an already stored proof file
+     */
+    private function payThroughReceipt(Invoice $invoice, float $amount, PaymentMethod $method, Carbon $paidAt, ?UploadedFile $file = null, array $proof = []): Invoice
+    {
+        $amount = number_format($amount, 2, '.', '');
+        $workspace = Workspace::query()->findOrFail($invoice->workspace_id);
+
+        DB::transaction(function () use ($invoice, $workspace, $amount, $method, $paidAt, $file, $proof): void {
+            $payment = $invoice->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
+
+            $this->receipts->create($workspace, [
+                'customer_id' => $invoice->customer_id,
+                'method' => $method->value,
+                'amount' => $amount,
+                'received_at' => $paidAt,
+                'legacy_payment_id' => $payment->id,
+                'allocations' => [['invoice_id' => $invoice->id, 'amount' => $amount]],
+            ] + $proof, request()->user(), $file);
+        });
+
+        return $invoice->refresh();
+    }
+
     /**
      * Payments, receipts and reminders only make sense on a numbered, issued
      * invoice: a draft is hidden from the subscriber and a void one is frozen.

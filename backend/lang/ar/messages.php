@@ -336,5 +336,14 @@ return [
     'plan_dedicated_seat_not_allowed' => 'المقعد المخصص متاح فقط للخطط الشهرية أو الأسبوعية أو الباقات.',
     'plan_not_found' => 'الخطة غير موجودة.',
     'feature_not_found' => 'غير موجود.',
+    'receipt_created' => 'تم تسجيل الإيصال.',
+    'receipt_allocated' => 'تم توزيع الإيصال.',
+    'receipt_cheque_updated' => 'تم تحديث حالة الشيك.',
+    'receipt_voided_ok' => 'تم إلغاء الإيصال.',
+    'receipt_voided' => 'هذا الإيصال ملغى ولا يمكن تعديله.',
+    'receipt_not_cheque' => 'حالة الشيك خاصة بالشيكات فقط.',
+    'receipt_cheque_transition_invalid' => 'لا يمكن نقل الشيك إلى هذه الحالة من حالته الحالية.',
+    'receipt_allocation_exceeds_receipt' => 'مجموع التوزيع يتجاوز مبلغ الإيصال.',
+    'receipt_invoice_mismatch' => 'الفاتورة غير موجودة أو لا تخص هذا العميل وهذه المساحة.',
 
 ];
