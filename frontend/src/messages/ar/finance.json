@@ -115,6 +115,29 @@
       "cancel": "إلغاء",
       "save": "حفظ",
       "error": "حدث خطأ ما"
+    },
+    "subscriptionTerms": {
+      "button": "الشروط المالية",
+      "title": "الشروط المالية",
+      "saved": "تم حفظ الشروط المالية",
+      "error": "تعذر حفظ الشروط",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "noPlan": "بدون خطة (السعر القديم)",
+      "fields": {
+        "plan": "الخطة",
+        "billingMode": "نمط الفوترة",
+        "customPrice": "سعر خاص",
+        "customPriceHint": "اتركه فارغاً لاستخدام سعر الخطة.",
+        "contractedHours": "الساعات المتعاقد عليها",
+        "contractedHoursHint": "للخطط بالساعة فقط.",
+        "graceDays": "أيام السماح بعد الاستحقاق",
+        "autoRenew": "تجديد تلقائي"
+      },
+      "modes": {
+        "prepaid": "مدفوع مسبقاً",
+        "postpaid": "مدفوع لاحقاً"
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ import type {
   SimpleMeta,
   SubscriptionStatus,
 } from "@/lib/types";
+import type { BillingMode } from "@/lib/types/financePlans";
 
 /* -------------------------------------------------------------------------- */
 /*  Types (mirror App\Http\Resources\OwnerSubscriptionResource)               */
@@ -27,6 +28,15 @@ export interface OwnerSubscription {
   plan_type: PlanType;
   /** Decimal string, e.g. "120.00". */
   monthly_price: string;
+  /** Decimal string — custom price, else plan price, else monthly_price. */
+  effective_price: string;
+  plan_id: string | null;
+  plan_code: string | null;
+  billing_mode: BillingMode;
+  custom_price: string | null;
+  contracted_hours: string | null;
+  grace_days: number;
+  auto_renew: boolean;
   /** The member's internet package name(s) in this workspace, or null. */
   internet_package: string | null;
   /** Decimal string — total price of the internet package(s). */

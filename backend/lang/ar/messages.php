@@ -145,6 +145,9 @@ return [
     'subscription_already_cancelled' => 'تم إلغاء هذا الاشتراك بالفعل.',
     'subscription_not_due_for_renewal' => 'لا يمكن تجديد الاشتراك قبل وصول تاريخ انتهائه.',
     'subscription_no_access' => 'ليس لديك صلاحية الوصول إلى هذا الاشتراك.',
+    'subscription_terms_updated' => 'تم تحديث الشروط المالية للاشتراك.',
+    'subscription_hours_need_hourly_plan' => 'الساعات المتعاقد عليها مسموحة فقط على الخطة بالساعة.',
+    'subscription_plan_needs_seat' => 'خطة المقعد المخصص تتطلب تعيين مقعد للاشتراك.',
 
     // Partner integration
     'partner_unauthorized' => 'مفتاح API غير صالح أو مفقود.',
