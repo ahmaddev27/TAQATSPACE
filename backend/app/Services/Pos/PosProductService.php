@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Pos;
 
 use App\Enums\StockMovementType;
+use App\Enums\WorkspaceFeature;
 use App\Models\CatalogItem;
 use App\Models\PosProduct;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\FeatureFlagService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +25,8 @@ use RuntimeException;
  */
 class PosProductService
 {
+    public function __construct(private readonly FeatureFlagService $features) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, PosProduct>
@@ -92,6 +96,8 @@ class PosProductService
             ],
             static fn ($value): bool => $value !== null,
         ))->save();
+
+        $this->syncLinkedItem($workspace, $product);
 
         return $product->refresh();
     }
@@ -192,11 +198,22 @@ class PosProductService
      * When the product is (or is being) linked to a catalog item, the item is
      * the source of truth for name and price: its values replace any sent here.
      *
+     * Only with finance_v2 on. Every product was linked by a backfill, but without
+     * the flag the catalog cannot be seen or edited, so an owner editing a price
+     * would get a success message and keep the old price. There the product form
+     * stays the source of truth, and {@see syncLinkedItem} keeps the item in step.
+     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     private function withCatalogItem(Workspace $workspace, array $data, ?PosProduct $product = null): array
     {
+        if (! $this->catalogIsLive($workspace)) {
+            unset($data['catalog_item_id']);
+
+            return $data;
+        }
+
         $itemId = $data['catalog_item_id'] ?? $product?->catalog_item_id;
 
         if ($itemId === null) {
@@ -217,6 +234,25 @@ class PosProductService
         }
 
         return [...$data, 'catalog_item_id' => $item->id, 'name' => $item->name_ar, 'price' => $item->price];
+    }
+
+    /** Without finance_v2 the item follows the product, so turning the flag on later changes no price. */
+    private function syncLinkedItem(Workspace $workspace, PosProduct $product): void
+    {
+        if ($product->catalog_item_id === null || $this->catalogIsLive($workspace)) {
+            return;
+        }
+
+        CatalogItem::query()
+            ->withoutWorkspaceScope()
+            ->where('workspace_id', $workspace->id)
+            ->whereKey($product->catalog_item_id)
+            ->update(['name_ar' => $product->name, 'name_en' => $product->name, 'price' => $product->price]);
+    }
+
+    private function catalogIsLive(Workspace $workspace): bool
+    {
+        return $this->features->isEnabled((string) $workspace->id, WorkspaceFeature::FinanceV2);
     }
 
     private function ensureBelongs(Workspace $workspace, PosProduct $product): void

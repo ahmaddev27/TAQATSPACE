@@ -75,6 +75,49 @@ class PosCatalogLinkTest extends CatalogTestCase
         $this->putJson("/api/pos/products/{$product->id}", ['is_active' => false])->assertOk();
     }
 
+    public function test_without_finance_v2_a_linked_product_keeps_the_edit_and_its_item_follows(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace(financeV2: false);
+        $item = CatalogItem::factory()->create(['workspace_id' => $workspace->id, 'name_ar' => 'قهوة', 'price' => 4]);
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'catalog_item_id' => $item->id, 'name' => 'قهوة', 'price' => 4]);
+        Sanctum::actingAs($owner);
+
+        $this->putJson("/api/pos/products/{$product->id}", ['name' => 'قهوة تركية', 'price' => 7])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'قهوة تركية')
+            ->assertJsonPath('data.price', '7.00');
+
+        $item->refresh();
+        $this->assertSame('قهوة تركية', $item->name_ar);
+        $this->assertEqualsWithDelta(7, (float) $item->price, 0.001);
+    }
+
+    public function test_without_finance_v2_a_product_cannot_be_linked_to_an_item(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace(financeV2: false);
+        $item = CatalogItem::factory()->create(['workspace_id' => $workspace->id, 'price' => 4]);
+        Sanctum::actingAs($owner);
+
+        $this->postJson('/api/pos/products', ['name' => 'شاي', 'price' => 3, 'catalog_item_id' => $item->id])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'شاي')
+            ->assertJsonPath('data.catalog_item_id', null);
+    }
+
+    public function test_with_finance_v2_the_item_stays_the_source_of_truth_on_edit(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $item = CatalogItem::factory()->create(['workspace_id' => $workspace->id, 'name_ar' => 'قهوة', 'price' => 4]);
+        $product = PosProduct::factory()->create(['workspace_id' => $workspace->id, 'catalog_item_id' => $item->id, 'name' => 'قهوة', 'price' => 4]);
+        Sanctum::actingAs($owner);
+
+        $this->putJson("/api/pos/products/{$product->id}", ['price' => 7])
+            ->assertOk()
+            ->assertJsonPath('data.price', '4.00');
+
+        $this->assertEqualsWithDelta(4, (float) $item->refresh()->price, 0.001);
+    }
+
     private function runBackfillMigration(): void
     {
         /** @var Migration $migration */
