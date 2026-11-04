@@ -109,10 +109,7 @@ class MemberDashboardService
             'package' => $this->packageName($subscription),
             // The member's own internet login (password decrypted via the cast).
             // Only ever returned to the member themselves on their dashboard.
-            'internet' => $subscription->internet_username === null ? null : [
-                'username' => $subscription->internet_username,
-                'password' => $subscription->internet_password_enc,
-            ],
+            'internet' => $subscription->internetCredentials(),
         ];
     }
 

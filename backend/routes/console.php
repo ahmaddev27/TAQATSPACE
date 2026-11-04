@@ -22,11 +22,34 @@ Schedule::command('subscriptions:expire')->dailyAt('00:30');
 // Remind members 3 days before their subscription expires.
 Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 
+// Router API request logs are only kept for 14 days.
+Schedule::command('router-logs:prune')->dailyAt('03:00');
+
+// Retention policy (config/retention.php): processed raw events, assembled
+// snapshot chunks and router logs. Replaces the scheduled router-snapshots:prune,
+// which would also delete chunks of snapshots that are not assembled yet.
+Schedule::command('network:prune')->dailyAt('03:15');
+
+// Late-item fallback for the ingest queue: /sync dispatches ProcessRouterBatch
+// itself; this catches runs that were lost or failed.
+Schedule::command('router-data:process-pending')->everyMinute()->withoutOverlapping();
+
+// Open sessions of routers that stopped syncing time out here (config/network.php).
+Schedule::command('sessions:close-idle')->everyFiveMinutes()->withoutOverlapping();
+
+// Daily attendance: days whose sessions changed are rebuilt every five minutes;
+// the nightly pass re-covers the last two local days of every workspace as a safety net.
+Schedule::command('attendance:rebuild')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('attendance:rebuild --recent')->dailyAt('01:15')->withoutOverlapping();
+
+// Router commands nobody acknowledged before their ttl must stop being resent.
+Schedule::command('router-commands:expire')->everyFiveMinutes();
+
 // Drain queued jobs (emails, SMS broadcasts, push + DB notifications) every
 // minute. The queue connection is `database` and shared hosting has no
 // persistent worker, so we process the backlog from the scheduler instead:
 // run until the queue is empty, cap the runtime so it exits before the next
 // tick, and never overlap with a still-running drain.
-Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3')
+Schedule::command('queue:work --queue=ingest,default --stop-when-empty --max-time=55 --tries=3')
     ->everyMinute()
     ->withoutOverlapping();

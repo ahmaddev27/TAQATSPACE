@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
+use App\Services\Hotspot\HotspotAccountService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +14,10 @@ class SubscriptionLifecycleService
 {
     private const CHUNK_SIZE = 200;
 
-    public function __construct(private readonly MemberService $members) {}
+    public function __construct(
+        private readonly MemberService $members,
+        private readonly HotspotAccountService $hotspot,
+    ) {}
 
     /**
      * Move every active subscription whose end date is before today to
@@ -40,6 +44,8 @@ class SubscriptionLifecycleService
                     $subscription->update(['status' => SubscriptionStatus::Expired->value]);
                     $this->members->freeSeat($subscription->workspace, $subscription);
                 }
+
+                $this->hotspot->suspendMany($subscriptions);
             });
 
             foreach ($subscriptions->pluck('workspace_id')->unique() as $workspaceId) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Subscription;
+use App\Services\Owner\ProfileCompletionService;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -36,6 +37,9 @@ class MemberResource extends JsonResource
                 'phone' => $member?->phone,
                 'gender' => $member?->gender?->value,
                 'specialty' => $member?->specialty,
+                'education_level' => $member?->education_level?->value,
+                'specialization' => $member?->specialization?->value,
+                'employment_status' => $member?->employment_status?->value,
                 'avatar' => MediaUrl::resolve($member?->avatar),
             ],
             'status' => $this->status->value,
@@ -50,6 +54,9 @@ class MemberResource extends JsonResource
             'package_price' => $member?->relationLoaded('internetPackages')
                 ? (string) $member->internetPackages->sum(static fn ($p): float => (float) $p->price)
                 : '0',
+            'mikrotik_username' => $this->hotspotAccount?->username ?? $this->internet_username,
+            'profile_completion' => $member === null ? null : app(ProfileCompletionService::class)
+                ->completion($member, $this->hotspotAccount?->username ?? $this->internet_username),
             'join_date' => $this->start_date?->toDateString(),
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
         ];

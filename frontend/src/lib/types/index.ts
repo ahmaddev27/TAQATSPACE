@@ -272,9 +272,36 @@ export interface Seat {
   type: SeatType;
   status: SeatStatus;
   notes: string | null;
+  kind?: SeatKind;
+  zone?: string | null;
+  capacity?: number;
+  is_private?: boolean;
+  branch_id?: string | null;
+  parent_id?: string | null;
   /** Only present for the owner/admin (loaded conditionally). */
   assigned_member?: SeatAssignedMember | null;
   created_at: string | null;
+}
+
+export type SeatKind = "desk" | "room" | "booth";
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string | null;
+  is_default: boolean;
+  seats_count?: number;
+}
+
+export interface SeatMonthOccupancy {
+  month: string;
+  days_in_month: number;
+  seats: {
+    seat_id: string;
+    seat_number: string;
+    occupied_days: number;
+    occupancy_rate: number;
+  }[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -333,7 +360,17 @@ export interface MemberUser {
   email: string;
   phone: string | null;
   specialty: string | null;
+  gender?: string | null;
+  education_level?: string | null;
+  specialization?: string | null;
+  employment_status?: string | null;
   avatar: string | null;
+}
+
+/** Donor-field completeness of one subscriber (0-100) and the fields still empty. */
+export interface ProfileCompletion {
+  percent: number;
+  missing: string[];
 }
 
 /** A workspace member as seen by the owner (a Subscription row, flattened). */
@@ -350,6 +387,8 @@ export interface Member {
   package_price: string;
   join_date: string | null;
   cancelled_at: string | null;
+  mikrotik_username?: string | null;
+  profile_completion?: ProfileCompletion | null;
 }
 
 /** Owner members listing payload: `{ members, meta }`. */

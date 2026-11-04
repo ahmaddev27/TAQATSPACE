@@ -23,6 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // A challenge-only (`2fa-pending`) token may reach nothing but the 2FA challenge.
         $middleware->api(append: [\App\Http\Middleware\RejectPendingTwoFactor::class]);
 
+        // The per-router rate limiter keys on the router `router` resolves, so
+        // authentication has to run before throttling (which is sorted early).
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            prepend: \App\Http\Middleware\AuthenticateRouter::class,
+        );
+
         $middleware->alias([
             'role.freelancer' => \App\Http\Middleware\EnsureFreelancer::class,
             'role.owner' => \App\Http\Middleware\EnsureWorkspaceOwner::class,
@@ -40,6 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
             // Server-to-server partner auth via `X-Api-Key`.
             'partner' => \App\Http\Middleware\AuthenticatePartner::class,
+            // MikroTik router auth via `X-API-Key` + the workspace `{code}` route segment.
+            'router' => \App\Http\Middleware\AuthenticateRouter::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

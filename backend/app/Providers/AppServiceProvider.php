@@ -20,8 +20,11 @@ use App\Services\Workspace\Reset\Steps\MembersResetStep;
 use App\Services\Workspace\Reset\Steps\PosResetStep;
 use App\Services\Workspace\Reset\WorkspaceResetter;
 use App\Support\Tenancy\CurrentWorkspaceContext;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -63,6 +66,12 @@ class AppServiceProvider extends ServiceProvider
             'mail',
             static fn ($app) => $app->make(SafeMailChannel::class),
         );
+
+        // Routers sync every ~50 s; 12/min leaves room for retries. Keyed per
+        // router (set by the `router` middleware), never per IP, since many
+        // routers can sit behind one carrier NAT.
+        RateLimiter::for('router', static fn (Request $request): Limit => Limit::perMinute(12)
+            ->by((string) ($request->attributes->get('router')?->getKey() ?? $request->ip())));
 
         Gate::define('manage-workspace', static function (User $user, Workspace $workspace): bool {
             return $user->id === $workspace->owner_id || $user->isAdmin();

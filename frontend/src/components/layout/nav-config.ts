@@ -303,6 +303,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "settings", href: "/owner/settings", icon: "settings" },
           { key: "staff", href: "/owner/settings/staff", icon: "shield" },
           { key: "auditLog", href: "/owner/settings/audit", icon: "shield" },
+          { key: "apiIntegration", href: "/owner/settings/api", icon: "wifi", feature: "network" },
         ],
       },
     ],
