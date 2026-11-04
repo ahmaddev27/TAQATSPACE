@@ -196,19 +196,24 @@ test.describe("operations changes need approval (M1)", () => {
 test.describe("module switch from the admin (M1)", () => {
   test.use({ storageState: statePath("owner1") });
 
-  test("turning the network module on shows it in the owner's menu, and off hides it", async ({ page }) => {
+  // owner1's workspace now has the network and finance_v2 modules on from the seed (every
+  // other check relies on that), so the switch is exercised on gsg, which no check uses.
+  test("turning a module on shows it in the owner's menu, and off hides it", async ({ page }) => {
     const owner = await ApiClient.login("owner1");
     const { id } = await ownerWorkspace(owner);
     await owner.dispose();
 
     const admin = await ApiClient.login("admin");
-    const menuLink = page.locator('a[href$="/owner/network"]');
+    const menuLink = page.locator('a[href$="/owner/gsg"]');
+    await page.goto("/en/owner");
+    await expect(page.locator('a[href$="/owner/network"]').first(), "network is on from the seed").toBeVisible();
+    await expect(menuLink).toHaveCount(0);
     try {
-      expect((await admin.put(`admin/workspaces/${id}/features`, { features: { network: true } })).status()).toBe(200);
+      expect((await admin.put(`admin/workspaces/${id}/features`, { features: { gsg: true } })).status()).toBe(200);
       await page.goto("/en/owner");
       await expect(menuLink.first()).toBeVisible();
     } finally {
-      expect((await admin.put(`admin/workspaces/${id}/features`, { features: { network: false } })).status()).toBe(200);
+      expect((await admin.put(`admin/workspaces/${id}/features`, { features: { gsg: false } })).status()).toBe(200);
     }
     await page.goto("/en/owner");
     await expect(menuLink).toHaveCount(0);

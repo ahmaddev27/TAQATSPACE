@@ -5,8 +5,13 @@ declare(strict_types=1);
 use App\Services\Demo\Steps\AccountsStep;
 use App\Services\Demo\Steps\AuditStep;
 use App\Services\Demo\Steps\FinanceStep;
+use App\Services\Demo\Steps\FinanceV2Step;
+use App\Services\Demo\Steps\HourPackagesStep;
 use App\Services\Demo\Steps\MembershipStep;
+use App\Services\Demo\Steps\ModulesStep;
+use App\Services\Demo\Steps\NetworkStep;
 use App\Services\Demo\Steps\PosStep;
+use App\Services\Demo\Steps\StationsStep;
 use App\Services\Demo\Steps\WorkspacesStep;
 
 return [
@@ -30,6 +35,11 @@ return [
         MembershipStep::class,
         FinanceStep::class,
         PosStep::class,
+        ModulesStep::class,
+        NetworkStep::class,
+        StationsStep::class,
+        FinanceV2Step::class,
+        HourPackagesStep::class,
         AuditStep::class,
     ],
 ];

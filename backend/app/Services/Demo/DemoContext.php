@@ -17,8 +17,14 @@ final class DemoContext
     /** @var array<string, Workspace> */
     private array $workspaces = [];
 
-    /** @param  string  $passwordHash  Already hashed; the plain password never reaches a step. */
-    public function __construct(public readonly string $passwordHash) {}
+    /**
+     * @param  string  $passwordHash  Already hashed; the plain password never reaches a step.
+     * @param  string  $routerKey  The plain key of the sync probe router (see DemoMarker::routerKeyFor); steps store only its hash.
+     */
+    public function __construct(
+        public readonly string $passwordHash,
+        public readonly string $routerKey = '',
+    ) {}
 
     public function addUser(string $key, User $user): void
     {

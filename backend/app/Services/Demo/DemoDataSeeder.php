@@ -21,7 +21,7 @@ class DemoDataSeeder
     /** @return array{users: int, workspaces: int} counts for the command's report */
     public function seed(string $plainPassword): array
     {
-        $context = new DemoContext(Hash::make($plainPassword));
+        $context = new DemoContext(Hash::make($plainPassword), DemoMarker::routerKeyFor($plainPassword));
 
         DB::transaction(function () use ($context): void {
             foreach ((array) config('demo.steps') as $stepClass) {

@@ -1,7 +1,7 @@
 import type { Page, Response } from "@playwright/test";
-import { ROLE_NAV, filterNavByPermissions, type NavItem } from "../../src/components/layout/nav-config";
-import type { AccountKey } from "./accounts";
-import { roleOf } from "./accounts";
+import { ROLE_NAV, filterNavByFeatures, filterNavByPermissions, type NavItem } from "../../src/components/layout/nav-config";
+import type { AccountKey, ModuleFlag } from "./accounts";
+import { flagsOf, roleOf } from "./accounts";
 
 /** Permissions each demo account holds (mirrors the backend demo steps). */
 const PERMISSIONS: Partial<Record<AccountKey, string[]>> = {
@@ -19,25 +19,57 @@ const EXTRA_PAGES: Record<string, string[]> = {
   cashier: ["/cashier/profile", "/settings/security"],
 };
 
+/** Pages a flag opens that are not in the sidebar. */
+const FLAG_EXTRA_PAGES: Partial<Record<ModuleFlag, string[]>> = {
+  network: ["/owner/settings/api/diagnostics"],
+};
+
+/**
+ * Menu entries whose page is not built yet: the sidebar links to them as soon as
+ * the flag is on, and they answer 404. Kept out of the walk so it checks what
+ * exists; remove an entry when its page ships.
+ */
+export const PAGES_NOT_BUILT_YET: readonly string[] = ["/owner/network", "/owner/gsg"];
+
 function leaves(items: NavItem[]): NavItem[] {
   return items.flatMap((item) => (item.children ? leaves(item.children) : [item]));
 }
 
+function flagMap(key: AccountKey): Record<ModuleFlag, boolean> {
+  const on = flagsOf(key);
+  return { network: on.includes("network"), finance_v2: on.includes("finance_v2"), gsg: on.includes("gsg") };
+}
+
 /**
- * Every page in the account's sidebar. Items behind a module flag or the
- * realtime-chat switch are left out: whether they exist depends on staging
- * configuration, and the specs cover them where it is known.
+ * Every page in the account's sidebar, including the ones its workspace's module
+ * flags open (see ENABLED_FLAGS). Only the realtime-chat switch is left out:
+ * whether chat or messages shows depends on staging configuration.
  */
 export function pagesFor(key: AccountKey): string[] {
   const role = roleOf(key);
   const isSuper = key === "admin";
-  const nav = filterNavByPermissions(ROLE_NAV[role], PERMISSIONS[key], isSuper);
+  const byPermission = filterNavByPermissions(ROLE_NAV[role], PERMISSIONS[key], isSuper);
+  const nav = filterNavByFeatures(byPermission, flagMap(key));
   const hrefs = nav.groups
     .flatMap((group) => leaves(group.items))
-    .filter((item) => item.href !== "#" && !item.feature && !item.realtime)
+    .filter((item) => item.href !== "#" && !item.realtime && !PAGES_NOT_BUILT_YET.includes(item.href))
     .map((item) => item.href);
+  const flagPages = role === "workspace_owner" ? flagsOf(key).flatMap((flag) => FLAG_EXTRA_PAGES[flag] ?? []) : [];
 
-  return [...new Set([...hrefs, ...(EXTRA_PAGES[role] ?? [])])];
+  return [...new Set([...hrefs, ...flagPages, ...(EXTRA_PAGES[role] ?? [])])];
+}
+
+/** The pages of modules the account's workspace has switched off: the menu hides them and the routes refuse them. */
+export function gatedPagesFor(key: AccountKey): string[] {
+  const role = roleOf(key);
+  const on = flagMap(key);
+  const hrefs = ROLE_NAV[role].groups
+    .flatMap((group) => leaves(group.items))
+    .filter((item) => item.feature !== undefined && !on[item.feature])
+    .map((item) => item.href);
+  const flagPages = role === "workspace_owner" ? (Object.keys(FLAG_EXTRA_PAGES) as ModuleFlag[]).filter((flag) => !on[flag]).flatMap((flag) => FLAG_EXTRA_PAGES[flag] ?? []) : [];
+
+  return [...new Set([...hrefs, ...flagPages])].filter((href) => !PAGES_NOT_BUILT_YET.includes(href));
 }
 
 /** Text that only appears on a framework error page or the 404 page. */

@@ -40,6 +40,19 @@ export class ApiClient {
     return this.ctx.put(path.replace(/^\//, ""), { headers: this.headers(), data, failOnStatusCode: false });
   }
 
+  delete(path: string, data?: unknown): Promise<APIResponse> {
+    return this.ctx.delete(path.replace(/^\//, ""), { headers: this.headers(), data, failOnStatusCode: false });
+  }
+
+  /** A multipart upload, for the endpoints that take a file. */
+  postFile(path: string, fields: Record<string, string>, file: { name: string; mimeType: string; buffer: Buffer }): Promise<APIResponse> {
+    return this.ctx.post(path.replace(/^\//, ""), {
+      headers: this.headers(),
+      multipart: { ...fields, receipt: file },
+      failOnStatusCode: false,
+    });
+  }
+
   async json<T = unknown>(response: APIResponse): Promise<T> {
     return (await response.json()) as T;
   }

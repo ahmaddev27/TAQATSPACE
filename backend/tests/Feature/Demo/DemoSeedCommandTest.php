@@ -112,7 +112,7 @@ class DemoSeedCommandTest extends TestCase
 
         $this->assertSame(0, User::query()->where('email', 'not like', '%@demo.taqat.test')->count());
         $this->assertSame(10, User::query()->where('role', UserRole::Freelancer)->count());
-        $this->assertSame(3, User::query()->where('role', UserRole::WorkspaceOwner)->count());
+        $this->assertSame(4, User::query()->where('role', UserRole::WorkspaceOwner)->count());
         $this->assertSame(3, User::query()->where('role', UserRole::Cashier)->count());
         $this->assertSame(2, User::query()->where('role', UserRole::Admin)->count());
         $this->assertSame(0, Workspace::query()->where('slug', 'not like', 'demo-%')->count());

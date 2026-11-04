@@ -14,7 +14,7 @@ use App\Services\Demo\DemoMarker;
 use App\Services\Demo\DemoSeedStep;
 use Database\Seeders\GazaData;
 
-/** The two isolated tenants, the throwaway one for the reset test, and the first tenant's staff. */
+/** The two isolated tenants, the throwaway one for the reset test, the one that enrols two-factor, and the first tenant's staff. */
 class WorkspacesStep implements DemoSeedStep
 {
     use BuildsDemoUsers;
@@ -23,6 +23,7 @@ class WorkspacesStep implements DemoSeedStep
         'ws1' => ['owner' => 'owner1', 'name' => 'مساحة المنارة', 'slug' => 'almanara', 'area' => 'الرمال', 'price' => 40],
         'ws2' => ['owner' => 'owner2', 'name' => 'مساحة إبداع', 'slug' => 'ibdaa', 'area' => 'تل السلطان', 'price' => 35],
         'ws_throwaway' => ['owner' => 'owner_throwaway', 'name' => 'مساحة تجريبية للحذف', 'slug' => 'throwaway', 'area' => 'المدينة', 'price' => 25],
+        'ws_stepup' => ['owner' => 'owner_stepup', 'name' => 'مساحة الأمان', 'slug' => 'stepup', 'area' => 'النصيرات', 'price' => 30],
     ];
 
     private const STAFF = [
