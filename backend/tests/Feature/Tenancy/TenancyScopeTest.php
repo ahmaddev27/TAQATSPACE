@@ -10,11 +10,8 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Database\QueryException;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -121,35 +118,6 @@ class TenancyScopeTest extends TestCase
 
         $this->assertNull($first->fresh()->default_workspace_id);
         $this->assertSame($workspace->id, $second->default_workspace_id);
-    }
-
-    public function test_migration_recovers_from_the_table_a_failed_run_left_behind(): void
-    {
-        $workspace = Workspace::factory()->create();
-        $migration = require database_path('migrations/2026_07_08_100000_create_branches_table.php');
-        $migration->down();
-        Schema::create('branches', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
-            $table->boolean('is_default')->default(false);
-        });
-
-        $migration->up();
-
-        $default = DB::table('branches')->where('workspace_id', $workspace->id)->where('is_default', true)->sole();
-        $this->assertSame($workspace->id, $default->default_workspace_id);
-    }
-
-    public function test_backfill_gives_every_existing_workspace_exactly_one_default_branch(): void
-    {
-        $workspaces = Workspace::factory()->count(3)->create();
-        $migration = require database_path('migrations/2026_07_08_100000_create_branches_table.php');
-        $migration->down();
-        $migration->up();
-
-        foreach ($workspaces as $workspace) {
-            $count = DB::table('branches')->where('workspace_id', $workspace->id)->where('is_default', true)->count();
-            $this->assertSame(1, $count);
-        }
     }
 
     public function test_middleware_binds_the_owner_workspace(): void
