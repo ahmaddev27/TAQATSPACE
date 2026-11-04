@@ -35,6 +35,9 @@ class DemoCleaner
 
             $this->clearKeylessTables($userIds->all(), $workspaceIds->all());
 
+            // Items restrict deleting their category, so the workspace's cascade would fail on them.
+            DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();
+
             // Mass deletes: no model events, so the audit log's append-only guard stays untouched.
             $workspaces = Workspace::withTrashed()->whereIn('id', $workspaceIds)->forceDelete();
             $users = User::query()->whereIn('id', $userIds)->delete();
@@ -50,9 +53,6 @@ class DemoCleaner
      */
     private function clearKeylessTables(array $userIds, array $workspaceIds): void
     {
-        // Items point at their category with RESTRICT, so they go before the workspace cascade reaches both.
-        DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();
-
         DB::table('audit_logs')
             ->where(fn ($query) => $query->whereIn('workspace_id', $workspaceIds)->orWhereIn('actor_id', $userIds))
             ->delete();

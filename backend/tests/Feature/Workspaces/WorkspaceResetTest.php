@@ -5,22 +5,33 @@ declare(strict_types=1);
 namespace Tests\Feature\Workspaces;
 
 use App\Contracts\WorkspaceResetStep;
+use App\Enums\RouterCommandVerb;
 use App\Enums\SeatStatus;
 use App\Models\AuditLog;
 use App\Models\BookingRequest;
+use App\Models\CatalogCategory;
+use App\Models\CatalogItem;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
+use App\Models\Plan;
 use App\Models\PosOrder;
 use App\Models\PosProduct;
+use App\Models\Receipt;
+use App\Models\ReceiptAllocation;
+use App\Models\Router;
+use App\Models\RouterCommand;
 use App\Models\Seat;
 use App\Models\Subscription;
+use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Auth\TwoFactorService;
 use App\Services\Workspace\Reset\WorkspaceResetter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -112,6 +123,76 @@ class WorkspaceResetTest extends TestCase
         $this->assertSame(1, PosProduct::query()->where('workspace_id', $workspace->id)->count());
         $this->assertTrue(User::query()->whereKey($owner->id)->exists());
         Storage::disk('public')->assertMissing("receipts/{$workspace->id}.jpg");
+    }
+
+    public function test_reset_clears_receipts_unbilled_charges_and_invoices_without_a_subscription(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        [$owner, $workspace] = $this->ownerWithWorkspace();
+        $receipt = Receipt::factory()->create([
+            'workspace_id' => $workspace->id,
+            'receipt_path' => 'receipts/private-proof.pdf',
+            'receipt_disk' => 'local',
+        ]);
+        Storage::disk('local')->put('receipts/private-proof.pdf', 'x');
+        UnbilledCharge::factory()->create(['workspace_id' => $workspace->id]);
+        $standalone = Invoice::factory()->create(['workspace_id' => $workspace->id, 'subscription_id' => null]);
+        ReceiptAllocation::query()->create(['receipt_id' => $receipt->id, 'invoice_id' => $standalone->id, 'amount' => 1]);
+
+        $this->reset($owner, $workspace)->assertOk();
+
+        $this->assertSame(0, Receipt::query()->where('workspace_id', $workspace->id)->count());
+        $this->assertSame(0, ReceiptAllocation::query()->where('receipt_id', $receipt->id)->count());
+        $this->assertSame(0, UnbilledCharge::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+        $this->assertNull(Invoice::query()->find($standalone->id));
+        Storage::disk('local')->assertMissing('receipts/private-proof.pdf');
+    }
+
+    public function test_reset_keeps_the_catalog_and_plans(): void
+    {
+        [$owner, $workspace] = $this->ownerWithWorkspace();
+        $category = CatalogCategory::factory()->create(['workspace_id' => $workspace->id]);
+        CatalogItem::factory()->create(['workspace_id' => $workspace->id, 'catalog_category_id' => $category->id]);
+        Plan::factory()->create(['workspace_id' => $workspace->id]);
+
+        $this->reset($owner, $workspace)->assertOk();
+
+        $this->assertSame(1, CatalogItem::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+        $this->assertSame(1, Plan::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+    }
+
+    public function test_reset_clears_recorded_network_data_keeps_the_router_and_disables_members_on_it(): void
+    {
+        [$owner, $workspace] = $this->ownerWithWorkspace();
+        $router = Router::factory()->create(['workspace_id' => $workspace->id]);
+        $subscription = Subscription::factory()->create(['workspace_id' => $workspace->id]);
+        DB::table('hotspot_accounts')->insert([
+            'id' => (string) Str::uuid(), 'workspace_id' => $workspace->id, 'subscription_id' => $subscription->id,
+            'username' => 'member1', 'password_enc' => 'x', 'status' => 'active', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('hotspot_events')->insert([
+            'router_id' => $router->id, 'workspace_id' => $workspace->id, 'event_uid' => 'boot-1', 'batch_id' => 'batch1',
+            'type' => 'login', 'occurred_at' => now(),
+        ]);
+        DB::table('devices')->insert([
+            'workspace_id' => $workspace->id, 'mac' => 'AA:BB:CC:DD:EE:01', 'first_seen_at' => now(), 'last_seen_at' => now(),
+        ]);
+        DB::table('attendance_daily')->insert([
+            'workspace_id' => $workspace->id, 'subscriber_id' => $subscription->member_id, 'date' => '2026-11-01',
+            'first_seen_at' => now(), 'last_seen_at' => now(),
+        ]);
+        RouterCommand::factory()->create(['router_id' => $router->id, 'workspace_id' => $workspace->id, 'payload' => ['username' => 'old']]);
+
+        $this->reset($owner, $workspace)->assertOk();
+
+        foreach (['hotspot_accounts', 'hotspot_events', 'devices', 'attendance_daily'] as $table) {
+            $this->assertSame(0, DB::table($table)->where('workspace_id', $workspace->id)->count(), $table);
+        }
+        $this->assertNotNull(Router::query()->withoutWorkspaceScope()->find($router->id));
+        $commands = RouterCommand::query()->withoutWorkspaceScope()->where('router_id', $router->id)->get();
+        $this->assertSame(['member1'], $commands->pluck('payload.username')->unique()->values()->all());
+        $this->assertContains(RouterCommandVerb::DisableUser, $commands->pluck('verb')->all());
     }
 
     public function test_reset_writes_an_audit_entry_with_actor_and_reason(): void

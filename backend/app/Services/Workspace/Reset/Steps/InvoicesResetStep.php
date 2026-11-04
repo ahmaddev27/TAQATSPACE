@@ -21,33 +21,33 @@ final class InvoicesResetStep implements WorkspaceResetStep
 
     public function reset(Workspace $workspace): void
     {
-        InvoicePayment::query()->whereIn('invoice_id', $this->invoiceIds($workspace))->delete();
-        Invoice::query()->whereIn('subscription_id', $this->subscriptionIds($workspace))->delete();
+        InvoicePayment::query()->whereIn('invoice_id', $this->invoices($workspace)->select('id'))->delete();
+        $this->invoices($workspace)->delete();
     }
 
     public function filePaths(Workspace $workspace): array
     {
         $paymentPaths = InvoicePayment::query()
-            ->whereIn('invoice_id', $this->invoiceIds($workspace))
+            ->whereIn('invoice_id', $this->invoices($workspace)->select('id'))
             ->pluck('receipt_path');
 
-        $invoicePaths = Invoice::query()
-            ->whereIn('subscription_id', $this->subscriptionIds($workspace))
+        $invoicePaths = $this->invoices($workspace)
             ->get(['receipt_path', 'invoice_pdf_path'])
             ->flatMap(fn (Invoice $invoice): array => [$invoice->receipt_path, $invoice->invoice_pdf_path]);
 
         return $paymentPaths->concat($invoicePaths)->filter()->unique()->values()->all();
     }
 
-    /** @return Builder<Subscription> */
-    private function subscriptionIds(Workspace $workspace): Builder
+    /**
+     * By workspace as well as by subscription: an invoice raised without a
+     * subscription has only the workspace to tie it here.
+     *
+     * @return Builder<Invoice>
+     */
+    private function invoices(Workspace $workspace): Builder
     {
-        return Subscription::query()->where('workspace_id', $workspace->id)->select('id');
-    }
-
-    /** @return Builder<Invoice> */
-    private function invoiceIds(Workspace $workspace): Builder
-    {
-        return Invoice::query()->whereIn('subscription_id', $this->subscriptionIds($workspace))->select('id');
+        return Invoice::query()->where(fn (Builder $query) => $query
+            ->where('workspace_id', $workspace->id)
+            ->orWhereIn('subscription_id', Subscription::query()->where('workspace_id', $workspace->id)->select('id')));
     }
 }

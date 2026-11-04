@@ -8,6 +8,8 @@ use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Models\AuditLog;
+use App\Models\CatalogCategory;
+use App\Models\CatalogItem;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
@@ -205,6 +207,18 @@ class DemoSeedCommandTest extends TestCase
         $this->assertNotNull(User::query()->find($member->id));
         $this->assertSame(1, Subscription::query()->where('workspace_id', $workspace->id)->count());
         $this->assertSame(1, AuditLog::query()->where('action', 'real.action')->count());
+    }
+
+    public function test_fresh_removes_demo_workspaces_that_have_a_catalog(): void
+    {
+        $this->artisan('demo:seed')->assertSuccessful();
+        $workspace = Workspace::query()->firstOrFail();
+        $category = CatalogCategory::factory()->create(['workspace_id' => $workspace->id]);
+        CatalogItem::factory()->create(['workspace_id' => $workspace->id, 'catalog_category_id' => $category->id]);
+
+        $this->artisan('demo:seed --fresh')->assertSuccessful();
+
+        $this->assertSame(0, CatalogItem::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
     }
 
     public function test_fresh_keeps_a_real_workspace_whose_slug_starts_with_demo(): void
