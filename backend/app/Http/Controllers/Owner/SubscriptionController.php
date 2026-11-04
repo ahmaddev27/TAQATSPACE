@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\ListSubscriptionsRequest;
+use App\Http\Requests\Owner\UpdateSubscriptionFinancialRequest;
 use App\Http\Resources\OwnerSubscriptionResource;
 use App\Models\Subscription;
 use App\Models\Workspace;
@@ -95,6 +96,34 @@ class SubscriptionController extends Controller
         return ApiResponse::success(
             new OwnerSubscriptionResource($cancelled),
             __('messages.subscription_cancelled'),
+        );
+    }
+
+    /**
+     * PUT /api/workspace/subscriptions/{subscription}/financial
+     *
+     * Set the plan, billing mode, negotiated price, contracted hours, grace
+     * days and auto-renew of a subscription (finance_v2 workspaces).
+     */
+    public function updateFinancial(UpdateSubscriptionFinancialRequest $request, Subscription $subscription): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.subscription_no_access'), 403);
+        }
+
+        try {
+            $updated = $this->subscriptions->updateFinancialTerms(
+                $workspace, $subscription, $request->validated(), $request->user(),
+            );
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 403);
+        }
+
+        return ApiResponse::success(
+            new OwnerSubscriptionResource($updated),
+            __('messages.subscription_terms_updated'),
         );
     }
 

@@ -73,3 +73,15 @@ export interface PlanRemoveResult {
   plan: Plan;
   deleted: boolean;
 }
+
+export type BillingMode = "prepaid" | "postpaid";
+
+/** Body of `PUT /workspace/subscriptions/{id}/financial`; null clears a value. */
+export interface SubscriptionTermsInput {
+  plan_id: string | null;
+  billing_mode: BillingMode;
+  custom_price: string | null;
+  contracted_hours: string | null;
+  grace_days: number;
+  auto_renew: boolean;
+}

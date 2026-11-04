@@ -179,6 +179,29 @@
       "cancel": "Cancel",
       "save": "Save",
       "error": "Something went wrong"
+    },
+    "subscriptionTerms": {
+      "button": "Financial terms",
+      "title": "Financial terms",
+      "saved": "Financial terms saved",
+      "error": "Could not save the terms",
+      "cancel": "Cancel",
+      "save": "Save",
+      "noPlan": "No plan (legacy price)",
+      "fields": {
+        "plan": "Plan",
+        "billingMode": "Billing mode",
+        "customPrice": "Custom price",
+        "customPriceHint": "Leave empty to use the plan price.",
+        "contractedHours": "Contracted hours",
+        "contractedHoursHint": "Only for hourly plans.",
+        "graceDays": "Grace days after due date",
+        "autoRenew": "Renew automatically"
+      },
+      "modes": {
+        "prepaid": "Prepaid",
+        "postpaid": "Postpaid"
+      }
     }
   }
 }

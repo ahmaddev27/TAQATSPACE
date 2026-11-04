@@ -23,6 +23,7 @@ use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use App\Services\Finance\DocumentNumberService;
 use App\Services\Finance\ReceiptService;
+use App\Services\Finance\SubscriptionPricingService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -42,6 +43,7 @@ class InvoiceService
         private readonly FeatureFlagService $features,
         private readonly DocumentNumberService $documentNumbers,
         private readonly ReceiptService $receipts,
+        private readonly SubscriptionPricingService $pricing,
     ) {}
 
     /**
@@ -221,7 +223,7 @@ class InvoiceService
                 $query->whereNull('end_date')
                     ->orWhereDate('end_date', '>=', $month->toDateString());
             })
-            ->with('member', 'workspace')
+            ->with('member', 'workspace', 'plan')
             ->chunkById(100, function ($subscriptions) use ($month, $dueDate, &$created): void {
                 foreach ($subscriptions as $subscription) {
                     $invoice = $this->createForBillingMonth($subscription, $month, $dueDate);
@@ -257,7 +259,7 @@ class InvoiceService
 
         return $this->withSubscriptionLine(Invoice::create([
             'subscription_id' => $subscription->id,
-            'amount' => $subscription->monthly_price,
+            'amount' => $this->pricing->effectivePrice($subscription),
             'due_date' => $dueDate->toDateString(),
             'status' => InvoiceStatus::Pending->value,
             'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
@@ -283,7 +285,7 @@ class InvoiceService
 
         $invoice = $this->withSubscriptionLine(Invoice::create([
             'subscription_id' => $subscription->id,
-            'amount' => $subscription->monthly_price,
+            'amount' => $this->pricing->effectivePrice($subscription),
             'due_date' => $periodEnd->toDateString(),
             'status' => InvoiceStatus::Pending->value,
             'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
@@ -542,8 +544,12 @@ class InvoiceService
             ->notDraft()
             ->whereDate('due_date', '<', $cutoff->toDateString())
             ->with(['subscription.member', 'subscription.workspace.owner'])
-            ->chunkById(100, function ($invoices) use (&$flagged): void {
+            ->chunkById(100, function ($invoices) use (&$flagged, $cutoff): void {
                 foreach ($invoices as $invoice) {
+                    if ($this->withinSubscriptionGrace($invoice, $cutoff)) {
+                        continue;
+                    }
+
                     $invoice->forceFill(['status' => InvoiceStatus::Overdue->value])->save();
                     $flagged++;
 
@@ -556,6 +562,18 @@ class InvoiceService
             });
 
         return $flagged;
+    }
+
+    /**
+     * The subscription's own `grace_days` extend the global grace period, so
+     * its invoice stays pending until due date + both have passed.
+     */
+    private function withinSubscriptionGrace(Invoice $invoice, Carbon $cutoff): bool
+    {
+        $graceDays = (int) ($invoice->subscription?->grace_days ?? 0);
+
+        return $graceDays > 0
+            && $invoice->due_date->copy()->addDays($graceDays)->gte($cutoff);
     }
 
     /**

@@ -20,7 +20,9 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import { cancelSubscription, renewSubscription } from "@/lib/actions/owner";
 import type { OwnerSubscription } from "@/lib/api/ownerSubscriptions";
+import type { Plan } from "@/lib/types/financePlans";
 import { ProvisionInternetButton } from "./ProvisionInternetButton";
+import { SubscriptionTermsModal } from "./SubscriptionTermsModal";
 import { avatarInitial, money, shortDate } from "./format";
 
 /* -------------------------------------------------------------------------- */
@@ -83,11 +85,15 @@ const PAGE_SIZE = 8;
 
 export interface SubscriptionsTableProps {
   subscriptions: OwnerSubscription[];
+  /** Active plans when Finance v2 is on for the workspace; null hides the terms form. */
+  plans?: Plan[] | null;
 }
 
 /** Owner subscriptions: searchable, filterable, sortable table with renew/cancel. */
-export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
+export function SubscriptionsTable({ subscriptions, plans = null }: SubscriptionsTableProps) {
   const t = useTranslations("owner.subscriptions");
+  const tTerms = useTranslations("finance.subscriptionTerms");
+  const [editing, setEditing] = useState<OwnerSubscription | null>(null);
   const tc = useTranslations();
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -322,6 +328,19 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
               {t("renew")}
             </Button>
           )}
+          {display !== "cancelled" && plans !== null && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditing(sub);
+              }}
+              aria-label={tTerms("button")}
+              title={tTerms("button")}
+            />
+          )}
           {display !== "cancelled" && (
             <ProvisionInternetButton
               subscriptionId={sub.id}
@@ -427,6 +446,14 @@ export function SubscriptionsTable({ subscriptions }: SubscriptionsTableProps) {
           </div>
         )}
       </div>
+
+      {editing !== null && plans !== null && (
+        <SubscriptionTermsModal
+          subscription={editing}
+          plans={plans}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </div>
   );
 }
