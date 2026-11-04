@@ -82,6 +82,52 @@
       "confirmTitle": "Update the router scripts?",
       "confirmMessage": "Version {version} will be pushed to the router on its next sync.",
       "queued": "Script update queued"
+    },
+    "logs": {
+      "colTime": "Time",
+      "colPath": "Path",
+      "colCode": "Code",
+      "colSize": "Size",
+      "colDuration": "Response time",
+      "colError": "Error",
+      "empty": "No requests match",
+      "count": "Requests",
+      "filters": "Filters",
+      "clearAll": "Clear all",
+      "autoRefresh": "Refreshes every 30 seconds",
+      "filter": {
+        "from": "From",
+        "to": "To",
+        "response_code": "Response code",
+        "error": "Error text"
+      }
+    },
+    "diagnostics": {
+      "hint": "Checks the last sync, clock drift, sequence gaps, stuck commands, script version and serial number.",
+      "run": "Run deep check",
+      "running": "Checking...",
+      "failed": "Could not run the check",
+      "status": {
+        "pass": "Pass",
+        "warning": "Warning",
+        "fail": "Fail"
+      },
+      "checks": {
+        "last_sync": "Last sync",
+        "clock_drift": "Clock drift",
+        "seq_gaps": "Sequence gaps",
+        "stuck_commands": "Stuck commands",
+        "script_version": "Script version",
+        "serial": "Serial number"
+      }
+    },
+    "diagnosticsPage": {
+      "title": "API diagnostics",
+      "subtitle": "Trace the router's requests and check the health of the integration",
+      "checkTitle": "Deep check",
+      "logTitle": "Request log",
+      "noRouter": "No router is connected yet.",
+      "open": "Open diagnostics"
     }
   }
 }

@@ -18,7 +18,12 @@ import type {
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
 import type { ApprovalRequestEntry } from "@/lib/types/approvals";
-import type { OwnerRouter, RouterInstallToken, RouterRotatedKey } from "@/lib/types/router";
+import type {
+  DiagnosticCheck,
+  OwnerRouter,
+  RouterInstallToken,
+  RouterRotatedKey,
+} from "@/lib/types/router";
 import type {
   Expense,
   ExpenseCategory,
@@ -715,6 +720,13 @@ export async function createRouter(name: string): Promise<ActionResult<OwnerRout
   });
   if (result.ok) revalidateOwner("settings/api");
   return result;
+}
+
+/** Run the router's deep health check (the server caches the result for 15 s). */
+export async function diagnoseRouter(
+  routerId: string,
+): Promise<ActionResult<{ checks: DiagnosticCheck[] }>> {
+  return authedMutate<{ checks: DiagnosticCheck[] }>(`/workspace/routers/${routerId}/diagnose`);
 }
 
 /** Issue a one-time install command (invalidates the previous one). Shown once, never persisted. */

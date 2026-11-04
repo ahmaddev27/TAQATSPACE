@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ForbiddenError } from "@/lib/api";
@@ -39,6 +40,11 @@ export default async function ApiIntegrationPage({
             {t("subtitle")}
           </p>
         </div>
+        {router !== null && (
+          <Link href={`/${locale}/owner/settings/api/diagnostics`} className="btn btn-secondary">
+            {t("diagnosticsPage.open")}
+          </Link>
+        )}
       </div>
 
       {router === null ? (
