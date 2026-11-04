@@ -54,6 +54,7 @@ class MemberResource extends JsonResource
             'package_price' => $member?->relationLoaded('internetPackages')
                 ? (string) $member->internetPackages->sum(static fn ($p): float => (float) $p->price)
                 : '0',
+            'mikrotik_username' => $this->hotspotAccount?->username ?? $this->internet_username,
             'profile_completion' => $member === null ? null : app(ProfileCompletionService::class)
                 ->completion($member, $this->hotspotAccount?->username ?? $this->internet_username),
             'join_date' => $this->start_date?->toDateString(),
