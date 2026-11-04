@@ -107,7 +107,6 @@ class SessionBuilder
         $this->persist($router, $ledger, $this->eventApplier->apply($router, $ledger, $events, $devices));
     }
 
-
     private function buildFromSnapshot(AssembledSnapshot $snapshot): void
     {
         $router = $this->router($snapshot->routerId);
