@@ -27,9 +27,10 @@ class UpdateExpenseRequest extends FormRequest
         return [
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'category' => ['sometimes', 'required', Rule::in(ExpenseCategory::values())],
-            'amount' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
+            'amount' => ['sometimes', 'required', 'decimal:0,2', 'min:0', 'max:99999999.99'],
             'spent_on' => ['sometimes', 'required', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            ...ExpenseRules::v2Fields($this->user()?->workspace?->id),
         ];
     }
 }

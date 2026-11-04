@@ -263,6 +263,9 @@ return [
     'expense_created' => 'تم تسجيل المصروف.',
     'expense_updated' => 'تم تحديث المصروف.',
     'expense_deleted' => 'تم حذف المصروف.',
+    'expense_voided' => 'تم إلغاء المصروف.',
+    'expense_already_voided' => 'هذا المصروف ملغى مسبقًا.',
+    'expense_void_reason_required' => 'سبب الإلغاء مطلوب.',
     'expense_no_access' => 'ليس لديك صلاحية الوصول إلى هذا المصروف.',
 
     // إدارة المساحة — الموارد

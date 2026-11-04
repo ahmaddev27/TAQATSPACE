@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\DestroyExpenseRequest;
 use App\Http\Requests\Owner\ListExpensesRequest;
 use App\Http\Requests\Owner\StoreExpenseRequest;
 use App\Http\Requests\Owner\UpdateExpenseRequest;
+use App\Http\Requests\Owner\VoidExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\Workspace;
@@ -72,7 +74,7 @@ class ExpenseController extends Controller
             return ApiResponse::error(__('messages.no_workspace'), 403);
         }
 
-        $expense = $this->expenses->create($workspace, $request->validated());
+        $expense = $this->expenses->create($workspace, $request->validated(), $request->user());
 
         return ApiResponse::success(
             new ExpenseResource($expense),
@@ -107,12 +109,16 @@ class ExpenseController extends Controller
     /**
      * DELETE /api/workspace/expenses/{expense}
      */
-    public function destroy(Request $request, Expense $expense): JsonResponse
+    public function destroy(DestroyExpenseRequest $request, Expense $expense): JsonResponse
     {
         $workspace = $this->ownerWorkspace($request);
 
         if ($workspace === null) {
             return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        if ($this->expenses->usesSoftVoid($workspace)) {
+            return $this->voidResponse($request, $workspace, $expense, (string) $request->validated('reason'));
         }
 
         try {
@@ -122,6 +128,31 @@ class ExpenseController extends Controller
         }
 
         return ApiResponse::success(null, __('messages.expense_deleted'));
+    }
+
+    /**
+     * POST /api/workspace/expenses/{expense}/void
+     */
+    public function void(VoidExpenseRequest $request, Expense $expense): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        if ($workspace === null) {
+            return ApiResponse::error(__('messages.no_workspace'), 403);
+        }
+
+        return $this->voidResponse($request, $workspace, $expense, (string) $request->validated('reason'));
+    }
+
+    private function voidResponse(Request $request, Workspace $workspace, Expense $expense, string $reason): JsonResponse
+    {
+        try {
+            $voided = $this->expenses->void($workspace, $expense, $reason, $request->user());
+        } catch (RuntimeException $e) {
+            return ApiResponse::error($e->getMessage(), 403);
+        }
+
+        return ApiResponse::success(new ExpenseResource($voided), __('messages.expense_voided'));
     }
 
     private function ownerWorkspace(Request $request): ?Workspace

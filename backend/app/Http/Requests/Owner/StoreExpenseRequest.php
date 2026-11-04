@@ -27,10 +27,11 @@ class StoreExpenseRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', Rule::in(ExpenseCategory::values())],
-            'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'category' => ['required_without:catalog_category_id', 'nullable', Rule::in(ExpenseCategory::values())],
+            'amount' => ['required', 'decimal:0,2', 'min:0', 'max:99999999.99'],
             'spent_on' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            ...ExpenseRules::v2Fields($this->user()?->workspace?->id),
         ];
     }
 }

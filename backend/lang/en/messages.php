@@ -263,6 +263,9 @@ return [
     'expense_created' => 'Expense recorded.',
     'expense_updated' => 'Expense updated.',
     'expense_deleted' => 'Expense deleted.',
+    'expense_voided' => 'Expense voided.',
+    'expense_already_voided' => 'This expense is already voided.',
+    'expense_void_reason_required' => 'A reason is required to void an expense.',
     'expense_no_access' => 'You do not have access to this expense.',
 
     // Workspace management — resources

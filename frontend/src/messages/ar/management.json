@@ -54,6 +54,19 @@
         "supplies": "المستلزمات",
         "marketing": "التسويق",
         "other": "أخرى"
+      },
+      "colMethod": "الطريقة / المرجع",
+      "void": "إلغاء",
+      "voided": "تم إلغاء المصروف.",
+      "voidFailed": "تعذّر إلغاء المصروف.",
+      "voidReason": "سبب الإلغاء",
+      "voidHint": "إلغاء «{title}» يزيله من الإجماليات ويُبقيه في سجل النشاط.",
+      "fMethod": "طريقة الدفع",
+      "fReference": "المرجع (اختياري)",
+      "noCatalogCategory": "بدون تصنيف",
+      "method": {
+        "cash": "نقدًا",
+        "transfer": "تحويل"
       }
     },
     "resources": {

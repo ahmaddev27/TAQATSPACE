@@ -66,6 +66,13 @@ export interface Expense {
   amount: string;
   spent_on: string | null;
   notes: string | null;
+  /** Finance v2 fields; null for expenses recorded before the catalog. */
+  catalog_category_id?: string | null;
+  catalog_category?: { id: string; code: string; name_ar: string; name_en: string };
+  method?: "cash" | "transfer" | null;
+  reference?: string | null;
+  voided_at?: string | null;
+  void_reason?: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

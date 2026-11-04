@@ -19,5 +19,6 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::get('/', [ExpenseController::class, 'index']);
         Route::post('/', [ExpenseController::class, 'store']);
         Route::put('/{expense}', [ExpenseController::class, 'update']);
+        Route::post('/{expense}/void', [ExpenseController::class, 'void']);
         Route::delete('/{expense}', [ExpenseController::class, 'destroy']);
     });
