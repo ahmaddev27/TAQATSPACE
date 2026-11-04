@@ -13,6 +13,7 @@ import {
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { formatDateTime } from "@/lib/dates";
 import { useUrlFilters } from "@/lib/hooks/useUrlFilters";
 import type { AuditLogEntry, AuditLogMeta } from "@/lib/types/audit";
 
@@ -25,7 +26,7 @@ export interface AuditLogTableProps {
 }
 
 function formatWhen(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleString() : "—";
+  return iso ? formatDateTime(iso) : "—";
 }
 
 /** Owner audit log: URL-driven filters, server-side pagination, read-only. */
