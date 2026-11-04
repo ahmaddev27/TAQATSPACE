@@ -7,6 +7,9 @@ namespace Tests\Feature\Network;
 use App\Enums\SessionEndReason;
 use App\Enums\SessionSource;
 use App\Models\HotspotSession;
+use App\Models\Router;
+use App\Models\User;
+use App\Services\Network\SessionBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -51,7 +54,7 @@ class SessionBuilderTest extends TestCase
 
     public function test_login_alone_leaves_an_open_session_linked_to_the_subscriber(): void
     {
-        $this->device(self::MAC, $subscriber = \App\Models\User::factory()->create()->id);
+        $this->device(self::MAC, $subscriber = User::factory()->create()->id);
 
         $this->feed($this->event('login', self::MAC, $this->at('10:00:00')));
 
@@ -141,7 +144,7 @@ class SessionBuilderTest extends TestCase
     public function test_the_same_mac_on_two_routers_gets_separate_sessions(): void
     {
         $this->feed($this->event('login', self::MAC, $this->at('10:00:00')));
-        $other = \App\Models\Router::factory()->create(['workspace_id' => $this->router->workspace_id]);
+        $other = Router::factory()->create(['workspace_id' => $this->router->workspace_id]);
         $this->router = $other;
         $this->feed($this->event('login', self::MAC, $this->at('10:01:00')));
 
@@ -257,7 +260,7 @@ class SessionBuilderTest extends TestCase
     {
         $this->feed($this->event('login', self::MAC, $this->at('11:30:00')), $this->event('login', 'AA:AA:AA:AA:AA:02', $this->at('11:50:00')));
 
-        $closed = app(\App\Services\Network\SessionBuilder::class)->closeIdle($this->router->id);
+        $closed = app(SessionBuilder::class)->closeIdle($this->router->id);
 
         $this->assertSame(1, $closed);
         [$old, $recent] = $this->sessions();
@@ -271,7 +274,7 @@ class SessionBuilderTest extends TestCase
         config(['network.sessions.timeout_minutes' => 60]);
         $this->feed($this->event('login', self::MAC, $this->at('11:30:00')));
 
-        app(\App\Services\Network\SessionBuilder::class)->closeIdle($this->router->id);
+        app(SessionBuilder::class)->closeIdle($this->router->id);
 
         $this->assertTrue($this->sessions()[0]->isOpen());
     }

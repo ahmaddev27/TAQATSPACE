@@ -11,6 +11,7 @@ use App\Models\Router;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Network\HotspotEventProcessor;
+use App\Services\Network\RouterSnapshotProcessor;
 use App\Services\Network\SessionBuilder;
 use App\Services\Router\RouterService;
 use App\Testing\Hotspot\FakeRouterTransport;
@@ -22,6 +23,7 @@ use App\Testing\Hotspot\SimulationScenario;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\BuildsSessionFixtures;
@@ -88,7 +90,7 @@ class SessionPipelineTest extends TestCase
 
         (new ProcessRouterBatch($this->router->id))->handle(
             app(HotspotEventProcessor::class),
-            app(\App\Services\Network\RouterSnapshotProcessor::class),
+            app(RouterSnapshotProcessor::class),
             app(SessionBuilder::class),
         );
 
@@ -220,7 +222,7 @@ class SessionPipelineTest extends TestCase
         $this->assertConsistent($sessions);
     }
 
-    /** @param \Illuminate\Support\Collection<int, HotspotSession> $sessions */
+    /** @param Collection<int, HotspotSession> $sessions */
     private function assertConsistent($sessions): void
     {
         foreach ($sessions->groupBy('device_id') as $own) {
