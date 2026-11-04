@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications\Channels;
 
+use App\Models\User;
 use Illuminate\Notifications\Channels\MailChannel;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +32,11 @@ class SafeMailChannel extends MailChannel
      */
     public function send($notifiable, Notification $notification)
     {
+        // Demo accounts keep their in-app notification but never get an email.
+        if ($notifiable instanceof User && $notifiable->isDemo()) {
+            return null;
+        }
+
         try {
             return parent::send($notifiable, $notification);
         } catch (Throwable $e) {
