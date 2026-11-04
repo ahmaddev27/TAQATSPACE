@@ -11,6 +11,7 @@ use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Notifications\ResetPasswordNotification;
+use App\Services\Demo\DemoMarker;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -182,6 +183,15 @@ class User extends Authenticatable
         }
 
         return $this->getPermissionNames()->values()->all();
+    }
+
+    /**
+     * Demo accounts (see `demo:seed`) must never cause an outgoing email, SMS or
+     * push; every sender checks this one definition.
+     */
+    public function isDemo(): bool
+    {
+        return DemoMarker::isDemoEmail($this->email);
     }
 
     public function isOwner(): bool

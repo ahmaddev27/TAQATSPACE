@@ -35,24 +35,24 @@
 
 | # | Milestone | Tasks | Effort (days) | Duration (weeks) | Week from → to | Depends on | Release |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [M0](https://github.com/ahmaddev27/TAQATSPACE/milestone/1) | Stabilization, readiness and discovery | 11 | 6 | 1.2 | 1 → 2 | — | R0 |
+| [M0](https://github.com/ahmaddev27/TAQATSPACE/milestone/1) | Stabilization, readiness and discovery | 12 | 8 | 1.6 | 1 → 2 | — | R0 |
 | [M1](https://github.com/ahmaddev27/TAQATSPACE/milestone/2) | Foundation: tenants, identity, roles and settings | 14 | 9.75 | 1.95 | 2 → 4 | M0 | R1 |
-| [M2](https://github.com/ahmaddev27/TAQATSPACE/milestone/3) | MikroTik integration (PUSH model) | 15 | 15.5 | 3.1 | 4 → 7 | M1 + VPS | R1 |
-| [M3](https://github.com/ahmaddev27/TAQATSPACE/milestone/4) | Data engine: attendance, statistics and alerts | 12 | 12.5 | 2.5 | 7 → 9 | M2 | R1 |
-| [M4](https://github.com/ahmaddev27/TAQATSPACE/milestone/5) | Workspace owner dashboard: operations and subscribers | 17 | 16.25 | 3.25 | 9 → 12 | M3 | R2 |
+| [M2](https://github.com/ahmaddev27/TAQATSPACE/milestone/3) | MikroTik integration (PUSH model) | 16 | 16.25 | 3.25 | 4 → 7 | M1 + VPS | R1 |
+| [M3](https://github.com/ahmaddev27/TAQATSPACE/milestone/4) | Data engine: attendance, statistics and alerts | 12 | 12.5 | 2.5 | 7 → 10 | M2 | R1 |
+| [M4](https://github.com/ahmaddev27/TAQATSPACE/milestone/5) | Workspace owner dashboard: operations and subscribers | 17 | 16.25 | 3.25 | 10 → 13 | M3 | R2 |
 | [M5](https://github.com/ahmaddev27/TAQATSPACE/milestone/6) | Finance v2: billing, collections and point of sale (no payment gateway) | 25 | 22.25 | 4.45 | 13 → 17 | M1, M4 | R2 |
-| [M6](https://github.com/ahmaddev27/TAQATSPACE/milestone/7) | GSG program, UR and month close | 14 | 14.75 | 2.95 | 17 → 20 | M3, M4 | R3 |
+| [M6](https://github.com/ahmaddev27/TAQATSPACE/milestone/7) | GSG program, UR and month close | 14 | 14.75 | 2.95 | 18 → 20 | M3, M4 | R3 |
 | [M7](https://github.com/ahmaddev27/TAQATSPACE/milestone/8) | Analytics, reports and report builder | 6 | 9.25 | 1.85 | 20 → 22 | M3, M6 | R3 |
-| [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin dashboard extension | 10 | 7.5 | 1.5 | 22 → 23 | M6 | R3 |
-| [M9](https://github.com/ahmaddev27/TAQATSPACE/milestone/10) | Freelancer portal extension | 11 | 6.75 | 1.35 | 23 → 25 | M3, M4, M5 | R4 |
+| [M8](https://github.com/ahmaddev27/TAQATSPACE/milestone/9) | Super admin dashboard extension | 10 | 7.5 | 1.5 | 22 → 24 | M6 | R3 |
+| [M9](https://github.com/ahmaddev27/TAQATSPACE/milestone/10) | Freelancer portal extension | 11 | 6.75 | 1.35 | 24 → 25 | M3, M4, M5 | R4 |
 | [M10](https://github.com/ahmaddev27/TAQATSPACE/milestone/11) | Public site, site builder and guest registration | 8 | 5.5 | 1.1 | 25 → 26 | M2, M9 | R4 |
 | [M11](https://github.com/ahmaddev27/TAQATSPACE/milestone/12) | Cross-dashboard integration (End-to-End) | 10 | 5 | 1 | 26 → 27 | M8, M9, M10 | R5 |
 | [M12](https://github.com/ahmaddev27/TAQATSPACE/milestone/13) | Hardening: security, performance and localization | 8 | 5.5 | 1.1 | 27 → 28 | M11 | R5 |
-| [M13](https://github.com/ahmaddev27/TAQATSPACE/milestone/14) | Migration, UAT and full switch-over from CoWorkSpaces | 8 | 8.25 | 1.65 | 28 → 29 | M12 | R5 |
-|  | **Total** | **169** | **144.75** | **≈ 28.9 weeks** |  |  |  |
+| [M13](https://github.com/ahmaddev27/TAQATSPACE/milestone/14) | Migration, UAT and full switch-over from CoWorkSpaces | 8 | 8.25 | 1.65 | 28 → 30 | M12 | R5 |
+|  | **Total** | **171** | **147.5** | **≈ 29.5 weeks** |  |  |  |
 
 - Execution is **sequential** (one developer); parallelism happens inside each milestone through agents (backend and frontend in separate worktrees) — see §9 of the development plan.
-- **Minimum switch-over path** (defer 9 deferrable tasks): ≈ 136 days ≈ 27.2 weeks — see §5.
+- **Minimum switch-over path** (defer 9 deferrable tasks): ≈ 138.75 days ≈ 27.8 weeks — see §5.
 - **Re-estimation:** after M2 closes, actual days are compared with estimates and the sheet is updated (the project's historical velocity with Claude was higher than estimated).
 
 ### Critical path
@@ -79,24 +79,24 @@ Critical path: **M0 → M1 → M2 → M3 → M4 → M6 → M8 → M11 → M12 �
 
 ### Parallel run on the TAQAT GAZA router
 
-Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode next to the CoWorkSpaces script. By the start of M6 (week 17) about 2 months of real data will have accumulated to validate attendance accuracy (M3.11) and UR parity (M6.13). Final cutover from CoWorkSpaces happens in M13.6.
+Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode next to the CoWorkSpaces script. By the start of M6 (week 18) about 2 months of real data will have accumulated to validate attendance accuracy (M3.11) and UR parity (M6.13). Final cutover from CoWorkSpaces happens in M13.6.
 
 ### Release plan
 
 | Release | Milestones | Content | End of week |
 | --- | --- | --- | --- |
 | R0 | M0 | Ship POS/cashier + security fixes | 2 |
-| R1 | M1, M2, M3 | Foundation + MikroTik + data engine (required so production can receive the parallel-run data) | 9 |
+| R1 | M1, M2, M3 | Foundation + MikroTik + data engine (required so production can receive the parallel-run data) | 10 |
 | R2 | M4, M5 | Owner operations dashboard + Finance v2 (behind a flag) | 17 |
-| R3 | M6, M7, M8 | GSG/UR + reports + super admin | 23 |
+| R3 | M6, M7, M8 | GSG/UR + reports + super admin | 24 |
 | R4 | M9, M10 | Freelancer portal + public site and guests | 26 |
-| R5 | M11, M12, M13 | E2E + hardening + cutover and launch | 29 |
+| R5 | M11, M12, M13 | E2E + hardening + cutover and launch | 30 |
 
 ---
 
 ## 3. Milestone details
 
-### M0 — Stabilization, readiness and discovery (weeks 1–2 · 6 days)
+### M0 — Stabilization, readiness and discovery (weeks 1–2 · 8 days)
 
 **Goal:** Clean up the current state before building: ship what is ready, close security gaps, prepare the infrastructure, and collect the missing inputs.  
 **Depends on:** — · **Branch:** `chore/m0-stabilize` · **Release:** R0 · **GitHub:** [milestone #1](https://github.com/ahmaddev27/TAQATSPACE/milestone/1)
@@ -114,7 +114,8 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 | 0.9 | Update `README.md`, archive the old `DOCS/taqat_space_dev_plan.xlsx`, and adopt these documents as the reference | — | Extension: `README.md` | PM | 0.25 | [#194](https://github.com/ahmaddev27/TAQATSPACE/issues/194) |
 | 0.10 | Session with the platform operator (super admin) and an actual freelancer to confirm the M8/M9 scope inferred in the SRS | §5, FR-SA-01..07, FR-FL-01..05 | New | PM | 0.5 | [#195](https://github.com/ahmaddev27/TAQATSPACE/issues/195) |
 | 0.11 | Obtain the full UR formula specification: the 32 parameters, C levels, TypeW weights, attendance mode, the 22 checks (prerequisite for 6.4 test-first) | FR-TRK-03, FR-MCL-02 | New | PM | 0.5 | [#196](https://github.com/ahmaddev27/TAQATSPACE/issues/196) |
-|  | **Total** |  |  |  | **6** |  |
+| 0.12 | Staging demo data and end-to-end browser checks for every role | NFR-TEST | New: `frontend/tests-e2e` | QA | 2 | [#410](https://github.com/ahmaddev27/TAQATSPACE/issues/410) |
+|  | **Total** |  |  |  | **8** |  |
 
 **Deliverables:** POS shipped to production, ops gap closed, secrets rotated, VPS ready with staging, CoWorkSpaces export files and both appendices.
 
@@ -157,7 +158,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M2 — MikroTik integration (PUSH model) (weeks 4–7 · 15.5 days)
+### M2 — MikroTik integration (PUSH model) (weeks 4–7 · 16.25 days)
 
 **Goal:** Connect each workspace's router to the platform securely and reliably despite NAT and power outages, and manage hotspot users from the platform.  
 **Depends on:** M1 + VPS · **Branch:** `feat/m2-mikrotik-sync` · **Release:** R1 · **GitHub:** [milestone #3](https://github.com/ahmaddev27/TAQATSPACE/milestone/3)
@@ -169,6 +170,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 | 2.3 | RouterOS 7.12+ scripts: pre-flight checks, on-login/on-logout hooks, RAM buffers, 50 s scheduler, chunked 30 min snapshot, persistent `seq` on flash, allowlisted command interpreter, `shared-users=1` and `visitor` profile, "poll-only" mode for the parallel run | Appendix B §B.2–B.3 | New | BE | 3 | [#213](https://github.com/ahmaddev27/TAQATSPACE/issues/213) |
 | 2.4 | `POST /api/v1/hotspot/{code}/sync` + `AuthenticateRouter` + rate limit + raw storage in `hotspot_events` (dedup by `event_uid`) and `router_snapshots` with its chunks + `batch_id` + clock-skew correction + plain-text response | Appendix B §B.3, NFR-SEC | Extension: pattern of `backend/app/Http/Middleware/AuthenticatePartner.php` | BE | 2 | [#214](https://github.com/ahmaddev27/TAQATSPACE/issues/214) |
 | 2.15 | Align the router scripts, installer and sync endpoint on one wire protocol, with a contract test | Appendix B §B.3, NFR-INT | Extension: `backend/app/Services/Hotspot/HotspotSyncService.php` | BE | 1 | [#381](https://github.com/ahmaddev27/TAQATSPACE/issues/381) |
+| 2.16 | Make sync.rsc survive long outages: refresh the clock on retry and cap events per batch | Appendix B §B.3, NFR-INT | Extension: `backend/resources/routeros/sync.rsc` | BE | 0.75 | [#407](https://github.com/ahmaddev27/TAQATSPACE/issues/407) |
 | 2.5 | Command queue `router_commands` (requested→delivered→acknowledged, resend, expiry) with actions: upsert-user, upsert-profile, disable-user, remove-active, block-mac, set-key, update-script | Appendix B §B.3 | New | BE | 1.25 | [#215](https://github.com/ahmaddev27/TAQATSPACE/issues/215) |
 | 2.6 | `hotspot_accounts` (unique per workspace) + migrate `subscriptions.internet_username` + wire `InternetAccessService` to upsert/disable commands on approval, suspension and expiry + map packages/plans to hotspot profiles (rate-limit, limit-bytes-total, shared-users=1, validity) | §4, FR-FL-01, §2.3 | Extension: `backend/app/Services/InternetAccessService.php` | BE | 1.25 | [#216](https://github.com/ahmaddev27/TAQATSPACE/issues/216) |
 | 2.7 | Lock the router to its serial number + "Unlock router" + regenerate/rotate the API key without reinstalling (`set-key`) | Appendix B §B.5 | New | BE | 0.5 | [#217](https://github.com/ahmaddev27/TAQATSPACE/issues/217) |
@@ -179,7 +181,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 | 2.12 | Test on MikroTik CHR, then on a real router: one-hour outage, reboot, 2,048 sessions, rejection of a key from another router | — | New | QA | 1.5 | [#222](https://github.com/ahmaddev27/TAQATSPACE/issues/222) |
 | 2.14 | Move production from cPanel to the VPS: copy the database, switch DNS for `api`/`taqat`/`sync`, 48-hour monitoring, shut down cPanel after two weeks — before 2.13 | NFR-PERF | New | Ops | 0.75 | [#223](https://github.com/ahmaddev27/TAQATSPACE/issues/223) |
 | 2.13 | Launch the parallel run on the TAQAT GAZA router (alongside the CoWorkSpaces script) and monitor it | — | New | Ops | 0.25 | [#224](https://github.com/ahmaddev27/TAQATSPACE/issues/224) |
-|  | **Total** |  |  |  | **15.5** |  |
+|  | **Total** |  |  |  | **16.25** |  |
 
 **Deliverables:** A router installs with a single command and sends its data, the platform creates and disables hotspot users remotely, and the parallel run has started.
 
@@ -191,7 +193,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M3 — Data engine: attendance, statistics and alerts (weeks 7–9 · 12.5 days)
+### M3 — Data engine: attendance, statistics and alerts (weeks 7–10 · 12.5 days)
 
 **Goal:** Turn events and snapshots into accurate, recomputable sessions, attendance, hours, scores and alerts.  
 **Depends on:** M2 · **Branch:** `feat/m3-data-engine` · **Release:** R1 · **GitHub:** [milestone #4](https://github.com/ahmaddev27/TAQATSPACE/milestone/4)
@@ -221,7 +223,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M4 — Workspace owner dashboard: operations and subscribers (weeks 9–12 · 16.25 days)
+### M4 — Workspace owner dashboard: operations and subscribers (weeks 10–13 · 16.25 days)
 
 **Goal:** Turn the owner dashboard from member and seat management into a full operations center built on attendance data.  
 **Depends on:** M3 · **Branch:** `feat/m4-owner-ops` · **Release:** R2 · **GitHub:** [milestone #5](https://github.com/ahmaddev27/TAQATSPACE/milestone/5)
@@ -299,7 +301,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M6 — GSG program, UR and month close (weeks 17–20 · 14.75 days)
+### M6 — GSG program, UR and month close (weeks 18–20 · 14.75 days)
 
 **Goal:** Compute the official UR with accuracy matching the current system, close the month, run UTR review, and show programs and claims to the workspace owner.  
 **Depends on:** M3, M4 · **Branch:** `feat/m6-gsg-ur` · **Release:** R3 · **GitHub:** [milestone #7](https://github.com/ahmaddev27/TAQATSPACE/milestone/7)
@@ -354,7 +356,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M8 — Super admin dashboard extension (weeks 22–23 · 7.5 days)
+### M8 — Super admin dashboard extension (weeks 22–24 · 7.5 days)
 
 **Goal:** Make the super admin the final approval point: UTR, programs and funded seats, claims, approvals, and network monitoring.  
 **Depends on:** M6 · **Branch:** `feat/m8-super-admin` · **Release:** R3 · **GitHub:** [milestone #9](https://github.com/ahmaddev27/TAQATSPACE/milestone/9)
@@ -382,7 +384,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M9 — Freelancer portal extension (weeks 23–25 · 6.75 days)
+### M9 — Freelancer portal extension (weeks 24–25 · 6.75 days)
 
 **Goal:** A real entry point for the freelancer to see their status, hours and finances and to submit requests.  
 **Depends on:** M3, M4, M5 · **Branch:** `feat/m9-freelancer-portal` · **Release:** R4 · **GitHub:** [milestone #10](https://github.com/ahmaddev27/TAQATSPACE/milestone/10)
@@ -487,7 +489,7 @@ Starts after M2 (end of week 7) with the TaqatSpace script in poll-only mode nex
 
 ---
 
-### M13 — Migration, UAT and full switch-over from CoWorkSpaces (weeks 28–29 · 8.25 days)
+### M13 — Migration, UAT and full switch-over from CoWorkSpaces (weeks 28–30 · 8.25 days)
 
 **Goal:** Move TAQAT GAZA entirely to TaqatSpace and close the first operating month without manual intervention.  
 **Depends on:** M12 · **Branch:** `release/m13-launch` · **Release:** R5 · **GitHub:** [milestone #14](https://github.com/ahmaddev27/TAQATSPACE/milestone/14)
@@ -560,7 +562,7 @@ These tasks do not block replacing CoWorkSpaces and can move to a second phase i
 | M10 | 10.7 | Custom domain: request → super admin approval → DNS/SSL activation | 0.5 | [#322](https://github.com/ahmaddev27/TAQATSPACE/issues/322) |
 |  |  | **Total** | **8.75** |  |
 
-Full scope ≈ 144.75 days; minimum path ≈ 136 days (≈ 27.2 weeks).
+Full scope ≈ 147.5 days; minimum path ≈ 138.75 days (≈ 27.8 weeks).
 
 ---
 
@@ -568,9 +570,9 @@ Full scope ≈ 144.75 days; minimum path ≈ 136 days (≈ 27.2 weeks).
 
 | Type | Days | Share |
 | --- | --- | --- |
-| BE+FE | 74.75 | 52% |
-| BE | 37.75 | 26% |
-| QA | 11.75 | 8% |
+| BE+FE | 74.75 | 51% |
+| BE | 38.5 | 26% |
+| QA | 13.75 | 9% |
 | FE | 5.5 | 4% |
 | Ops | 5.25 | 4% |
 | PM | 3.5 | 2% |

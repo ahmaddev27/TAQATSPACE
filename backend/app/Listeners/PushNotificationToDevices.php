@@ -43,7 +43,7 @@ class PushNotificationToDevices
 
         $notifiable = $event->notifiable;
 
-        if (! $notifiable instanceof User) {
+        if (! $notifiable instanceof User || $notifiable->isDemo()) {
             return;
         }
 
