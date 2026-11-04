@@ -9,6 +9,12 @@ name: E2E Staging
 
 on:
   workflow_dispatch:
+    inputs:
+      grep:
+        description: 'Only run tests whose title matches this regular expression (empty runs everything)'
+        required: false
+        default: ''
+        type: string
   workflow_run:
     workflows: ["Deploy Staging"]
     types: [completed]
@@ -69,7 +75,14 @@ jobs:
         working-directory: frontend
         env:
           CI: "true"
-        run: npx playwright test --project=chromium
+          # Passed through the environment, never spliced into the command, so an input cannot inject shell.
+          E2E_GREP: ${{ github.event.inputs.grep }}
+        run: |
+          if [ -n "$E2E_GREP" ]; then
+            npx playwright test --project=chromium --grep "$E2E_GREP"
+          else
+            npx playwright test --project=chromium
+          fi
 
       - name: Upload failure screenshots
         if: failure()

@@ -6,7 +6,8 @@ import { pagesFor, visit, watch } from "./support/walk";
 const LOCALES = ["ar", "en"] as const;
 const apiOrigin = (): string => new URL(apiBase()).origin;
 
-// Every page in each role's menu, in both languages.
+// Every page in each role's menu, in both languages. Accounts whose workspace has a
+// module on (support/accounts.ts ENABLED_FLAGS) also walk that module's pages.
 for (const key of SESSION_ACCOUNTS) {
   test.describe(`page walk: ${key}`, () => {
     test.use({ storageState: statePath(key) });
@@ -61,6 +62,10 @@ test.describe("role isolation in the API", () => {
     { as: "staff_cashier", path: "workspace/staff" },
     { as: "admin_limited", path: "admin/approvals" },
     { as: "admin_limited", path: "admin/audit-logs" },
+    // Modules that are on for owner1's workspace are still the owner's alone.
+    { as: "freelancer1", path: "workspace/routers" },
+    { as: "owner1", path: "admin/hour-packages" },
+    { as: "staff_cashier", path: "workspace/routers" },
   ];
 
   for (const { as, path } of cases) {
