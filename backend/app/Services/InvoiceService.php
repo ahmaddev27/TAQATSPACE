@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
+use App\Enums\WorkspaceFeature;
+use App\Exceptions\InvoiceLifecycleException;
 use App\Models\Invoice;
+use App\Models\InvoiceLine;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
@@ -16,6 +20,7 @@ use App\Notifications\InvoicePaidNotification;
 use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
+use App\Services\Finance\DocumentNumberService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -23,6 +28,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class InvoiceService
@@ -31,6 +37,8 @@ class InvoiceService
 
     public function __construct(
         private readonly FileUploadService $uploads,
+        private readonly FeatureFlagService $features,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -40,6 +48,8 @@ class InvoiceService
      */
     public function submitReceipt(Invoice $invoice, UploadedFile $receipt): Invoice
     {
+        $this->assertIssued($invoice);
+
         $invoice->forceFill([
             'receipt_path' => $this->uploads->upload(
                 $receipt,
@@ -70,6 +80,8 @@ class InvoiceService
      */
     public function approveReceipt(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status !== InvoiceStatus::UnderReview) {
             throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
         }
@@ -116,6 +128,8 @@ class InvoiceService
      */
     public function recordPaymentWithReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -152,6 +166,11 @@ class InvoiceService
      */
     public function delete(Invoice $invoice): void
     {
+        // Issued invoices are voided, never deleted, once finance v2 is on.
+        if (! $invoice->isDraft() && $this->financeV2($invoice->workspace_id)) {
+            throw InvoiceLifecycleException::immutable();
+        }
+
         $disk = Storage::disk((string) config('filesystems.media', 'public'));
 
         $paths = $invoice->payments()
@@ -226,13 +245,13 @@ class InvoiceService
             return null;
         }
 
-        return Invoice::create([
+        return $this->withSubscriptionLine(Invoice::create([
             'subscription_id' => $subscription->id,
             'amount' => $subscription->monthly_price,
             'due_date' => $dueDate->toDateString(),
             'status' => InvoiceStatus::Pending->value,
             'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
-        ]);
+        ]));
     }
 
     /**
@@ -252,13 +271,13 @@ class InvoiceService
             return $existing;
         }
 
-        $invoice = Invoice::create([
+        $invoice = $this->withSubscriptionLine(Invoice::create([
             'subscription_id' => $subscription->id,
             'amount' => $subscription->monthly_price,
             'due_date' => $periodEnd->toDateString(),
             'status' => InvoiceStatus::Pending->value,
             'invoice_number' => $this->nextInvoiceNumber($subscription->workspace),
-        ]);
+        ]));
 
         $subscription->loadMissing('member');
         $subscription->member?->notify(new InvoiceCreatedNotification($invoice));
@@ -286,14 +305,14 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_member_no_subscription'));
         }
 
-        $invoice = Invoice::create([
+        $invoice = $this->withSubscriptionLine(Invoice::create([
             'subscription_id' => $subscription->id,
             'amount' => $data['amount'],
             'due_date' => $data['due_date'],
             'status' => InvoiceStatus::Pending->value,
             'invoice_number' => $this->nextInvoiceNumber($workspace),
             'notes' => $data['notes'] ?? null,
-        ]);
+        ]));
 
         $subscription->loadMissing('member');
         $subscription->member?->notify(new InvoiceCreatedNotification($invoice));
@@ -308,6 +327,8 @@ class InvoiceService
      */
     public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -340,6 +361,8 @@ class InvoiceService
      */
     public function recordPartialPayment(Invoice $invoice, float $amount, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -402,6 +425,8 @@ class InvoiceService
      */
     public function recordPayment(Invoice $invoice, float $amount, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -471,6 +496,8 @@ class InvoiceService
      */
     public function sendReminder(Invoice $invoice): void
     {
+        $this->assertIssued($invoice);
+
         $cacheKey = "invoice:{$invoice->id}:reminder_sent";
 
         if (Cache::has($cacheKey)) {
@@ -494,6 +521,7 @@ class InvoiceService
 
         Invoice::query()
             ->where('status', InvoiceStatus::Pending->value)
+            ->notDraft()
             ->whereDate('due_date', '<', $cutoff->toDateString())
             ->with(['subscription.member', 'subscription.workspace.owner'])
             ->chunkById(100, function ($invoices) use (&$flagged): void {
@@ -523,6 +551,7 @@ class InvoiceService
         $sent = 0;
 
         Invoice::query()
+            ->where('doc_status', DocStatus::Issued->value)
             ->whereIn('status', [
                 InvoiceStatus::Overdue->value,
                 InvoiceStatus::PartiallyPaid->value,
@@ -562,7 +591,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forWorkspace($workspace->id)
-            ->with(['subscription.member', 'subscription.seat', 'payments'])
+            ->with(['subscription.member', 'subscription.seat', 'payments', 'customer:id,name'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();
@@ -608,7 +637,7 @@ class InvoiceService
      */
     public function workspaceSummary(Workspace $workspace): array
     {
-        $base = fn (): Builder => Invoice::query()->forWorkspace($workspace->id);
+        $base = fn (): Builder => Invoice::query()->forWorkspace($workspace->id)->notDraft();
 
         $outstanding = (clone $base())
             ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
@@ -638,7 +667,7 @@ class InvoiceService
     {
         return Invoice::query()
             ->forWorkspace($workspace->id)
-            ->with(['subscription.member', 'subscription.seat', 'subscription.workspace'])
+            ->with(['subscription.member', 'subscription.seat', 'subscription.workspace', 'customer:id,name', 'lines'])
             ->find($invoiceId);
     }
 
@@ -651,16 +680,20 @@ class InvoiceService
         $invoice->loadMissing('subscription.workspace');
 
         $subscription = $invoice->subscription;
+        $workspaceOwnerId = $invoice->workspace_id !== null
+            ? Workspace::query()->whereKey($invoice->workspace_id)->value('owner_id')
+            : $subscription?->workspace?->owner_id;
 
-        if ($subscription === null) {
-            return false;
-        }
-
-        if ($subscription->member_id === $user->id) {
+        if ($workspaceOwnerId === $user->id) {
             return true;
         }
 
-        return $subscription->workspace?->owner_id === $user->id;
+        // Drafts are internal to the workspace.
+        if ($invoice->isDraft()) {
+            return false;
+        }
+
+        return $invoice->customer_id === $user->id || $subscription?->member_id === $user->id;
     }
 
     /**
@@ -716,8 +749,25 @@ class InvoiceService
      * than the platform's. Locks the latest row for that prefix to keep the
      * sequence collision-safe under concurrent generation.
      */
+    /**
+     * Payments, receipts and reminders only make sense on a numbered, issued
+     * invoice: a draft is hidden from the subscriber and a void one is frozen.
+     *
+     * @throws InvoiceLifecycleException when the invoice is a draft or void
+     */
+    private function assertIssued(Invoice $invoice): void
+    {
+        if ($invoice->doc_status !== DocStatus::Issued) {
+            throw InvoiceLifecycleException::notPayable();
+        }
+    }
+
     private function nextInvoiceNumber(Workspace $workspace): string
     {
+        if ($this->financeV2($workspace->id)) {
+            return $this->documentNumbers->next($workspace);
+        }
+
         $year = Carbon::today()->year;
         $prefix = $this->invoicePrefixFor($workspace)."-{$year}-";
 
@@ -754,5 +804,31 @@ class InvoiceService
         }
 
         return $base;
+    }
+
+    private function financeV2(?string $workspaceId): bool
+    {
+        return $workspaceId !== null && $this->features->isEnabled($workspaceId, WorkspaceFeature::FinanceV2);
+    }
+
+    /** With finance v2 on every invoice carries at least one line; subscription invoices get a single fee line. */
+    private function withSubscriptionLine(Invoice $invoice): Invoice
+    {
+        if ($this->financeV2($invoice->workspace_id)) {
+            // Bulk insert: the line observer would (rightly) refuse lines on an issued invoice.
+            InvoiceLine::query()->insert([
+                'id' => (string) Str::uuid(),
+                'invoice_id' => $invoice->id,
+                'description' => __('messages.invoice_line_subscription'),
+                'qty' => '1.00',
+                'unit_price' => $invoice->amount,
+                'amount' => $invoice->amount,
+                'sort_order' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return $invoice;
     }
 }

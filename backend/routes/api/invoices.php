@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Finance\InvoiceLifecycleController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Member\InvoiceController as MemberInvoiceController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,17 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::put('/{invoice}/partial-payment', [InvoiceController::class, 'partialPayment']);
         Route::post('/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
         Route::post('/{invoice}/remind', [InvoiceController::class, 'remind']);
+    });
+
+// Finance v2 — draft / issue / void. Hidden (404) while the flag is off; issuing
+// and voiding need a recent two-factor check.
+Route::middleware(['auth:sanctum', 'role.owner', 'feature:finance_v2,hidden'])
+    ->prefix('workspace/invoices')
+    ->group(function (): void {
+        Route::post('/drafts', [InvoiceLifecycleController::class, 'store']);
+        Route::put('/{invoice}/draft', [InvoiceLifecycleController::class, 'update']);
+        Route::post('/{invoice}/issue', [InvoiceLifecycleController::class, 'issue'])->middleware('2fa.recent');
+        Route::post('/{invoice}/void', [InvoiceLifecycleController::class, 'void'])->middleware('2fa.recent');
     });
 
 // Freelancer — read-only invoice history.

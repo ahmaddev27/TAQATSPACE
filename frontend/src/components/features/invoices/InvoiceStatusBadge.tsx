@@ -8,24 +8,30 @@ import { STATUS_MAP } from "@/components/ui/Badge";
  */
 const INVOICE_OVERRIDES: Record<string, { cls: string; ar: string; en: string }> = {
   pending: { cls: "badge-neutral", ar: "غير مدفوعة", en: "Unpaid" },
+  void: { cls: "badge-neutral", ar: "ملغاة", en: "Voided" },
+  draft: { cls: "badge-neutral", ar: "مسودة", en: "Draft" },
   payment_rejected: { cls: "badge-danger", ar: "وصل مرفوض", en: "Receipt rejected" },
   partially_paid: { cls: "badge-warning", ar: "مدفوعة جزئياً", en: "Partially paid" },
 };
 
 export interface InvoiceStatusBadgeProps {
   status: string;
+  /** Finance v2 lifecycle; a draft or voided invoice shows that instead of its payment status. */
+  docStatus?: string;
   locale?: string;
   dot?: boolean;
 }
 
 export function InvoiceStatusBadge({
   status,
+  docStatus,
   locale = "ar",
   dot = true,
 }: InvoiceStatusBadgeProps) {
+  const key = docStatus === "void" || docStatus === "draft" ? docStatus : status;
   const m =
-    INVOICE_OVERRIDES[status] ??
-    STATUS_MAP[status] ?? { cls: "badge-neutral", ar: status, en: status };
+    INVOICE_OVERRIDES[key] ??
+    STATUS_MAP[key] ?? { cls: "badge-neutral", ar: key, en: key };
   return (
     <span className={cn("badge", m.cls)}>
       {dot && <span className="dot" />}

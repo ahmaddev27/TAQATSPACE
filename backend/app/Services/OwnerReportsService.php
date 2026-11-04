@@ -55,6 +55,7 @@ class OwnerReportsService
 
         $invoices = Invoice::query()
             ->forWorkspace($workspace->id)
+            ->notDraft()
             ->whereIn('status', [
                 InvoiceStatus::Pending->value,
                 InvoiceStatus::Overdue->value,

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\PaymentStatus;
+use App\Observers\InvoiceImmutabilityObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +17,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property DocStatus $doc_status
+ * @property PaymentStatus $payment_status
+ * @property string|null $workspace_id
+ * @property string|null $customer_id
+ */
+#[ObservedBy([InvoiceImmutabilityObserver::class])]
 class Invoice extends Model
 {
     /** @use HasFactory<\Database\Factories\InvoiceFactory> */
@@ -21,6 +32,19 @@ class Invoice extends Model
     /** @var list<string> */
     protected $fillable = [
         'subscription_id',
+        'workspace_id',
+        'customer_id',
+        'doc_status',
+        'payment_status',
+        'subtotal',
+        'tax_rate',
+        'tax_amount',
+        'total',
+        'period_start',
+        'period_end',
+        'issued_at',
+        'voided_at',
+        'void_reason',
         'amount',
         'amount_paid',
         'due_date',
@@ -41,6 +65,16 @@ class Invoice extends Model
     {
         return [
             'status' => InvoiceStatus::class,
+            'doc_status' => DocStatus::class,
+            'payment_status' => PaymentStatus::class,
+            'subtotal' => 'decimal:2',
+            'tax_rate' => 'decimal:2',
+            'tax_amount' => 'decimal:2',
+            'total' => 'decimal:2',
+            'period_start' => 'date',
+            'period_end' => 'date',
+            'issued_at' => 'datetime',
+            'voided_at' => 'datetime',
             'due_date' => 'date',
             'paid_at' => 'datetime',
             'receipt_reviewed_at' => 'datetime',
@@ -53,6 +87,18 @@ class Invoice extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
+    /** @return HasMany<InvoiceLine, $this> */
+    public function lines(): HasMany
+    {
+        return $this->hasMany(InvoiceLine::class)->orderBy('sort_order');
     }
 
     /** @return HasMany<InvoicePayment, $this> */
@@ -88,30 +134,66 @@ class Invoice extends Model
     }
 
     /**
-     * Invoices belonging to a workspace, resolved through the subscription.
+     * Invoices belonging to a workspace: stamped with it directly, or (legacy
+     * rows written before the stamp existed) resolved through the subscription.
      *
      * @param  Builder<Invoice>  $query
      */
     public function scopeForWorkspace(Builder $query, string $workspaceId): void
     {
-        $query->whereHas('subscription', static function (Builder $subscription) use ($workspaceId): void {
-            $subscription->where('workspace_id', $workspaceId);
+        $query->where(static function (Builder $inner) use ($workspaceId): void {
+            $inner->where('workspace_id', $workspaceId)
+                ->orWhereHas('subscription', static function (Builder $subscription) use ($workspaceId): void {
+                    $subscription->where('workspace_id', $workspaceId);
+                });
         });
     }
 
     /**
-     * Invoices belonging to a member, resolved through the subscription.
+     * Invoices addressed to a member. Drafts are internal to the workspace, so
+     * the member never sees them.
      *
      * @param  Builder<Invoice>  $query
      */
     public function scopeForMember(Builder $query, string $memberId): void
     {
-        $query->whereHas('subscription', static function (Builder $subscription) use ($memberId): void {
-            $subscription->where('member_id', $memberId);
-        });
+        $query->where('doc_status', '!=', DocStatus::Draft->value)
+            ->where(static function (Builder $inner) use ($memberId): void {
+                $inner->where('customer_id', $memberId)
+                    ->orWhereHas('subscription', static function (Builder $subscription) use ($memberId): void {
+                        $subscription->where('member_id', $memberId);
+                    });
+            });
+    }
+
+    /**
+     * Everything except unissued drafts: the invoices that count as receivables.
+     *
+     * @param  Builder<Invoice>  $query
+     */
+    public function scopeNotDraft(Builder $query): void
+    {
+        $query->where('doc_status', '!=', DocStatus::Draft->value);
     }
 
     // ---- Helpers ----
+
+    public function isDraft(): bool
+    {
+        return $this->doc_status === DocStatus::Draft;
+    }
+
+    /** Whether the invoice belongs to the workspace (direct stamp, else via its subscription). */
+    public function belongsToWorkspace(string $workspaceId): bool
+    {
+        if ($this->workspace_id !== null) {
+            return $this->workspace_id === $workspaceId;
+        }
+
+        $this->loadMissing('subscription');
+
+        return $this->subscription?->workspace_id === $workspaceId;
+    }
 
     /**
      * An invoice is overdue when its due date has passed and it is unpaid.

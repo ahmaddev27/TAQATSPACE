@@ -84,6 +84,7 @@ class DashboardStatsService
             ->sum('amount');
 
         $outstanding = Invoice::query()
+            ->notDraft()
             ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
             ->sum('amount');
 

@@ -118,6 +118,19 @@
         "message": "Permanently delete invoice {invoice}? This also removes its receipts and payment history. This can't be undone.",
         "confirm": "Delete"
       },
+      "void": {
+        "title": "Void invoice",
+        "body": "Void invoice {invoice}? It stays on record with its payments but can no longer be edited or paid.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is this invoice being voided?",
+        "reasonRequired": "Enter a reason (at least 3 characters).",
+        "code": "Two-factor code",
+        "codeRequired": "Enter the 6-digit code from your authenticator app to continue.",
+        "cancel": "Cancel",
+        "confirm": "Void invoice",
+        "done": "Invoice voided",
+        "failed": "Could not void invoice"
+      },
       "issueModal": {
         "title": "Issue new invoice",
         "member": "Member",
