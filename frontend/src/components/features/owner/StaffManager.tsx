@@ -19,6 +19,7 @@ import {
   resendStaffInvitation,
   deleteStaffInvitation,
 } from "@/lib/actions/owner";
+import { formatDate } from "@/lib/dates";
 import {
   DEFAULT_STAFF_GROUP,
   POS_PERMISSIONS,
@@ -172,7 +173,7 @@ export function StaffManager({ staff, invitations }: Props) {
                 <span className="muted-3" style={{ fontSize: "var(--fs-sm)" }}>
                   {t(`groups.${inv.staff_group}`)}
                   {inv.expires_at
-                    ? ` · ${t("expiresAt", { date: new Date(inv.expires_at).toLocaleDateString() })}`
+                    ? ` · ${t("expiresAt", { date: formatDate(inv.expires_at) })}`
                     : null}
                 </span>
               </div>

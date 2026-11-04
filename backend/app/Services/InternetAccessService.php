@@ -56,7 +56,7 @@ class InternetAccessService
         $member = $subscription->member;
         $workspace = $subscription->workspace;
 
-        if ($member === null || $workspace === null) {
+        if ($member === null || $workspace === null || $member->isDemo()) {
             return ['email' => false, 'sms' => false];
         }
 

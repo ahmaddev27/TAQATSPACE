@@ -1,0 +1,68 @@
+name: Seed Staging Demo Data
+
+# Runs `php artisan demo:seed` on the STAGING server over SSH. It targets only
+# STAGING_API_PATH, and the command itself refuses to run unless the server's
+# APP_URL is a staging (or local/testing) host, so a mistaken path or secret
+# cannot seed production. The password comes from the STAGING_DEMO_PASSWORD
+# secret and travels on stdin: it is never in a command line, an argument or a log.
+#
+# Manual only. The E2E workflow calls it (workflow_call) to reset the data first.
+
+on:
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: Delete the existing demo data first (--fresh)
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      fresh:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed-staging
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DEMO_PASSWORD: ${{ secrets.STAGING_DEMO_PASSWORD }}
+      STAGING_API_PATH: ${{ vars.STAGING_API_PATH }}
+      FRESH: ${{ inputs.fresh }}
+    steps:
+      - name: Check configuration
+        run: |
+          for name in SSH_HOST SSH_PORT SSH_USER SSH_PRIVATE_KEY DEMO_PASSWORD STAGING_API_PATH; do
+            if [ -z "${!name}" ]; then echo "::error::$name is not configured."; exit 1; fi
+          done
+          # Staging only: a plain absolute path that names the staging app.
+          if ! printf '%s' "$STAGING_API_PATH" | grep -Eq '^/[A-Za-z0-9._/-]+$' || \
+             ! printf '%s' "$STAGING_API_PATH" | grep -q 'staging'; then
+            echo "::error::STAGING_API_PATH must be an absolute path to the staging app."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Seed demo data on the staging server
+        run: |
+          flags=""
+          if [ "$FRESH" = "true" ]; then flags="--fresh"; fi
+          printf '%s' "$DEMO_PASSWORD" | ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+            "cd '$STAGING_API_PATH' && DEMO_PASSWORD=\"\$(cat)\" php artisan demo:seed $flags"
