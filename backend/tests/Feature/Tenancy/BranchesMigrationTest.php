@@ -14,17 +14,14 @@ use Tests\TestCase;
 
 /**
  * Runs the branches migration itself. Schema changes commit implicitly on
- * MariaDB, so the usual wrapping transaction cannot undo these tests. They run
- * without one and force a fresh database for the next test instead, otherwise
- * their rows would leak into it. Other tables reference branches, hence the
- * disabled foreign key checks around the drop.
+ * MariaDB, so the usual wrapping transaction cannot undo these tests: each one
+ * forces a fresh database for the next test, otherwise its rows would leak into
+ * it. Other tables reference branches, hence the disabled foreign key checks
+ * around the drop.
  */
 class BranchesMigrationTest extends TestCase
 {
     use RefreshDatabase;
-
-    /** @var list<string> */
-    protected array $connectionsToTransact = [];
 
     protected function tearDown(): void
     {
