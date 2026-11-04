@@ -1,4 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ApiError } from "@/lib/api";
+import { ownerPlans } from "@/lib/api/financePlans";
 import { ownerSubscriptions } from "@/lib/api/ownerSubscriptions";
 import { SubscriptionsTable } from "@/components/features/owner/SubscriptionsTable";
 
@@ -17,6 +19,13 @@ export default async function OwnerSubscriptionsPage({
     status: "all",
     per_page: 200,
   });
+  // Plans answer 404 while Finance v2 is off; the terms form is then hidden.
+  const plans = await ownerPlans()
+    .then((result) => result.items)
+    .catch((error: unknown) => {
+      if (error instanceof ApiError && error.status === 404) return null;
+      throw error;
+    });
 
   return (
     <div className="page">
@@ -30,7 +39,7 @@ export default async function OwnerSubscriptionsPage({
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <SubscriptionsTable subscriptions={subscriptions} />
+        <SubscriptionsTable subscriptions={subscriptions} plans={plans} />
       </div>
     </div>
   );
