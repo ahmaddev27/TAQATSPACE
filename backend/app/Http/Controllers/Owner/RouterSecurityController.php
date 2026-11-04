@@ -7,15 +7,16 @@ namespace App\Http\Controllers\Owner;
 use App\Exceptions\RouterRotationInProgressException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RouterKeyResource;
-use App\Models\Router;
+use App\Http\Controllers\Owner\Concerns\ResolvesOwnedRouter;
 use App\Services\Router\RouterSecurityService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 class RouterSecurityController extends Controller
 {
+    use ResolvesOwnedRouter;
+
     public function __construct(private readonly RouterSecurityService $security) {}
 
     /**
@@ -58,18 +59,4 @@ class RouterSecurityController extends Controller
         return ApiResponse::success(new RouterKeyResource($rotated), __('messages.router_key_rotated'));
     }
 
-    /** Routers of other workspaces are 404, never 403, so their ids stay private. */
-    private function ownedRouter(Request $request, string $id): Router|JsonResponse
-    {
-        $workspace = $request->user()->workspace;
-
-        if ($workspace === null || Gate::denies('manage-workspace', $workspace)) {
-            return ApiResponse::error(__('messages.unauthorized_action'), 403);
-        }
-
-        return Router::query()
-            ->withoutWorkspaceScope()
-            ->where('workspace_id', $workspace->getKey())
-            ->find($id) ?? ApiResponse::error(__('messages.router_not_found'), 404);
-    }
 }

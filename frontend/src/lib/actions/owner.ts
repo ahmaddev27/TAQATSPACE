@@ -18,6 +18,7 @@ import type {
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
 import type { ApprovalRequestEntry } from "@/lib/types/approvals";
+import type { OwnerRouter, RouterInstallToken, RouterRotatedKey } from "@/lib/types/router";
 import type {
   Expense,
   ExpenseCategory,
@@ -688,5 +689,76 @@ export async function resetWorkspace(
     body: { confirmation: input.confirmation, reason: input.reason },
   });
   if (result.ok) revalidatePath("/[locale]/(dashboard)/owner", "layout");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Settings — API & integration (MikroTik router)                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Prove a fresh step-up before a router security call. A blank code skips the
+ * check; the backend's recent-2FA gate then decides.
+ */
+async function stepUp(code: string): Promise<ActionResult<never> | null> {
+  const trimmed = code.trim();
+  if (trimmed === "") return null;
+
+  const verified = await authedMutate("/auth/two-factor/verify", { body: { code: trimmed } });
+  return verified.ok ? null : { ...verified, errors: { code: [verified.message] } };
+}
+
+/** Register the workspace's router; its key is issued with the install command. */
+export async function createRouter(name: string): Promise<ActionResult<OwnerRouter>> {
+  const result = await authedMutate<OwnerRouter>("/workspace/routers", {
+    body: { name: name.trim() },
+  });
+  if (result.ok) revalidateOwner("settings/api");
+  return result;
+}
+
+/** Issue a one-time install command (invalidates the previous one). Shown once, never persisted. */
+export async function generateInstallCommand(
+  routerId: string,
+): Promise<ActionResult<RouterInstallToken>> {
+  return authedMutate<RouterInstallToken>(`/workspace/routers/${routerId}/install-token`);
+}
+
+/** Rotate the router key after a 2FA check. The returned key is shown once, never persisted. */
+export async function rotateRouterKey(
+  routerId: string,
+  code: string,
+): Promise<ActionResult<RouterRotatedKey>> {
+  const failed = await stepUp(code);
+  if (failed) return failed;
+
+  const result = await authedMutate<RouterRotatedKey>(`/workspace/routers/${routerId}/rotate-key`);
+  if (result.ok) revalidateOwner("settings/api");
+  return result;
+}
+
+/** Clear the serial-number lock so a replacement router can bind itself. */
+export async function unlockRouter(
+  routerId: string,
+  code: string,
+): Promise<ActionResult<undefined>> {
+  const failed = await stepUp(code);
+  if (failed) return failed;
+
+  const result = await authedMutate<undefined>(`/workspace/routers/${routerId}/unlock`);
+  if (result.ok) revalidateOwner("settings/api");
+  return result;
+}
+
+/** Queue a script update; `full` re-pushes every script even when the version matches. */
+export async function updateRouterScript(
+  routerId: string,
+  full = false,
+): Promise<ActionResult<{ queued: number }>> {
+  const result = await authedMutate<{ queued: number }>(
+    `/workspace/routers/${routerId}/update-script`,
+    { body: { full } },
+  );
+  if (result.ok) revalidateOwner("settings/api");
   return result;
 }

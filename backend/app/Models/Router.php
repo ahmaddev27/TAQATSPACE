@@ -21,9 +21,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property RouterStatus $status
  * @property string|null $mode
  * @property string|null $script_version
+ * @property \Illuminate\Support\Carbon|null $last_seen_at
  */
 class Router extends Model
 {
+    /** A router that has not synced for this long is shown as offline. */
+    public const ONLINE_WINDOW_MINUTES = 3;
+
     /** @use HasFactory<RouterFactory> */
     use BelongsToWorkspace, HasFactory, HasUuids;
 
@@ -64,10 +68,32 @@ class Router extends Model
         ];
     }
 
+    /** @return HasMany<RouterCommand, $this> */
+    public function commands(): HasMany
+    {
+        return $this->hasMany(RouterCommand::class);
+    }
+
     /** @return HasMany<RouterApiLog, $this> */
     public function apiLogs(): HasMany
     {
         return $this->hasMany(RouterApiLog::class);
+    }
+
+    /**
+     * What the owner sees. Locked and disabled are decisions, so they win; otherwise
+     * liveness is derived from the last sync rather than a stored flag that
+     * nothing would flip back when the router goes quiet.
+     */
+    public function connectionStatus(): RouterStatus
+    {
+        if ($this->last_seen_at === null || in_array($this->status, [RouterStatus::Locked, RouterStatus::Disabled], true)) {
+            return $this->status;
+        }
+
+        return $this->last_seen_at->gt(now()->subMinutes(self::ONLINE_WINDOW_MINUTES))
+            ? RouterStatus::Online
+            : RouterStatus::Offline;
     }
 
     /**

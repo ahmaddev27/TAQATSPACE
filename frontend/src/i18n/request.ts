@@ -29,6 +29,7 @@ const NAMESPACES = [
   "audit",
   "approvals",
   "shortcuts",
+  "integration",
 ] as const;
 
 /** Recursively merge `source` into `target` (objects deep, scalars overwrite). */
