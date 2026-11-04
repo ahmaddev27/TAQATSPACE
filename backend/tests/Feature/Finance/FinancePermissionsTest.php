@@ -36,7 +36,7 @@ class FinancePermissionsTest extends CatalogTestCase
                 ->match(['GET', 'POST'], "/api/_test/finance/{$slug}", fn () => response()->json(['ok' => true]));
         }
 
-        Route::middleware(['api', 'auth:sanctum', 'finance.permission:finance_issue_void', '2fa.recent'])
+        Route::middleware(['api', 'auth:sanctum', 'finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent'])
             ->post('/api/_test/finance/step-up', fn () => response()->json(['ok' => true]));
     }
 
@@ -144,6 +144,16 @@ class FinancePermissionsTest extends CatalogTestCase
         app(TwoFactorService::class)->markVerified($other);
         Sanctum::actingAs($other);
         $this->postJson('/api/_test/finance/step-up')->assertForbidden();
+    }
+
+    public function test_issue_void_rejects_staff_who_never_enrolled_in_two_factor(): void
+    {
+        [, $workspace] = $this->owningWorkspace();
+        Sanctum::actingAs($this->cashierFor($workspace, [FinancePermission::IssueVoid->value]));
+
+        $this->postJson('/api/_test/finance/step-up')
+            ->assertForbidden()
+            ->assertJsonPath('code', 'two_factor_enrollment_required');
     }
 
     public function test_group_map_and_gates_delegate_to_the_same_permissions(): void

@@ -15,7 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Binds a finance route to a staff permission, e.g. `finance.permission:finance_collect`.
  * Several names mean "any of". Owners and admins always pass. Issue/void routes
- * chain `2fa.recent` after it so the permission alone is never enough.
+ * chain `2fa.enrolled` then `2fa.recent` after it (`2fa.recent` alone lets
+ * never-enrolled staff through), so the permission alone is never enough.
  */
 final class EnsureFinancePermission
 {
