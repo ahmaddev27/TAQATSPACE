@@ -25,10 +25,13 @@ async function nextCode(): Promise<string> {
 /** A fresh browser session for the throwaway owner, signed in through the app's login route. */
 async function signIn(browser: Browser): Promise<{ page: Page; challenged: boolean }> {
   const context = await browser.newContext();
-  const response = await context.request.post("/api/auth/login", {
-    data: { email: emailOf(THROWAWAY), password: demoPassword() },
-    failOnStatusCode: false,
-  });
+  const login = () =>
+    context.request.post("/api/auth/login", {
+      data: { email: emailOf(THROWAWAY), password: demoPassword() },
+      failOnStatusCode: false,
+    });
+  // A dropped connection says nothing about the login, so only that is tried again; a refusal still fails.
+  const response = await login().catch(() => login());
   expect(response.status(), "login of the throwaway owner").toBe(200);
   const body = (await response.json()) as { two_factor_required?: boolean };
   return { page: await context.newPage(), challenged: body.two_factor_required === true };
