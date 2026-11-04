@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\ListMembersRequest;
+use App\Http\Requests\Owner\UpdateMemberProfileRequest;
 use App\Http\Requests\Owner\UpdateMemberStatusRequest;
 use App\Http\Resources\MemberResource;
 use App\Models\User;
@@ -97,6 +98,26 @@ class MemberController extends Controller
             new MemberResource($subscription),
             __('messages.member_status_updated'),
         );
+    }
+
+    /**
+     * PUT /api/workspace/members/{user}/profile
+     *
+     * Save the donor fields and MikroTik username of a member of THIS workspace.
+     */
+    public function updateProfile(UpdateMemberProfileRequest $request, User $user): JsonResponse
+    {
+        $workspace = $this->ownerWorkspace($request);
+
+        $detail = $workspace === null
+            ? null
+            : $this->members->updateProfile($workspace, $user, $request->validated());
+
+        if ($detail === null) {
+            return ApiResponse::error(__('messages.member_not_found'), 404);
+        }
+
+        return ApiResponse::success($detail, __('messages.member_profile_updated'));
     }
 
     private function ownerWorkspace(Request $request): ?Workspace

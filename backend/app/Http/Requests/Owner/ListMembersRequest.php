@@ -21,6 +21,7 @@ class ListMembersRequest extends FormRequest
     {
         return [
             'status' => ['nullable', 'string', Rule::in(['active', 'suspended', 'all'])],
+            'profile' => ['nullable', 'string', Rule::in(['incomplete'])],
             'search' => ['nullable', 'string', 'max:255'],
             'sort' => ['nullable', 'string', Rule::in(['join_date', 'name', 'status'])],
             'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],

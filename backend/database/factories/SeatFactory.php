@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\SeatKind;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
 use App\Models\Seat;
@@ -29,6 +30,7 @@ class SeatFactory extends Factory
             'status' => SeatStatus::Available,
             'assigned_member_id' => null,
             'notes' => null,
+            'kind' => SeatKind::Desk,
         ];
     }
 }

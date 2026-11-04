@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SeatKind;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
 use App\Observers\SeatObserver;
@@ -27,6 +28,12 @@ class Seat extends Model
         'status',
         'assigned_member_id',
         'notes',
+        'zone',
+        'kind',
+        'capacity',
+        'is_private',
+        'branch_id',
+        'parent_id',
     ];
 
     /**
@@ -37,6 +44,9 @@ class Seat extends Model
         return [
             'type' => SeatType::class,
             'status' => SeatStatus::class,
+            'kind' => SeatKind::class,
+            'capacity' => 'integer',
+            'is_private' => 'boolean',
         ];
     }
 
@@ -44,6 +54,18 @@ class Seat extends Model
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);
+    }
+
+    /** @return BelongsTo<Branch, $this> */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /** @return BelongsTo<Seat, $this> */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /** @return BelongsTo<User, $this> */

@@ -1,0 +1,133 @@
+{
+  "integration": {
+    "title": "API & integration",
+    "subtitle": "Connect your MikroTik router to the platform and manage its key",
+    "copy": "Copy",
+    "copied": "Copied",
+    "cancel": "Cancel",
+    "actionFailed": "The action failed",
+    "codeLabel": "Authenticator code",
+    "codeHint": "Enter the 6-digit code from your authenticator app",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "pending": "Waiting for first sync",
+      "locked": "Locked",
+      "disabled": "Disabled"
+    },
+    "card": {
+      "status": "Status",
+      "lastSync": "Last sync",
+      "never": "Never",
+      "versions": "RouterOS version",
+      "scriptVersion": "Script {version}",
+      "serial": "Serial number",
+      "workspaceCode": "Workspace code",
+      "endpoint": "Sync endpoint"
+    },
+    "empty": {
+      "title": "No router connected yet",
+      "body": "Name your router, then generate an install command and paste it into the RouterOS terminal.",
+      "nameLabel": "Router name",
+      "create": "Add router",
+      "created": "Router added",
+      "failed": "Could not add the router"
+    },
+    "install": {
+      "title": "Install on the router",
+      "hint": "Generate a one-time command and paste it into the RouterOS terminal. It also issues a fresh router key.",
+      "generate": "Generate install command",
+      "regenerate": "Generate a new command",
+      "copy": "Copy command",
+      "copied": "Command copied",
+      "expiresIn": "Expires in {time}",
+      "expired": "Expired, generate a new one",
+      "onceNote": "Valid for 30 minutes and works once. A new command invalidates this one. It is not saved anywhere.",
+      "failed": "Could not generate the command"
+    },
+    "commands": {
+      "title": "Recent commands",
+      "empty": "No commands have been sent to the router yet",
+      "colCommand": "Command",
+      "colStatus": "Status",
+      "colQueued": "Queued",
+      "colAcknowledged": "Acknowledged",
+      "colError": "Error",
+      "status": {
+        "requested": "Queued",
+        "delivered": "Delivered",
+        "acknowledged": "Acknowledged",
+        "failed": "Failed",
+        "expired": "Expired"
+      }
+    },
+    "rotate": {
+      "action": "Regenerate key",
+      "modalTitle": "Regenerate the router key",
+      "description": "The router receives the new key on its next sync. The old key keeps working for one hour.",
+      "confirm": "Regenerate",
+      "newKeyTitle": "New router key",
+      "shownOnce": "Copy this key now. It is shown only once and cannot be retrieved later.",
+      "done": "I have copied it"
+    },
+    "unlock": {
+      "action": "Unlock device",
+      "modalTitle": "Unlock the router",
+      "description": "Clears the bound serial number so a replacement router can bind itself on its next sync.",
+      "confirm": "Unlock",
+      "done": "Router unlocked"
+    },
+    "update": {
+      "action": "Update script",
+      "confirmTitle": "Update the router scripts?",
+      "confirmMessage": "Version {version} will be pushed to the router on its next sync.",
+      "queued": "Script update queued"
+    },
+    "logs": {
+      "colTime": "Time",
+      "colPath": "Path",
+      "colCode": "Code",
+      "colSize": "Size",
+      "colDuration": "Response time",
+      "colError": "Error",
+      "empty": "No requests match",
+      "count": "Requests",
+      "filters": "Filters",
+      "clearAll": "Clear all",
+      "autoRefresh": "Refreshes every 30 seconds",
+      "filter": {
+        "from": "From",
+        "to": "To",
+        "response_code": "Response code",
+        "error": "Error text"
+      }
+    },
+    "diagnostics": {
+      "hint": "Checks the last sync, clock drift, sequence gaps, stuck commands, script version and serial number.",
+      "run": "Run deep check",
+      "running": "Checking...",
+      "failed": "Could not run the check",
+      "status": {
+        "pass": "Pass",
+        "warning": "Warning",
+        "fail": "Fail"
+      },
+      "checks": {
+        "last_sync": "Last sync",
+        "clock_drift": "Clock drift",
+        "seq_gaps": "Sequence gaps",
+        "stuck_commands": "Stuck commands",
+        "script_version": "Script version",
+        "serial": "Serial number"
+      }
+    },
+    "diagnosticsPage": {
+      "title": "API diagnostics",
+      "subtitle": "Trace the router's requests and check the health of the integration",
+      "checkTitle": "Deep check",
+      "logTitle": "Request log",
+      "noRouter": "No router is connected yet.",
+      "open": "Open diagnostics"
+    }
+  }
+}

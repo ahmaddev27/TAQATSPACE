@@ -20,6 +20,7 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::get('/', [MemberController::class, 'index']);
         Route::get('/{user}', [MemberController::class, 'show']);
         Route::put('/{user}/status', [MemberController::class, 'updateStatus']);
+        Route::put('/{user}/profile', [MemberController::class, 'updateProfile']);
     });
 
 /*

@@ -9,6 +9,7 @@ use Database\Factories\BranchFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A physical location of a workspace. Every workspace has exactly one default branch.
@@ -39,6 +40,12 @@ class Branch extends Model
 
         static::creating($syncDefaultMarker);
         static::updating($syncDefaultMarker);
+    }
+
+    /** @return HasMany<Seat, $this> */
+    public function seats(): HasMany
+    {
+        return $this->hasMany(Seat::class);
     }
 
     /**
