@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# e2e (sessions and failure screenshots must never be committed)
+/.auth/
+/test-results/
+/playwright-report/
