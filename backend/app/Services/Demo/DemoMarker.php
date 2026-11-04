@@ -28,6 +28,16 @@ final class DemoMarker
         return $localPart.'@'.self::emailDomain();
     }
 
+    /**
+     * The key of the demo router that the sync checks talk to. Derived from the
+     * demo password, so the seed run and the test run each compute the same value
+     * without it being stored, printed or sent anywhere. 64 hex characters, like a real key.
+     */
+    public static function routerKeyFor(string $demoPassword): string
+    {
+        return hash_hmac('sha256', 'demo-router-key', $demoPassword);
+    }
+
     public static function isDemoEmail(?string $email): bool
     {
         return $email !== null && Str::endsWith(Str::lower($email), '@'.self::emailDomain());

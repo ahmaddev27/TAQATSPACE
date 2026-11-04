@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Demo;
 
+use App\Models\HourPackage;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Demo\Steps\HourPackagesStep;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -36,6 +38,7 @@ class DemoCleaner
             // Mass deletes: no model events, so the audit log's append-only guard stays untouched.
             $workspaces = Workspace::withTrashed()->whereIn('id', $workspaceIds)->forceDelete();
             $users = User::query()->whereIn('id', $userIds)->delete();
+            $this->clearDemoHourPackages();
 
             return ['users' => (int) $users, 'workspaces' => (int) $workspaces];
         });
@@ -47,6 +50,9 @@ class DemoCleaner
      */
     private function clearKeylessTables(array $userIds, array $workspaceIds): void
     {
+        // Items point at their category with RESTRICT, so they go before the workspace cascade reaches both.
+        DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();
+
         DB::table('audit_logs')
             ->where(fn ($query) => $query->whereIn('workspace_id', $workspaceIds)->orWhereIn('actor_id', $userIds))
             ->delete();
@@ -54,5 +60,23 @@ class DemoCleaner
         foreach (self::USER_POINTERS as [$table, $column]) {
             DB::table($table)->whereIn($column, $userIds)->delete();
         }
+    }
+
+    /**
+     * Hour packages belong to the platform, not to a workspace; the code prefix marks the demo ones.
+     * Run after the users are gone, because a purchase keeps its package in place.
+     */
+    private function clearDemoHourPackages(): void
+    {
+        $packages = DB::table('hour_packages')
+            ->where('code', 'like', HourPackagesStep::CODE_PREFIX.'%')
+            ->whereNotExists(fn ($query) => $query->select(DB::raw(1))
+                ->from('hour_package_purchases')
+                ->whereColumn('hour_package_purchases.hour_package_id', 'hour_packages.id'))
+            ->pluck('id')
+            ->all();
+
+        DB::table('audit_logs')->where('subject_type', (new HourPackage)->getMorphClass())->whereIn('subject_id', $packages)->delete();
+        DB::table('hour_packages')->whereIn('id', $packages)->delete();
     }
 }

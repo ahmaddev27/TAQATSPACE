@@ -13,7 +13,7 @@ use Database\Seeders\AdminPermissionSeeder;
 use Database\Seeders\PosPermissionSeeder;
 use Spatie\Permission\Models\Role;
 
-/** Platform admins, workspace owners and the ten freelancers. */
+/** Platform admins, workspace owners (one of them enrols two-factor in the checks) and the ten freelancers. */
 class AccountsStep implements DemoSeedStep
 {
     use BuildsDemoUsers;
@@ -58,7 +58,7 @@ class AccountsStep implements DemoSeedStep
     {
         $documents = ['license' => 'owner-docs/demo/license.pdf', 'id_document' => 'owner-docs/demo/id.pdf'];
 
-        foreach (['owner1' => 'أحمد المنارة', 'owner2' => 'سلمى الإبداع', 'owner_throwaway' => 'رامي التجريبي'] as $key => $name) {
+        foreach (['owner1' => 'أحمد المنارة', 'owner2' => 'سلمى الإبداع', 'owner_throwaway' => 'رامي التجريبي', 'owner_stepup' => 'ليث الأمان'] as $key => $name) {
             $this->makeUser($context, $key, $name, UserRole::WorkspaceOwner, ['documents' => $documents]);
         }
     }
