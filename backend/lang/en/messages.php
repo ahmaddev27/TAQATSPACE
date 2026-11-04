@@ -136,6 +136,9 @@ return [
     'member_not_found' => 'Member not found.',
     'member_not_in_workspace' => 'Member is not part of this workspace.',
     'member_status_updated' => 'Member status updated.',
+    'member_profile_updated' => 'Member profile updated.',
+    'mikrotik_username_taken' => 'This internet username is already used in your workspace.',
+    'member_has_no_internet_account' => 'This member has no internet account yet.',
 
     // Bookings / subscriptions
     'booking_submitted' => 'Booking request submitted.',

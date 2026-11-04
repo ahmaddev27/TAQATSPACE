@@ -359,7 +359,17 @@ export interface MemberUser {
   email: string;
   phone: string | null;
   specialty: string | null;
+  gender?: string | null;
+  education_level?: string | null;
+  specialization?: string | null;
+  employment_status?: string | null;
   avatar: string | null;
+}
+
+/** Donor-field completeness of one subscriber (0-100) and the fields still empty. */
+export interface ProfileCompletion {
+  percent: number;
+  missing: string[];
 }
 
 /** A workspace member as seen by the owner (a Subscription row, flattened). */
@@ -376,6 +386,8 @@ export interface Member {
   package_price: string;
   join_date: string | null;
   cancelled_at: string | null;
+  mikrotik_username?: string | null;
+  profile_completion?: ProfileCompletion | null;
 }
 
 /** Owner members listing payload: `{ members, meta }`. */

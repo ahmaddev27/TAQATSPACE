@@ -136,6 +136,9 @@ return [
     'member_not_found' => 'العضو غير موجود.',
     'member_not_in_workspace' => 'العضو ليس جزءًا من مساحة العمل هذه.',
     'member_status_updated' => 'تم تحديث حالة العضو.',
+    'member_profile_updated' => 'تم تحديث ملف العضو.',
+    'mikrotik_username_taken' => 'اسم مستخدم الإنترنت مستخدم بالفعل في مساحتك.',
+    'member_has_no_internet_account' => 'لا يملك هذا العضو حساب إنترنت بعد.',
 
     // الحجوزات / الاشتراكات
     'booking_submitted' => 'تم إرسال طلب الحجز.',

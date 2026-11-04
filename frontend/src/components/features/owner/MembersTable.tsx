@@ -27,7 +27,7 @@ type StatusFilter = "all" | "active" | "suspended" | "pending";
 
 const PAGE_SIZE = 8;
 const FILTERS: StatusFilter[] = ["all", "active", "suspended"];
-const FILTER_KEYS = ["status", "search"] as const;
+const FILTER_KEYS = ["status", "search", "profile"] as const;
 
 export interface MembersTableProps {
   members: Member[];
@@ -50,6 +50,9 @@ export function MembersTable({ members }: MembersTableProps) {
   const setFilter = (value: StatusFilter) =>
     setUrlFilter("status", value === "all" ? null : value);
   const setQuery = (value: string) => setUrlFilter("search", value);
+  const incompleteOnly = filters.profile === "incomplete";
+  const setIncompleteOnly = (on: boolean) =>
+    setUrlFilter("profile", on ? "incomplete" : null);
   const [sort, setSort] = useState<SortState | null>({ key: "name", dir: "asc" });
   const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState<Member | null>(null);
@@ -66,6 +69,9 @@ export function MembersTable({ members }: MembersTableProps) {
     let rows = members.filter(
       (m) => filter === "all" || m.status === filter,
     );
+    if (incompleteOnly) {
+      rows = rows.filter((m) => (m.profile_completion?.percent ?? 0) < 100);
+    }
     if (q) {
       rows = rows.filter(
         (m) =>
@@ -81,7 +87,7 @@ export function MembersTable({ members }: MembersTableProps) {
       price: (m) => m.monthly_price,
       joined: (m) => m.join_date ?? "",
     });
-  }, [members, filter, query, sort]);
+  }, [members, filter, query, incompleteOnly, sort]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const curPage = Math.min(page, pages);
@@ -93,6 +99,13 @@ export function MembersTable({ members }: MembersTableProps) {
       key: "st",
       label: `${t("members.filterStatus")}: ${statusLabel[filter]}`,
       onRemove: () => setFilter("all"),
+    });
+  }
+  if (incompleteOnly) {
+    chips.push({
+      key: "pf",
+      label: t("members.profile.incompleteList"),
+      onRemove: () => setIncompleteOnly(false),
     });
   }
   if (query) {
@@ -146,6 +159,14 @@ export function MembersTable({ members }: MembersTableProps) {
       id: "spec",
       header: t("members.colSpecialty"),
       cell: (m) => <span className="muted">{m.user.specialty ?? "—"}</span>,
+    },
+    {
+      id: "profile",
+      header: t("members.profile.column"),
+      num: true,
+      cell: (m) => (
+        <span className="cell-num">{m.profile_completion?.percent ?? 0}%</span>
+      ),
     },
     {
       id: "seat",
@@ -225,6 +246,17 @@ export function MembersTable({ members }: MembersTableProps) {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className={`btn btn-ghost${incompleteOnly ? " active" : ""}`}
+          aria-pressed={incompleteOnly}
+          onClick={() => {
+            setIncompleteOnly(!incompleteOnly);
+            setPage(1);
+          }}
+        >
+          {t("members.profile.incompleteList")}
+        </button>
         <div className="spacer" />
         <div className="dt-search input-icon">
           <Icon name="search" />

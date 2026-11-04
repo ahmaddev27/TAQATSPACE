@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +9,7 @@ import { Drawer } from "@/components/ui/Drawer";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import type { Member } from "@/lib/types";
 import { avatarInitial, money, shortDate } from "./format";
+import { ProfileWizard } from "./ProfileWizard";
 
 export interface MemberDrawerProps {
   member: Member;
@@ -31,6 +33,8 @@ export function MemberDrawer({
   const tc = useTranslations();
   const confirm = useConfirm();
   const isSuspended = member.status === "suspended";
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const percent = member.profile_completion?.percent ?? 0;
 
   const askSuspend = async () => {
     const ok = await confirm({
@@ -99,6 +103,27 @@ export function MemberDrawer({
               <StatusBadge status={member.status} locale={locale} />
             </div>
           </div>
+        </div>
+
+        <div className="drawer-section stack" style={{ gap: 12 }}>
+          <div className="between">
+            <span className="muted">{t("members.profile.completeness")}</span>
+            <span className="tnum" style={{ fontWeight: 600 }}>
+              {percent}%
+            </span>
+          </div>
+          <progress value={percent} max={100} style={{ width: "100%" }} />
+          {wizardOpen ? (
+            <ProfileWizard
+              member={member}
+              onCancel={() => setWizardOpen(false)}
+              onDone={onClose}
+            />
+          ) : (
+            <Button variant="secondary" onClick={() => setWizardOpen(true)}>
+              {t("members.profile.complete")}
+            </Button>
+          )}
         </div>
 
         <div className="drawer-section stack" style={{ gap: 12 }}>

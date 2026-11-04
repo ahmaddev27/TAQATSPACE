@@ -95,6 +95,27 @@ export async function updateMemberStatus(
   return result;
 }
 
+/** Donor fields + MikroTik username saved by the profile completion wizard. */
+export interface MemberProfileInput {
+  gender?: string | null;
+  education_level?: string | null;
+  specialization?: string | null;
+  employment_status?: string | null;
+  mikrotik_username?: string;
+}
+
+export async function updateMemberProfile(
+  userId: string,
+  input: MemberProfileInput,
+): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/members/${userId}/profile`, {
+    method: "PUT",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("members");
+  return result;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Subscriptions                                                             */
 /* -------------------------------------------------------------------------- */
