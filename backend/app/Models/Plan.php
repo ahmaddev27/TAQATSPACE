@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A workspace's financial plan (monthly, weekly, daily, hourly, per GB or
@@ -73,12 +74,18 @@ class Plan extends Model
         return $this->archived_at !== null;
     }
 
+    /** @return HasMany<Subscription, $this> */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
     /**
-     * Whether any record references this plan. Nothing does until plans are
-     * linked to subscriptions (5.3), which must extend this check.
+     * Whether any record references this plan; a plan in use is archived
+     * instead of deleted. Extend this when another table starts pointing here.
      */
     public function isInUse(): bool
     {
-        return false;
+        return $this->subscriptions()->exists();
     }
 }

@@ -145,6 +145,9 @@ return [
     'subscription_already_cancelled' => 'This subscription is already cancelled.',
     'subscription_not_due_for_renewal' => 'The subscription cannot be renewed before its end date is reached.',
     'subscription_no_access' => 'You do not have access to this subscription.',
+    'subscription_terms_updated' => 'Subscription financial terms updated.',
+    'subscription_hours_need_hourly_plan' => 'Contracted hours are only allowed on an hourly plan.',
+    'subscription_plan_needs_seat' => 'A dedicated-seat plan needs a seat assigned to the subscription.',
 
     // Partner integration
     'partner_unauthorized' => 'Invalid or missing API key.',

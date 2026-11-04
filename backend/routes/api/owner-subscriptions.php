@@ -20,4 +20,6 @@ Route::middleware(['auth:sanctum', 'role.owner'])
         Route::put('/{subscription}/renew', [SubscriptionController::class, 'renew']);
         Route::put('/{subscription}/cancel', [SubscriptionController::class, 'cancel']);
         Route::post('/{subscription}/internet', [SubscriptionController::class, 'provisionInternet']);
+        Route::put('/{subscription}/financial', [SubscriptionController::class, 'updateFinancial'])
+            ->middleware(['workspace.current', 'feature:finance_v2,hidden']);
     });
