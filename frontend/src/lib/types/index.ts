@@ -271,9 +271,36 @@ export interface Seat {
   type: SeatType;
   status: SeatStatus;
   notes: string | null;
+  kind?: SeatKind;
+  zone?: string | null;
+  capacity?: number;
+  is_private?: boolean;
+  branch_id?: string | null;
+  parent_id?: string | null;
   /** Only present for the owner/admin (loaded conditionally). */
   assigned_member?: SeatAssignedMember | null;
   created_at: string | null;
+}
+
+export type SeatKind = "desk" | "room" | "booth";
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string | null;
+  is_default: boolean;
+  seats_count?: number;
+}
+
+export interface SeatMonthOccupancy {
+  month: string;
+  days_in_month: number;
+  seats: {
+    seat_id: string;
+    seat_number: string;
+    occupied_days: number;
+    occupancy_rate: number;
+  }[];
 }
 
 /* -------------------------------------------------------------------------- */

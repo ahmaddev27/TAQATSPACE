@@ -1,5 +1,12 @@
 import { serverFetch } from "@/lib/api";
-import type { ApiEnvelope, Seat, SeatStatus, SeatType } from "@/lib/types";
+import type {
+  ApiEnvelope,
+  Branch,
+  Seat,
+  SeatMonthOccupancy,
+  SeatStatus,
+  SeatType,
+} from "@/lib/types";
 
 /**
  * Seat map for a workspace (public; assignee names only for owner/admin).
@@ -82,4 +89,19 @@ export async function unassignSeat(seatId: string): Promise<Seat> {
 /** Owner: delete a seat. */
 export async function destroySeat(seatId: string): Promise<void> {
   await serverFetch<void>(`/seats/${seatId}`, { method: "DELETE" });
+}
+
+/** Owner: branches of the workspace, default first. */
+export async function ownerBranches(): Promise<Branch[]> {
+  const res = await serverFetch<ApiEnvelope<Branch[]>>("/workspace/branches");
+  return res.data;
+}
+
+/** Owner: days each station was held in a month (`YYYY-MM`, default current). */
+export async function seatMonthOccupancy(month?: string): Promise<SeatMonthOccupancy> {
+  const query = month ? `?month=${encodeURIComponent(month)}` : "";
+  const res = await serverFetch<ApiEnvelope<SeatMonthOccupancy>>(
+    `/workspace/seats/occupancy${query}`,
+  );
+  return res.data;
 }

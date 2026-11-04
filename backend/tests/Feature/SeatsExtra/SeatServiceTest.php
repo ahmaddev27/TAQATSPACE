@@ -7,6 +7,7 @@ namespace Tests\Feature\SeatsExtra;
 use App\Enums\SeatStatus;
 use App\Enums\SeatType;
 use App\Enums\SubscriptionStatus;
+use App\Models\Branch;
 use App\Models\Seat;
 use App\Models\Subscription;
 use App\Models\User;
@@ -43,6 +44,22 @@ class SeatServiceTest extends TestCase
         $this->assertSame(SeatStatus::Available, $seat->status);
         $this->assertNull($seat->notes);
         $this->assertSame($workspace->id, $seat->workspace_id);
+    }
+
+    public function test_create_defaults_station_fields_and_uses_the_default_branch(): void
+    {
+        $workspace = Workspace::factory()->create(['total_seats' => 5]);
+
+        $seat = $this->service()->create($workspace, ['seat_number' => 'S-1', 'type' => SeatType::Fixed->value, 'zone' => null]);
+
+        $this->assertSame('desk', $seat->kind->value);
+        $this->assertSame(1, $seat->capacity);
+        $this->assertFalse($seat->is_private);
+        $this->assertNull($seat->zone);
+        $this->assertSame(
+            Branch::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->where('is_default', true)->value('id'),
+            $seat->branch_id,
+        );
     }
 
     public function test_create_honours_explicit_status_and_notes(): void

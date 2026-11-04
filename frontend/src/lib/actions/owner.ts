@@ -5,11 +5,13 @@ import { serverFetch } from "@/lib/api";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ApiEnvelope,
+  Branch,
   BroadcastInput,
   BroadcastResult,
   Member,
   Package,
   Seat,
+  SeatKind,
   SeatType,
   SeatingMode,
   SubscriptionStatus,
@@ -688,5 +690,55 @@ export async function resetWorkspace(
     body: { confirmation: input.confirmation, reason: input.reason },
   });
   if (result.ok) revalidatePath("/[locale]/(dashboard)/owner", "layout");
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Stations: bulk add and branches                                           */
+/* -------------------------------------------------------------------------- */
+
+export interface BulkAddSeatsInput {
+  start: number;
+  count: number;
+  prefix?: string;
+  type: SeatType;
+  kind?: SeatKind;
+  zone?: string;
+  branch_id?: string;
+  is_private?: boolean;
+}
+
+/** Add up to 200 stations at once; the backend rejects the whole batch on any clash. */
+export async function bulkAddSeats(
+  input: BulkAddSeatsInput,
+): Promise<ActionResult<{ created: number }>> {
+  const result = await authedMutate<{ created: number }>("/workspace/seats/bulk", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) {
+    revalidateOwner("seats");
+    revalidateOwner("");
+  }
+  return result;
+}
+
+export async function createBranch(input: {
+  name: string;
+  address?: string;
+}): Promise<ActionResult<Branch>> {
+  const result = await authedMutate<Branch>("/workspace/branches", {
+    method: "POST",
+    body: input,
+  });
+  if (result.ok) revalidateOwner("seats");
+  return result;
+}
+
+export async function deleteBranch(branchId: string): Promise<ActionResult> {
+  const result = await authedMutate(`/workspace/branches/${branchId}`, {
+    method: "DELETE",
+  });
+  if (result.ok) revalidateOwner("seats");
   return result;
 }

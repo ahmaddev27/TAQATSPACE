@@ -20,7 +20,9 @@ Route::get('/workspaces/{workspace}/seats', [SeatController::class, 'index']);
 Route::middleware(['auth:sanctum', 'role.owner'])->group(function (): void {
     // Owner's own seat map — always includes the assignee (name + avatar).
     Route::get('/workspace/seats', [SeatController::class, 'ownerIndex']);
+    Route::get('/workspace/seats/occupancy', [SeatController::class, 'monthOccupancy']);
     Route::post('/workspace/seats', [SeatController::class, 'store']);
+    Route::post('/workspace/seats/bulk', [SeatController::class, 'bulkStore']);
 
     Route::prefix('seats/{seat}')->group(function (): void {
         Route::put('/', [SeatController::class, 'update']);

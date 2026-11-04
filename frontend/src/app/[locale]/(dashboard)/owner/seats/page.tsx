@@ -1,11 +1,14 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOwnerWorkspace } from "@/lib/actions/owner";
-import { ownerSeats } from "@/lib/api/seats";
+import { ownerBranches, ownerSeats, seatMonthOccupancy } from "@/lib/api/seats";
 import { listMembers } from "@/lib/api/members";
+import type { SeatMonthOccupancy } from "@/lib/types";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SeatBoard } from "@/components/features/owner/SeatBoard";
+import { SeatsWorkspace } from "@/components/features/owner/SeatsWorkspace";
 
 export const dynamic = "force-dynamic";
+
+const emptyOccupancy: SeatMonthOccupancy = { month: "", days_in_month: 0, seats: [] };
 
 export default async function OwnerSeatsPage({
   params,
@@ -18,9 +21,11 @@ export default async function OwnerSeatsPage({
 
   const workspace = await getOwnerWorkspace();
 
-  const [seats, memberResult] = await Promise.all([
+  const [seats, memberResult, branches, occupancy] = await Promise.all([
     workspace ? ownerSeats() : Promise.resolve([]),
     listMembers({ status: "active", per_page: 200 }),
+    workspace ? ownerBranches() : Promise.resolve([]),
+    workspace ? seatMonthOccupancy() : Promise.resolve(emptyOccupancy),
   ]);
 
   return (
@@ -35,7 +40,7 @@ export default async function OwnerSeatsPage({
       </div>
 
       <div style={{ marginTop: 16 }}>
-        {seats.length === 0 ? (
+        {seats.length === 0 && (
           <EmptyState
             icon="grid"
             title={t("noSeatsTitle")}
@@ -46,8 +51,14 @@ export default async function OwnerSeatsPage({
               variant: "secondary",
             }}
           />
-        ) : (
-          <SeatBoard seats={seats} members={memberResult.members} />
+        )}
+        {workspace && (
+          <SeatsWorkspace
+            seats={seats}
+            members={memberResult.members}
+            branches={branches}
+            occupancy={occupancy}
+          />
         )}
       </div>
     </div>
