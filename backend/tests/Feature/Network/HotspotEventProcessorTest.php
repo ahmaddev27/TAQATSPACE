@@ -126,8 +126,9 @@ class HotspotEventProcessorTest extends TestCase
 
         $this->assertSame(1200, $count);
         $this->assertSame(1200, DevicePresence::query()->withoutWorkspaceScope()->count());
-        // 3 batches x (select, existing, upsert chunk(s), update, tx) plus the final empty select.
-        $this->assertLessThan(40, $queries);
+        // 3 batches x (select, existing, upsert chunk(s), update, tx, session building and its built marker)
+        // plus the unbuilt check and the final empty select; still constant per batch, never per event.
+        $this->assertLessThan(60, $queries);
     }
 
     public function test_failure_rolls_back_and_keeps_events_unprocessed(): void

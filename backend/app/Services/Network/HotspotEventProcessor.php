@@ -30,6 +30,8 @@ class HotspotEventProcessor
         $router = Router::query()->withoutWorkspaceScope()->findOrFail($routerId);
         $total = 0;
 
+        $this->rebuildUnbuilt($routerId);
+
         while (($events = $this->nextBatch($routerId))->isNotEmpty()) {
             DB::transaction(function () use ($router, $routerId, $events): void {
                 $this->devices->resolveBatch($router, $events);
@@ -43,6 +45,35 @@ class HotspotEventProcessor
         }
 
         return $total;
+    }
+
+    /**
+     * Applied events whose sessions were never built (the previous run died
+     * after marking them) are handed over again, oldest first. Building is
+     * idempotent and marks them built, so each retry makes progress.
+     */
+    private function rebuildUnbuilt(string $routerId): void
+    {
+        $after = 0;
+
+        while (($ids = $this->unbuiltEventIds($routerId, $after)) !== []) {
+            HotspotEventsProcessed::dispatch($routerId, $ids);
+            $after = end($ids);
+        }
+    }
+
+    /** @return list<int> */
+    private function unbuiltEventIds(string $routerId, int $after): array
+    {
+        return HotspotEvent::query()
+            ->where('router_id', $routerId)
+            ->where('id', '>', $after)
+            ->whereNotNull('processed_at')
+            ->whereNull('sessions_built_at')
+            ->orderBy('id')
+            ->limit(self::BATCH_SIZE)
+            ->pluck('id')
+            ->all();
     }
 
     /** @return Collection<int, HotspotEvent> */

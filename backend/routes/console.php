@@ -34,6 +34,9 @@ Schedule::command('network:prune')->dailyAt('03:15');
 // itself; this catches runs that were lost or failed.
 Schedule::command('router-data:process-pending')->everyMinute()->withoutOverlapping();
 
+// Open sessions of routers that stopped syncing time out here (config/network.php).
+Schedule::command('sessions:close-idle')->everyFiveMinutes()->withoutOverlapping();
+
 // Router commands nobody acknowledged before their ttl must stop being resent.
 Schedule::command('router-commands:expire')->everyFiveMinutes();
 
