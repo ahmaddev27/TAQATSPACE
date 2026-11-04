@@ -80,6 +80,25 @@ const TIMEZONES = [
 
 const CURRENCIES = ["ILS", "USD", "EUR", "JOD", "EGP", "SAR", "AED", "KWD"] as const;
 
+/** The tab that shows each validated field. */
+const FIELD_TABS: Record<string, string> = {
+  name: "basic",
+  description: "basic",
+  phone: "basic",
+  contact_email: "general",
+  bank_name: "general",
+  iban: "general",
+  timezone: "general",
+  currency: "general",
+  wifi_ssid: "general",
+  wifi_password: "general",
+  address: "location",
+  city: "location",
+  city_id: "location",
+  latitude: "location",
+  longitude: "location",
+};
+
 interface FormState {
   name: string;
   description: string;
@@ -206,6 +225,9 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
         toast({ tone: "ok", title: t("settings.saved") });
       } else {
         setErrors(res.errors ?? {});
+        // All tabs save together, so the field at fault may be on another tab with nothing to see here.
+        const failedTabs = Object.keys(res.errors ?? {}).map((field) => FIELD_TABS[field]).filter(Boolean);
+        if (failedTabs.length > 0 && !failedTabs.includes(tab)) setTab(failedTabs[0]);
         toast({ tone: "err", title: t("settings.saveFailed"), body: res.message });
       }
     });

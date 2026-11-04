@@ -69,7 +69,8 @@ export function watch(page: Page, apiOrigin: string): PageProblems {
 export async function visit(page: Page, url: string, problems: PageProblems): Promise<string[]> {
   problems.list.length = 0;
   const response = await page.goto(url, { waitUntil: "load" });
-  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
+  // A short window for late API calls: the chat's Firestore listener never lets the network go idle.
+  await page.waitForLoadState("networkidle", { timeout: 3_000 }).catch(() => undefined);
 
   const found = [...problems.list];
   if (!response || response.status() >= 400) found.push(`document responded ${response?.status() ?? "nothing"}`);

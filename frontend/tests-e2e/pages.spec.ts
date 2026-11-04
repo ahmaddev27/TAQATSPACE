@@ -11,18 +11,17 @@ for (const key of SESSION_ACCOUNTS) {
   test.describe(`page walk: ${key}`, () => {
     test.use({ storageState: statePath(key) });
 
+    // One test per page: a slow or broken page fails alone and names itself.
     for (const locale of LOCALES) {
-      test(`every menu page loads (${locale})`, async ({ page }) => {
-        const problems = watch(page, apiOrigin());
-        const failures: string[] = [];
+      for (const href of pagesFor(key)) {
+        test(`/${locale}${href} loads`, async ({ page }) => {
+          const problems = watch(page, apiOrigin());
 
-        for (const href of pagesFor(key)) {
           const found = await visit(page, `/${locale}${href}`, problems);
-          failures.push(...found.map((problem) => `${locale}${href}: ${problem}`));
-        }
 
-        expect(failures, `pages with problems for ${key}`).toEqual([]);
-      });
+          expect(found, `problems on /${locale}${href} for ${key}`).toEqual([]);
+        });
+      }
     }
   });
 }

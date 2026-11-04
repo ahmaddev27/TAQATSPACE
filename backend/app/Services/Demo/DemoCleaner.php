@@ -28,11 +28,8 @@ class DemoCleaner
     {
         return DB::transaction(function (): array {
             $userIds = User::query()->where('email', 'like', '%@'.DemoMarker::emailDomain())->pluck('id');
-            $workspaceIds = Workspace::withTrashed()
-                ->where(fn ($query) => $query
-                    ->where('slug', 'like', DemoMarker::slugPrefix().'%')
-                    ->orWhereIn('owner_id', $userIds))
-                ->pluck('id');
+            // By owner, never by slug: a real workspace named "Demo Hub" also gets a demo- slug.
+            $workspaceIds = Workspace::withTrashed()->whereIn('owner_id', $userIds)->pluck('id');
 
             $this->clearKeylessTables($userIds->all(), $workspaceIds->all());
 

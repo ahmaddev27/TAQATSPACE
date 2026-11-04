@@ -7,6 +7,7 @@ namespace App\Services\Demo\Steps;
 use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\WorkspaceStatus;
+use App\Models\City;
 use App\Models\Workspace;
 use App\Services\Demo\DemoContext;
 use App\Services\Demo\DemoMarker;
@@ -51,6 +52,8 @@ class WorkspacesStep implements DemoSeedStep
             'description' => 'مساحة عمل تجريبية لاختبار المنصة على بيئة الاختبار.',
             'address' => $definition['area'].'، غزة',
             'city' => 'غزة',
+            // Required by the settings form, so a workspace without it can never be saved.
+            'city_id' => City::query()->firstOrCreate(['name_ar' => 'غزة'], ['name_en' => 'Gaza'])->id,
             'total_seats' => 12,
             'price_per_month' => $definition['price'],
             'amenities' => ['wifi', 'printer', 'coffee'],
