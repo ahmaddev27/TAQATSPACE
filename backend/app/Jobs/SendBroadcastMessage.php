@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Mail\BroadcastMessageMail;
+use App\Services\Demo\DemoMarker;
 use App\Services\Sms\SmsService;
 use App\Support\MailConfigurator;
 use Illuminate\Bus\Queueable;
@@ -50,6 +51,11 @@ class SendBroadcastMessage implements ShouldQueue
 
     public function handle(SmsService $sms): void
     {
+        // Backstop for any path that dispatches a raw address: demo mailboxes are never contacted.
+        if ($this->channel === 'email' && DemoMarker::isDemoEmail($this->to)) {
+            return;
+        }
+
         try {
             if ($this->channel === 'email') {
                 $this->sendEmail();
