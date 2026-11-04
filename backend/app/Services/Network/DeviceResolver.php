@@ -51,6 +51,26 @@ class DeviceResolver
     }
 
     /**
+     * Same as resolveBatch for the devices a snapshot lists.
+     *
+     * @return Collection<string, Device> keyed by normalized MAC
+     */
+    public function resolveSnapshot(Router $router, AssembledSnapshot $snapshot): Collection
+    {
+        $sightings = [];
+
+        foreach ($snapshot->rows as $row) {
+            $mac = MacAddress::normalize($row->mac);
+
+            if ($mac !== null) {
+                $sightings[$mac] = ['username' => $row->username, 'first' => $snapshot->takenAt, 'last' => $snapshot->takenAt];
+            }
+        }
+
+        return $this->persist($router, $sightings);
+    }
+
+    /**
      * One entry per MAC: when it was first/last seen in the batch and the
      * latest username it presented.
      *

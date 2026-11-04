@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Services\Network\HotspotEventProcessor;
 use App\Services\Network\RouterSnapshotProcessor;
+use App\Services\Network\SessionBuilder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,11 +42,14 @@ class ProcessRouterBatch implements ShouldQueue
         return [(new WithoutOverlapping($this->routerId))->releaseAfter(15)->expireAfter(120)];
     }
 
-    public function handle(HotspotEventProcessor $events, RouterSnapshotProcessor $snapshots): void
+    public function handle(HotspotEventProcessor $events, RouterSnapshotProcessor $snapshots, SessionBuilder $sessions): void
     {
         // Events first: the snapshot is authoritative and reconciles whatever
         // an event of the same period left behind.
         $events->process($this->routerId);
+        // A restart must close the old boot's sessions before a snapshot of the new boot can vouch for them.
+        $sessions->reconcileBoot($this->routerId);
         $snapshots->process($this->routerId);
+        $sessions->closeIdle($this->routerId);
     }
 }

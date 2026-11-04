@@ -8,7 +8,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 
 /**
  * A batch of raw hotspot events was applied to the connected-now table. The
- * ids are handed to session building (3.3).
+ * ids are handed to session building (BuildSessionsFromEvents).
  */
 final class HotspotEventsProcessed
 {

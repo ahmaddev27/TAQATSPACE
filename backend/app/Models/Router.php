@@ -42,6 +42,8 @@ class Router extends Model
         'last_seen_at',
         'last_seq',
         'clock_offset_seconds',
+        'boot_id',
+        'sessions_boot_id',
     ];
 
     /** @var list<string> */

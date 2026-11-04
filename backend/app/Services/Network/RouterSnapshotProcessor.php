@@ -18,6 +18,7 @@ class RouterSnapshotProcessor
     public function __construct(
         private readonly SnapshotAssembler $assembler,
         private readonly DevicePresenceService $presence,
+        private readonly SessionBuilder $sessions,
     ) {}
 
     /** @return int number of snapshots applied */
@@ -48,6 +49,7 @@ class RouterSnapshotProcessor
             }
 
             $this->presence->applySnapshot($assembled);
+            $this->sessions->applySnapshot($assembled);
 
             return 1;
         });

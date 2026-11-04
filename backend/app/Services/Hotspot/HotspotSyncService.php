@@ -104,6 +104,7 @@ class HotspotSyncService
             'last_seen_at' => $receivedAt,
             'last_seq' => max((int) $router->last_seq, $payload->seq),
             'clock_offset_seconds' => $offset,
+            'boot_id' => $payload->bootId,
             'routeros_version' => $payload->routerosVersion ?? $router->routeros_version,
             'script_version' => $payload->scriptVersion ?? $router->script_version,
             'mode' => in_array($payload->mode, RouterScriptRepository::MODES, true) ? $payload->mode : $router->mode,
