@@ -60,7 +60,7 @@ class UnbilledChargeController extends Controller
     /** DELETE /api/workspace/finance/unbilled-charges/{id} (voids an open charge) */
     public function destroy(Request $request, string $id): JsonResponse
     {
-        abort_unless($this->access->canManage($request->user()), 403, __('messages.insufficient_permissions'));
+        abort_unless($this->access->canManageCharges($request->user()), 403, __('messages.insufficient_permissions'));
 
         $charge = $this->repository->find($this->context->workspace(), $id);
         $voided = $this->charges->void($charge, $request->user());

@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services\Finance;
 
-use App\Enums\PosPermission;
+use App\Enums\FinancePermission;
 use App\Models\User;
 
 /**
- * Who may touch the finance catalog. Owners (and platform admins) always may;
- * a cashier may read it, and change it only with the `pos_manage_products`
- * grant. Everyone else has no catalog surface.
+ * Who may touch the finance catalog and the unbilled charges. Owners (and
+ * platform admins) always may; a cashier may read them, change the catalog with
+ * `finance_items` and record or void on-account charges with `finance_withdrawals`
+ * (the legacy `pos_manage_products` grant still satisfies both). Everyone else
+ * has no surface here.
  */
 final class CatalogAccess
 {
+    public function __construct(private readonly FinanceAccess $finance) {}
+
     public function canView(User $user): bool
     {
         return $user->isOwner() || $user->isAdmin() || $user->isCashier();
@@ -21,10 +25,11 @@ final class CatalogAccess
 
     public function canManage(User $user): bool
     {
-        if ($user->isOwner() || $user->isAdmin()) {
-            return true;
-        }
+        return $this->finance->can($user, FinancePermission::Items);
+    }
 
-        return $user->isCashier() && $user->can(PosPermission::ManageProducts->value);
+    public function canManageCharges(User $user): bool
+    {
+        return $this->finance->can($user, FinancePermission::Withdrawals);
     }
 }

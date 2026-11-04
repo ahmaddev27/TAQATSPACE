@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.admin' => \App\Http\Middleware\EnsureAdmin::class,
             // Fine-grained admin gate: `can.permission:<permission>`.
             'can.permission' => \App\Http\Middleware\EnsureHasAdminPermission::class,
+            // Staff finance gate: `finance.permission:<finance_*>[,<finance_*>]` (any of; owner/admin pass).
+            'finance.permission' => \App\Http\Middleware\EnsureFinancePermission::class,
             // Binds the request's workspace into the tenancy context (403 if none).
             'workspace.current' => \App\Http\Middleware\CurrentWorkspace::class,
             // Step-up: users with 2FA must have verified a code in the last 10 minutes.
