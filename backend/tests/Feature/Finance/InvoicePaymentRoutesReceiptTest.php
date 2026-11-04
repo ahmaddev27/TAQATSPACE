@@ -48,6 +48,9 @@ class InvoicePaymentRoutesReceiptTest extends ReceiptTestCase
         $this->assertSame([], Storage::disk('public')->allFiles());
         $this->assertCount(1, Storage::disk('local')->allFiles());
         $this->assertNotNull(Receipt::query()->firstOrFail()->receipt_path);
+
+        $list = $this->getJson(self::INVOICES)->assertOk();
+        $this->assertStringContainsString('signature=', (string) $list->json('data.invoices.0.payments.0.receipt_url'));
     }
 
     public function test_voiding_the_receipt_takes_the_legacy_payment_back_too(): void

@@ -609,7 +609,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forWorkspace($workspace->id)
-            ->with(['subscription.member', 'subscription.seat', 'payments', 'customer:id,name'])
+            ->with(['subscription.member', 'subscription.seat', 'payments.receipt', 'customer:id,name'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();
@@ -642,7 +642,7 @@ class InvoiceService
     {
         return $this->filteredQuery($filters)
             ->forMember($member->id)
-            ->with(['subscription.workspace', 'subscription.seat', 'payments'])
+            ->with(['subscription.workspace', 'subscription.seat', 'payments.receipt'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();

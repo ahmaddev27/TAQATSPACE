@@ -7,15 +7,12 @@ namespace App\Http\Resources;
 use App\Models\Receipt;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\URL;
 
 /**
  * @mixin Receipt
  */
 class ReceiptResource extends JsonResource
 {
-    private const FILE_URL_MINUTES = 10;
-
     /**
      * @return array<string, mixed>
      */
@@ -40,11 +37,7 @@ class ReceiptResource extends JsonResource
             'reference' => $this->reference,
             'cheque_status' => $this->cheque_status?->value,
             'is_collected' => $this->isCollected(),
-            'receipt_url' => $this->receipt_path === null ? null : URL::temporarySignedRoute(
-                'finance.receipts.file',
-                now()->addMinutes(self::FILE_URL_MINUTES),
-                ['receipt' => $this->id],
-            ),
+            'receipt_url' => $this->resource->fileUrl(),
             'voided_at' => $this->voided_at?->toIso8601String(),
             'void_reason' => $this->void_reason,
             'allocations' => $this->whenLoaded('allocations', fn () => $this->allocations->map(static fn ($allocation): array => [

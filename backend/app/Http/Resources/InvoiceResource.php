@@ -72,7 +72,10 @@ class InvoiceResource extends JsonResource
                 'id' => $p->id,
                 'amount' => $p->amount,
                 'paid_at' => $p->paid_at?->toIso8601String(),
-                'receipt_url' => MediaUrl::resolve($p->receipt_path),
+                // Once a receipt mirrors the payment its proof is private: a signed link, never a public one.
+                'receipt_url' => $p->relationLoaded('receipt') && $p->receipt !== null
+                    ? $p->receipt->fileUrl()
+                    : MediaUrl::resolve($p->receipt_path),
             ])->all()),
             'receipt_rejected_reason' => $this->receipt_rejected_reason,
             'receipt_reviewed_at' => $this->receipt_reviewed_at?->toIso8601String(),

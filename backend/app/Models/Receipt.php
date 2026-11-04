@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Money received from a customer, numbered per workspace. It may be allocated
@@ -76,6 +77,16 @@ class Receipt extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(ReceiptAllocation::class);
+    }
+
+    /** A short-lived signed link to the private proof file, or null when there is none. */
+    public function fileUrl(): ?string
+    {
+        if ($this->receipt_path === null) {
+            return null;
+        }
+
+        return URL::temporarySignedRoute('finance.receipts.file', now()->addMinutes(10), ['receipt' => $this->id]);
     }
 
     public function isVoided(): bool
