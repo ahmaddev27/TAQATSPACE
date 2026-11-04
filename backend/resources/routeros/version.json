@@ -1,10 +1,10 @@
 {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "min_routeros": "7.12",
     "files": {
         "install-precheck.rsc": "9ab8d5bc131672bcdb358aaa613c662f07ff1e616efa7b14f384fd3b62e4acc1",
-        "hooks.rsc": "0ed149160aa4a6f71a61838c4f010ef82923aa97275a20c90e966e666600c791",
-        "sync.rsc": "ea0364113cd138a93bb1149d6823a10112c47a92498f806f1a5b7379c74e2808",
+        "hooks.rsc": "ab13add6e61c46de979678b48dd0ce3ed16d600def25ac50d61c618ad83767db",
+        "sync.rsc": "56893c6f92922634f6c167707c4d8c525cb898d9dcf49bd44fa80d90f4ce38c4",
         "snapshot.rsc": "424e9dc5303ced2fddeeba8983d5697450f25768a2801cbb97c9a389e109e19f",
         "interpreter.rsc": "5898fa78bec6179aa448387c158c2da40a5a94ad87a19806147ab2dc3ae8466e"
     }

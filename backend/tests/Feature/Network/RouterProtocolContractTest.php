@@ -12,10 +12,14 @@ use App\Models\RouterSnapshot;
 use App\Models\Workspace;
 use App\Repositories\Eloquent\RouterScriptRepository;
 use App\Services\Router\RouterCommandService;
+use App\Http\Requests\Hotspot\SyncRequest;
 use App\Services\Hotspot\SyncWireParser;
+use App\Testing\Hotspot\RouterSimulator;
 use App\Support\Router\RouterKeyHasher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
@@ -161,10 +165,60 @@ class RouterProtocolContractTest extends TestCase
         );
 
         $this->assertSame(
-            ['cwsLastBatch', 'cwsSeq', 'cwsBootId', 'now', 'cwsMode', 'nonce', 'SCRIPT_VERSION', 'serial', 'rosVersion'],
+            ['batch', 'seq', 'cwsBootId', 'now', 'cwsMode', 'nonce', 'SCRIPT_VERSION', 'serial', 'rosVersion'],
             $built,
         );
         $this->assertCount(count(SyncWireParser::HEADER_FIELDS), $built);
+    }
+
+    /** The code of the function `:global <name> do={ ... }` up to the next top-level closing brace. */
+    private function scriptFunction(string $script, string $name): string
+    {
+        $this->assertSame(1, preg_match('/^:global '.$name.' do=\{\R(.*?)^\}/ms', $script, $match), "sync.rsc has no function {$name}");
+
+        return $match[1];
+    }
+
+    public function test_sync_rsc_rebuilds_the_head_with_the_current_clock_on_every_send_and_never_keeps_it(): void
+    {
+        $script = $this->readFile('routeros/sync.rsc');
+        $code = implode("\n", array_filter(explode("\n", $script), static fn (string $line): bool => ! str_starts_with(ltrim($line), '#')));
+        $send = $this->scriptFunction($script, 'cwsSend');
+
+        $this->assertSame(1, substr_count($code, '"H|'), 'the H line must be built in exactly one place');
+        $this->assertStringContainsString('"H|', $send);
+        $this->assertMatchesRegularExpression('/:local now "\$\[\/system clock get date\] \$\[\/system clock get time\]"/', $send);
+        $this->assertStringContainsString('/tool fetch', $send);
+        $this->assertDoesNotMatchRegularExpression('/:set cwsLast\w+\s+\(?\$head/', $code, 'the kept batch must not contain the H line');
+        $this->assertStringContainsString('$cwsLastEvents . $cwsLastSnap . $cwsLastAcks', $code);
+    }
+
+    public function test_sync_rsc_caps_the_events_per_batch_at_the_server_limit_and_keeps_the_rest(): void
+    {
+        $script = $this->readFile('routeros/sync.rsc');
+        $take = $this->scriptFunction($script, 'cwsTakeEvents');
+
+        preg_match('/^:global cwsBatchEvents (\d+)$/m', $script, $cap);
+        preg_match('/^:global cwsBatchBytes (\d+)$/m', $script, $bytes);
+
+        $this->assertSame(SyncRequest::MAX_EVENTS, (int) ($cap[1] ?? 0));
+        $this->assertSame(RouterSimulator::MAX_EVENTS_PER_BATCH, (int) $cap[1]);
+        $this->assertLessThan(65536, (int) $bytes[1] + 3000 + 2000, 'events, snapshot chunk and acks must fit the 64 KB http-data limit');
+        $this->assertStringContainsString('$taken < $cwsBatchEvents', $take);
+        $this->assertStringContainsString('set cwsEvents [:pick $cwsEvents $cut $total]', $take);
+        $this->assertStringContainsString(':set cwsLastEvents [$cwsTakeEvents]', $script);
+        $this->assertDoesNotMatchRegularExpression('/\$cwsEvents\s*\.\s*\$pending/', $script, 'the whole buffer must never be sent in one batch');
+    }
+
+    public function test_sync_rsc_drops_a_refused_batch_after_the_same_number_of_failures_as_the_simulator(): void
+    {
+        $script = $this->readFile('routeros/sync.rsc');
+
+        preg_match('/^:global cwsQuarantineAfter (\d+)$/m', $script, $limit);
+
+        $this->assertSame(RouterSimulator::QUARANTINE_AFTER_FAILURES, (int) $limit[1]);
+        $this->assertMatchesRegularExpression('/\$cwsFailures >= \$cwsQuarantineAfter/', $script);
+        $this->assertStringContainsString('[$cwsSend [:rndstr length=12 from="abcdef0123456789"] $cwsSeq $probeNonce ""]', $script);
     }
 
     /** Counts the `|` separated fields of the `:local line "<prefix>...\n"` a script builds, ignoring `$[...]` and `$(...)` substitutions. */
@@ -270,6 +324,34 @@ class RouterProtocolContractTest extends TestCase
         $this->assertSame($first, $second);
         $this->assertSame(2, HotspotEvent::query()->count());
         $this->assertSame(1, RouterSnapshot::query()->count());
+    }
+
+    public function test_a_retried_batch_with_a_fresh_now_stores_nothing_twice_even_after_the_cached_reply_expired(): void
+    {
+        Carbon::setTestNow('2026-11-03 12:30:00');
+        [$body] = $this->routerBody('2026-11-03');
+        $this->postText($body)->assertOk();
+        $occurred = HotspotEvent::query()->orderBy('event_uid')->pluck('occurred_at')->map->toDateTimeString()->all();
+
+        Carbon::setTestNow('2026-11-03 13:30:00');
+        Cache::flush();
+        $this->postText(str_replace('2026-11-03 12:30:00', '2026-11-03 13:30:00', $body))->assertOk();
+
+        $this->assertSame(2, HotspotEvent::query()->count());
+        $this->assertSame($occurred, HotspotEvent::query()->orderBy('event_uid')->pluck('occurred_at')->map->toDateTimeString()->all());
+        $this->assertSame(0, $this->router->refresh()->clock_offset_seconds);
+        Carbon::setTestNow();
+    }
+
+    public function test_a_first_delivery_after_an_outage_uses_the_fresh_clock_for_every_event(): void
+    {
+        Carbon::setTestNow('2026-11-03 13:30:00');
+        [$body] = $this->routerBody('2026-11-03');
+
+        $this->postText(str_replace('2026-11-03 12:30:00', '2026-11-03 13:30:00', $body))->assertOk();
+
+        $this->assertSame(['2026-11-03 12:29:00', '2026-11-03 12:29:30'], HotspotEvent::query()->orderBy('event_uid')->pluck('occurred_at')->map->toDateTimeString()->all());
+        Carbon::setTestNow();
     }
 
     public function test_a_malformed_line_returns_422_and_stores_nothing(): void

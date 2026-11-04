@@ -20,6 +20,5 @@ final readonly class SimulationPlan
         public int $durationMinutes = 60,
         public int $seed = 1,
         public int $intervalSeconds = self::DEFAULT_INTERVAL_SECONDS,
-        public bool $refreshNowOnResend = false,
     ) {}
 }

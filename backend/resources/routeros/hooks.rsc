@@ -4,7 +4,7 @@
 # In "poll-only" mode (parallel run) NOTHING on the router is modified: no hooks, no profiles.
 
 :global cwsMode "{{MODE}}"
-:global cwsMaxEvents 200
+:global cwsMaxEvents 2000
 :global cwsEvents
 :global cwsEventCount
 :global cwsSeq
