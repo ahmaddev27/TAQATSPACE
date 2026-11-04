@@ -15,8 +15,10 @@ use App\Services\Approvals\Handlers\WorkingHoursApprovalHandler;
 use App\Services\Finance\FinanceAccess;
 use App\Services\Workspace\Reset\Steps\BookingsResetStep;
 use App\Services\Workspace\Reset\Steps\ExpensesResetStep;
+use App\Services\Workspace\Reset\Steps\FinanceResetStep;
 use App\Services\Workspace\Reset\Steps\InvoicesResetStep;
 use App\Services\Workspace\Reset\Steps\MembersResetStep;
+use App\Services\Workspace\Reset\Steps\NetworkResetStep;
 use App\Services\Workspace\Reset\Steps\PosResetStep;
 use App\Services\Workspace\Reset\WorkspaceResetter;
 use App\Support\Tenancy\CurrentWorkspaceContext;
@@ -43,8 +45,11 @@ class AppServiceProvider extends ServiceProvider
         // Later modules (network, finance, GSG) tag their own WorkspaceResetStep
         // with `workspace.reset` from their provider; nothing here changes.
         $this->app->tag([
+            // Order matters: see FinanceResetStep and NetworkResetStep.
+            FinanceResetStep::class,
             InvoicesResetStep::class,
             BookingsResetStep::class,
+            NetworkResetStep::class,
             MembersResetStep::class,
             ExpensesResetStep::class,
             PosResetStep::class,
