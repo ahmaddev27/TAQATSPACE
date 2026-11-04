@@ -6,6 +6,7 @@ namespace Tests\Feature\Network;
 
 use App\Enums\SessionEndReason;
 use App\Jobs\ProcessRouterBatch;
+use App\Models\HotspotEvent;
 use App\Models\HotspotSession;
 use App\Models\Router;
 use App\Models\User;
@@ -155,6 +156,7 @@ class SessionPipelineTest extends TestCase
 
     public function test_events_applied_while_the_lock_was_held_are_built_by_the_next_run(): void
     {
+        config(['network.sessions.lock_wait_seconds' => 0]);
         $this->event('login', self::MAC, $this->at('10:00:00'));
         $this->event('logout', self::MAC, $this->at('10:20:00'));
         $held = Cache::lock("router:{$this->router->id}:sessions", 30);
@@ -182,13 +184,16 @@ class SessionPipelineTest extends TestCase
         $this->feed($this->event('login', self::MAC, $this->at('10:00:00')));
         $this->feed($this->event('login', 'AA:AA:AA:AA:AA:02', $this->at('10:40:00'), boot: 'boot2'));
 
-        $this->feed($this->event('logout', self::MAC, $this->at('10:10:00'), data: ['uptime' => '10m']));
+        $this->feed($this->event('login', 'AA:AA:AA:AA:AA:03', $this->at('10:10:00')));
 
-        [$old, $new] = $this->sessions();
-        $this->assertEquals($this->at('10:10:00'), $old->ended_at);
-        $this->assertTrue($new->isOpen());
-        $this->assertNull($new->end_reason);
+        $current = collect($this->sessions())->first(fn (HotspotSession $s): bool => $s->started_at->equalTo($this->at('10:40:00')));
+        $this->assertTrue($current->isOpen());
+        $this->assertNull($current->end_reason);
         $this->assertSame('boot2', $this->router->fresh()->sessions_boot_id);
+
+        $this->feed($this->event('login', 'AA:AA:AA:AA:AA:04', $this->at('10:50:00'), boot: 'boot2'));
+
+        $this->assertTrue($current->fresh()->isOpen());
     }
 
     public function test_the_lock_is_released_after_a_build_and_another_router_is_never_blocked(): void
