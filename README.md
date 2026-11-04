@@ -7,14 +7,14 @@ Multi-tenant coworking platform for Gaza — Arabic-first (RTL) + English. Today
 | | |
 |---|---|
 | **Platform** | Phases 1–4 + platform expansion + realtime (Firebase) + POS/café & cashier + M1 foundation — **built** |
-| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 169 tasks, ≈ 145 working days (≈ 28.9 weeks)** |
+| **Roadmap** | Toward the CoWorkSpaces SRS: **14 milestones (M0–M13), 171 tasks, ≈ 148 working days (≈ 29.5 weeks)** |
 | **Current milestone** | **M2 — MikroTik integration** ([milestone](https://github.com/ahmaddev27/TAQATSPACE/milestone/3)). M1 is done and on staging; the open M0 items wait on owner decisions |
 | **Production** | 🟢 [taqat.space](https://taqat.space) + [api.taqat.space](https://api.taqat.space/api/health) — at PR #162 (2026-06-30). POS/cashier, M1 and later work are on `dev`, pending release R0 ([#186](https://github.com/ahmaddev27/TAQATSPACE/issues/186)) |
 | **Staging** | 🟢 [staging.taqat.space](https://staging.taqat.space) — deploys from `dev` |
 | **Default branch** | `dev` |
 | **Board** | [TaqatSpace Roadmap](https://github.com/users/ahmaddev27/projects/1) |
 | **API docs** | Scramble UI `/docs/api` + [`api-docs/openapi.json`](api-docs/openapi.json) + Postman collection (`composer api:docs`) |
-| **Last updated** | 2026-11-03 |
+| **Last updated** | 2026-11-04 |
 
 ---
 
