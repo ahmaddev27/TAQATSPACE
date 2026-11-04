@@ -6,12 +6,10 @@ namespace Tests\Feature\InvoicesExtra;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
-use App\Enums\WorkspaceFeature;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
-use App\Models\WorkspaceFeatureFlag;
 use App\Notifications\InvoicePaidNotification;
 use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReminderNotification;
@@ -196,9 +194,9 @@ class OwnerInvoiceEndpointsTest extends TestCase
     public function test_destroy_endpoint_voids_instead_of_deleting_once_finance_v2_is_on(): void
     {
         [$owner, $workspace, $subscription] = $this->ownerWorkspaceSubscription();
-        WorkspaceFeatureFlag::query()->create([
+        \App\Models\WorkspaceFeatureFlag::query()->create([
             'workspace_id' => $workspace->id,
-            'feature' => WorkspaceFeature::FinanceV2->value,
+            'feature' => \App\Enums\WorkspaceFeature::FinanceV2->value,
             'enabled' => true,
         ]);
         $invoice = Invoice::factory()->create(['subscription_id' => $subscription->id]);

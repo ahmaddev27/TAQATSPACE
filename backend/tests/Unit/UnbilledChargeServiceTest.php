@@ -14,7 +14,6 @@ use App\Models\Workspace;
 use App\Services\Finance\UnbilledChargeService;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class UnbilledChargeServiceTest extends TestCase
@@ -93,7 +92,7 @@ class UnbilledChargeServiceTest extends TestCase
     {
         $invoice = Invoice::factory()->create();
 
-        $id = (string) Str::uuid();
+        $id = (string) \Illuminate\Support\Str::uuid();
         // Plain insert: the model observer refuses new lines on an issued invoice.
         InvoiceLine::query()->insert([
             'id' => $id,

@@ -8,7 +8,6 @@ use App\Enums\PosPermission;
 use App\Enums\WorkspaceFeature;
 use App\Models\AuditLog;
 use App\Models\CatalogCategory;
-use App\Models\User;
 use App\Models\Workspace;
 use App\Services\FeatureFlagService;
 use Laravel\Sanctum\Sanctum;
@@ -132,7 +131,7 @@ class CatalogCategoryTest extends CatalogTestCase
 
     public function test_a_user_without_a_workspace_is_rejected(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs(\App\Models\User::factory()->create());
 
         $this->getJson(self::URL)->assertForbidden();
     }

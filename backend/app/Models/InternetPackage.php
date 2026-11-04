@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Database\Factories\InternetPackageFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class InternetPackage extends Model
 {
-    /** @use HasFactory<InternetPackageFactory> */
+    /** @use HasFactory<\Database\Factories\InternetPackageFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */

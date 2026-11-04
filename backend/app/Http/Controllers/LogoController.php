@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Workspace\LogoUploadRequest;
 use App\Http\Resources\WorkspaceResource;
-use App\Models\Workspace;
 use App\Services\WorkspaceService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -58,7 +57,7 @@ class LogoController extends Controller
     /**
      * Resolve the requester's workspace and confirm they may manage it.
      */
-    private function authorizedWorkspace(Request $request): Workspace|JsonResponse
+    private function authorizedWorkspace(Request $request): \App\Models\Workspace|JsonResponse
     {
         $workspace = $request->user()->workspace;
 

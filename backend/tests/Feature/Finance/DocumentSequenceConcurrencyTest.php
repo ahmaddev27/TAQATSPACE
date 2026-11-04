@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Finance;
 
-use App\Exceptions\UnbilledChargeException;
 use App\Models\DocumentSequence;
 use App\Models\Invoice;
 use App\Services\Finance\DocumentNumberService;
@@ -83,7 +82,7 @@ class DocumentSequenceConcurrencyTest extends InvoiceV2TestCase
         try {
             app(InvoiceLifecycleService::class)->issue($draft, $owner);
             $this->fail('Expected the issue to fail.');
-        } catch (UnbilledChargeException) {
+        } catch (\App\Exceptions\UnbilledChargeException) {
             $this->assertNull($draft->fresh()->invoice_number);
             $this->assertSame('draft', $draft->fresh()->doc_status->value);
         }

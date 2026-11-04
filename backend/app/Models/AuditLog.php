@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AuditActorType;
-use App\Services\Audit\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
 /**
  * One immutable audit entry. Written only through
- * {@see AuditLogger}; updates and deletes are refused.
+ * {@see \App\Services\Audit\AuditLogger}; updates and deletes are refused.
  *
  * @property int $id
  * @property string|null $workspace_id

@@ -13,7 +13,6 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
@@ -100,7 +99,7 @@ class DashboardStatsService
      *
      * @return Collection<string, int>
      */
-    private function countsByColumn(Model $model, string $column): Collection
+    private function countsByColumn(\Illuminate\Database\Eloquent\Model $model, string $column): Collection
     {
         /** @var Collection<string, int> $counts */
         $counts = $model->newQuery()

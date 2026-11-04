@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enums\ResourceStatus;
 use App\Enums\ResourceType;
-use Database\Factories\ResourceFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Resource extends Model
 {
-    /** @use HasFactory<ResourceFactory> */
+    /** @use HasFactory<\Database\Factories\ResourceFactory> */
     use HasFactory, HasUuids;
 
     protected $table = 'workspace_resources';

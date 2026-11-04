@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AnnouncementType;
-use Database\Factories\AnnouncementFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +14,7 @@ use Illuminate\Support\Carbon;
 
 class Announcement extends Model
 {
-    /** @use HasFactory<AnnouncementFactory> */
+    /** @use HasFactory<\Database\Factories\AnnouncementFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */

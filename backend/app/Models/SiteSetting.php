@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Database\Factories\SiteSettingFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SiteSetting extends Model
 {
-    /** @use HasFactory<SiteSettingFactory> */
+    /** @use HasFactory<\Database\Factories\SiteSettingFactory> */
     use HasFactory, HasUuids;
 
     /** @var list<string> */

@@ -6,8 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CityResource;
 use App\Services\CityService;
-use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use App\Support\ApiResponse;
 
 class CityController extends Controller
 {
