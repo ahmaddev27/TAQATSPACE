@@ -21,7 +21,7 @@ class StoreUnbilledChargeRequest extends FormRequest
     {
         $user = $this->user();
 
-        return $user !== null && app(CatalogAccess::class)->canManage($user);
+        return $user !== null && app(CatalogAccess::class)->canManageCharges($user);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Enums\PosPermission;
+use App\Enums\StaffPermission;
 use App\Enums\UserRole;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -26,7 +27,7 @@ class PosPermissionSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        collect(PosPermission::values())
+        collect(StaffPermission::values())
             ->each(fn (string $name): Permission => Permission::findOrCreate($name, 'web'));
 
         Role::findOrCreate(UserRole::Cashier->value, 'web')->syncPermissions([]);

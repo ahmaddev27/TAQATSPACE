@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StaffManager } from "./StaffManager";
 import { inviteStaff, updateStaffPermissions } from "@/lib/actions/owner";
-import type { Staff } from "@/lib/types/staff";
+import { STAFF_GROUP_PERMISSIONS, type Staff } from "@/lib/types/staff";
 
 vi.mock("@/lib/actions/owner", () => ({
   inviteStaff: vi.fn().mockResolvedValue({ ok: true }),
@@ -69,7 +69,10 @@ describe("StaffManager", () => {
       email: "new@cafe.ps",
       name: undefined,
       staff_group: "finance_supervisor",
-      permissions: ["pos_refund", "pos_view_reports", "pos_sell"],
+      permissions: [
+        ...STAFF_GROUP_PERMISSIONS.finance_supervisor,
+        "pos_sell",
+      ],
     });
   });
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Enums\FinancePermission;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\Channels\SafeMailChannel;
@@ -11,6 +12,7 @@ use App\Services\Approvals\ApprovalHandlerRegistry;
 use App\Services\Approvals\Handlers\CapacityApprovalHandler;
 use App\Services\Approvals\Handlers\PricingApprovalHandler;
 use App\Services\Approvals\Handlers\WorkingHoursApprovalHandler;
+use App\Services\Finance\FinanceAccess;
 use App\Services\Workspace\Reset\Steps\BookingsResetStep;
 use App\Services\Workspace\Reset\Steps\ExpensesResetStep;
 use App\Services\Workspace\Reset\Steps\InvoicesResetStep;
@@ -77,6 +79,15 @@ class AppServiceProvider extends ServiceProvider
                 || $user->isAdmin()
                 || ($user->isCashier() && (string) $user->workspace_id === (string) $workspace->id);
         });
+
+        // `can:finance.<permission>` / Gate::allows('finance.finance_collect') delegate to
+        // FinanceAccess, so policies and the route middleware share one rule.
+        foreach (FinancePermission::cases() as $permission) {
+            Gate::define(
+                'finance.'.$permission->value,
+                static fn (User $user): bool => app(FinanceAccess::class)->can($user, $permission),
+            );
+        }
 
         // Controls access to the Scramble API docs UI (`/docs/api`) and spec
         // (`/docs/api.json`). The API surface is already discoverable from the

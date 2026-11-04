@@ -29,7 +29,7 @@ import type {
   Staff,
   StaffInvitation,
   InviteStaffInput,
-  PosPermission,
+  StaffPermission,
   StaffGroup,
 } from "@/lib/types/staff";
 
@@ -614,7 +614,7 @@ export async function inviteStaff(
 /** Re-scope a staff member's group and permission grant. */
 export async function updateStaffPermissions(
   staffId: string,
-  permissions: PosPermission[],
+  permissions: StaffPermission[],
   staffGroup?: StaffGroup,
 ): Promise<ActionResult<Staff>> {
   const result = await authedMutate<Staff>(

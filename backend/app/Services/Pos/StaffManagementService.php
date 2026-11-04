@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Pos;
 
-use App\Enums\PosPermission;
+use App\Enums\StaffPermission;
 use App\Enums\StaffGroup;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -303,7 +303,7 @@ class StaffManagementService
             return null;
         }
 
-        $valid = array_values(array_intersect($permissions, PosPermission::values()));
+        $valid = array_values(array_intersect($permissions, StaffPermission::values()));
 
         return $valid === [] ? null : $valid;
     }
