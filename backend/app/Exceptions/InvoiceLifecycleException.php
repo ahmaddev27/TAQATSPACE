@@ -34,6 +34,11 @@ class InvoiceLifecycleException extends RuntimeException
         return new self(__('messages.invoice_not_issued'), 409);
     }
 
+    public static function notPayable(): self
+    {
+        return new self(__('messages.invoice_not_payable'), 409);
+    }
+
     public static function noLines(): self
     {
         return new self(__('messages.invoice_no_lines'), 422);

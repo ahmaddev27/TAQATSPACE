@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceFeature;
@@ -47,6 +48,8 @@ class InvoiceService
      */
     public function submitReceipt(Invoice $invoice, UploadedFile $receipt): Invoice
     {
+        $this->assertIssued($invoice);
+
         $invoice->forceFill([
             'receipt_path' => $this->uploads->upload(
                 $receipt,
@@ -77,6 +80,8 @@ class InvoiceService
      */
     public function approveReceipt(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status !== InvoiceStatus::UnderReview) {
             throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
         }
@@ -123,6 +128,8 @@ class InvoiceService
      */
     public function recordPaymentWithReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -320,6 +327,8 @@ class InvoiceService
      */
     public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -352,6 +361,8 @@ class InvoiceService
      */
     public function recordPartialPayment(Invoice $invoice, float $amount, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -414,6 +425,8 @@ class InvoiceService
      */
     public function recordPayment(Invoice $invoice, float $amount, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
+        $this->assertIssued($invoice);
+
         if ($invoice->status === InvoiceStatus::Paid) {
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
@@ -483,6 +496,8 @@ class InvoiceService
      */
     public function sendReminder(Invoice $invoice): void
     {
+        $this->assertIssued($invoice);
+
         $cacheKey = "invoice:{$invoice->id}:reminder_sent";
 
         if (Cache::has($cacheKey)) {
@@ -536,6 +551,7 @@ class InvoiceService
         $sent = 0;
 
         Invoice::query()
+            ->where('doc_status', DocStatus::Issued->value)
             ->whereIn('status', [
                 InvoiceStatus::Overdue->value,
                 InvoiceStatus::PartiallyPaid->value,
@@ -733,6 +749,19 @@ class InvoiceService
      * than the platform's. Locks the latest row for that prefix to keep the
      * sequence collision-safe under concurrent generation.
      */
+    /**
+     * Payments, receipts and reminders only make sense on a numbered, issued
+     * invoice: a draft is hidden from the subscriber and a void one is frozen.
+     *
+     * @throws InvoiceLifecycleException when the invoice is a draft or void
+     */
+    private function assertIssued(Invoice $invoice): void
+    {
+        if ($invoice->doc_status !== DocStatus::Issued) {
+            throw InvoiceLifecycleException::notPayable();
+        }
+    }
+
     private function nextInvoiceNumber(Workspace $workspace): string
     {
         if ($this->financeV2($workspace->id)) {

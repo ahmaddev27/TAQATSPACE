@@ -163,6 +163,7 @@ return [
     'invoice_deleted' => 'Invoice deleted.',
     'invoice_immutable' => 'An issued invoice cannot be changed or deleted; void it instead.',
     'invoice_not_draft' => 'Only a draft invoice can be edited or issued.',
+    'invoice_not_payable' => 'Payments, receipts and reminders are only allowed on an issued invoice.',
     'invoice_not_issued' => 'Only an issued invoice can be voided.',
     'invoice_no_lines' => 'An invoice needs at least one line before it can be issued.',
     'invoice_total_too_large' => 'The invoice total exceeds the maximum supported amount.',

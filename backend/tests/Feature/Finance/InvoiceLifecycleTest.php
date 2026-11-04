@@ -13,8 +13,10 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Notifications\InvoiceCreatedNotification;
 use App\Services\Auth\TwoFactorService;
+use App\Services\Finance\InvoiceLifecycleService;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class InvoiceLifecycleTest extends InvoiceV2TestCase
 {
@@ -262,5 +264,47 @@ class InvoiceLifecycleTest extends InvoiceV2TestCase
         $this->assertSame(InvoiceStatus::Paid, $paid->status);
         $this->assertSame(PaymentStatus::Paid, $paid->payment_status);
         $this->assertSame(DocStatus::Issued, $paid->doc_status);
+    }
+
+    /** @return array<string, array{0: string, 1: string, 2: array<string, mixed>}> */
+    public static function paymentEndpoints(): array
+    {
+        return [
+            'pay' => ['put', '/pay', []],
+            'partial payment' => ['put', '/partial-payment', ['amount' => '1.00']],
+            'approve receipt' => ['put', '/approve-receipt', []],
+            'remind' => ['post', '/remind', []],
+        ];
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    #[DataProvider('paymentEndpoints')]
+    public function test_payment_flows_are_rejected_on_a_draft(string $method, string $path, array $payload): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $draft = $this->draftFor($owner, $workspace);
+        Sanctum::actingAs($owner);
+
+        $this->{$method.'Json'}(self::BASE."/{$draft->id}{$path}", $payload)->assertStatus(409);
+
+        $fresh = $draft->fresh();
+        $this->assertSame(DocStatus::Draft, $fresh->doc_status);
+        $this->assertSame(InvoiceStatus::Pending, $fresh->status);
+        $this->assertSame(PaymentStatus::Unpaid, $fresh->payment_status);
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    #[DataProvider('paymentEndpoints')]
+    public function test_payment_flows_are_rejected_on_a_void_invoice(string $method, string $path, array $payload): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $invoice = app(InvoiceLifecycleService::class)->void($this->issuedFor($owner, $workspace), 'Mistake', $owner);
+        Sanctum::actingAs($owner);
+
+        $this->{$method.'Json'}(self::BASE."/{$invoice->id}{$path}", $payload)->assertStatus(409);
+
+        $fresh = $invoice->fresh();
+        $this->assertSame(DocStatus::Void, $fresh->doc_status);
+        $this->assertNotSame(InvoiceStatus::Paid, $fresh->status);
     }
 }

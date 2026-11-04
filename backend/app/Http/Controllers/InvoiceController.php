@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\WorkspaceFeature;
+use App\Exceptions\InvoiceLifecycleException;
 use App\Http\Requests\Invoice\DeleteInvoiceRequest;
 use App\Http\Requests\Invoice\MarkPaidRequest;
 use App\Http\Requests\Invoice\PartialPaymentRequest;
@@ -138,6 +139,8 @@ class InvoiceController extends Controller
                 $invoice,
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -165,6 +168,8 @@ class InvoiceController extends Controller
                 $request->file('receipt'),
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -186,6 +191,8 @@ class InvoiceController extends Controller
 
         try {
             $updated = $this->invoices->approveReceipt($invoice);
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -235,6 +242,8 @@ class InvoiceController extends Controller
                 (float) $data['amount'],
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -264,6 +273,8 @@ class InvoiceController extends Controller
                 $request->file('receipt'),
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
             );
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 422);
         }
@@ -284,6 +295,8 @@ class InvoiceController extends Controller
 
         try {
             $this->invoices->sendReminder($invoice);
+        } catch (InvoiceLifecycleException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return ApiResponse::error($e->getMessage(), 429);
         }
