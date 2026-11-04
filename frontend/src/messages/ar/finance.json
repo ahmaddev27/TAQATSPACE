@@ -116,6 +116,70 @@
       "save": "حفظ",
       "error": "حدث خطأ ما"
     },
+    "receipts": {
+      "title": "الإيصالات",
+      "subtitle": "المبالغ المستلمة من العملاء موزعة على فواتيرهم. الشيك يُحتسب مدفوعاً بعد صرفه.",
+      "add": "إيصال جديد",
+      "empty": "لا توجد إيصالات بعد.",
+      "createTitle": "إيصال جديد",
+      "created": "تم تسجيل الإيصال",
+      "chequeUpdated": "تم تحديث حالة الشيك",
+      "voided": "تم إلغاء الإيصال",
+      "voidTitle": "إلغاء الإيصال",
+      "voidReason": "السبب",
+      "voidHint": "إلغاء {number} يعيد مبلغه من الفواتير.",
+      "void": "إلغاء",
+      "viewProof": "الإثبات",
+      "chooseCustomer": "اختر العميل",
+      "proofHint": "ملف PDF أو صورة حتى 5 ميجابايت. يُحفظ بشكل خاص.",
+      "optional": "اختياري",
+      "allocations": "التوزيع على الفواتير",
+      "addAllocation": "إضافة فاتورة",
+      "removeAllocation": "إزالة",
+      "overAllocated": "مجموع التوزيع يتجاوز مبلغ الإيصال.",
+      "surplus": "غير موزّع (رصيد للعميل): {amount}",
+      "sort": {
+        "receivedAt": "حسب تاريخ الإيصال",
+        "collectedAt": "حسب تاريخ التحصيل"
+      },
+      "fields": {
+        "number": "الرقم",
+        "customer": "العميل",
+        "method": "الطريقة",
+        "amount": "المبلغ",
+        "unallocated": "غير موزّع",
+        "receivedAt": "تاريخ الإيصال",
+        "collectedAt": "تاريخ التحصيل",
+        "reference": "المرجع",
+        "chequeNumber": "رقم الشيك",
+        "proof": "الإثبات",
+        "status": "الحالة"
+      },
+      "methods": {
+        "cash": "نقداً",
+        "card": "بطاقة",
+        "transfer": "تحويل",
+        "cheque": "شيك"
+      },
+      "statuses": {
+        "collected": "محصّل",
+        "voided": "ملغى"
+      },
+      "cheque": {
+        "received": "مستلم",
+        "deposited": "مودَع",
+        "cleared": "مصروف",
+        "bounced": "مرتجع"
+      },
+      "chequeActions": {
+        "deposited": "تم الإيداع",
+        "cleared": "تم الصرف",
+        "bounced": "ارتجع"
+      },
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "error": "حدث خطأ ما"
+    },
     "subscriptionTerms": {
       "button": "الشروط المالية",
       "title": "الشروط المالية",

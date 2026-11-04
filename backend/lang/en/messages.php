@@ -339,5 +339,14 @@ return [
     'plan_dedicated_seat_not_allowed' => 'A dedicated seat is only available on monthly, weekly or bundle plans.',
     'plan_not_found' => 'Plan not found.',
     'feature_not_found' => 'Not found.',
+    'receipt_created' => 'Receipt recorded.',
+    'receipt_allocated' => 'Receipt allocated.',
+    'receipt_cheque_updated' => 'Cheque status updated.',
+    'receipt_voided_ok' => 'Receipt voided.',
+    'receipt_voided' => 'This receipt is void and can no longer be changed.',
+    'receipt_not_cheque' => 'Only a cheque has a cheque status.',
+    'receipt_cheque_transition_invalid' => 'The cheque cannot move to that status from its current one.',
+    'receipt_allocation_exceeds_receipt' => 'The allocations exceed the receipt amount.',
+    'receipt_invoice_mismatch' => 'An invoice does not exist, or does not belong to this customer and workspace.',
 
 ];

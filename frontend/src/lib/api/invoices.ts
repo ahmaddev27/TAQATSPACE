@@ -61,6 +61,8 @@ export interface Invoice {
   status: InvoiceStatus;
   /** Finance v2 lifecycle; legacy invoices are migrated to `issued`. */
   doc_status?: DocStatus;
+  payment_status?: "unpaid" | "partial" | "paid";
+  customer_id?: string | null;
   void_reason?: string | null;
   due_date: string | null;
   paid_at: string | null;

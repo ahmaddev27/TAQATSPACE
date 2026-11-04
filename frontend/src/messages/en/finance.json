@@ -116,6 +116,70 @@
       "save": "Save",
       "error": "Something went wrong"
     },
+    "receipts": {
+      "title": "Receipts",
+      "subtitle": "Money received from customers, spread over their invoices. A cheque counts as paid once it clears.",
+      "add": "New receipt",
+      "empty": "No receipts yet.",
+      "createTitle": "New receipt",
+      "created": "Receipt recorded",
+      "chequeUpdated": "Cheque status updated",
+      "voided": "Receipt voided",
+      "voidTitle": "Void receipt",
+      "voidReason": "Reason",
+      "voidHint": "Voiding {number} takes its money back off the invoices.",
+      "void": "Void",
+      "viewProof": "Proof",
+      "chooseCustomer": "Choose a customer",
+      "proofHint": "PDF or image, up to 5 MB. Stored privately.",
+      "optional": "optional",
+      "allocations": "Allocation across invoices",
+      "addAllocation": "Add invoice",
+      "removeAllocation": "Remove",
+      "overAllocated": "The allocations exceed the receipt amount.",
+      "surplus": "Not allocated (credit on account): {amount}",
+      "sort": {
+        "receivedAt": "By receipt date",
+        "collectedAt": "By collection date"
+      },
+      "fields": {
+        "number": "Number",
+        "customer": "Customer",
+        "method": "Method",
+        "amount": "Amount",
+        "unallocated": "Unallocated",
+        "receivedAt": "Receipt date",
+        "collectedAt": "Collection date",
+        "reference": "Reference",
+        "chequeNumber": "Cheque number",
+        "proof": "Proof",
+        "status": "Status"
+      },
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "transfer": "Transfer",
+        "cheque": "Cheque"
+      },
+      "statuses": {
+        "collected": "Collected",
+        "voided": "Voided"
+      },
+      "cheque": {
+        "received": "Received",
+        "deposited": "Deposited",
+        "cleared": "Cleared",
+        "bounced": "Bounced"
+      },
+      "chequeActions": {
+        "deposited": "Mark deposited",
+        "cleared": "Mark cleared",
+        "bounced": "Mark bounced"
+      },
+      "cancel": "Cancel",
+      "save": "Save",
+      "error": "Something went wrong"
+    },
     "subscriptionTerms": {
       "button": "Financial terms",
       "title": "Financial terms",

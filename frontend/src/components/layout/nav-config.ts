@@ -276,6 +276,7 @@ export const ROLE_NAV: Record<UserRole, RoleNav> = {
           { key: "expenses", href: "/owner/expenses", icon: "wallet" },
           { key: "catalog", href: "/owner/finance/catalog", icon: "layers", feature: "finance_v2" },
           { key: "plans", href: "/owner/finance/plans", icon: "grid", feature: "finance_v2" },
+          { key: "receipts", href: "/owner/finance/receipts", icon: "receipt", feature: "finance_v2" },
         ],
       },
       {

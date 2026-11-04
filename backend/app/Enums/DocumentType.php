@@ -12,4 +12,5 @@ enum DocumentType: string
     use HasValues;
 
     case Invoice = 'invoice';
+    case Receipt = 'receipt';
 }
