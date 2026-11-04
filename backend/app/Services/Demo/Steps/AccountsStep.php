@@ -7,7 +7,6 @@ namespace App\Services\Demo\Steps;
 use App\Enums\AdminPermission;
 use App\Enums\AdminRole;
 use App\Enums\UserRole;
-use App\Models\User;
 use App\Services\Demo\DemoContext;
 use App\Services\Demo\DemoSeedStep;
 use Database\Seeders\AdminPermissionSeeder;

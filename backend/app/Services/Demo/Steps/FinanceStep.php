@@ -12,7 +12,6 @@ use App\Models\InvoicePayment;
 use App\Models\Subscription;
 use App\Services\Demo\DemoContext;
 use App\Services\Demo\DemoSeedStep;
-use Illuminate\Support\Collection;
 
 /** Invoices in every status (with a partial payment) and workspace expenses. */
 class FinanceStep implements DemoSeedStep

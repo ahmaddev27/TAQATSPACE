@@ -1,0 +1,77 @@
+name: E2E Staging
+
+# Browser checks against the deployed STAGING site, for every role, using the
+# demo data. Runs after each successful "Deploy Staging" and on demand. It runs
+# on GitHub's machines and never deploys anything.
+#
+# The repository is public, so the artifacts are too: failures keep screenshots
+# only (no traces, no videos), and the tests use demo accounts and demo data only.
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Deploy Staging"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-staging
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    uses: ./.github/workflows/seed-staging.yml
+    with:
+      fresh: true
+    secrets: inherit
+
+  e2e:
+    needs: seed
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: staging
+    env:
+      E2E_BASE_URL: ${{ vars.STAGING_WEB_URL || 'https://staging.taqat.space' }}
+      E2E_API_URL: ${{ vars.STAGING_API_URL }}
+      E2E_DEMO_PASSWORD: ${{ secrets.STAGING_DEMO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Staging only
+        run: |
+          case "$E2E_BASE_URL $E2E_API_URL" in
+            *staging*) ;;
+            *) echo "::error::E2E_BASE_URL and STAGING_API_URL must point at staging."; exit 1 ;;
+          esac
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies and the browser
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run the end-to-end suite
+        working-directory: frontend
+        env:
+          CI: "true"
+        run: npx playwright test --project=chromium
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-screenshots
+          path: frontend/test-results/**/*.png
+          if-no-files-found: ignore
+          retention-days: 7
