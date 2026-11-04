@@ -29,6 +29,7 @@ class SessionBuilder
         private readonly EventSessionApplier $eventApplier,
         private readonly SnapshotSessionApplier $snapshotApplier,
         private readonly DeviceResolver $devices,
+        private readonly AttendanceAffectedDays $affectedDays,
     ) {}
 
     /** @param list<int> $eventIds */
@@ -106,7 +107,6 @@ class SessionBuilder
         $this->persist($router, $ledger, $this->eventApplier->apply($router, $ledger, $events, $devices));
     }
 
-
     private function buildFromSnapshot(AssembledSnapshot $snapshot): void
     {
         $router = $this->router($snapshot->routerId);
@@ -138,6 +138,8 @@ class SessionBuilder
         DB::transaction(function () use ($router, $ledger, $boot): void {
             $this->sessions->insert($ledger->created());
             $this->sessions->saveChanges($ledger->changed());
+            // closeIdle() needs no mark: it ends a session exactly where attendance already counted it (last_seen_at).
+            $this->affectedDays->markSessions($router->workspace_id, $ledger->created(), $ledger->changed());
 
             if ($boot->id !== $router->sessions_boot_id) {
                 Router::query()->withoutWorkspaceScope()->whereKey($router->getKey())->update([
