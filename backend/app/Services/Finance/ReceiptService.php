@@ -210,7 +210,7 @@ class ReceiptService
 
         $invoices = $this->balances->lockPayable($receipt, array_keys($rows));
         $this->assertFitsInvoices($invoices, $rows);
-        $this->insertAllocations($receipt, $rows);
+        $this->storeAllocations($receipt, $rows);
 
         return $receipt->isCollected() ? $this->collect($receipt, $invoices, $rows) : [];
     }
@@ -261,19 +261,27 @@ class ReceiptService
         }
     }
 
-    /** @param  array<string, string>  $rows */
-    private function insertAllocations(Receipt $receipt, array $rows): void
+    /**
+     * A receipt holds one row per invoice, so a later allocation adds to the row already there.
+     *
+     * @param  array<string, string>  $rows
+     */
+    private function storeAllocations(Receipt $receipt, array $rows): void
     {
+        $existing = ReceiptAllocation::query()
+            ->where('receipt_id', $receipt->id)
+            ->whereIn('invoice_id', array_keys($rows))
+            ->pluck('amount', 'invoice_id');
         $now = Carbon::now();
 
-        ReceiptAllocation::query()->insert(array_map(static fn (string $invoiceId, string $amount): array => [
+        ReceiptAllocation::query()->upsert(array_map(static fn (string $invoiceId, string $amount): array => [
             'id' => (string) Str::uuid(),
             'receipt_id' => $receipt->id,
             'invoice_id' => $invoiceId,
-            'amount' => $amount,
+            'amount' => bcadd((string) ($existing[$invoiceId] ?? '0'), $amount, 2),
             'created_at' => $now,
             'updated_at' => $now,
-        ], array_keys($rows), array_values($rows)));
+        ], array_keys($rows), array_values($rows)), ['receipt_id', 'invoice_id'], ['amount', 'updated_at']);
     }
 
     /**

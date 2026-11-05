@@ -27,10 +27,10 @@ test.describe("modules off, in the browser", () => {
 
   for (const href of gatedPagesFor("owner2")) {
     test(`${href} is not found`, async ({ page }) => {
-      const response = await page.goto(`/en${href}`);
+      await page.goto(`/en${href}`);
 
-      const refused = (response?.status() ?? 0) >= 400 || NOT_FOUND.test(await page.locator("body").innerText());
-      expect(refused, `${href} must not open while its module is off`).toBe(true);
+      // These pages stream: the response is a 200 and the 404 arrives after it, so wait for the text.
+      await expect(page.locator("body"), `${href} must not open while its module is off`).toContainText(NOT_FOUND);
     });
   }
 });

@@ -24,6 +24,8 @@ use App\Models\Plan;
 use App\Models\Receipt;
 use App\Models\Router;
 use App\Models\Seat;
+use App\Models\StatsDailyWorkspace;
+use App\Models\StatsMonthlySubscriber;
 use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
@@ -109,6 +111,8 @@ class DemoModulesSeedTest extends TestCase
         $this->assertGreaterThan(0, $main->commands()->withoutGlobalScopes()->count(), 'provisioned logins were queued');
         $this->assertSame(2, HotspotAccount::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
         $this->assertGreaterThan(0, HotspotSession::query()->withoutGlobalScopes()->where('router_id', $main->id)->count());
+        $this->assertSame(2, StatsDailyWorkspace::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+        $this->assertGreaterThan(0, StatsMonthlySubscriber::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
     }
 
     public function test_the_probe_router_accepts_a_text_plain_sync_and_a_wrong_key_is_refused(): void
@@ -223,6 +227,8 @@ class DemoModulesSeedTest extends TestCase
             'charges' => UnbilledCharge::query()->withoutWorkspaceScope()->count(),
             'packages' => HourPackage::query()->count(),
             'purchases' => HourPackagePurchase::query()->count(),
+            'daily_stats' => StatsDailyWorkspace::query()->withoutWorkspaceScope()->count(),
+            'monthly_stats' => StatsMonthlySubscriber::query()->withoutWorkspaceScope()->count(),
         ];
     }
 }

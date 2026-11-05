@@ -1,9 +1,9 @@
 import { test, expect, request, type APIRequestContext } from "@playwright/test";
 import { apiBase, probeRouterKey, statePath } from "./support/accounts";
 import { ApiClient } from "./support/api";
-import { rowWhere, unique } from "./support/data";
+import { dateFromNow, rowWhere, unique } from "./support/data";
 import { en } from "./support/messages";
-import { firstArray } from "./support/ui";
+import { dialog, fieldInput, firstArray, tab } from "./support/ui";
 
 // The demo seed names these (backend/app/Services/Demo/Steps/NetworkStep.php).
 const MAIN_ROUTER = "Main router";
@@ -191,5 +191,78 @@ test.describe("router sync endpoint (M2 and M3)", () => {
 
     const list = await owner.json(await owner.get("workspace/routers"));
     expect(rowWhere(list, "id", id)?.status).toBe("online");
+  });
+});
+
+// Recalculation runs on the heavy queue, which the staging scheduler drains once a minute,
+// so these tests wait for the status instead of assuming it is instant.
+test.describe("statistics recalculation (M3.5)", () => {
+  test.describe.configure({ mode: "serial" });
+  test.setTimeout(300_000);
+
+  type Status = { data: { state: string; active: boolean; written: { days: number } | null } };
+  const RANGE = { from: dateFromNow(-10), to: dateFromNow(0) };
+
+  const status = async (): Promise<Status> => owner.json<Status>(await owner.get("workspace/tools/recalculate/status"));
+
+  /** A run left by an earlier test (or the nightly schedule) must end before a new one can start. */
+  const waitUntilIdle = async (): Promise<Status> => {
+    await expect
+      .poll(async () => (await status()).data.active, { message: "no recalculation in flight", timeout: 240_000, intervals: [3_000] })
+      .toBe(false);
+    return status();
+  };
+
+  test.beforeAll(async () => {
+    await waitUntilIdle();
+  });
+
+  test("a range longer than three months or in the wrong order is refused", async () => {
+    const tooLong = await owner.post("workspace/tools/recalculate", { from: dateFromNow(-120), to: dateFromNow(0) });
+    const reversed = await owner.post("workspace/tools/recalculate", { from: dateFromNow(0), to: dateFromNow(-5) });
+
+    expect(tooLong.status()).toBe(422);
+    expect(reversed.status()).toBe(422);
+  });
+
+  test("a member cannot start a recalculation", async () => {
+    const member = await ApiClient.login("freelancer1");
+    const response = await member.post("workspace/tools/recalculate", RANGE);
+    await member.dispose();
+
+    expect(response.status()).toBe(403);
+  });
+
+  test("the owner recalculates a range, a second request is refused while it runs, and the run completes", async () => {
+    const first = await owner.post("workspace/tools/recalculate", RANGE);
+    const second = await owner.post("workspace/tools/recalculate", RANGE);
+    const secondBody = await owner.json<{ message: string }>(second);
+
+    expect(first.status()).toBe(202);
+    // 409 while the first still waits for the worker; 202 only if the worker already finished it.
+    expect([202, 409]).toContain(second.status());
+    if (second.status() === 409) expect(secondBody.message).toBeTruthy();
+
+    const finished = await waitUntilIdle();
+    expect(finished.data.state).toBe("completed");
+    expect(finished.data.written?.days).toBe(11);
+  });
+
+  test.describe("in the browser", () => {
+    test.use({ storageState: statePath("owner1") });
+
+    test("the Tools tab recalculates a range and shows it completed", async ({ page }) => {
+      await waitUntilIdle();
+      await page.goto("/en/owner/settings");
+      await tab(page, en("owner", "owner.settings.tabTools")).click();
+
+      const card = page.getByTestId("recalculate-card");
+      await fieldInput(card, en("owner", "owner.tools.from")).fill(RANGE.from);
+      await fieldInput(card, en("owner", "owner.tools.to")).fill(RANGE.to);
+      await card.getByRole("button", { name: en("owner", "owner.tools.recalculate") }).click();
+      await dialog(page).getByRole("button", { name: en("owner", "owner.tools.confirmAction") }).click();
+
+      await expect(page.getByTestId("recalculate-state")).toHaveAttribute("data-state", "completed", { timeout: 240_000 });
+    });
   });
 });

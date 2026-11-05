@@ -1,5 +1,7 @@
 /** Shared, locale-aware formatting helpers for the owner dashboard. */
 
+import { formatDate } from "@/lib/dates";
+
 /** First grapheme of a name (Arabic + Latin safe), uppercased. */
 export function avatarInitial(name: string | null | undefined): string {
   const first = Array.from((name ?? "").trim())[0] ?? "?";
@@ -9,12 +11,8 @@ export function avatarInitial(name: string | null | undefined): string {
 /** Format an ISO date as a short, LTR numeric date. Empty string for null. */
 export function shortDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  if (Number.isNaN(new Date(iso).getTime())) return "—";
+  return formatDate(iso);
 }
 
 /** Format a numeric/string amount with the shekel sign, no decimals when whole. */

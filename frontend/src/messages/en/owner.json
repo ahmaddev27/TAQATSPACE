@@ -509,6 +509,7 @@
       "domainCode": "Space code",
       "domainCopy": "Copy",
       "domainCopied": "Copied",
+      "tabTools": "Tools",
       "tabDanger": "Danger zone",
       "danger": {
         "title": "Reset workspace",
@@ -600,6 +601,30 @@
         "security": "24/7 security"
       },
       "tabOperations": "Operations"
+    },
+    "tools": {
+      "title": "Recalculate statistics",
+      "description": "Rebuilds attendance and the daily and monthly statistics from the recorded sessions. Use it after a router outage or a correction. The same range always gives the same numbers.",
+      "from": "From",
+      "to": "To",
+      "rangeHint": "Up to 3 months, ending no later than today.",
+      "recalculate": "Recalculate",
+      "confirmTitle": "Recalculate this range?",
+      "confirmMessage": "Attendance and statistics from {from} to {to} will be rebuilt. It runs in the background and can take a few minutes.",
+      "confirmAction": "Recalculate",
+      "started": "Recalculation started",
+      "failedToStart": "Could not start the recalculation",
+      "finished": "Recalculation finished",
+      "failedTitle": "Recalculation failed",
+      "state": {
+        "idle": "Not run yet",
+        "queued": "Queued",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "lastRun": "Range {from} to {to}",
+      "written": "{days} days and {months} subscriber-months written"
     },
     "common": {
       "currency": "₪",
