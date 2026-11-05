@@ -26,7 +26,7 @@ Route::middleware(['router', 'throttle:router'])
     });
 
 // Reachability check used by install-precheck.rsc; public, so it must reveal nothing.
-Route::get('v1/hotspot/ping', [RouterScriptController::class, 'ping'])->middleware('throttle:60,1');
+Route::get('v1/hotspot/ping', [RouterScriptController::class, 'ping'])->middleware('throttle:60,1,router-ping');
 
 /*
 |--------------------------------------------------------------------------
@@ -37,7 +37,7 @@ Route::get('v1/hotspot/ping', [RouterScriptController::class, 'ping'])->middlewa
 */
 Route::get('v1/hotspot/install/{token}.rsc', [RouterInstallerController::class, 'show'])
     ->where('token', '[A-Za-z0-9]+')
-    ->middleware('throttle:20,1');
+    ->middleware('throttle:20,1,router-install');
 
 Route::middleware(['auth:sanctum', 'role.owner', 'feature:network'])
     ->prefix('workspace/routers')

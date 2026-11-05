@@ -31,5 +31,5 @@ Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidd
 
 // Receipt proofs are private; a short-lived signed URL (made by the resource) is the credential.
 Route::get('finance/receipts/{receipt}/file', [ReceiptController::class, 'file'])
-    ->middleware(['signed', 'throttle:60,1'])
+    ->middleware(['signed', 'throttle:60,1,receipt-proof'])
     ->name('finance.receipts.file');

@@ -15,6 +15,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'role.owner', 'feature:network'])
     ->prefix('workspace/tools')
     ->group(function (): void {
-        Route::post('/recalculate', [ToolsController::class, 'recalculate'])->middleware('throttle:6,1');
+        Route::post('/recalculate', [ToolsController::class, 'recalculate'])->middleware('throttle:6,1,stats-recalculate');
         Route::get('/recalculate/status', [ToolsController::class, 'status']);
     });

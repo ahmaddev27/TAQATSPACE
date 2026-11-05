@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')
 
         // Raise a bell + push alert for a just-sent Firestore message.
         Route::post('/notify', [ChatController::class, 'notify'])
-            ->middleware('throttle:120,1');
+            ->middleware('throttle:120,1,chat-notify');
 
         // Attachments: upload to S3, then resolve a fresh signed URL on demand.
         Route::post('/attachments', [ChatController::class, 'uploadAttachment']);
