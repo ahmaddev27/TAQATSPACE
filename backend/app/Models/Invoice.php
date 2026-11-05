@@ -47,6 +47,7 @@ class Invoice extends Model
         'void_reason',
         'amount',
         'amount_paid',
+        'credited_amount',
         'due_date',
         'paid_at',
         'status',
@@ -80,6 +81,7 @@ class Invoice extends Model
             'receipt_reviewed_at' => 'datetime',
             'amount' => 'decimal:2',
             'amount_paid' => 'decimal:2',
+            'credited_amount' => 'decimal:2',
         ];
     }
 
@@ -99,6 +101,12 @@ class Invoice extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(InvoiceLine::class)->orderBy('sort_order');
+    }
+
+    /** @return HasMany<CreditNote, $this> */
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class)->orderBy('issued_at');
     }
 
     /** @return HasMany<InvoicePayment, $this> */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
@@ -46,6 +47,7 @@ class InvoicePdfService
             $invoice->status->value,
             (string) $invoice->amount,
             (string) $invoice->amount_paid,
+            (string) $invoice->credited_amount,
             (string) ($invoice->paid_at?->getTimestamp() ?? ''),
         ])), 0, 10);
 
@@ -75,6 +77,28 @@ class InvoicePdfService
      * cannot do — so the Arabic-first template renders correctly.
      */
     private function render(Invoice $invoice): string
+    {
+        return $this->renderView('pdf.invoice', ['invoice' => $invoice]);
+    }
+
+    /**
+     * Stream a credit note as a PDF attachment. Credit notes are immutable, so
+     * it is rendered on demand rather than cached.
+     */
+    public function streamCreditNote(CreditNote $creditNote): StreamedResponse
+    {
+        $creditNote->loadMissing('invoice.customer', 'invoice.subscription.workspace', 'issuer');
+        $pdf = $this->renderView('pdf.credit-note', ['creditNote' => $creditNote]);
+
+        return response()->streamDownload(static function () use ($pdf): void {
+            echo $pdf;
+        }, $creditNote->number.'.pdf', ['Content-Type' => 'application/pdf']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function renderView(string $view, array $data): string
     {
         $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
         $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
@@ -112,7 +136,7 @@ class InvoicePdfService
 
         $mpdf->SetDirectionality('rtl');
 
-        $html = View::make('pdf.invoice', ['invoice' => $invoice])->render();
+        $html = View::make($view, $data)->render();
 
         $mpdf->WriteHTML($html);
 

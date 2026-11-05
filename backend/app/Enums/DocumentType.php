@@ -13,4 +13,5 @@ enum DocumentType: string
 
     case Invoice = 'invoice';
     case Receipt = 'receipt';
+    case CreditNote = 'credit_note';
 }

@@ -383,7 +383,7 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
         }
 
-        $total = (float) $invoice->amount;
+        $total = (float) $invoice->amount - (float) $invoice->credited_amount;
         $remaining = round($total - (float) $invoice->amount_paid, 2);
 
         if ($amount > $remaining + 0.001) {
@@ -451,7 +451,7 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
         }
 
-        $total = (float) $invoice->amount;
+        $total = (float) $invoice->amount - (float) $invoice->credited_amount;
         $remaining = round($total - (float) $invoice->amount_paid, 2);
 
         if ($amount > $remaining + 0.001) {
@@ -787,7 +787,7 @@ class InvoiceService
      */
     private function outstanding(Invoice $invoice): float
     {
-        return round((float) $invoice->amount - (float) $invoice->amount_paid, 2);
+        return round((float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid, 2);
     }
 
     /**

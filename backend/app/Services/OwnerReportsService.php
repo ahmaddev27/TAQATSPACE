@@ -62,7 +62,7 @@ class OwnerReportsService
                 InvoiceStatus::PartiallyPaid->value,
             ])
             ->whereNotNull('due_date')
-            ->get(['amount', 'amount_paid', 'due_date']);
+            ->get(['amount', 'credited_amount', 'amount_paid', 'due_date']);
 
         $buckets = [
             'current' => ['count' => 0, 'amount' => 0.0],
@@ -75,7 +75,7 @@ class OwnerReportsService
         $total = 0.0;
 
         foreach ($invoices as $invoice) {
-            $outstanding = max(0.0, (float) $invoice->amount - (float) $invoice->amount_paid);
+            $outstanding = max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid);
 
             if ($outstanding <= 0) {
                 continue;
