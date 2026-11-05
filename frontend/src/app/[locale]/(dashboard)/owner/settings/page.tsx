@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { serverFetch } from "@/lib/api";
 import { getOwnerWorkspace } from "@/lib/actions/owner";
 import { ownerPendingApprovals } from "@/lib/api/approvals";
 import { Icon } from "@/components/ui/Icon";
 import { SettingsTabs } from "@/components/features/owner/SettingsTabs";
+import type { ApiEnvelope, User } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +17,10 @@ export default async function OwnerSettingsPage({
   setRequestLocale(locale);
   const t = await getTranslations("owner");
 
-  const [workspace, pendingApprovals] = await Promise.all([
+  const [workspace, pendingApprovals, me] = await Promise.all([
     getOwnerWorkspace(),
     ownerPendingApprovals(),
+    serverFetch<ApiEnvelope<{ user: User }>>("/auth/me"),
   ]);
 
   return (
@@ -37,6 +40,7 @@ export default async function OwnerSettingsPage({
             workspace={workspace}
             locale={locale}
             pendingApprovals={pendingApprovals}
+            networkEnabled={me.data.user.features?.network === true}
           />
         ) : (
           <div className="empty-state" style={{ minHeight: 280 }}>

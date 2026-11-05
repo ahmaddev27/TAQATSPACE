@@ -22,6 +22,8 @@ final class NetworkResetStep implements WorkspaceResetStep
     private const WORKSPACE_TABLES = [
         'attendance_daily',
         'attendance_affected_days',
+        'stats_daily_workspace',
+        'stats_monthly_subscriber',
         'hotspot_sessions',
         'device_presence',
         'devices',

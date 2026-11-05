@@ -53,3 +53,12 @@ Schedule::command('router-commands:expire')->everyFiveMinutes();
 Schedule::command('queue:work --queue=ingest,default --stop-when-empty --max-time=55 --tries=3')
     ->everyMinute()
     ->withoutOverlapping();
+
+// Statistics follow the nightly attendance pass, and recalculations (the owner's
+// button, stats:recalculate) run on their own queue and worker: one can take
+// minutes and must not hold up the ingest drain above. The mutex expires after
+// 30 minutes so a killed worker cannot block the queue for the default day.
+Schedule::command('stats:recalculate')->dailyAt('01:45')->withoutOverlapping();
+Schedule::command('queue:work --queue=heavy --stop-when-empty --max-time=55 --tries=1')
+    ->everyMinute()
+    ->withoutOverlapping(30);

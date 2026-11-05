@@ -21,6 +21,7 @@ import { MessagingTab } from "./MessagingTab";
 import { DomainTab } from "./DomainTab";
 import { DangerTab } from "./DangerTab";
 import { OperationsTab } from "./OperationsTab";
+import { RecalculateCard } from "./RecalculateCard";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -30,6 +31,8 @@ export interface SettingsTabsProps {
   locale: string;
   /** The owner's operations requests still awaiting a decision. */
   pendingApprovals?: ApprovalRequestEntry[];
+  /** The tools act on network data, so they only exist for a workspace with that module. */
+  networkEnabled?: boolean;
 }
 
 // MapLibre touches `window`, so load the picker on the client only.
@@ -138,7 +141,7 @@ function buildInitial(ws: Workspace): FormState {
 }
 
 /** Tabbed workspace settings editor. One Save persists the whole form. */
-export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: SettingsTabsProps) {
+export function SettingsTabs({ workspace, locale, pendingApprovals = [], networkEnabled = false }: SettingsTabsProps) {
   const t = useTranslations("owner");
   const tm = useTranslations("messaging.settings.owner");
   const localeTag = useLocale();
@@ -242,6 +245,7 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
     { id: "operations", label: t("settings.tabOperations") },
     { id: "messaging", label: tm("tab") },
     { id: "domain", label: t("settings.tabDomain") },
+    ...(networkEnabled ? [{ id: "tools", label: t("settings.tabTools") }] : []),
     { id: "danger", label: t("settings.tabDanger") },
   ];
 
@@ -519,10 +523,12 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
           />
         )}
 
+        {tab === "tools" && <RecalculateCard />}
+
         {tab === "danger" && workspace.slug && <DangerTab slug={workspace.slug} />}
       </div>
 
-      {!["photos", "operations", "messaging", "domain", "danger"].includes(tab) && (
+      {!["photos", "operations", "messaging", "domain", "tools", "danger"].includes(tab) && (
         <Button
           variant="primary"
           icon="check"

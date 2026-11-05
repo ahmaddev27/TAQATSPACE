@@ -45,6 +45,24 @@ const workspace = {
   wifi_password: "pw-123",
 } as unknown as Workspace;
 
+describe("SettingsTabs tools tab", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) }));
+  });
+
+  it("does not exist while the network module is off", () => {
+    render(<SettingsTabs workspace={workspace} locale="en" />);
+
+    expect(screen.queryByRole("tab", { name: "settings.tabTools" })).not.toBeInTheDocument();
+  });
+
+  it("exists when the network module is on", () => {
+    render(<SettingsTabs workspace={workspace} locale="en" networkEnabled />);
+
+    expect(screen.getByRole("tab", { name: "settings.tabTools" })).toBeInTheDocument();
+  });
+});
+
 describe("SettingsTabs general tab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
