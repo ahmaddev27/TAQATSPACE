@@ -53,10 +53,11 @@ test("without two-factor, the sensitive actions are refused for enrolment, not f
   const routers = await owner.json<{ data: Array<{ id: string }> }>(await owner.get("workspace/routers"));
   const rotate = await owner.post(`workspace/routers/${routers.data[0].id}/rotate-key`);
   const voidReceipt = await owner.post("workspace/finance/receipts/00000000-0000-4000-8000-000000000000/void", { reason: "E2E" });
+  const rotateBody = await rotate.json();
   await owner.dispose();
 
   expect(rotate.status()).toBe(403);
-  expect(await rotate.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+  expect(rotateBody).toMatchObject({ code: "two_factor_enrollment_required" });
   expect(voidReceipt.status()).toBe(403);
 });
 

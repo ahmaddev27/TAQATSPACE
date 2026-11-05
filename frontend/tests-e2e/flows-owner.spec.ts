@@ -112,7 +112,8 @@ test.describe("owner settings (M1)", () => {
     expect(new Set(collect(firstArray(otherLog), "workspace_id"))).toEqual(new Set([other]));
     expect(collect(ownLog, "action")).toContain("workspace.settings.updated");
 
-    await page.goto("/en/owner/settings/audit");
+    // The run keeps adding rows, so filter for this one instead of hoping it stays on the first page.
+    await page.goto("/en/owner/settings/audit?action=workspace.settings.updated");
     await expect(page.getByRole("heading", { name: en("audit", "audit.title") })).toBeVisible();
     await expect(page.getByText("workspace.settings.updated").first()).toBeVisible();
   });
