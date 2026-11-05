@@ -20,6 +20,7 @@ let enroller: ApiClient;
 let routerToken: ApiClient;
 let invoiceToken: ApiClient;
 let receiptToken: ApiClient;
+let creditToken: ApiClient;
 let secret = "";
 let recoveryCodes: string[] = [];
 let customer = "";
@@ -35,7 +36,8 @@ async function verify(client: ApiClient): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  [enroller, routerToken, invoiceToken, receiptToken] = await Promise.all([
+  [enroller, routerToken, invoiceToken, receiptToken, creditToken] = await Promise.all([
+    ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
@@ -45,7 +47,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await Promise.all([enroller, routerToken, invoiceToken, receiptToken].map((client) => client?.dispose()));
+  await Promise.all([enroller, routerToken, invoiceToken, receiptToken, creditToken].map((client) => client?.dispose()));
 });
 
 test("without two-factor, the sensitive actions are refused for enrolment, not for a stale check", async () => {
@@ -53,10 +55,11 @@ test("without two-factor, the sensitive actions are refused for enrolment, not f
   const routers = await owner.json<{ data: Array<{ id: string }> }>(await owner.get("workspace/routers"));
   const rotate = await owner.post(`workspace/routers/${routers.data[0].id}/rotate-key`);
   const voidReceipt = await owner.post("workspace/finance/receipts/00000000-0000-4000-8000-000000000000/void", { reason: "E2E" });
+  const rotateBody = await rotate.json();
   await owner.dispose();
 
   expect(rotate.status()).toBe(403);
-  expect(await rotate.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+  expect(rotateBody).toMatchObject({ code: "two_factor_enrollment_required" });
   expect(voidReceipt.status()).toBe(403);
 });
 
@@ -105,9 +108,10 @@ test.describe("router key rotation (M2)", () => {
     const router = await request.newContext({ baseURL: `${apiBase()}/` });
     const body = `H|${unique("b")}|1|e2eboot${Date.now() % 100000}|${new Date().toISOString().slice(0, 19).replace("T", " ")}|full|stepupnonce|1.1.0\n`;
     const sync = await router.post(`v1/hotspot/${code}/sync`, { data: body, headers: { "Content-Type": "text/plain", "X-API-Key": newKey }, failOnStatusCode: false });
+    const syncBody = await sync.text();
     await router.dispose();
     expect(sync.status(), "the new key syncs").toBe(200);
-    expect((await sync.text()).startsWith("CWS-SYNC stepupnonce")).toBe(true);
+    expect(syncBody.startsWith("CWS-SYNC stepupnonce")).toBe(true);
   });
 });
 
@@ -159,6 +163,48 @@ test.describe("receipts (M5)", () => {
     const response = await enroller.postFile(`workspace/invoices/${draft}/payment`, { amount: "5.00" }, TINY_PDF);
 
     expect(response.status()).toBe(409);
+  });
+});
+
+test.describe("credit notes (M5)", () => {
+  const issue = async (amount: string): Promise<string> => {
+    const draft = idOf(await created(enroller, await enroller.post("workspace/invoices/drafts", {
+      customer_id: customer, due_date: dateFromNow(14), lines: [{ description: "E2E credit", qty: "1.00", unit_price: amount }],
+    })));
+    expect((await enroller.post(`workspace/invoices/${draft}/issue`)).status()).toBe(200);
+    return draft;
+  };
+
+  test("issuing needs a recent code; the invoice itself stays as it was and the receivable follows", async () => {
+    const invoice = await issue("50.00");
+
+    const stale = await creditToken.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "50.00", reason: "E2E credit" });
+    expect(stale.status()).toBe(403);
+    expect(await stale.json()).toMatchObject({ code: TWO_FACTOR_REQUIRED });
+
+    await verify(creditToken);
+    const made = await creditToken.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "50.00", reason: "E2E credit" });
+    expect(made.status()).toBe(201);
+    const note = await creditToken.json(made);
+    expect(deepFind(note, "number")).toBeTruthy();
+    expect(Number(deepFind(note, "refund_amount"))).toBeCloseTo(0, 2);
+
+    const after = await creditToken.json(await creditToken.get(`workspace/invoices/${invoice}`));
+    expect(Number(deepFind(after, "amount")), "the invoice total is untouched").toBeCloseTo(50, 2);
+    expect(Number(deepFind(after, "credited_amount"))).toBeCloseTo(50, 2);
+    expect(Number(deepFind(after, "remaining_amount")), "nothing left to collect").toBeCloseTo(0, 2);
+    expect(deepFind(after, "doc_status")).toBe("issued");
+  });
+
+  test("a credit above what the invoice carries, an empty reason and a draft are refused", async () => {
+    const invoice = await issue("30.00");
+    const draft = idOf(await created(enroller, await enroller.post("workspace/invoices/drafts", {
+      customer_id: customer, due_date: dateFromNow(14), lines: [{ description: "E2E draft", qty: "1.00", unit_price: "10.00" }],
+    })));
+
+    expect((await enroller.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "30.01", reason: "Too much" })).status()).toBe(422);
+    expect((await enroller.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "5.00", reason: "" })).status()).toBe(422);
+    expect((await enroller.post(`workspace/invoices/${draft}/credit-notes`, { amount: "5.00", reason: "On a draft" })).status()).toBe(422);
   });
 });
 

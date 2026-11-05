@@ -62,22 +62,53 @@ class InvoiceBalanceService
         $open = [];
 
         foreach ($invoices as $id => $invoice) {
-            $balance = bcsub(bcsub((string) $invoice->amount, (string) $invoice->amount_paid, 2), $held[$id] ?? '0.00', 2);
+            $balance = bcsub($this->unpaid($invoice), $held[$id] ?? '0.00', 2);
             $open[$id] = bccomp($balance, '0', 2) > 0 ? $balance : '0.00';
         }
 
         return $open;
     }
 
+    /** What the customer still owes: the invoice total less credit notes and money collected. */
+    public function unpaid(Invoice $invoice): string
+    {
+        $balance = bcsub(bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2), (string) $invoice->amount_paid, 2);
+
+        return bccomp($balance, '0', 2) > 0 ? $balance : '0.00';
+    }
+
+    /**
+     * What uncleared cheques are holding on each invoice.
+     *
+     * @param  array<int, string>  $invoiceIds
+     * @return array<string, string> invoice id => held amount
+     */
+    public function held(array $invoiceIds): array
+    {
+        return $this->heldByPendingCheques($invoiceIds);
+    }
+
     /** Move an invoice's paid total by `$delta` (negative to take money back) and re-derive its status. */
     public function applyDelta(Invoice $invoice, string $delta, Carbon $at): void
     {
         $paid = bcadd((string) $invoice->amount_paid, $delta, 2);
-        $paid = bccomp($paid, '0', 2) < 0 ? '0.00' : $paid;
-        $status = $this->statusFor($paid, (string) $invoice->amount);
+
+        $this->settle($invoice, bccomp($paid, '0', 2) < 0 ? '0.00' : $paid, (string) $invoice->credited_amount, $at);
+    }
+
+    /** Add a credit note to an invoice: its total stays, what is payable shrinks. */
+    public function applyCredit(Invoice $invoice, string $credit, Carbon $at): void
+    {
+        $this->settle($invoice, (string) $invoice->amount_paid, bcadd((string) $invoice->credited_amount, $credit, 2), $at);
+    }
+
+    private function settle(Invoice $invoice, string $paid, string $credited, Carbon $at): void
+    {
+        $status = $this->statusFor($paid, bcsub((string) $invoice->amount, $credited, 2));
 
         $invoice->forceFill([
             'amount_paid' => $paid,
+            'credited_amount' => $credited,
             'payment_status' => $status,
             'paid_at' => $status === PaymentStatus::Paid ? ($invoice->paid_at ?? $at) : null,
         ])->save();

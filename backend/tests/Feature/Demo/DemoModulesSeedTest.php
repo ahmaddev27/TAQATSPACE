@@ -13,6 +13,7 @@ use App\Enums\UnbilledChargeStatus;
 use App\Enums\WorkspaceFeature;
 use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
+use App\Models\CreditNote;
 use App\Models\Expense;
 use App\Models\HotspotAccount;
 use App\Models\HotspotSession;
@@ -23,6 +24,8 @@ use App\Models\Plan;
 use App\Models\Receipt;
 use App\Models\Router;
 use App\Models\Seat;
+use App\Models\StatsDailyWorkspace;
+use App\Models\StatsMonthlySubscriber;
 use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
@@ -108,6 +111,8 @@ class DemoModulesSeedTest extends TestCase
         $this->assertGreaterThan(0, $main->commands()->withoutGlobalScopes()->count(), 'provisioned logins were queued');
         $this->assertSame(2, HotspotAccount::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
         $this->assertGreaterThan(0, HotspotSession::query()->withoutGlobalScopes()->where('router_id', $main->id)->count());
+        $this->assertSame(2, StatsDailyWorkspace::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
+        $this->assertGreaterThan(0, StatsMonthlySubscriber::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
     }
 
     public function test_the_probe_router_accepts_a_text_plain_sync_and_a_wrong_key_is_refused(): void
@@ -176,6 +181,16 @@ class DemoModulesSeedTest extends TestCase
         $this->assertNull($cheque->collected_at);
     }
 
+    public function test_credit_notes_cover_a_partial_and_a_full_credit(): void
+    {
+        $this->seedDemo();
+        $notes = CreditNote::query()->where('workspace_id', $this->workspace('almanara')->id)->with('invoice')->get();
+
+        $this->assertCount(2, $notes);
+        $this->assertEqualsCanonicalizing([5.0, 30.0], $notes->map(fn (CreditNote $note): float => (float) $note->amount)->all());
+        $this->assertTrue($notes->every(fn (CreditNote $note): bool => $note->invoice->doc_status === DocStatus::Issued));
+    }
+
     public function test_hour_packages_come_with_a_requested_purchase(): void
     {
         $this->seedDemo();
@@ -208,9 +223,12 @@ class DemoModulesSeedTest extends TestCase
             'plans' => Plan::query()->withoutWorkspaceScope()->count(),
             'invoices' => Invoice::query()->withoutGlobalScopes()->count(),
             'receipts' => Receipt::query()->withoutGlobalScopes()->count(),
+            'credit_notes' => CreditNote::query()->count(),
             'charges' => UnbilledCharge::query()->withoutWorkspaceScope()->count(),
             'packages' => HourPackage::query()->count(),
             'purchases' => HourPackagePurchase::query()->count(),
+            'daily_stats' => StatsDailyWorkspace::query()->withoutWorkspaceScope()->count(),
+            'monthly_stats' => StatsMonthlySubscriber::query()->withoutWorkspaceScope()->count(),
         ];
     }
 }

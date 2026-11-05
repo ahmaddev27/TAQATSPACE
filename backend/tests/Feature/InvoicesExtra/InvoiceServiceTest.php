@@ -124,6 +124,23 @@ class InvoiceServiceTest extends TestCase
         Notification::assertSentTo($member, InvoicePaidNotification::class);
     }
 
+    public function test_mark_paid_on_a_partly_credited_invoice_collects_only_the_net_amount(): void
+    {
+        Notification::fake();
+        [, , $subscription] = $this->workspaceWithSubscription();
+        $invoice = $this->invoiceFor($subscription, [
+            'amount' => '100.00',
+            'credited_amount' => '30.00',
+            'amount_paid' => 0,
+            'status' => InvoiceStatus::Pending,
+        ]);
+
+        $updated = $this->service()->markPaid($invoice);
+
+        $this->assertSame(InvoiceStatus::Paid, $updated->status);
+        $this->assertEquals(70, $updated->amount_paid);
+    }
+
     public function test_mark_paid_rejects_an_already_paid_invoice(): void
     {
         Notification::fake();

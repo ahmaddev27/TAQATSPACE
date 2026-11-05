@@ -8,6 +8,7 @@ use App\Enums\FinancePermission;
 use App\Enums\InvoiceStatus;
 use App\Models\AuditLog;
 use App\Models\Receipt;
+use App\Models\ReceiptAllocation;
 use App\Services\Auth\TwoFactorService;
 use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\Finance\ReceiptService;
@@ -140,6 +141,27 @@ class ReceiptAllocationTest extends ReceiptTestCase
 
         $this->assertSame('paid', $invoice->fresh()->payment_status->value);
         $this->postJson(self::RECEIPTS."/{$id}/allocations", ['allocations' => $this->allocation($invoice, '30.00')])->assertUnprocessable();
+    }
+
+    public function test_a_later_allocation_to_an_invoice_the_receipt_already_pays_adds_to_it(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '50.00');
+        Sanctum::actingAs($owner);
+
+        $id = $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '100.00', ['allocations' => $this->allocation($invoice, '30.00')]))
+            ->assertCreated()->json('data.id');
+        $this->assertSame('partial', $invoice->fresh()->payment_status->value);
+
+        $this->postJson(self::RECEIPTS."/{$id}/allocations", ['allocations' => $this->allocation($invoice, '20.00')])
+            ->assertOk()->assertJsonPath('data.unallocated_amount', '50.00');
+
+        $this->assertSame('paid', $invoice->fresh()->payment_status->value);
+
+        $rows = ReceiptAllocation::query()->where('receipt_id', $id)->pluck('amount');
+        $this->assertCount(1, $rows);
+        $this->assertEqualsWithDelta(50.0, (float) $rows->first(), 0.001);
     }
 
     public function test_voiding_a_receipt_puts_the_invoices_back(): void

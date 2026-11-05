@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+import { formatDateTime } from "@/lib/dates";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   DataTable,
@@ -32,7 +33,6 @@ function codeTone(code: number): "success" | "warning" | "danger" {
 /** The router's API request log: URL-driven filters, server pagination, refreshed every 30 s. */
 export function ApiLogsTable({ logs, meta }: ApiLogsTableProps) {
   const t = useTranslations("integration.logs");
-  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -61,7 +61,7 @@ export function ApiLogsTable({ logs, meta }: ApiLogsTableProps) {
       header: t("colTime"),
       cell: (l) => (
         <span className="cell-num ltr">
-          {l.created_at ? new Date(l.created_at).toLocaleString(locale) : "—"}
+          {l.created_at ? formatDateTime(l.created_at) : "—"}
         </span>
       ),
     },

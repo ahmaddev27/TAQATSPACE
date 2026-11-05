@@ -341,6 +341,10 @@ return [
     'diag_serial_ok' => 'الرقم التسلسلي للراوتر مطابق.',
     'workspace_reset_confirmation_mismatch' => 'اكتب معرّف مساحة العمل (slug) كما هو تماماً لتأكيد إعادة الضبط.',
     'workspace_reset_done' => 'تمت إعادة ضبط مساحة العمل وحُذفت بياناتها التشغيلية.',
+    'stats_recalculation_started' => 'بدأت إعادة الحساب، وقد تستغرق بضع دقائق.',
+    'stats_recalculation_running' => 'هناك عملية إعادة حساب قيد التنفيذ لهذه المساحة. انتظر حتى تنتهي.',
+    'stats_range_too_long' => 'لا يمكن أن تتجاوز الفترة :months أشهر.',
+    'stats_range_in_future' => 'لا يمكن أن تنتهي الفترة بعد اليوم.',
     'hour_package_created' => 'تم إنشاء باقة الساعات.',
     'hour_package_updated' => 'تم تحديث باقة الساعات.',
     'hour_package_archived' => 'تمت أرشفة باقة الساعات.',
@@ -407,5 +411,10 @@ return [
     'receipt_cheque_transition_invalid' => 'لا يمكن نقل الشيك إلى هذه الحالة من حالته الحالية.',
     'receipt_allocation_exceeds_receipt' => 'مجموع التوزيع يتجاوز مبلغ الإيصال.',
     'receipt_invoice_mismatch' => 'الفاتورة غير موجودة أو لا تخص هذا العميل وهذه المساحة.',
+    'credit_note_issued' => 'تم إصدار الإشعار الدائن.',
+    'credit_note_invoice_not_issued' => 'لا يمكن إصدار إشعار دائن إلا على فاتورة صادرة.',
+    'credit_note_exceeds_invoice' => 'مبلغ الإشعار يتجاوز المتاح للخصم من الفاتورة (:remaining).',
+    'credit_note_held_by_cheques' => 'يوجد شيك معلّق على هذه الفاتورة، لذا المتاح للخصم حالياً :creditable فقط.',
+    'credit_note_amount_invalid' => 'يجب أن يكون مبلغ الإشعار أكبر من صفر.',
 
 ];

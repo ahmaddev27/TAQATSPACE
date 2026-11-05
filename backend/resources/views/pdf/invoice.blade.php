@@ -21,7 +21,7 @@
 
     $isPartiallyPaid = $status === \App\Enums\InvoiceStatus::PartiallyPaid;
     $amountPaid = (float) ($invoice->amount_paid ?? 0);
-    $remaining = max(0, (float) $invoice->amount - $amountPaid);
+    $remaining = max(0, (float) $invoice->amount - (float) $invoice->credited_amount - $amountPaid);
 
     // When a receipt has been uploaded but the stored status is still pending or
     // overdue (e.g. a lag before the status transition completed), the PDF should

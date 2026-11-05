@@ -116,6 +116,21 @@
       "save": "Save",
       "error": "Something went wrong"
     },
+    "creditNotes": {
+      "title": "Credit notes",
+      "subtitle": "Corrections of issued invoices. Each one is linked to its invoice and carries a reason; the invoice itself is never edited.",
+      "empty": "No credit notes yet.",
+      "downloadPdf": "PDF",
+      "fields": {
+        "number": "Number",
+        "invoice": "Invoice",
+        "customer": "Customer",
+        "amount": "Credited",
+        "refund": "Owed back",
+        "reason": "Reason",
+        "issuedAt": "Issued"
+      }
+    },
     "receipts": {
       "title": "Receipts",
       "subtitle": "Money received from customers, spread over their invoices. A cheque counts as paid once it clears.",

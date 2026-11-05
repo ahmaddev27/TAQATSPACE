@@ -9,6 +9,7 @@ use App\Models\HotspotSession;
 use App\Models\Workspace;
 use App\Repositories\Eloquent\AttendanceRepository;
 use App\Support\Network\LocalDays;
+use App\Support\Network\SessionWindow;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -93,22 +94,10 @@ class AttendanceRebuilder
         $grouped = [];
 
         foreach ($sessions as $session) {
-            $grouped[$session->subscriber_id][] = [$session->started_at, $this->effectiveEnd($session)];
+            $grouped[$session->subscriber_id][] = [$session->started_at, SessionWindow::endOf($session)];
         }
 
         return $grouped;
-    }
-
-    /** An open session counts up to the last moment the router vouched for it, never beyond now. */
-    private function effectiveEnd(HotspotSession $session): CarbonInterface
-    {
-        if ($session->ended_at !== null) {
-            return $session->ended_at;
-        }
-
-        $vouched = $session->last_seen_at->greaterThan($session->started_at) ? $session->last_seen_at : $session->started_at;
-
-        return $vouched->greaterThan(now()) ? now() : $vouched;
     }
 
     /**

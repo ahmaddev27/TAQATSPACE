@@ -15,7 +15,9 @@ use App\Services\Hotspot\HotspotSyncService;
 use App\Services\Hotspot\SyncPayload;
 use App\Services\Hotspot\SyncWireParser;
 use App\Services\Network\AttendanceRebuilder;
+use App\Services\Network\StatsAggregator;
 use App\Services\Router\RouterService;
+use App\Support\Network\LocalDays;
 use App\Support\Router\RouterKeyHasher;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
@@ -53,6 +55,8 @@ class NetworkStep implements DemoSeedStep
         private readonly HotspotSyncService $sync,
         private readonly SyncWireParser $parser,
         private readonly AttendanceRebuilder $attendance,
+        private readonly StatsAggregator $stats,
+        private readonly LocalDays $days = new LocalDays,
     ) {}
 
     public function seed(DemoContext $context): void
@@ -66,6 +70,15 @@ class NetworkStep implements DemoSeedStep
 
         ProcessRouterBatch::dispatchSync((string) $main->getKey());
         $this->attendance->rebuildAffected();
+        $this->aggregateStats($workspace);
+    }
+
+    /** The stats tables cascade with the workspace, so the cleaner needs no step of its own for them. */
+    private function aggregateStats(Workspace $workspace): void
+    {
+        $today = $this->days->dateOf(Date::now()->getTimestamp(), $this->days->zone($workspace->timezone));
+
+        $this->stats->aggregate($workspace, Date::parse($today)->subDay()->toDateString(), $today);
     }
 
     private function createRouters(Workspace $workspace, DemoContext $context): Router

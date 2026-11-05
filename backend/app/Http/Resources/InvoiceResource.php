@@ -27,8 +27,9 @@ class InvoiceResource extends JsonResource
             'invoice_number' => $this->invoice_number,
             'amount' => $this->amount,
             'amount_paid' => $this->amount_paid,
+            'credited_amount' => (string) $this->credited_amount,
             'remaining_amount' => number_format(
-                max(0, (float) $this->amount - (float) $this->amount_paid),
+                max(0, (float) $this->amount - (float) $this->credited_amount - (float) $this->amount_paid),
                 2,
                 '.',
                 '',

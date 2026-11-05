@@ -55,6 +55,8 @@ export interface Invoice {
   amount: string;
   /** Running total paid + remaining balance (decimal strings) for partial payments. */
   amount_paid: string;
+  /** Sum of the invoice's credit notes (finance v2); the invoice amount itself never changes. */
+  credited_amount?: string;
   remaining_amount: string;
   amount_formatted: string;
   currency: string;

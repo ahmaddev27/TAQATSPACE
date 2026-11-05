@@ -341,6 +341,10 @@ return [
     'diag_serial_ok' => 'The router serial number matches.',
     'workspace_reset_confirmation_mismatch' => 'Type the workspace slug exactly to confirm the reset.',
     'workspace_reset_done' => 'The workspace was reset. Its operational data was deleted.',
+    'stats_recalculation_started' => 'Recalculation started. This can take a few minutes.',
+    'stats_recalculation_running' => 'A recalculation is already running for this workspace. Wait for it to finish.',
+    'stats_range_too_long' => 'The range cannot be longer than :months months.',
+    'stats_range_in_future' => 'The range cannot end after today.',
     'hour_package_created' => 'Hour package created.',
     'hour_package_updated' => 'Hour package updated.',
     'hour_package_archived' => 'Hour package archived.',
@@ -407,5 +411,10 @@ return [
     'receipt_cheque_transition_invalid' => 'The cheque cannot move to that status from its current one.',
     'receipt_allocation_exceeds_receipt' => 'The allocations exceed the receipt amount.',
     'receipt_invoice_mismatch' => 'An invoice does not exist, or does not belong to this customer and workspace.',
+    'credit_note_issued' => 'Credit note issued.',
+    'credit_note_invoice_not_issued' => 'A credit note can only be raised on an issued invoice.',
+    'credit_note_exceeds_invoice' => 'The credit note exceeds what the invoice can still be credited (:remaining).',
+    'credit_note_held_by_cheques' => 'A cheque is pending on this invoice, so only :creditable can be credited for now.',
+    'credit_note_amount_invalid' => 'The credit note amount must be greater than zero.',
 
 ];

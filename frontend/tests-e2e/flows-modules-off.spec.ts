@@ -27,10 +27,10 @@ test.describe("modules off, in the browser", () => {
 
   for (const href of gatedPagesFor("owner2")) {
     test(`${href} is not found`, async ({ page }) => {
-      const response = await page.goto(`/en${href}`);
+      await page.goto(`/en${href}`);
 
-      const refused = (response?.status() ?? 0) >= 400 || NOT_FOUND.test(await page.locator("body").innerText());
-      expect(refused, `${href} must not open while its module is off`).toBe(true);
+      // These pages stream: the response is a 200 and the 404 arrives after it, so wait for the text.
+      await expect(page.locator("body"), `${href} must not open while its module is off`).toContainText(NOT_FOUND);
     });
   }
 });
@@ -47,7 +47,7 @@ test.describe("modules off, in the API", () => {
   });
 
   test("finance v2 endpoints answer 404, as if they did not exist", async () => {
-    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/unbilled-charges", "workspace/finance/imports/template/catalog_items"];
+    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/credit-notes", "workspace/finance/unbilled-charges", "workspace/finance/imports/template/catalog_items"];
     for (const path of reads) {
       expect((await owner.get(path)).status(), path).toBe(404);
     }
@@ -59,6 +59,7 @@ test.describe("modules off, in the API", () => {
     expect((await owner.post("workspace/invoices/drafts", { customer_id: UUID, due_date: dateFromNow(7), lines: [] })).status()).toBe(404);
     expect((await owner.put(`workspace/subscriptions/${subscription}/financial`, { grace_days: 1 })).status()).toBe(404);
     expect((await owner.post(`workspace/invoices/${invoice}/issue`)).status()).toBe(404);
+    expect((await owner.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "1.00", reason: "E2E" })).status()).toBe(404);
   });
 
   test("network endpoints are forbidden", async () => {

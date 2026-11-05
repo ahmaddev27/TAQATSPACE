@@ -320,7 +320,7 @@ test.describe("receipts (M5)", () => {
 
     expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "bounced" })).status()).toBe(200);
     expect(await field(`workspace/invoices/${invoice}`, "payment_status"), "bounced cheque").toBe("unpaid");
-    expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "cleared" })).status(), "a bounced cheque cannot move on").toBe(422);
+    expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "cleared" })).status(), "a bounced cheque cannot move on").toBe(409);
   });
 
   test("the cheque status of a cash receipt cannot be changed", async () => {
@@ -338,6 +338,29 @@ test.describe("receipts (M5)", () => {
     expect(list.status()).toBe(200);
     expect(firstArray(await owner.json(list)).length).toBeGreaterThan(0);
     expect(stranger.status()).toBe(422);
+  });
+});
+
+test.describe("credit notes (M5)", () => {
+  test("the demo credit notes are listed, each linked to its invoice with a reason", async () => {
+    const list = await owner.get("workspace/finance/credit-notes", { per_page: 100 });
+    expect(list.status()).toBe(200);
+
+    const notes = firstArray(await owner.json(list)) as Array<{ number: string; invoice_number: string | null; reason: string; amount: string }>;
+    expect(notes.length).toBeGreaterThanOrEqual(2);
+    for (const note of notes) {
+      expect(note.invoice_number, "linked to an invoice").toBeTruthy();
+      expect(note.reason.length, "carries a reason").toBeGreaterThan(2);
+    }
+  });
+
+  test("a credit note needs the two-factor enrolment of the person issuing it", async () => {
+    const invoice = await issuedInvoice(customer, 20);
+
+    const response = await owner.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "5.00", reason: "E2E" });
+
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "two_factor_enrollment_required" });
   });
 });
 
