@@ -53,10 +53,11 @@ test("without two-factor, the sensitive actions are refused for enrolment, not f
   const routers = await owner.json<{ data: Array<{ id: string }> }>(await owner.get("workspace/routers"));
   const rotate = await owner.post(`workspace/routers/${routers.data[0].id}/rotate-key`);
   const voidReceipt = await owner.post("workspace/finance/receipts/00000000-0000-4000-8000-000000000000/void", { reason: "E2E" });
+  const rotateBody = await rotate.json();
   await owner.dispose();
 
   expect(rotate.status()).toBe(403);
-  expect(await rotate.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+  expect(rotateBody).toMatchObject({ code: "two_factor_enrollment_required" });
   expect(voidReceipt.status()).toBe(403);
 });
 
@@ -105,9 +106,10 @@ test.describe("router key rotation (M2)", () => {
     const router = await request.newContext({ baseURL: `${apiBase()}/` });
     const body = `H|${unique("b")}|1|e2eboot${Date.now() % 100000}|${new Date().toISOString().slice(0, 19).replace("T", " ")}|full|stepupnonce|1.1.0\n`;
     const sync = await router.post(`v1/hotspot/${code}/sync`, { data: body, headers: { "Content-Type": "text/plain", "X-API-Key": newKey }, failOnStatusCode: false });
+    const syncBody = await sync.text();
     await router.dispose();
     expect(sync.status(), "the new key syncs").toBe(200);
-    expect((await sync.text()).startsWith("CWS-SYNC stepupnonce")).toBe(true);
+    expect(syncBody.startsWith("CWS-SYNC stepupnonce")).toBe(true);
   });
 });
 

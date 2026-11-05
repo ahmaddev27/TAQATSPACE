@@ -1,6 +1,7 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+import { formatDateTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import type { RouterCommand, RouterCommandStatus } from "@/lib/types/router";
@@ -20,10 +21,8 @@ export interface CommandsTableProps {
 /** Recent platform-to-router commands and where each one stands. */
 export function CommandsTable({ commands }: CommandsTableProps) {
   const t = useTranslations("integration.commands");
-  const locale = useLocale();
 
-  const when = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" }) : "—";
+  const when = (iso: string | null) => (iso ? formatDateTime(iso) : "—");
 
   const columns: DataTableColumn<RouterCommand>[] = [
     {

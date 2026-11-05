@@ -73,6 +73,8 @@ export function NotificationItem({
           <span
             className="muted-3"
             style={{ fontSize: "var(--fs-xs)", flex: "none" }}
+            // The time depends on the moment it is rendered, so the server and the browser may differ.
+            suppressHydrationWarning
           >
             {time}
           </span>
