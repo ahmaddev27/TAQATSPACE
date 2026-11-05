@@ -879,7 +879,8 @@ function RecentRow({ order, divider }: { order: PosOrder; divider: boolean }) {
           <PaidPill paid={isPaid} />
         </div>
         {order.created_at && (
-          <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+          // "2 minutes ago" depends on the moment it is rendered, so the server and the browser may differ.
+          <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }} suppressHydrationWarning>
             {relativeTime(order.created_at, locale)}
           </span>
         )}

@@ -319,7 +319,7 @@ test.describe("receipts (M5)", () => {
 
     expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "bounced" })).status()).toBe(200);
     expect(await field(`workspace/invoices/${invoice}`, "payment_status"), "bounced cheque").toBe("unpaid");
-    expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "cleared" })).status(), "a bounced cheque cannot move on").toBe(422);
+    expect((await owner.put(`workspace/finance/receipts/${id}/cheque-status`, { status: "cleared" })).status(), "a bounced cheque cannot move on").toBe(409);
   });
 
   test("the cheque status of a cash receipt cannot be changed", async () => {
