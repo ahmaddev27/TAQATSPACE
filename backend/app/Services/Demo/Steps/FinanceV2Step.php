@@ -25,6 +25,7 @@ use App\Services\Demo\DemoSeedStep;
 use App\Services\ExpenseService;
 use App\Services\Finance\CatalogCategoryService;
 use App\Services\Finance\CatalogItemService;
+use App\Services\Finance\CreditNoteService;
 use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\Finance\PlanService;
 use App\Services\Finance\ReceiptService;
@@ -34,7 +35,8 @@ use App\Services\Finance\UnbilledChargeService;
  * Finance v2 for the first tenant, written through the finance services as the
  * owner: a catalog, plans of every pricing method, a subscription with financial
  * terms, unbilled charges, invoices (draft, issued, void), receipts (a partial
- * allocation and an uncollected cheque) and a voided expense.
+ * allocation and an uncollected cheque), credit notes (partial, and full on an
+ * unpaid invoice) and a voided expense.
  */
 class FinanceV2Step implements DemoSeedStep
 {
@@ -54,6 +56,7 @@ class FinanceV2Step implements DemoSeedStep
         private readonly UnbilledChargeService $charges,
         private readonly InvoiceLifecycleService $invoices,
         private readonly ReceiptService $receipts,
+        private readonly CreditNoteService $creditNotes,
         private readonly ExpenseService $expenses,
     ) {}
 
@@ -142,6 +145,11 @@ class FinanceV2Step implements DemoSeedStep
         $this->receipt($workspace, $owner, $first, PaymentMethod::Cash, 60, [['invoice_id' => $partial->id, 'amount' => 30]]);
         // A cheque is not collected until it clears, so its invoice stays unpaid.
         $this->receipt($workspace, $owner, $first, PaymentMethod::Cheque, 80, [['invoice_id' => $cheque->id, 'amount' => 80]]);
+
+        // A small correction of a partly paid invoice, and an invoice wiped out in full.
+        $this->creditNotes->issue($partial, '5.00', 'Printing discount agreed with the customer.', $owner);
+        $mistaken = $this->issue($workspace, $owner, $second, [$this->line('خدمة بسعر خاطئ', 1, 30, $item)]);
+        $this->creditNotes->issue($mistaken, '30.00', 'Billed at the wrong price.', $owner);
     }
 
     private function charge(Workspace $workspace, User $owner, User $customer, string $description, int $qty, int $price): UnbilledCharge

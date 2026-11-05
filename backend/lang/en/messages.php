@@ -385,5 +385,10 @@ return [
     'receipt_cheque_transition_invalid' => 'The cheque cannot move to that status from its current one.',
     'receipt_allocation_exceeds_receipt' => 'The allocations exceed the receipt amount.',
     'receipt_invoice_mismatch' => 'An invoice does not exist, or does not belong to this customer and workspace.',
+    'credit_note_issued' => 'Credit note issued.',
+    'credit_note_invoice_not_issued' => 'A credit note can only be raised on an issued invoice.',
+    'credit_note_exceeds_invoice' => 'The credit note exceeds what the invoice can still be credited (:remaining).',
+    'credit_note_held_by_cheques' => 'A cheque is pending on this invoice, so only :creditable can be credited for now.',
+    'credit_note_amount_invalid' => 'The credit note amount must be greater than zero.',
 
 ];

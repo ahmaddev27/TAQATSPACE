@@ -131,6 +131,21 @@
         "done": "Invoice voided",
         "failed": "Could not void invoice"
       },
+      "creditNote": {
+        "title": "Credit note",
+        "body": "Correct invoice {invoice} with a credit note. The invoice stays as issued; up to {creditable} can still be credited.",
+        "amount": "Credit amount",
+        "amountRequired": "Enter an amount greater than zero.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is this invoice being credited?",
+        "reasonRequired": "Enter a reason (at least 3 characters).",
+        "code": "Two-factor code",
+        "codeRequired": "Enter the 6-digit code from your authenticator app to continue.",
+        "cancel": "Cancel",
+        "confirm": "Issue credit note",
+        "done": "Credit note issued",
+        "failed": "Could not issue the credit note"
+      },
       "issueModal": {
         "title": "Issue new invoice",
         "member": "Member",

@@ -385,5 +385,10 @@ return [
     'receipt_cheque_transition_invalid' => 'لا يمكن نقل الشيك إلى هذه الحالة من حالته الحالية.',
     'receipt_allocation_exceeds_receipt' => 'مجموع التوزيع يتجاوز مبلغ الإيصال.',
     'receipt_invoice_mismatch' => 'الفاتورة غير موجودة أو لا تخص هذا العميل وهذه المساحة.',
+    'credit_note_issued' => 'تم إصدار الإشعار الدائن.',
+    'credit_note_invoice_not_issued' => 'لا يمكن إصدار إشعار دائن إلا على فاتورة صادرة.',
+    'credit_note_exceeds_invoice' => 'مبلغ الإشعار يتجاوز المتاح للخصم من الفاتورة (:remaining).',
+    'credit_note_held_by_cheques' => 'يوجد شيك معلّق على هذه الفاتورة، لذا المتاح للخصم حالياً :creditable فقط.',
+    'credit_note_amount_invalid' => 'يجب أن يكون مبلغ الإشعار أكبر من صفر.',
 
 ];
