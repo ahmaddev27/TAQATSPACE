@@ -6,6 +6,7 @@ namespace App\Services\Finance;
 
 use App\Enums\DocStatus;
 use App\Enums\DocumentType;
+use App\Enums\WalletEntryType;
 use App\Exceptions\CreditNoteException;
 use App\Models\CreditNote;
 use App\Models\Invoice;
@@ -26,6 +27,7 @@ class CreditNoteService
     public function __construct(
         private readonly DocumentNumberService $numbers,
         private readonly InvoiceBalanceService $balances,
+        private readonly WalletLedger $wallet,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -77,8 +79,32 @@ class CreditNoteService
         ]);
 
         $this->balances->applyCredit($locked, $amount, $now);
+        $this->creditWallet($note, $locked, $actor);
 
         return $note;
+    }
+
+    /** The part of the credit the customer had already paid becomes money on their wallet. */
+    private function creditWallet(CreditNote $note, Invoice $invoice, ?User $actor): void
+    {
+        if (bccomp((string) $note->refund_amount, '0', 2) <= 0 || $invoice->customer_id === null) {
+            return;
+        }
+
+        $entry = $this->wallet->append(
+            $note->workspace_id,
+            $invoice->customer_id,
+            WalletEntryType::Credit,
+            (string) $note->refund_amount,
+            'Credit note '.$note->number,
+            WalletLedger::RELATED_CREDIT_NOTE,
+            $note->id,
+            $actor,
+        );
+        $this->audit->log('finance.wallet.credited', $entry, actor: $actor, changes: [
+            'credit_note' => $note->number,
+            'amount' => $entry->amount,
+        ]);
     }
 
     /**

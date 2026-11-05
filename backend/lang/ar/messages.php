@@ -416,5 +416,15 @@ return [
     'credit_note_exceeds_invoice' => 'مبلغ الإشعار يتجاوز المتاح للخصم من الفاتورة (:remaining).',
     'credit_note_held_by_cheques' => 'يوجد شيك معلّق على هذه الفاتورة، لذا المتاح للخصم حالياً :creditable فقط.',
     'credit_note_amount_invalid' => 'يجب أن يكون مبلغ الإشعار أكبر من صفر.',
+    'wallet_deposit_received' => 'تم استلام التأمين.',
+    'wallet_deposit_returned' => 'تم رد التأمين وإصدار سند الصرف.',
+    'wallet_settled' => 'تم سداد الفاتورة من المحفظة.',
+    'wallet_forfeited' => 'تم مصادرة التأمين.',
+    'wallet_insufficient' => 'المبلغ أكبر من رصيد المحفظة (:balance).',
+    'wallet_amount_invalid' => 'يجب أن يكون المبلغ أكبر من صفر.',
+    'wallet_unknown_customer' => 'هذا الشخص ليس عميلاً في المساحة.',
+    'wallet_request_key_reused' => 'مفتاح الطلب هذا استُخدم سابقاً لعملية مختلفة.',
+    'payment_voucher_voided_ok' => 'تم إلغاء سند الصرف وإعادة المبلغ إلى المحفظة.',
+    'payment_voucher_voided' => 'سند الصرف هذا ملغى مسبقاً.',
 
 ];

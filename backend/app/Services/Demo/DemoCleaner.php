@@ -39,6 +39,10 @@ class DemoCleaner
             // import_batches go with the workspace; only their parked files need removing.
             Storage::disk('local')->delete(DB::table('import_batches')->whereIn('workspace_id', $workspaceIds)->whereNotNull('payload_path')->pluck('payload_path')->all());
 
+            // The cascade clears wallets with the workspace; naming them here keeps a schema change from leaving ledgers behind.
+            DB::table('payment_vouchers')->whereIn('workspace_id', $workspaceIds)->delete();
+            DB::table('wallet_entries')->whereIn('workspace_id', $workspaceIds)->delete();
+
             // Items restrict deleting their category, so the workspace's cascade would fail on them.
             DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();
 

@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Receipts with their allocations, and unbilled charges. Must run before the
+ * Receipts with their allocations, the customer wallets (ledger entries and the
+ * payment vouchers that document money paid back), and unbilled charges. Must run before the
  * invoices step: deleting an invoice only removes its allocations, which would
  * leave the receipt looking like unspent customer credit. Import batches go too:
  * what they created is gone, so the same file must be importable again. The
@@ -31,6 +32,9 @@ final class FinanceResetStep implements WorkspaceResetStep
         $this->deletePrivateProofsAfterCommit($workspace);
         $this->deleteParkedImportsAfterCommit($workspace);
 
+        // Vouchers point at wallet entries, so they go first.
+        DB::table('payment_vouchers')->where('workspace_id', $workspace->id)->delete();
+        DB::table('wallet_entries')->where('workspace_id', $workspace->id)->delete();
         DB::table('receipts')->where('workspace_id', $workspace->id)->delete();
         DB::table('unbilled_charges')->where('workspace_id', $workspace->id)->delete();
         DB::table('import_batches')->where('workspace_id', $workspace->id)->delete();

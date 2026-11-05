@@ -21,7 +21,7 @@ class PayOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'method' => ['required', Rule::in(PaymentMethod::values())],
+            'method' => ['required', Rule::in(PaymentMethod::manualValues())],
         ];
     }
 }

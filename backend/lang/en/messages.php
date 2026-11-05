@@ -416,5 +416,15 @@ return [
     'credit_note_exceeds_invoice' => 'The credit note exceeds what the invoice can still be credited (:remaining).',
     'credit_note_held_by_cheques' => 'A cheque is pending on this invoice, so only :creditable can be credited for now.',
     'credit_note_amount_invalid' => 'The credit note amount must be greater than zero.',
+    'wallet_deposit_received' => 'Deposit received.',
+    'wallet_deposit_returned' => 'Deposit returned and payment voucher issued.',
+    'wallet_settled' => 'Invoice paid from the wallet.',
+    'wallet_forfeited' => 'Deposit forfeited.',
+    'wallet_insufficient' => 'The amount is more than the wallet balance (:balance).',
+    'wallet_amount_invalid' => 'The amount must be greater than zero.',
+    'wallet_unknown_customer' => 'This person is not a customer of the workspace.',
+    'wallet_request_key_reused' => 'This request key was already used for a different operation.',
+    'payment_voucher_voided_ok' => 'Payment voucher voided and the money put back on the wallet.',
+    'payment_voucher_voided' => 'This payment voucher is already void.',
 
 ];

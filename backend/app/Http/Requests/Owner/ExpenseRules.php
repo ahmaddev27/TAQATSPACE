@@ -22,7 +22,7 @@ final class ExpenseRules
     {
         return [
             'catalog_category_id' => ['nullable', 'uuid', self::expenseCategoryOf($workspaceId)],
-            'method' => ['nullable', Rule::in(PaymentMethod::values())],
+            'method' => ['nullable', Rule::in(PaymentMethod::manualValues())],
             'reference' => ['nullable', 'string', 'max:100'],
         ];
     }
