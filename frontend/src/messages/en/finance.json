@@ -202,6 +202,49 @@
         "prepaid": "Prepaid",
         "postpaid": "Postpaid"
       }
+    },
+    "import": {
+      "title": "Import from Excel",
+      "subtitle": "Upload an XLSX file, check it row by row, then import it all at once. If any row has an error, nothing is imported.",
+      "steps": {
+        "upload": "Upload",
+        "preview": "Check",
+        "done": "Done"
+      },
+      "types": {
+        "catalog_items": "Catalog items",
+        "withdrawals": "Withdrawals"
+      },
+      "typeHint": {
+        "catalog_items": "Columns: code, category_code, name_ar, name_en, unit, price. An existing code is rejected.",
+        "withdrawals": "Columns: source_ref, customer_email, description, qty, unit_price, occurred_at. Each source_ref can be imported once."
+      },
+      "rules": "One sheet, up to 2,000 rows, up to 5 MB, no formulas.",
+      "template": "Download the template",
+      "dropLabel": "Choose an XLSX file",
+      "dropHint": "Or drop it here",
+      "clear": "Remove",
+      "check": "Check file",
+      "checking": "Checking...",
+      "rows": "{count} rows",
+      "okTitle": "The file is ready",
+      "okBody": "All rows passed. Importing writes them together.",
+      "errorsTitle": "{count} errors found",
+      "errorsBody": "Fix the file and upload it again. Nothing was imported.",
+      "errorCols": {
+        "row": "Row",
+        "column": "Column",
+        "message": "Problem"
+      },
+      "moreErrors": "Only the first {shown} errors are shown.",
+      "commit": "Import all rows",
+      "committing": "Importing...",
+      "back": "Choose another file",
+      "doneTitle": "Import completed",
+      "doneBody": "{count} rows were imported.",
+      "another": "Import another file",
+      "error": "Something went wrong",
+      "noFile": "Choose a file first."
     }
   }
 }

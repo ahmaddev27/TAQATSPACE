@@ -97,6 +97,7 @@
       "catalog": "Catalog",
       "plans": "Plans",
       "receipts": "Receipts",
+      "importXlsx": "Import",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",
