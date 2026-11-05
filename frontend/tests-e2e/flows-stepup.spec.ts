@@ -106,9 +106,10 @@ test.describe("router key rotation (M2)", () => {
     const router = await request.newContext({ baseURL: `${apiBase()}/` });
     const body = `H|${unique("b")}|1|e2eboot${Date.now() % 100000}|${new Date().toISOString().slice(0, 19).replace("T", " ")}|full|stepupnonce|1.1.0\n`;
     const sync = await router.post(`v1/hotspot/${code}/sync`, { data: body, headers: { "Content-Type": "text/plain", "X-API-Key": newKey }, failOnStatusCode: false });
+    const syncBody = await sync.text();
     await router.dispose();
     expect(sync.status(), "the new key syncs").toBe(200);
-    expect((await sync.text()).startsWith("CWS-SYNC stepupnonce")).toBe(true);
+    expect(syncBody.startsWith("CWS-SYNC stepupnonce")).toBe(true);
   });
 });
 
