@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+import { formatDateTime } from "@/lib/dates";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
@@ -31,7 +32,6 @@ export interface RouterCardProps {
 /** Status, identity and actions of the workspace router. */
 export function RouterCard({ router }: RouterCardProps) {
   const t = useTranslations("integration");
-  const locale = useLocale();
   const confirm = useConfirm();
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
@@ -42,7 +42,7 @@ export function RouterCard({ router }: RouterCardProps) {
   const [newKey, setNewKey] = useState<string | null>(null);
 
   const lastSync = router.last_seen_at
-    ? new Date(router.last_seen_at).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" })
+    ? formatDateTime(router.last_seen_at)
     : t("card.never");
 
   const copy = (value: string) => {

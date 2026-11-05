@@ -84,7 +84,8 @@ export function ThreadList({
                   </div>
                 </div>
                 <div className="thread-meta">
-                  <span className="thread-time">
+                  {/* Depends on the moment it is rendered, so the server and the browser may differ. */}
+                  <span className="thread-time" suppressHydrationWarning>
                     {relativeTime(th.last_message?.created_at, locale)}
                   </span>
                   {th.unread_count > 0 && (
