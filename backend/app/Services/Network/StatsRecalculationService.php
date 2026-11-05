@@ -28,6 +28,7 @@ class StatsRecalculationService
     public function __construct(
         private readonly AttendanceRebuilder $attendance,
         private readonly StatsAggregator $aggregator,
+        private readonly ScoringService $scoring,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -63,7 +64,10 @@ class StatsRecalculationService
 
         try {
             $this->attendance->rebuild($workspace, $from, $to);
-            $this->store($workspace, $status->running()->completed($this->aggregator->aggregate($workspace, $from, $to)));
+            $figures = $this->aggregator->aggregate($workspace, $from, $to);
+            // Scores read the monthly figures just rewritten, so they follow every recalculation.
+            $this->scoring->compute($workspace);
+            $this->store($workspace, $status->running()->completed($figures));
         } catch (Throwable $e) {
             $this->fail($workspace);
 

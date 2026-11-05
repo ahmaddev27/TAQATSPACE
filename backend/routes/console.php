@@ -59,6 +59,9 @@ Schedule::command('queue:work --queue=ingest,default --stop-when-empty --max-tim
 // minutes and must not hold up the ingest drain above. The mutex expires after
 // 30 minutes so a killed worker cannot block the queue for the default day.
 Schedule::command('stats:recalculate')->dailyAt('01:45')->withoutOverlapping();
+// Scores are also recomputed by every recalculation above; this pass applies changed
+// weights and moves the "days without activity" forward even on a quiet night.
+Schedule::command('scores:compute')->dailyAt('02:30')->withoutOverlapping();
 Schedule::command('queue:work --queue=heavy --stop-when-empty --max-time=55 --tries=1')
     ->everyMinute()
     ->withoutOverlapping(30);
