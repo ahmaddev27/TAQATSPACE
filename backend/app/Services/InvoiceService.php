@@ -154,7 +154,7 @@ class InvoiceService
                 'public',
             ),
             'status' => InvoiceStatus::Paid->value,
-            'amount_paid' => $invoice->amount,
+            'amount_paid' => $this->netPayable($invoice),
             'paid_at' => $paidAt ?? Carbon::now(),
         ])->save();
 
@@ -347,7 +347,7 @@ class InvoiceService
 
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid->value,
-            'amount_paid' => $invoice->amount,
+            'amount_paid' => $this->netPayable($invoice),
             'paid_at' => $paidAt ?? Carbon::now(),
         ])->save();
 
@@ -402,7 +402,7 @@ class InvoiceService
 
         DB::transaction(function () use ($invoice, $amount, $paymentDate, $fullyPaid, $newPaid): void {
             $invoice->forceFill([
-                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'amount_paid' => $fullyPaid ? $this->netPayable($invoice) : round($newPaid, 2),
                 'status' => $fullyPaid
                     ? InvoiceStatus::Paid->value
                     : InvoiceStatus::PartiallyPaid->value,
@@ -478,7 +478,7 @@ class InvoiceService
         DB::transaction(function () use ($invoice, $amount, $receiptPath, $paymentDate, $fullyPaid, $newPaid): void {
             $invoice->forceFill([
                 'receipt_path' => $receiptPath,
-                'amount_paid' => $fullyPaid ? $invoice->amount : round($newPaid, 2),
+                'amount_paid' => $fullyPaid ? $this->netPayable($invoice) : round($newPaid, 2),
                 'status' => $fullyPaid
                     ? InvoiceStatus::Paid->value
                     : InvoiceStatus::PartiallyPaid->value,
@@ -830,6 +830,12 @@ class InvoiceService
         if ($invoice->doc_status !== DocStatus::Issued) {
             throw InvoiceLifecycleException::notPayable();
         }
+    }
+
+    /** Amount actually collectable once credit notes are deducted. */
+    private function netPayable(Invoice $invoice): float
+    {
+        return round((float) $invoice->amount - (float) $invoice->credited_amount, 2);
     }
 
     private function nextInvoiceNumber(Workspace $workspace): string
