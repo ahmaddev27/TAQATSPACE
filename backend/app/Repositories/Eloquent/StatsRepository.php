@@ -53,8 +53,8 @@ class StatsRepository
         return Subscription::query()
             ->where('workspace_id', $workspaceId)
             ->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::Expired->value, SubscriptionStatus::Suspended->value])
-            ->where('start_date', '<=', $toDate)
-            ->where(fn (Builder $query) => $query->whereNull('end_date')->orWhere('end_date', '>=', $fromDate))
+            ->whereDate('start_date', '<=', $toDate)
+            ->where(fn (Builder $query) => $query->whereNull('end_date')->orWhereDate('end_date', '>=', $fromDate))
             ->toBase()
             ->get(['member_id', 'start_date', 'end_date']);
     }
