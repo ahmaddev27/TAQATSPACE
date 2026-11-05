@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public contact form — rate-limited to deter spam.
 Route::post('/contact', [ContactController::class, 'store'])
-    ->middleware('throttle:5,60');
+    ->middleware('throttle:5,60,contact-form');
 
 Route::middleware(['auth:sanctum', 'role.admin', 'can.permission:manage_messaging'])
     ->prefix('admin/contact-messages')

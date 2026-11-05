@@ -26,7 +26,7 @@ Route::prefix('auth')->group(function (): void {
     Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
-        ->middleware('throttle:3,60');
+        ->middleware('throttle:3,60,forgot-password');
     Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
     Route::middleware('auth:sanctum')->group(function (): void {

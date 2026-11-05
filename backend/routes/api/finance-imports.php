@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidden'])
     ->prefix('workspace/finance/imports')
     ->group(function (): void {
-        Route::post('/preview', [ImportController::class, 'preview'])->middleware('throttle:20,1');
+        Route::post('/preview', [ImportController::class, 'preview'])->middleware('throttle:20,1,import-preview');
         Route::post('/{id}/commit', [ImportController::class, 'commit'])->whereUuid('id');
         Route::get('/template/{type}', [ImportController::class, 'template']);
     });
