@@ -97,6 +97,7 @@
       "catalog": "Catalog",
       "plans": "Plans",
       "receipts": "Receipts",
+      "creditNotes": "Credit notes",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",

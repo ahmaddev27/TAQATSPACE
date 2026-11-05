@@ -28,6 +28,7 @@ import { RemindButton } from "./RemindButton";
 import { DownloadPdfLink } from "./DownloadPdfLink";
 import { PaymentsHistoryButton } from "./PaymentsHistoryButton";
 import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
+import { CreditNoteButton } from "./CreditNoteButton";
 import { VoidInvoiceButton } from "./VoidInvoiceButton";
 import { invoiceDate, invoiceMoney, invoicePeriod } from "./format";
 
@@ -36,6 +37,9 @@ type StatusTab = "all" | InvoiceStatus;
 const TABS: StatusTab[] = ["all", "under_review", "pending", "overdue", "paid"];
 const FILTER_KEYS = ["status", "month"] as const;
 const PAGE_SIZE = 8;
+
+/** What a credit note may still take off the invoice. */
+const creditableOf = (inv: Invoice): number => Number(inv.amount) - Number(inv.credited_amount ?? 0);
 
 export interface InvoicesTableProps {
   invoices: Invoice[];
@@ -202,6 +206,13 @@ export function InvoicesTable({ invoices, members, financeV2 = false }: Invoices
             />
           )}
           <DownloadPdfLink invoiceId={inv.id} label={t("actions.downloadPdf")} />
+          {financeV2 && inv.doc_status === "issued" && creditableOf(inv) > 0 && (
+            <CreditNoteButton
+              invoiceId={inv.id}
+              invoiceNumber={inv.invoice_number}
+              creditable={creditableOf(inv).toFixed(2)}
+            />
+          )}
           {inv.doc_status === "void" ? null : financeV2 && inv.doc_status === "issued" ? (
             <VoidInvoiceButton invoiceId={inv.id} invoiceNumber={inv.invoice_number} />
           ) : (

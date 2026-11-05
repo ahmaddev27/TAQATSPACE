@@ -47,7 +47,7 @@ test.describe("modules off, in the API", () => {
   });
 
   test("finance v2 endpoints answer 404, as if they did not exist", async () => {
-    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/unbilled-charges"];
+    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/credit-notes", "workspace/finance/unbilled-charges"];
     for (const path of reads) {
       expect((await owner.get(path)).status(), path).toBe(404);
     }
@@ -59,6 +59,7 @@ test.describe("modules off, in the API", () => {
     expect((await owner.post("workspace/invoices/drafts", { customer_id: UUID, due_date: dateFromNow(7), lines: [] })).status()).toBe(404);
     expect((await owner.put(`workspace/subscriptions/${subscription}/financial`, { grace_days: 1 })).status()).toBe(404);
     expect((await owner.post(`workspace/invoices/${invoice}/issue`)).status()).toBe(404);
+    expect((await owner.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "1.00", reason: "E2E" })).status()).toBe(404);
   });
 
   test("network endpoints are forbidden", async () => {

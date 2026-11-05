@@ -340,6 +340,29 @@ test.describe("receipts (M5)", () => {
   });
 });
 
+test.describe("credit notes (M5)", () => {
+  test("the demo credit notes are listed, each linked to its invoice with a reason", async () => {
+    const list = await owner.get("workspace/finance/credit-notes", { per_page: 100 });
+    expect(list.status()).toBe(200);
+
+    const notes = firstArray(await owner.json(list)) as Array<{ number: string; invoice_number: string | null; reason: string; amount: string }>;
+    expect(notes.length).toBeGreaterThanOrEqual(2);
+    for (const note of notes) {
+      expect(note.invoice_number, "linked to an invoice").toBeTruthy();
+      expect(note.reason.length, "carries a reason").toBeGreaterThan(2);
+    }
+  });
+
+  test("a credit note needs the two-factor enrolment of the person issuing it", async () => {
+    const invoice = await issuedInvoice(customer, 20);
+
+    const response = await owner.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "5.00", reason: "E2E" });
+
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+  });
+});
+
 test.describe("expenses (M5)", () => {
   test("an expense can be voided with a reason, once", async () => {
     const made = await created(owner, await owner.post("workspace/expenses", {

@@ -13,6 +13,7 @@ use App\Enums\UnbilledChargeStatus;
 use App\Enums\WorkspaceFeature;
 use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
+use App\Models\CreditNote;
 use App\Models\Expense;
 use App\Models\HotspotAccount;
 use App\Models\HotspotSession;
@@ -176,6 +177,16 @@ class DemoModulesSeedTest extends TestCase
         $this->assertNull($cheque->collected_at);
     }
 
+    public function test_credit_notes_cover_a_partial_and_a_full_credit(): void
+    {
+        $this->seedDemo();
+        $notes = CreditNote::query()->where('workspace_id', $this->workspace('almanara')->id)->with('invoice')->get();
+
+        $this->assertCount(2, $notes);
+        $this->assertEqualsCanonicalizing([5.0, 30.0], $notes->map(fn (CreditNote $note): float => (float) $note->amount)->all());
+        $this->assertTrue($notes->every(fn (CreditNote $note): bool => $note->invoice->doc_status === DocStatus::Issued));
+    }
+
     public function test_hour_packages_come_with_a_requested_purchase(): void
     {
         $this->seedDemo();
@@ -208,6 +219,7 @@ class DemoModulesSeedTest extends TestCase
             'plans' => Plan::query()->withoutWorkspaceScope()->count(),
             'invoices' => Invoice::query()->withoutGlobalScopes()->count(),
             'receipts' => Receipt::query()->withoutGlobalScopes()->count(),
+            'credit_notes' => CreditNote::query()->count(),
             'charges' => UnbilledCharge::query()->withoutWorkspaceScope()->count(),
             'packages' => HourPackage::query()->count(),
             'purchases' => HourPackagePurchase::query()->count(),
