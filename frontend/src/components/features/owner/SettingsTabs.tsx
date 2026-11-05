@@ -21,6 +21,7 @@ import { MessagingTab } from "./MessagingTab";
 import { DomainTab } from "./DomainTab";
 import { DangerTab } from "./DangerTab";
 import { OperationsTab } from "./OperationsTab";
+import { RecalculateCard } from "./RecalculateCard";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -242,6 +243,7 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
     { id: "operations", label: t("settings.tabOperations") },
     { id: "messaging", label: tm("tab") },
     { id: "domain", label: t("settings.tabDomain") },
+    { id: "tools", label: t("settings.tabTools") },
     { id: "danger", label: t("settings.tabDanger") },
   ];
 
@@ -519,10 +521,12 @@ export function SettingsTabs({ workspace, locale, pendingApprovals = [] }: Setti
           />
         )}
 
+        {tab === "tools" && <RecalculateCard />}
+
         {tab === "danger" && workspace.slug && <DangerTab slug={workspace.slug} />}
       </div>
 
-      {!["photos", "operations", "messaging", "domain", "danger"].includes(tab) && (
+      {!["photos", "operations", "messaging", "domain", "tools", "danger"].includes(tab) && (
         <Button
           variant="primary"
           icon="check"

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { serverFetch } from "@/lib/api";
+import { ApiError, serverFetch } from "@/lib/api";
 import { authedMutate, type ActionResult } from "@/lib/actions/client";
 import type {
   ApiEnvelope,
@@ -20,6 +20,7 @@ import type {
   WorkspaceMessagingUpdateInput,
 } from "@/lib/types";
 import type { ApprovalRequestEntry } from "@/lib/types/approvals";
+import type { RecalculateInput, RecalculationStatus } from "@/lib/types/tools";
 import type {
   DiagnosticCheck,
   OwnerRouter,
@@ -863,4 +864,26 @@ export async function updateRouterScript(
   );
   if (result.ok) revalidateOwner("settings/api");
   return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tools: statistics recalculation                                           */
+/* -------------------------------------------------------------------------- */
+
+/** Queue a recalculation of a date range (at most three months). */
+export async function startRecalculation(
+  input: RecalculateInput,
+): Promise<ActionResult<RecalculationStatus>> {
+  return authedMutate<RecalculationStatus>("/workspace/tools/recalculate", { body: input });
+}
+
+/** The latest recalculation of the workspace; polled while one is running. */
+export async function getRecalculationStatus(): Promise<ActionResult<RecalculationStatus>> {
+  try {
+    const res = await serverFetch<ApiEnvelope<RecalculationStatus>>("/workspace/tools/recalculate/status");
+    return { ok: true, data: res.data };
+  } catch (error) {
+    const status = error instanceof ApiError ? error.status : 500;
+    return { ok: false, status, message: error instanceof Error ? error.message : "Request failed." };
+  }
 }
