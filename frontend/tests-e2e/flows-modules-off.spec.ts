@@ -47,7 +47,7 @@ test.describe("modules off, in the API", () => {
   });
 
   test("finance v2 endpoints answer 404, as if they did not exist", async () => {
-    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/credit-notes", "workspace/finance/unbilled-charges"];
+    const reads = ["workspace/finance/catalog/items", "workspace/finance/catalog/categories", "workspace/finance/plans", "workspace/finance/receipts", "workspace/finance/credit-notes", "workspace/finance/unbilled-charges", "workspace/finance/imports/template/catalog_items"];
     for (const path of reads) {
       expect((await owner.get(path)).status(), path).toBe(404);
     }

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Demo\Steps\HourPackagesStep;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Removes demo data and nothing else. Scope is "owned by a demo account or a
@@ -34,6 +35,9 @@ class DemoCleaner
             $workspaceIds = Workspace::withTrashed()->whereIn('owner_id', $userIds)->pluck('id');
 
             $this->clearKeylessTables($userIds->all(), $workspaceIds->all());
+
+            // import_batches go with the workspace; only their parked files need removing.
+            Storage::disk('local')->delete(DB::table('import_batches')->whereIn('workspace_id', $workspaceIds)->whereNotNull('payload_path')->pluck('payload_path')->all());
 
             // Items restrict deleting their category, so the workspace's cascade would fail on them.
             DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();

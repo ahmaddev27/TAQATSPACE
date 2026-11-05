@@ -53,6 +53,15 @@ export class ApiClient {
     });
   }
 
+  /** A multipart upload under a custom field name (e.g. the import `file`). */
+  postUpload(path: string, field: string, fields: Record<string, string>, file: { name: string; mimeType: string; buffer: Buffer }): Promise<APIResponse> {
+    return this.ctx.post(path.replace(/^\//, ""), {
+      headers: this.headers(),
+      multipart: { ...fields, [field]: file },
+      failOnStatusCode: false,
+    });
+  }
+
   async json<T = unknown>(response: APIResponse): Promise<T> {
     return (await response.json()) as T;
   }

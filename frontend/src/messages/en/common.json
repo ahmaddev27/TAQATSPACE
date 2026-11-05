@@ -98,6 +98,7 @@
       "plans": "Plans",
       "receipts": "Receipts",
       "creditNotes": "Credit notes",
+      "importXlsx": "Import",
       "members": "Members",
       "expenses": "Expenses",
       "resources": "Resources",

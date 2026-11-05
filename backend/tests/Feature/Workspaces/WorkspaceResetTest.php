@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Workspaces;
 
 use App\Contracts\WorkspaceResetStep;
+use App\Enums\ImportStatus;
+use App\Enums\ImportType;
 use App\Enums\RouterCommandVerb;
 use App\Enums\SeatStatus;
 use App\Models\AuditLog;
@@ -12,6 +14,7 @@ use App\Models\BookingRequest;
 use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
 use App\Models\Expense;
+use App\Models\ImportBatch;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Models\Plan;
@@ -147,6 +150,35 @@ class WorkspaceResetTest extends TestCase
         $this->assertSame(0, UnbilledCharge::query()->withoutWorkspaceScope()->where('workspace_id', $workspace->id)->count());
         $this->assertNull(Invoice::query()->find($standalone->id));
         Storage::disk('local')->assertMissing('receipts/private-proof.pdf');
+    }
+
+    public function test_reset_forgets_import_batches_so_the_same_file_can_be_imported_again(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        [$owner, $workspace] = $this->ownerWithWorkspace();
+        $parked = "imports/{$workspace->id}/parked.json";
+        Storage::disk('local')->put($parked, '[]');
+        ImportBatch::query()->create([
+            'workspace_id' => $workspace->id,
+            'type' => ImportType::Withdrawals,
+            'file_hash' => str_repeat('a', 64),
+            'status' => ImportStatus::Committed,
+            'row_count' => 1,
+        ]);
+        ImportBatch::query()->create([
+            'workspace_id' => $workspace->id,
+            'type' => ImportType::Withdrawals,
+            'file_hash' => str_repeat('b', 64),
+            'status' => ImportStatus::Previewed,
+            'row_count' => 1,
+            'payload_path' => $parked,
+        ]);
+
+        $this->reset($owner, $workspace)->assertOk();
+
+        $this->assertSame(0, DB::table('import_batches')->where('workspace_id', $workspace->id)->count());
+        Storage::disk('local')->assertMissing($parked);
     }
 
     public function test_reset_keeps_the_catalog_and_plans(): void

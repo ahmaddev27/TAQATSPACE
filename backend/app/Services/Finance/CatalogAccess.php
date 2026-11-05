@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Finance;
 
 use App\Enums\FinancePermission;
+use App\Enums\ImportType;
 use App\Models\User;
 
 /**
@@ -31,5 +32,11 @@ final class CatalogAccess
     public function canManageCharges(User $user): bool
     {
         return $this->finance->can($user, FinancePermission::Withdrawals);
+    }
+
+    /** Importing needs the same grant as managing what is imported. */
+    public function canImport(User $user, ImportType $type): bool
+    {
+        return $type === ImportType::CatalogItems ? $this->canManage($user) : $this->canManageCharges($user);
     }
 }

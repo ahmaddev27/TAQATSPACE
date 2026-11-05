@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { ApiClient, deepFind } from "./support/api";
 import { TINY_PDF, created, dateFromNow, idOf, memberUserId, num, unique } from "./support/data";
 import { firstArray } from "./support/ui";
+import { XLSX_MIME, buildXlsx } from "./support/xlsx";
 
 // Finance v2 (M5) as owner1, whose workspace has the finance_v2 flag on. The
 // two-factor steps (issue and void with a stale check, voiding a receipt) are
@@ -409,5 +410,95 @@ test.describe("POS products with finance_v2 off (M5)", () => {
 
     expect(status).toBe(200);
     expect(price).toBeCloseTo(12, 2);
+  });
+});
+
+test.describe("XLSX import (M5)", () => {
+  const ITEM_HEADERS = ["code", "category_code", "name_ar", "name_en", "unit", "price"];
+  const WITHDRAWAL_HEADERS = ["source_ref", "customer_email", "description", "qty", "unit_price", "occurred_at"];
+  const IMPORTS = "workspace/finance/imports";
+
+  type Preview = { data: { id: string; status: string; errors: Array<{ row: number; column: string }> } };
+
+  const upload = (type: string, rows: string[][]) =>
+    owner.postUpload(`${IMPORTS}/preview`, "file", { type }, { name: "import.xlsx", mimeType: XLSX_MIME, buffer: buildXlsx(rows) });
+
+  async function importCategory(): Promise<{ id: string; code: string }> {
+    const code = unique("IMPCAT");
+    const id = idOf(await created(owner, await owner.post("workspace/finance/catalog/categories", {
+      kind: "sales", code, name_ar: "فئة استيراد", name_en: "Import category",
+    })));
+    return { id, code };
+  }
+
+  // Filtered by the new category, so the owner's growing catalog cannot push the rows off the page.
+  async function itemCodes(categoryId: string): Promise<string[]> {
+    const items = firstArray(await owner.json(await owner.get("workspace/finance/catalog/items", { catalog_category_id: categoryId, per_page: 200 }))) as Array<{ code: string }>;
+    return items.map((item) => item.code);
+  }
+
+  test("a clean catalog file previews without writing, commits every row, and the same file is then refused", async () => {
+    const { id: categoryId, code: category } = await importCategory();
+    const codes = [unique("IMP"), unique("IMP"), unique("IMP")];
+    const rows = [ITEM_HEADERS, ...codes.map((code) => [code, category, "صنف", "Imported item", "piece", "3.50"])];
+
+    const previewed = await upload("catalog_items", rows);
+    expect(previewed.status(), "previewing a clean file").toBe(201);
+    const batch = (await owner.json<Preview>(previewed)).data.id;
+
+    expect(await itemCodes(categoryId), "a preview writes nothing").toHaveLength(0);
+
+    expect((await owner.post(`${IMPORTS}/${batch}/commit`)).status(), "committing").toBe(200);
+    expect((await itemCodes(categoryId)).sort()).toEqual([...codes].sort());
+
+    expect((await upload("catalog_items", rows)).status(), "the same file again").toBe(409);
+    expect((await owner.post(`${IMPORTS}/${batch}/commit`)).status(), "committing twice").toBe(409);
+  });
+
+  test("one bad row shows by row and column, and the commit is refused", async () => {
+    const { id: categoryId, code: category } = await importCategory();
+    const good = unique("IMP");
+    const rows = [ITEM_HEADERS, [good, category, "أ", "A", "piece", "1"], [unique("IMP"), category, "ب", "B", "bottle", "1"]];
+
+    const previewed = await owner.json<Preview>(await upload("catalog_items", rows));
+    expect(previewed.data.status).toBe("failed");
+    expect(previewed.data.errors[0]).toMatchObject({ row: 3, column: "unit" });
+
+    expect((await owner.post(`${IMPORTS}/${previewed.data.id}/commit`)).status()).toBe(422);
+    expect(await itemCodes(categoryId), "the good row was not written either").toHaveLength(0);
+  });
+
+  test("a formula cell and a file over the row limit are refused", async () => {
+    const { code: category } = await importCategory();
+
+    expect((await upload("catalog_items", [ITEM_HEADERS, [unique("IMP"), category, "أ", "A", "piece", "=1+1"]])).status(), "a formula").toBe(422);
+
+    const tooMany = Array.from({ length: 2001 }, (_, index) => [`ROW-${index}`, category, "أ", "A", "piece", "1"]);
+    expect((await upload("catalog_items", [ITEM_HEADERS, ...tooMany])).status(), "2,001 rows").toBe(422);
+  });
+
+  test("withdrawals import as on-account charges and an imported source_ref cannot come in twice", async () => {
+    const ref = unique("WD");
+    const row = [ref, CUSTOMER_EMAIL, "Imported withdrawal", "2", "4.25", dateFromNow(-1)];
+    const previewed = await upload("withdrawals", [WITHDRAWAL_HEADERS, row]);
+    expect(previewed.status()).toBe(201);
+    const batch = (await owner.json<Preview>(previewed)).data.id;
+
+    expect((await owner.post(`${IMPORTS}/${batch}/commit`)).status()).toBe(200);
+    const charges = firstArray(await owner.json(await owner.get("workspace/finance/unbilled-charges", { source: "import", customer_id: customer, per_page: 200 }))) as Array<{ source_ref: string; amount: string }>;
+    expect(num(charges.find((charge) => charge.source_ref === ref)?.amount), "qty times unit price").toBeCloseTo(8.5, 2);
+
+    const again = await owner.json<Preview>(await upload("withdrawals", [WITHDRAWAL_HEADERS, [ref, CUSTOMER_EMAIL, "Other file", "1", "1", ""]]));
+    expect(again.data.status).toBe("failed");
+    expect(again.data.errors[0].column).toBe("source_ref");
+  });
+
+  test("the templates download as XLSX files", async () => {
+    for (const type of ["catalog_items", "withdrawals"]) {
+      const response = await owner.get(`${IMPORTS}/template/${type}`);
+      expect(response.status(), type).toBe(200);
+      expect(response.headers()["content-type"]).toContain("spreadsheetml");
+      expect((await response.body()).subarray(0, 2).toString(), "an XLSX is a zip").toBe("PK");
+    }
   });
 });

@@ -15,8 +15,9 @@ use Throwable;
 /**
  * Receipts with their allocations, and unbilled charges. Must run before the
  * invoices step: deleting an invoice only removes its allocations, which would
- * leave the receipt looking like unspent customer credit. The catalog, plans
- * and document numbering are configuration and stay.
+ * leave the receipt looking like unspent customer credit. Import batches go too:
+ * what they created is gone, so the same file must be importable again. The
+ * catalog, plans and document numbering are configuration and stay.
  */
 final class FinanceResetStep implements WorkspaceResetStep
 {
@@ -28,9 +29,11 @@ final class FinanceResetStep implements WorkspaceResetStep
     public function reset(Workspace $workspace): void
     {
         $this->deletePrivateProofsAfterCommit($workspace);
+        $this->deleteParkedImportsAfterCommit($workspace);
 
         DB::table('receipts')->where('workspace_id', $workspace->id)->delete();
         DB::table('unbilled_charges')->where('workspace_id', $workspace->id)->delete();
+        DB::table('import_batches')->where('workspace_id', $workspace->id)->delete();
     }
 
     public function filePaths(Workspace $workspace): array
@@ -61,6 +64,29 @@ final class FinanceResetStep implements WorkspaceResetStep
                     // The data is already gone; a leftover file must not fail the request.
                     Log::warning('Workspace reset could not delete some receipt proofs.', ['error' => $e->getMessage()]);
                 }
+            }
+        });
+    }
+
+    /** Rows of a previewed file wait on the private disk until it is committed. */
+    private function deleteParkedImportsAfterCommit(Workspace $workspace): void
+    {
+        $paths = DB::table('import_batches')
+            ->where('workspace_id', $workspace->id)
+            ->whereNotNull('payload_path')
+            ->pluck('payload_path')
+            ->all();
+
+        if ($paths === []) {
+            return;
+        }
+
+        DB::afterCommit(static function () use ($paths): void {
+            try {
+                Storage::disk('local')->delete($paths);
+            } catch (Throwable $e) {
+                // The data is already gone; a leftover file must not fail the request.
+                Log::warning('Workspace reset could not delete some parked import files.', ['error' => $e->getMessage()]);
             }
         });
     }

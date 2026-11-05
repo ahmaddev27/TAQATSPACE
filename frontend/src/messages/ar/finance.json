@@ -217,6 +217,49 @@
         "prepaid": "مدفوع مسبقاً",
         "postpaid": "مدفوع لاحقاً"
       }
+    },
+    "import": {
+      "title": "الاستيراد من Excel",
+      "subtitle": "ارفع ملف XLSX وافحصه صفاً صفاً ثم استورده دفعة واحدة. إذا وُجد خطأ في أي صف فلن يُستورد شيء.",
+      "steps": {
+        "upload": "الرفع",
+        "preview": "الفحص",
+        "done": "تم"
+      },
+      "types": {
+        "catalog_items": "أصناف الكتالوج",
+        "withdrawals": "السحوبات"
+      },
+      "typeHint": {
+        "catalog_items": "الأعمدة: code, category_code, name_ar, name_en, unit, price. الرمز الموجود مسبقاً يُرفض.",
+        "withdrawals": "الأعمدة: source_ref, customer_email, description, qty, unit_price, occurred_at. يمكن استيراد كل source_ref مرة واحدة."
+      },
+      "rules": "ورقة واحدة، حتى 2000 صف، حتى 5 ميجابايت، بدون معادلات.",
+      "template": "تنزيل القالب",
+      "dropLabel": "اختر ملف XLSX",
+      "dropHint": "أو أفلته هنا",
+      "clear": "إزالة",
+      "check": "فحص الملف",
+      "checking": "جارٍ الفحص...",
+      "rows": "{count} صف",
+      "okTitle": "الملف جاهز",
+      "okBody": "اجتازت كل الصفوف الفحص. الاستيراد يكتبها معاً.",
+      "errorsTitle": "تم العثور على {count} أخطاء",
+      "errorsBody": "صحّح الملف وارفعه من جديد. لم يُستورد شيء.",
+      "errorCols": {
+        "row": "الصف",
+        "column": "العمود",
+        "message": "المشكلة"
+      },
+      "moreErrors": "تُعرض أول {shown} أخطاء فقط.",
+      "commit": "استيراد كل الصفوف",
+      "committing": "جارٍ الاستيراد...",
+      "back": "اختيار ملف آخر",
+      "doneTitle": "اكتمل الاستيراد",
+      "doneBody": "تم استيراد {count} صف.",
+      "another": "استيراد ملف آخر",
+      "error": "حدث خطأ ما",
+      "noFile": "اختر ملفاً أولاً."
     }
   }
 }
