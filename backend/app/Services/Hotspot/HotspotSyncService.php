@@ -8,6 +8,7 @@ use App\Enums\RouterStatus;
 use App\Jobs\ProcessRouterBatch;
 use App\Models\Router;
 use App\Repositories\Eloquent\RouterScriptRepository;
+use App\Services\Network\GapDetector;
 use App\Services\Router\RouterCommandService;
 use App\Services\Router\RouterSecurityService;
 use Carbon\CarbonInterface;
@@ -35,6 +36,7 @@ class HotspotSyncService
         private readonly SyncResponseBuilder $responses,
         private readonly RouterCommandService $commands,
         private readonly RouterSecurityService $security,
+        private readonly GapDetector $gaps,
     ) {}
 
     public function handle(Router $router, SyncPayload $payload): string
@@ -87,6 +89,7 @@ class HotspotSyncService
                 $this->snapshots->store($router, $payload->snapshot, $offset, $receivedAt);
             }
 
+            $this->recordGap($router, $payload, $offset, $receivedAt);
             $this->touchRouter($router, $payload, $offset, $receivedAt);
             $this->security->bindSerial($router, $payload->serial);
 
@@ -95,6 +98,16 @@ class HotspotSyncService
 
             return $lines;
         });
+    }
+
+    /** Gap bookkeeping must never fail a sync: the batch is already worth keeping. */
+    private function recordGap(Router $router, SyncPayload $payload, int $offset, CarbonInterface $receivedAt): void
+    {
+        try {
+            $this->gaps->recordSync($router, $payload->bootId, $offset, $receivedAt);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private function touchRouter(Router $router, SyncPayload $payload, int $offset, CarbonInterface $receivedAt): void

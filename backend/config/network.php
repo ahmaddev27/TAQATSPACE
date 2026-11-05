@@ -17,4 +17,12 @@ return [
         'lock_seconds' => 30,
         'lock_wait_seconds' => 20,
     ],
+
+    'gaps' => [
+        // A router silent for longer than this has a gap in its data.
+        'threshold_minutes' => (int) env('NETWORK_GAP_THRESHOLD_MINUTES', 5),
+
+        // A router clock that moves by more than this between two syncs is a clock jump.
+        'clock_jump_seconds' => 120,
+    ],
 ];

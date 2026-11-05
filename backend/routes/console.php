@@ -37,6 +37,9 @@ Schedule::command('router-data:process-pending')->everyMinute()->withoutOverlapp
 // Open sessions of routers that stopped syncing time out here (config/network.php).
 Schedule::command('sessions:close-idle')->everyFiveMinutes()->withoutOverlapping();
 
+// A router silent past the threshold gets an open gap, so its days are flagged instead of read as absence.
+Schedule::command('routers:detect-gaps')->everyMinute()->withoutOverlapping();
+
 // Daily attendance: days whose sessions changed are rebuilt every five minutes;
 // the nightly pass re-covers the last two local days of every workspace as a safety net.
 Schedule::command('attendance:rebuild')->everyFiveMinutes()->withoutOverlapping();
