@@ -35,6 +35,12 @@ class ReceiptException extends RuntimeException
         return new self(__('messages.invoice_nothing_open_to_pay'), 422);
     }
 
+    /** Voiding it would also take back what it paid on other invoices. */
+    public static function sharedAllocation(): self
+    {
+        return new self(__('messages.receipt_shared_allocation'), 409);
+    }
+
     public static function invoiceMismatch(): self
     {
         return new self(__('messages.receipt_invoice_mismatch'), 422);

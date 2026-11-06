@@ -14,10 +14,8 @@ use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Receipt;
 use App\Models\Subscription;
-use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Admin\AdminInvoiceService;
-use App\Services\Auth\TwoFactorService;
 use App\Services\Finance\CreditNoteService;
 use App\Services\Finance\InvoiceBalanceService;
 use App\Services\Finance\InvoiceLifecycleService;
@@ -286,7 +284,7 @@ class CreditIntegrityTest extends ReceiptTestCase
 
     public function test_the_refusal_messages_exist_in_both_languages(): void
     {
-        $keys = ['invoice_void_has_credit_notes', 'invoice_void_has_pending_cheques', 'invoice_has_receipts', 'invoice_has_credit_notes', 'invoice_nothing_open_to_pay', 'credit_note_request_key_reused', 'invoice_marked_partially_paid', 'invoice_nothing_owed_cannot_unpaid', 'receipt_shared_allocation', 'invoice_unpaid_receipt_void_reason'];
+        $keys = ['invoice_void_has_credit_notes', 'invoice_void_has_pending_cheques', 'invoice_has_credit_notes', 'invoice_nothing_open_to_pay', 'credit_note_request_key_reused', 'invoice_marked_partially_paid', 'invoice_nothing_owed_cannot_unpaid', 'invoice_unpaid_legacy_payments', 'receipt_shared_allocation', 'invoice_unpaid_receipt_void_reason'];
 
         foreach ($keys as $key) {
             foreach (['en', 'ar'] as $locale) {
@@ -455,30 +453,6 @@ class CreditIntegrityTest extends ReceiptTestCase
         $subscription = Subscription::factory()->create(['workspace_id' => $workspace->id]);
 
         return Invoice::factory()->create(['subscription_id' => $subscription->id, 'amount' => $amount, 'amount_paid' => '0.00']);
-    }
-
-    private function pendingCheque(User $owner, Workspace $workspace, User $customer, Invoice $invoice, string $amount): Receipt
-    {
-        return app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, $amount, [
-            'method' => 'cheque',
-            'allocations' => $this->allocation($invoice, $amount),
-        ]), $owner);
-    }
-
-    private function clearedCheque(User $owner, Workspace $workspace, User $customer, Invoice $invoice, string $amount): Receipt
-    {
-        $service = app(ReceiptService::class);
-        $cheque = $this->pendingCheque($owner, $workspace, $customer, $invoice, $amount);
-        $service->changeChequeStatus($cheque, ChequeStatus::Deposited, $owner);
-
-        return $service->changeChequeStatus($cheque->fresh(), ChequeStatus::Cleared, $owner);
-    }
-
-    private function actAsOwner(User $owner): void
-    {
-        Sanctum::actingAs($owner);
-        $owner->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_confirmed_at' => now()])->save();
-        app(TwoFactorService::class)->markVerified($owner);
     }
 
     /** The amount owed back, as the invoice page reports it. */

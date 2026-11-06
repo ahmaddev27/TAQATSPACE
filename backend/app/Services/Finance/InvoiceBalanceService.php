@@ -89,9 +89,46 @@ class InvoiceBalanceService
     /** What the customer still owes: the invoice total less credit notes and money collected. */
     public function unpaid(Invoice $invoice): string
     {
-        $balance = bcsub(bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2), (string) $invoice->amount_paid, 2);
+        $balance = bcsub($this->payable($invoice), (string) $invoice->amount_paid, 2);
 
         return bccomp($balance, '0', 2) > 0 ? $balance : '0.00';
+    }
+
+    /** What the invoice asks for once credit notes are deducted; zero when fully credited. */
+    public function payable(Invoice $invoice): string
+    {
+        return bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
+    }
+
+    /**
+     * What a "pay what is left" action may take from a locked invoice: what is
+     * owed and not already promised by a pending cheque. Null when nothing is
+     * owed at all (credit notes or earlier payments cover it), which the caller
+     * settles with reconcile() instead of paying.
+     *
+     * @throws ReceiptException when pending cheques hold everything that is owed
+     */
+    public function openToPay(Invoice $locked): ?string
+    {
+        $open = $this->outstanding(new Collection([$locked->id => $locked]))[$locked->id];
+
+        if (bccomp($open, '0', 2) > 0) {
+            return $open;
+        }
+
+        return bccomp($this->unpaid($locked), '0', 2) > 0 ? throw ReceiptException::nothingOpen() : null;
+    }
+
+    /**
+     * The one step that derives a locked invoice's payment status from its money:
+     * paid against payable. Pending cheques are not money yet, so they never
+     * change the status; they only limit what openToPay() lets an action take.
+     * Every action that used to force a status (mark paid, mark unpaid, approve
+     * a receipt) ends here instead.
+     */
+    public function reconcile(Invoice $locked, Carbon $at): void
+    {
+        $this->settle($locked, (string) $locked->amount_paid, (string) $locked->credited_amount, $at);
     }
 
     /**
@@ -118,16 +155,6 @@ class InvoiceBalanceService
     public function held(array $invoiceIds): array
     {
         return $this->heldByPendingCheques($invoiceIds);
-    }
-
-    /** Whether any receipt that is not void is allocated to the invoice. */
-    public function hasLiveReceipts(Invoice $invoice): bool
-    {
-        return ReceiptAllocation::query()
-            ->join('receipts', 'receipts.id', '=', 'receipt_allocations.receipt_id')
-            ->where('receipt_allocations.invoice_id', $invoice->id)
-            ->whereNull('receipts.voided_at')
-            ->exists();
     }
 
     /** Move an invoice's paid total by `$delta` (negative to take money back) and re-derive its status. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PaymentMethod;
 use App\Exceptions\InvoiceLifecycleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\MarkInvoicePaidRequest;
@@ -12,6 +13,7 @@ use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Services\Admin\AdminInvoiceService;
 use App\Support\ApiResponse;
+use App\Support\Finance\PaymentResultMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -40,13 +42,15 @@ class InvoiceController extends Controller
      */
     public function markPaid(MarkInvoicePaidRequest $request, Invoice $invoice): JsonResponse
     {
-        $paidAt = $request->validated()['paid_at'] ?? null;
+        $data = $request->validated();
+        $paidAt = $data['paid_at'] ?? null;
 
         try {
             $updated = $this->invoices->markPaid(
                 $invoice,
                 $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
                 $request->file('receipt'),
+                isset($data['method']) ? PaymentMethod::from((string) $data['method']) : null,
             );
         } catch (InvoiceLifecycleException $e) {
             throw $e;
@@ -54,15 +58,15 @@ class InvoiceController extends Controller
             return ApiResponse::error($e->getMessage(), 422);
         }
 
-        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+        return ApiResponse::success(new InvoiceResource($updated), PaymentResultMessage::for($updated));
     }
 
     /**
      * PUT /api/admin/invoices/{invoice}/mark-unpaid — revert to pending.
      */
-    public function markUnpaid(Invoice $invoice): JsonResponse
+    public function markUnpaid(Request $request, Invoice $invoice): JsonResponse
     {
-        $updated = $this->invoices->markUnpaid($invoice);
+        $updated = $this->invoices->markUnpaid($invoice, $request->user());
 
         return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_reverted_pending'));
     }
@@ -80,6 +84,6 @@ class InvoiceController extends Controller
             $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
         );
 
-        return ApiResponse::success(new InvoiceResource($updated), __('messages.receipt_uploaded'));
+        return ApiResponse::success(new InvoiceResource($updated), PaymentResultMessage::for($updated, 'messages.receipt_uploaded'));
     }
 }

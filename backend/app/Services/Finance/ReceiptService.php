@@ -273,7 +273,7 @@ class ReceiptService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, Invoice>  $invoices
+     * @param  Collection<string, Invoice>  $invoices
      * @param  array<string, string>  $rows
      */
     private function assertFitsInvoices($invoices, array $rows): void
@@ -315,7 +315,7 @@ class ReceiptService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, Invoice>  $invoices
+     * @param  Collection<string, Invoice>  $invoices
      * @param  array<string, string>  $rows
      * @return array<int, Invoice>
      */
@@ -405,26 +405,44 @@ class ReceiptService
 
     /**
      * Receipts are financial documents: the proof goes on the private disk and
-     * is only ever handed out through a short-lived signed URL.
+     * is only ever handed out through a short-lived signed URL. Pass the result
+     * to create() as `receipt_path` / `receipt_disk`, and to discardProof() if
+     * the payment then fails.
      *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
+     * @return array{receipt_path: string, receipt_disk: string}
      */
-    private function storeFile(UploadedFile $file, Workspace $workspace, array $data): array
+    public function storeProof(UploadedFile $file, Workspace $workspace): array
     {
         $disk = (string) config('filesystems.default');
 
-        return $data + [
+        return [
             'receipt_path' => $this->uploads->upload($file, 'finance/receipts/'.$workspace->id, $disk, 'private'),
             'receipt_disk' => $disk,
         ];
     }
 
+    /** @param  array<string, mixed>  $proof  what storeProof() returned; anything else is left alone */
+    public function discardProof(array $proof): void
+    {
+        if (isset($proof['receipt_path'], $proof['receipt_disk'])) {
+            Storage::disk($proof['receipt_disk'])->delete($proof['receipt_path']);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function storeFile(UploadedFile $file, Workspace $workspace, array $data): array
+    {
+        return $data + $this->storeProof($file, $workspace);
+    }
+
     /** @param  array<string, mixed>|null  $data */
     private function discardFile(?array $data): void
     {
-        if ($data !== null && isset($data['receipt_path'], $data['receipt_disk'])) {
-            Storage::disk($data['receipt_disk'])->delete($data['receipt_path']);
+        if ($data !== null) {
+            $this->discardProof($data);
         }
     }
 }

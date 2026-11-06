@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 class InvoiceService
 {
@@ -83,9 +84,13 @@ class InvoiceService
 
     /**
      * Owner approves a member-submitted receipt: the invoice is confirmed paid
-     * (keeping the member's receipt as proof) and the member is notified.
+     * (keeping the member's receipt as proof) and the member is notified. With
+     * finance v2 on it pays what is left through a transfer receipt; a pending
+     * cheque can leave it partially paid, and credit notes that already cover
+     * it settle it without a receipt.
      *
      * @throws RuntimeException when the invoice is not awaiting review
+     * @throws ReceiptException when pending cheques hold everything that is owed
      */
     public function approveReceipt(Invoice $invoice, ?Carbon $paidAt = null): Invoice
     {
@@ -95,14 +100,15 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_receipt_not_under_review'));
         }
 
-        $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
-
-        if ($this->financeV2($invoice->workspace_id) && bccomp($this->outstanding($invoice), '0', 2) > 0) {
-            return $this->payThroughReceipt($invoice, null, PaymentMethod::Transfer,$paidAt ?? Carbon::now(), proof: [
+        if ($this->financeV2($invoice->workspace_id)) {
+            // The review stamp is written with the payment, so a refused payment leaves the receipt under review.
+            return $this->payThroughReceipt($invoice, null, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), proof: [
                 'receipt_path' => $invoice->receipt_path,
                 'receipt_disk' => (string) config('filesystems.media', 'public'),
-            ]);
+            ], attributes: ['receipt_reviewed_at' => Carbon::now()]);
         }
+
+        $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
 
         return $this->markPaid($invoice, $paidAt);
     }
@@ -138,9 +144,12 @@ class InvoiceService
     /**
      * Owner-side: attach a payment receipt AND record the invoice as paid in one
      * step — the owner is logging a payment they received (cash/transfer) with
-     * proof. Stores the receipt, marks paid, and notifies the member.
+     * proof. Stores the receipt, marks paid, and notifies the member. With
+     * finance v2 on the proof goes on the transfer receipt the payment writes
+     * and is removed again if the payment fails.
      *
      * @throws RuntimeException when the invoice is already paid
+     * @throws ReceiptException when pending cheques hold everything that is owed
      */
     public function recordPaymentWithReceipt(Invoice $invoice, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
@@ -150,7 +159,7 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
-        // Pays only what is open and not held by a pending cheque, with the proof kept on the receipt.
+        // Pays only what is open and not held by a pending cheque.
         if ($this->financeV2($invoice->workspace_id)) {
             return $this->payThroughReceipt($invoice, null, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), $receipt);
         }
@@ -347,11 +356,16 @@ class InvoiceService
     }
 
     /**
-     * Record a payment against an invoice and notify the member.
+     * Record a payment against an invoice and notify the member. With finance
+     * v2 on it pays what is left through a receipt of `$method` (cash unless
+     * given): a pending cheque can leave it partially paid, and credit notes
+     * that already cover it settle it without a receipt. `$method` is ignored
+     * with finance v2 off, where no receipt is written.
      *
      * @throws RuntimeException when the invoice is already paid
+     * @throws ReceiptException when pending cheques hold everything that is owed
      */
-    public function markPaid(Invoice $invoice, ?Carbon $paidAt = null): Invoice
+    public function markPaid(Invoice $invoice, ?Carbon $paidAt = null, ?PaymentMethod $method = null): Invoice
     {
         $this->assertIssued($invoice);
 
@@ -361,7 +375,7 @@ class InvoiceService
 
         // Pays only what is open and not held by a pending cheque, so a clearing cheque cannot overpay.
         if ($this->financeV2($invoice->workspace_id)) {
-            return $this->payThroughReceipt($invoice, null, PaymentMethod::Cash, $paidAt ?? Carbon::now());
+            return $this->payThroughReceipt($invoice, null, $method ?? PaymentMethod::Cash, $paidAt ?? Carbon::now());
         }
 
         $invoice->forceFill([
@@ -701,12 +715,7 @@ class InvoiceService
         return max(1, min($perPage, 100));
     }
 
-    /**
-     * Generate the next sequential invoice number, prefixed by the workspace so
-     * the document reads in the space's own name (e.g. TEST-{YYYY}-{0001}) rather
-     * than the platform's. Locks the latest row for that prefix to keep the
-     * sequence collision-safe under concurrent generation.
-     */
+    /** What is still owed on the invoice: net payable less what was paid (negative when overpaid). */
     private function outstanding(Invoice $invoice): string
     {
         return bcsub($this->netPayable($invoice), (string) $invoice->amount_paid, 2);
@@ -785,36 +794,83 @@ class InvoiceService
      * The legacy payment row is still written, and linked, so existing payment
      * history keeps working; its proof file lives on the receipt, privately.
      *
-     * A null `$amount` pays everything that is open and not held by a pending cheque.
+     * A null `$amount` pays what is left (InvoiceBalanceService::openToPay).
+     * An uploaded `$file` is stored first and removed again when the payment
+     * fails or nothing was paid; a `$proof` stored elsewhere (the member's) is
+     * only referenced, never removed.
      *
-     * @param  array{receipt_path?: string|null, receipt_disk?: string}  $proof  an already stored proof file
+     * @param  array{receipt_path?: string|null, receipt_disk?: string}  $proof
+     * @param  array<string, mixed>  $attributes  invoice columns written in the same transaction
      *
      * @throws ReceiptException when nothing is open to pay or the amount does not fit
      */
-    private function payThroughReceipt(Invoice $invoice, ?string $amount, PaymentMethod $method, Carbon $paidAt, ?UploadedFile $file = null, array $proof = []): Invoice
+    private function payThroughReceipt(Invoice $invoice, ?string $amount, PaymentMethod $method, Carbon $paidAt, ?UploadedFile $file = null, array $proof = [], array $attributes = []): Invoice
     {
         $workspace = Workspace::query()->findOrFail($invoice->workspace_id);
+        $stored = $file === null ? [] : $this->receipts->storeProof($file, $workspace);
 
-        DB::transaction(function () use ($invoice, $workspace, $amount, $method, $paidAt, $file, $proof): void {
-            // The exclusive lock comes before the payment row: inserting it takes a shared lock on
-            // the invoice through the foreign key, and two overlapping payments that each hold
-            // that shared lock while waiting for the exclusive one deadlock.
-            $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
-            $amount ??= $this->openToPay($locked);
+        try {
+            $receipted = DB::transaction(fn (): bool => $this->payLocked($invoice, $workspace, $amount, $method, $paidAt, $stored + $proof, $attributes));
+        } catch (Throwable $e) {
+            $this->receipts->discardProof($stored);
+            throw $e;
+        }
 
-            $payment = $locked->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
-
-            $this->receipts->create($workspace, [
-                'customer_id' => $invoice->customer_id,
-                'method' => $method->value,
-                'amount' => $amount,
-                'received_at' => $paidAt,
-                'legacy_payment_id' => $payment->id,
-                'allocations' => [['invoice_id' => $invoice->id, 'amount' => $amount]],
-            ] + $proof, request()->user(), $file);
-        });
+        if (! $receipted) {
+            // Credit notes already covered it: no receipt was written to keep the file.
+            $this->receipts->discardProof($stored);
+            $this->afterSettledWithoutPayment($invoice->refresh());
+        }
 
         return $invoice->refresh();
+    }
+
+    /**
+     * @param  array<string, mixed>  $proof
+     * @param  array<string, mixed>  $attributes
+     * @return bool whether a receipt took money (false: nothing was owed, so the status was settled instead)
+     */
+    private function payLocked(Invoice $invoice, Workspace $workspace, ?string $amount, PaymentMethod $method, Carbon $paidAt, array $proof, array $attributes): bool
+    {
+        // The exclusive lock comes before the payment row: inserting it takes a shared lock on
+        // the invoice through the foreign key, and two overlapping payments that each hold
+        // that shared lock while waiting for the exclusive one deadlock.
+        $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+
+        if ($attributes !== []) {
+            $locked->forceFill($attributes)->save();
+        }
+
+        $amount ??= $this->balances->openToPay($locked);
+
+        if ($amount === null) {
+            $this->balances->reconcile($locked, $paidAt);
+
+            return false;
+        }
+
+        $payment = $locked->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
+
+        $this->receipts->create($workspace, [
+            'customer_id' => $locked->customer_id,
+            'method' => $method->value,
+            'amount' => $amount,
+            'received_at' => $paidAt,
+            'legacy_payment_id' => $payment->id,
+            'allocations' => [['invoice_id' => $locked->id, 'amount' => $amount]],
+        ] + $proof, request()->user());
+
+        return true;
+    }
+
+    /**
+     * openToPay() only lets nothing through when the invoice is covered, so it
+     * is paid now: the member hears so, as after a receipt that settles it.
+     */
+    private function afterSettledWithoutPayment(Invoice $invoice): void
+    {
+        $invoice->customer?->notify(new InvoicePaidNotification($invoice));
+        Cache::forget("workspace:{$invoice->workspace_id}:dashboard_stats");
     }
 
     /**
@@ -837,17 +893,11 @@ class InvoiceService
     }
 
     /**
-     * What is open on the (locked) invoice once pending cheques are counted as spoken for.
-     *
-     * @throws ReceiptException when nothing is left to pay
+     * Generate the next sequential invoice number, prefixed by the workspace so
+     * the document reads in the space's own name (e.g. TEST-{YYYY}-{0001}) rather
+     * than the platform's. Locks the latest row for that prefix to keep the
+     * sequence collision-safe under concurrent generation.
      */
-    private function openToPay(Invoice $locked): string
-    {
-        $open = $this->balances->outstanding(collect([$locked->id => $locked]))[$locked->id];
-
-        return bccomp($open, '0', 2) > 0 ? $open : throw ReceiptException::nothingOpen();
-    }
-
     private function nextInvoiceNumber(Workspace $workspace): string
     {
         if ($this->financeV2($workspace->id)) {

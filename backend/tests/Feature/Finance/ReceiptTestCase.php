@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Finance;
 
+use App\Enums\ChequeStatus;
 use App\Models\Invoice;
+use App\Models\Receipt;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Auth\TwoFactorService;
+use App\Services\Finance\InvoiceLifecycleService;
+use App\Services\Finance\ReceiptService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\Sanctum;
 
 /** Shared fixtures for the receipt tests. */
 abstract class ReceiptTestCase extends InvoiceV2TestCase
@@ -30,7 +36,7 @@ abstract class ReceiptTestCase extends InvoiceV2TestCase
             'lines' => [['description' => 'Service', 'qty' => '1', 'unit_price' => $amount]],
         ]);
 
-        return app(\App\Services\Finance\InvoiceLifecycleService::class)->issue($draft, $owner);
+        return app(InvoiceLifecycleService::class)->issue($draft, $owner);
     }
 
     /**
@@ -96,5 +102,31 @@ abstract class ReceiptTestCase extends InvoiceV2TestCase
     protected function allocation(Invoice $invoice, string $amount): array
     {
         return [['invoice_id' => $invoice->id, 'amount' => $amount]];
+    }
+
+    /** A cheque received for `$amount` of the invoice: it holds that part until it clears or bounces. */
+    protected function pendingCheque(User $owner, Workspace $workspace, User $customer, Invoice $invoice, string $amount): Receipt
+    {
+        return app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, $amount, [
+            'method' => 'cheque',
+            'allocations' => $this->allocation($invoice, $amount),
+        ]), $owner);
+    }
+
+    protected function clearedCheque(User $owner, Workspace $workspace, User $customer, Invoice $invoice, string $amount): Receipt
+    {
+        $service = app(ReceiptService::class);
+        $cheque = $this->pendingCheque($owner, $workspace, $customer, $invoice, $amount);
+        $service->changeChequeStatus($cheque, ChequeStatus::Deposited, $owner);
+
+        return $service->changeChequeStatus($cheque->fresh(), ChequeStatus::Cleared, $owner);
+    }
+
+    /** Acts as the owner with a fresh two-factor check, as the step-up routes require. */
+    protected function actAsOwner(User $owner): void
+    {
+        Sanctum::actingAs($owner);
+        $owner->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_confirmed_at' => now()])->save();
+        app(TwoFactorService::class)->markVerified($owner);
     }
 }
