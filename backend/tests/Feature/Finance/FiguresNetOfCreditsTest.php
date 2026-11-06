@@ -41,6 +41,8 @@ class FiguresNetOfCreditsTest extends TestCase
     {
         parent::setUp();
 
+        // Mid-month, so due dates a few days out stay inside this month's report buckets.
+        $this->travelTo(Carbon::parse('2026-11-15 10:00:00'));
         $this->emulateMysqlDateFormat();
         $this->workspace = Workspace::factory()->create();
         $this->member = User::factory()->freelancer()->create();
@@ -78,7 +80,7 @@ class FiguresNetOfCreditsTest extends TestCase
         $this->invoice(InvoiceStatus::Overdue, '50.00', ['credited_amount' => '20.00', 'due_date' => Carbon::today()->subDays(3)]);
     }
 
-    /** Paid, legacy paid (amount_paid never backfilled), partly paid, overdue and pending - no credits. */
+    /** Paid, legacy paid (amount_paid never backfilled), overpaid, partly paid, overdue and pending - no credits. */
     private function seedPlain(): void
     {
         $this->invoice(InvoiceStatus::Paid, '100.00', ['amount_paid' => '100.00']);
@@ -86,9 +88,24 @@ class FiguresNetOfCreditsTest extends TestCase
         $this->invoice(InvoiceStatus::Pending, '80.00', ['amount_paid' => '30.00', 'due_date' => Carbon::today()->addDay()]);
         $this->invoice(InvoiceStatus::Overdue, '50.00', ['due_date' => Carbon::today()->subDays(3)]);
         $this->invoice(InvoiceStatus::Pending, '20.00', ['due_date' => Carbon::today()->addDays(9)]);
-        // Overpaid (imported/demo rows) and partially_paid must keep today's numbers too.
+        // Overpaid (imported/demo rows) and partially_paid, one of them late.
         $this->invoice(InvoiceStatus::Paid, '60.00', ['amount_paid' => '90.00']);
         $this->invoice(InvoiceStatus::PartiallyPaid, '70.00', ['amount_paid' => '20.00', 'paid_at' => Carbon::now()]);
+        $this->invoice(InvoiceStatus::PartiallyPaid, '90.00', [
+            'amount_paid' => '50.00', 'paid_at' => Carbon::now(), 'due_date' => Carbon::today()->subDays(10),
+        ]);
+    }
+
+    /**
+     * SUM(column) over the given statuses: the pre-credit expression, computed inline.
+     *
+     * @param  list<InvoiceStatus>  $statuses
+     */
+    private function oldSum(array $statuses, string $column = 'amount'): float
+    {
+        return (float) Invoice::query()
+            ->whereIn('status', array_map(static fn (InvoiceStatus $s): string => $s->value, $statuses))
+            ->sum($column);
     }
 
     public function test_workspace_summary_is_net_of_credits(): void
@@ -165,38 +182,32 @@ class FiguresNetOfCreditsTest extends TestCase
     }
 
     /**
-     * Every figure is compared with the pre-credit expression, computed inline
-     * (SUM(amount) over the same filters, SUM(amount_paid) for the P&L), over
-     * paid, legacy paid, overpaid, partly paid, partially_paid, overdue and
-     * pending invoices without any credit.
+     * Every revenue and per-status figure equals the pre-credit expression,
+     * computed inline (SUM(amount) over the same filter, SUM(amount_paid) for
+     * the P&L), over paid, legacy paid, overpaid, partly paid, partially_paid,
+     * overdue and pending invoices without any credit. The receivable figures
+     * change on purpose: see the next test.
      */
     public function test_figures_without_credits_are_unchanged(): void
     {
         $this->seedPlain();
 
-        $sum = static fn (array $statuses, string $column = 'amount'): float => (float) Invoice::query()
-            ->whereIn('status', $statuses)->sum($column);
-        $paid = $sum([InvoiceStatus::Paid->value]);
-        $overdue = $sum([InvoiceStatus::Overdue->value]);
-        $pending = $sum([InvoiceStatus::Pending->value]);
-        $outstanding = $pending + $overdue;
+        $paid = $this->oldSum([InvoiceStatus::Paid]);
+        $pending = $this->oldSum([InvoiceStatus::Pending]);
+        $overdue = $this->oldSum([InvoiceStatus::Overdue]);
         $oldRevenue = (float) Invoice::query()->whereNotNull('paid_at')->sum('amount_paid');
-        $firstUnpaid = (float) Invoice::query()
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
-            ->orderBy('due_date')->value('amount');
+        // The proof only means something if the seed holds the awkward rows.
+        $this->assertTrue(Invoice::query()->where('status', InvoiceStatus::Paid->value)->where('amount_paid', 0)->exists());
+        $this->assertTrue(Invoice::query()->whereColumn('amount_paid', '>', 'amount')->exists());
+        $this->assertTrue(Invoice::query()->where('status', InvoiceStatus::PartiallyPaid->value)->exists());
 
-        $summary = app(InvoiceService::class)->workspaceSummary($this->workspace);
-        $this->assertEquals($outstanding, $summary['total_outstanding']);
-        $this->assertEquals($overdue, $summary['total_overdue']);
-        $this->assertEquals($paid, $summary['paid_this_month']);
+        $this->assertEquals($paid, app(InvoiceService::class)->workspaceSummary($this->workspace)['paid_this_month']);
 
         $stats = app(OwnerDashboardService::class)->statsFor($this->workspace);
         $this->assertEquals($paid, $stats['revenue_this_month']);
         $this->assertEquals($paid, end($stats['revenue_chart'])['amount']);
 
-        $revenue = app(DashboardStatsService::class)->build()['revenue'];
-        $this->assertEquals($paid, $revenue['paid']);
-        $this->assertEquals($outstanding, $revenue['outstanding']);
+        $this->assertEquals($paid, app(DashboardStatsService::class)->build()['revenue']['paid']);
 
         $report = app(ReportsService::class)->build();
         $this->assertEquals($paid, $report['invoices_by_status']['paid']['amount']);
@@ -205,13 +216,50 @@ class FiguresNetOfCreditsTest extends TestCase
         $this->assertEquals($paid, end($report['revenue_by_month'])['paid']);
         $this->assertEquals($paid, $report['top_workspaces'][0]['paid_total']);
 
+        $pl = app(OwnerReportsService::class)->build($this->workspace)['profit_loss'];
+        $this->assertEquals($oldRevenue, end($pl)['revenue']);
+    }
+
+    /**
+     * Without credits, each receivable figure moves from the old SUM(amount)
+     * over pending + overdue by exactly two things the product owner decided
+     * on 2026-11-06: partially paid invoices now count (the aging report's
+     * statuses), and every partial payment is subtracted.
+     */
+    public function test_receivables_without_credits_change_by_exactly_the_partial_payments(): void
+    {
+        $this->seedPlain();
+        $receivable = [InvoiceStatus::Pending, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid];
+
+        $oldOutstanding = $this->oldSum([InvoiceStatus::Pending, InvoiceStatus::Overdue]);
+        $addedPartiallyPaid = $this->oldSum([InvoiceStatus::PartiallyPaid]);
+        $partialPayments = $this->oldSum($receivable, 'amount_paid');
+        $outstanding = $oldOutstanding + $addedPartiallyPaid - $partialPayments;
+
+        $oldOverdue = $this->oldSum([InvoiceStatus::Overdue]);
+        $late = Invoice::query()->where('status', InvoiceStatus::PartiallyPaid->value)
+            ->whereDate('due_date', '<', Carbon::today()->toDateString());
+        $overdue = $oldOverdue + (float) (clone $late)->sum('amount') - (float) (clone $late)->sum('amount_paid')
+            - $this->oldSum([InvoiceStatus::Overdue], 'amount_paid');
+
+        $first = Invoice::query()->whereIn('status', array_map(static fn (InvoiceStatus $s): string => $s->value, $receivable))
+            ->orderBy('due_date')->first();
+        $this->assertGreaterThan(0, $partialPayments);
+        $this->assertGreaterThan(0, $addedPartiallyPaid);
+
+        $summary = app(InvoiceService::class)->workspaceSummary($this->workspace);
+        $this->assertEquals($outstanding, $summary['total_outstanding']);
+        $this->assertEquals($overdue, $summary['total_overdue']);
+        $this->assertEquals($outstanding, app(DashboardStatsService::class)->build()['revenue']['outstanding']);
+        $this->assertEquals($outstanding, array_sum(array_column(app(ReportsService::class)->build()['revenue_by_month'], 'outstanding')));
+
         $detail = app(AdminWorkspaceService::class)->detailFor($this->workspace)['invoices_summary'];
         $this->assertEquals($outstanding, $detail['total_unpaid']);
         $this->assertEquals($overdue, $detail['total_overdue']);
 
-        $this->assertEquals($firstUnpaid, app(MemberDashboardService::class)->summary($this->member)['next_invoice']['amount']);
+        $next = app(MemberDashboardService::class)->summary($this->member)['next_invoice'];
+        $this->assertEquals((float) $first->amount - (float) $first->amount_paid, $next['amount']);
 
-        $pl = app(OwnerReportsService::class)->build($this->workspace)['profit_loss'];
-        $this->assertEquals($oldRevenue, end($pl)['revenue']);
+        $this->assertEquals($outstanding, app(OwnerReportsService::class)->build($this->workspace)['aging_total']);
     }
 }

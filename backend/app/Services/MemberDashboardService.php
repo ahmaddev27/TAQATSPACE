@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\BookingStatus;
-use App\Enums\InvoiceStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\Announcement;
 use App\Models\InternetPackage;
@@ -146,8 +145,8 @@ class MemberDashboardService
     }
 
     /**
-     * The soonest unpaid (pending or overdue) invoice across the member's
-     * subscriptions, ordered by due date.
+     * The soonest unpaid (pending, overdue or partially paid) invoice across the
+     * member's subscriptions, ordered by due date, with what is still owed on it.
      *
      * @return array{amount: string, due_date: ?string}|null
      */
@@ -156,16 +155,16 @@ class MemberDashboardService
         $invoice = Invoice::query()
             ->notDraft()
             ->whereHas('subscription', static fn ($query) => $query->where('member_id', $member->id))
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
+            ->receivable()
             ->orderBy('due_date')
-            ->first(['id', 'amount', 'credited_amount', 'due_date']);
+            ->first(['id', 'amount', 'credited_amount', 'amount_paid', 'due_date']);
 
         if ($invoice === null) {
             return null;
         }
 
         return [
-            'amount' => number_format(InvoiceMoney::net($invoice), 2, '.', ''),
+            'amount' => number_format(InvoiceMoney::receivable($invoice), 2, '.', ''),
             'due_date' => $invoice->due_date?->toDateString(),
         ];
     }

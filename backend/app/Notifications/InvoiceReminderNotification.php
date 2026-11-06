@@ -65,6 +65,6 @@ class InvoiceReminderNotification extends Notification implements ShouldQueue
     /** What is still owed after credits and payments, not the frozen invoice total. */
     private function owed(): string
     {
-        return number_format(InvoiceMoney::owed($this->invoice), 2, '.', '');
+        return number_format(InvoiceMoney::receivable($this->invoice), 2, '.', '');
     }
 }

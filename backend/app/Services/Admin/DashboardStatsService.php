@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  * Every section is computed with a single grouped query (no per-row work and
  * no N+1), so the whole payload costs a handful of indexed aggregate queries.
  * "Revenue" here is admin-tracked figures, not gateway money: `paid` is the
- * sum of paid invoices, `outstanding` the sum of pending + overdue.
+ * sum of paid invoices, `outstanding` what is still owed on unpaid invoices.
  */
 class DashboardStatsService
 {
@@ -74,7 +74,8 @@ class DashboardStatsService
     }
 
     /**
-     * Tracked revenue figures: paid total and outstanding (pending + overdue).
+     * Tracked revenue figures: paid total and outstanding (what is still owed
+     * on pending, overdue and partially paid invoices).
      *
      * @return array{paid: string, outstanding: string}
      */
@@ -83,9 +84,7 @@ class DashboardStatsService
         $paid = InvoiceMoney::sumNet(Invoice::query()
             ->where('status', InvoiceStatus::Paid->value));
 
-        $outstanding = InvoiceMoney::sumNet(Invoice::query()
-            ->notDraft()
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value]));
+        $outstanding = InvoiceMoney::sumReceivable(Invoice::query()->notDraft()->receivable());
 
         return [
             'paid' => number_format((float) $paid, 2, '.', ''),

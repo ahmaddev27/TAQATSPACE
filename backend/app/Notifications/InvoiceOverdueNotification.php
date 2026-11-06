@@ -66,7 +66,7 @@ class InvoiceOverdueNotification extends Notification implements ShouldQueue
             'audience' => $this->audience,
             'invoice_id' => $this->invoice->id,
             'invoice_number' => $this->invoice->invoice_number,
-            'amount' => number_format(InvoiceMoney::owed($this->invoice), 2, '.', ''),
+            'amount' => number_format(InvoiceMoney::receivable($this->invoice), 2, '.', ''),
             'due_date' => $this->invoice->due_date?->toDateString(),
         ];
     }

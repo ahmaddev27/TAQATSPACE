@@ -668,7 +668,9 @@ class InvoiceService
     }
 
     /**
-     * Summary tiles for the owner invoices dashboard.
+     * Summary tiles for the owner invoices dashboard. Outstanding and overdue
+     * are what is still owed (partial payments and credits subtracted), so
+     * total_outstanding equals the owner aging report's total.
      *
      * @return array{total_outstanding: string, total_overdue: string, paid_this_month: string}
      */
@@ -676,11 +678,9 @@ class InvoiceService
     {
         $base = fn (): Builder => Invoice::query()->forWorkspace($workspace->id)->notDraft();
 
-        $outstanding = InvoiceMoney::sumNet((clone $base())
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value]));
+        $outstanding = InvoiceMoney::sumReceivable($base()->receivable());
 
-        $overdue = InvoiceMoney::sumNet((clone $base())
-            ->where('status', InvoiceStatus::Overdue->value));
+        $overdue = InvoiceMoney::sumReceivable($base()->overdueReceivable());
 
         $paidThisMonth = InvoiceMoney::sumNet((clone $base())
             ->where('status', InvoiceStatus::Paid->value)

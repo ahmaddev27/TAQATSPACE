@@ -60,9 +60,9 @@ class ReportsService
 
     /**
      * Continuous last-12-months revenue series. `paid` sums paid invoices by the
-     * month they were paid (paid_at); `outstanding` sums pending + overdue
-     * invoices by the month they are due (due_date). Missing months are filled
-     * with zeros in PHP so the series is always contiguous.
+     * month they were paid (paid_at); `outstanding` sums what is still owed on
+     * unpaid invoices by the month they are due (due_date). Missing months are
+     * filled with zeros in PHP so the series is always contiguous.
      *
      * @return array<int, array{month: string, paid: string, outstanding: string}>
      */
@@ -81,9 +81,9 @@ class ReportsService
 
         $outstanding = Invoice::query()
             ->notDraft()
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
+            ->receivable()
             ->where('due_date', '>=', $start)
-            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(".InvoiceMoney::netSql().") as total")
+            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(".InvoiceMoney::receivableSql().") as total")
             ->groupBy('bucket')
             ->pluck('total', 'bucket');
 

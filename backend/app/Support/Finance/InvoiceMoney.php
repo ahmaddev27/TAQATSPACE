@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Finance;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -14,12 +15,25 @@ use Illuminate\Database\Query\Expression;
  * dashboard and summary agrees on what an invoice is worth.
  *
  * An invoice keeps its frozen total `amount`; credit notes accumulate in
- * `credited_amount`. Both expressions use portable CASE WHEN (the test DB is
- * SQLite, production is MariaDB) and equal a plain `amount` / `amount_paid`
+ * `credited_amount`. Every expression uses portable CASE WHEN (the test DB is
+ * SQLite, production is MariaDB) and equals a plain `amount` / `amount_paid`
  * whenever `credited_amount` is 0.
  */
 final class InvoiceMoney
 {
+    /**
+     * Statuses whose invoices can still be owed money. The owner aging report
+     * defines this set (under_review and payment_rejected stay out), and every
+     * outstanding figure reuses it so the dashboards agree with that report.
+     *
+     * @var list<string>
+     */
+    public const RECEIVABLE_STATUSES = [
+        InvoiceStatus::Pending->value,
+        InvoiceStatus::Overdue->value,
+        InvoiceStatus::PartiallyPaid->value,
+    ];
+
     /**
      * The invoice total minus its credits, never below zero. This deliberately
      * keeps today's meaning of "sum of amount": older invoices may carry
@@ -48,10 +62,16 @@ final class InvoiceMoney
         return "({$table}.amount_paid - {$owedBack})";
     }
 
-    /** What the customer still owes: amount - credited - paid, never below zero. */
-    public static function owed(Invoice $invoice): float
+    /**
+     * What the customer still owes: amount - credited - paid, never below zero.
+     * Only meaningful over {@see RECEIVABLE_STATUSES}: a legacy paid row may
+     * carry amount_paid = 0 and would read as owed.
+     */
+    public static function receivableSql(string $table = 'invoices'): string
     {
-        return max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid);
+        $open = "{$table}.amount - {$table}.credited_amount - {$table}.amount_paid";
+
+        return "(CASE WHEN {$open} > 0 THEN {$open} ELSE 0 END)";
     }
 
     /** SUM() of the net amount over the given invoice query. */
@@ -60,9 +80,23 @@ final class InvoiceMoney
         return (float) $query->sum(new Expression(self::netSql($table)));
     }
 
+    /** SUM() of what is still owed over the given invoice query. */
+    public static function sumReceivable(EloquentBuilder|QueryBuilder $query, string $table = 'invoices'): float
+    {
+        return (float) $query->sum(new Expression(self::receivableSql($table)));
+    }
+
     /** Net amount of one loaded invoice (PHP twin of {@see netSql()}). */
     public static function net(Invoice $invoice): float
     {
         return max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount);
+    }
+
+    /** What one loaded invoice still owes (PHP twin of {@see receivableSql()}). */
+    public static function receivable(Invoice $invoice): float
+    {
+        $open = round((float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid, 2);
+
+        return max(0.0, $open);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\InvoiceStatus;
 use App\Enums\PosOrderStatus;
 use App\Models\Expense;
 use App\Models\InternetPackage;
@@ -57,11 +56,8 @@ class OwnerReportsService
         $invoices = Invoice::query()
             ->forWorkspace($workspace->id)
             ->notDraft()
-            ->whereIn('status', [
-                InvoiceStatus::Pending->value,
-                InvoiceStatus::Overdue->value,
-                InvoiceStatus::PartiallyPaid->value,
-            ])
+            // Shared with every outstanding figure, so the dashboards add up to this report.
+            ->receivable()
             ->whereNotNull('due_date')
             ->get(['amount', 'credited_amount', 'amount_paid', 'due_date']);
 
@@ -76,7 +72,7 @@ class OwnerReportsService
         $total = 0.0;
 
         foreach ($invoices as $invoice) {
-            $outstanding = max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid);
+            $outstanding = InvoiceMoney::receivable($invoice);
 
             if ($outstanding <= 0) {
                 continue;

@@ -124,22 +124,22 @@ class AdminWorkspaceService
     }
 
     /**
+     * Counts are by status; total_unpaid and total_overdue are what is still
+     * owed (partial payments and credits subtracted), as on the owner dashboard.
+     *
      * @return array<string, mixed>
      */
     private function invoicesSummary(Workspace $workspace): array
     {
-        $unpaidStatuses = [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value];
-
         return [
             'total_count' => $this->workspaceInvoices($workspace)->count(),
             'pending_count' => $this->workspaceInvoices($workspace)
                 ->where('invoices.status', InvoiceStatus::Pending->value)->count(),
             'overdue_count' => $this->workspaceInvoices($workspace)
                 ->where('invoices.status', InvoiceStatus::Overdue->value)->count(),
-            'total_unpaid' => (string) InvoiceMoney::sumNet($this->workspaceInvoices($workspace)
-                ->whereIn('invoices.status', $unpaidStatuses)),
-            'total_overdue' => (string) InvoiceMoney::sumNet($this->workspaceInvoices($workspace)
-                ->where('invoices.status', InvoiceStatus::Overdue->value)),
+            // Two decimals, as the decimal SUM() returned on MariaDB before these became expressions.
+            'total_unpaid' => number_format(InvoiceMoney::sumReceivable($this->workspaceInvoices($workspace)->receivable()), 2, '.', ''),
+            'total_overdue' => number_format(InvoiceMoney::sumReceivable($this->workspaceInvoices($workspace)->overdueReceivable()), 2, '.', ''),
         ];
     }
 
