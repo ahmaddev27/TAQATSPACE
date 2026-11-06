@@ -15,6 +15,7 @@ import {
   type ImportBatch,
   type ImportRowError,
   type ImportType,
+  parseRowErrors,
 } from "@/lib/types/financeImports";
 
 const XLSX = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -28,6 +29,8 @@ export function ImportWizard() {
   const [file, setFile] = useState<File | null>(null);
   const [batch, setBatch] = useState<ImportBatch | null>(null);
   const [imported, setImported] = useState<ImportBatch | null>(null);
+  // Row errors the commit itself found (the data changed since the preview).
+  const [refused, setRefused] = useState<ImportRowError[] | null>(null);
 
   const fail = (body: string) => toast({ tone: "err", title: t("error"), body });
 
@@ -35,6 +38,7 @@ export function ImportWizard() {
     setFile(null);
     setBatch(null);
     setImported(null);
+    setRefused(null);
   };
 
   const onCheck = () => {
@@ -53,7 +57,9 @@ export function ImportWizard() {
     if (!batch) return;
     startTransition(async () => {
       const res = await commitImport(batch.id);
-      if (res.ok) setImported(res.data);
+      if (res.ok) return setImported(res.data);
+      const rows = parseRowErrors(res.errors?.rows);
+      if (rows.length > 0) setRefused(rows);
       else fail(res.message);
     });
   };
@@ -65,6 +71,9 @@ export function ImportWizard() {
   ];
 
   const step = imported ? 2 : batch ? 1 : 0;
+  // The preview's errors, or the commit's when it was refused; null when the file can be imported.
+  const errors = refused ?? (batch && !batch.can_commit ? batch.errors : null);
+  const errorCount = refused ? refused.length : (batch?.error_count ?? 0);
 
   return (
     <section className="card card-pad stack" style={{ gap: 16 }}>
@@ -101,23 +110,23 @@ export function ImportWizard() {
 
       {step === 1 && batch && (
         <div className="stack" style={{ gap: 14 }}>
-          {batch.can_commit ? (
+          {errors === null ? (
             <Alert tone="success" title={t("okTitle")}>
               {t("rows", { count: batch.row_count })}. {t("okBody")}
             </Alert>
           ) : (
             <>
-              <Alert tone="danger" title={t("errorsTitle", { count: batch.error_count })}>
+              <Alert tone="danger" title={t("errorsTitle", { count: errorCount })}>
                 {t("errorsBody")}
               </Alert>
-              <DataTable columns={columns} rows={batch.errors} rowKey={(e) => `${e.row}-${e.column}-${e.message}`} />
-              {batch.error_count > batch.errors.length && (
-                <p className="muted" style={{ margin: 0 }}>{t("moreErrors", { shown: batch.errors.length })}</p>
+              <DataTable columns={columns} rows={errors} rowKey={(e) => `${e.row}-${e.column}-${e.message}`} />
+              {errorCount > errors.length && (
+                <p className="muted" style={{ margin: 0 }}>{t("moreErrors", { shown: errors.length })}</p>
               )}
             </>
           )}
           <div className="row wrap" style={{ gap: 8 }}>
-            {batch.can_commit && (
+            {errors === null && (
               <Button variant="primary" loading={pending} onClick={onCommit}>
                 {pending ? t("committing") : t("commit")}
               </Button>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\ImportStatus;
 use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
 use App\Models\ImportBatch;
@@ -12,6 +13,7 @@ use App\Models\Subscription;
 use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
@@ -28,12 +30,37 @@ class ImportRepository
             ?? throw (new ModelNotFoundException)->setModel(ImportBatch::class, [$id]);
     }
 
-    public function findByHash(Workspace $workspace, string $hash): ?ImportBatch
+    public function findByHash(Workspace $workspace, string $hash, bool $lock = false): ?ImportBatch
+    {
+        $query = ImportBatch::query()->withoutWorkspaceScope()
+            ->where('workspace_id', $workspace->id)
+            ->where('file_hash', $hash);
+
+        return ($lock ? $query->lockForUpdate() : $query)->first();
+    }
+
+    /**
+     * Calls $callback for every previewed batch untouched since $before.
+     *
+     * @param  callable(ImportBatch): void  $callback
+     */
+    public function eachAbandonedPreview(CarbonInterface $before, callable $callback): void
+    {
+        ImportBatch::query()->withoutWorkspaceScope()
+            ->where('status', ImportStatus::Previewed)
+            ->where('updated_at', '<', $before)
+            ->chunkById(100, static function ($batches) use ($callback): void {
+                $batches->each($callback);
+            });
+    }
+
+    /** Deletes a batch only if it is still previewed, so a commit that just won the race is never removed. */
+    public function deleteIfStillPreviewed(ImportBatch $batch): bool
     {
         return ImportBatch::query()->withoutWorkspaceScope()
-            ->where('workspace_id', $workspace->id)
-            ->where('file_hash', $hash)
-            ->first();
+            ->whereKey($batch->id)
+            ->where('status', ImportStatus::Previewed)
+            ->delete() > 0;
     }
 
     /**

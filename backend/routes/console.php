@@ -25,6 +25,10 @@ Schedule::command('subscriptions:notify-expiring')->dailyAt('08:30');
 // Router API request logs are only kept for 14 days.
 Schedule::command('router-logs:prune')->dailyAt('03:00');
 
+// Parked rows of XLSX imports that were previewed but never committed hold
+// customer emails, so they are removed after a week.
+Schedule::command('imports:prune')->dailyAt('03:30');
+
 // Retention policy (config/retention.php): processed raw events, assembled
 // snapshot chunks and router logs. Replaces the scheduled router-snapshots:prune,
 // which would also delete chunks of snapshots that are not assembled yet.
