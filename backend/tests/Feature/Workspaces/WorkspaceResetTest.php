@@ -6,13 +6,16 @@ namespace Tests\Feature\Workspaces;
 
 use App\Contracts\WorkspaceResetStep;
 use App\Enums\ImportStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\ImportType;
 use App\Enums\RouterCommandVerb;
 use App\Enums\SeatStatus;
+use App\Enums\WalletEntryType;
 use App\Models\AuditLog;
 use App\Models\BookingRequest;
 use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
+use App\Models\CustomerWallet;
 use App\Models\Expense;
 use App\Models\ImportBatch;
 use App\Models\Invoice;
@@ -30,7 +33,10 @@ use App\Models\UnbilledCharge;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Auth\TwoFactorService;
+use App\Services\Finance\PaymentVoucherService;
+use App\Services\Finance\WalletLedger;
 use App\Services\Workspace\Reset\WorkspaceResetter;
+use App\Support\Finance\WalletMovement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -152,7 +158,7 @@ class WorkspaceResetTest extends TestCase
         Storage::disk('local')->assertMissing('receipts/private-proof.pdf');
     }
 
-    public function test_reset_clears_wallet_entries_and_payment_vouchers_of_the_workspace_only(): void
+    public function test_reset_clears_wallet_entries_payment_vouchers_and_wallets_of_the_workspace_only(): void
     {
         Storage::fake('public');
         [$owner, $workspace] = $this->ownerWithWorkspace();
@@ -165,20 +171,24 @@ class WorkspaceResetTest extends TestCase
 
         $this->assertSame(0, DB::table('wallet_entries')->where('workspace_id', $workspace->id)->count());
         $this->assertSame(0, DB::table('payment_vouchers')->where('workspace_id', $workspace->id)->count());
+        $this->assertSame(0, DB::table('customer_wallets')->where('workspace_id', $workspace->id)->count());
         $this->assertNull(DB::table('payment_vouchers')->find($gone));
         $this->assertSame(2, DB::table('wallet_entries')->where('workspace_id', $other->id)->count());
         $this->assertNotNull(DB::table('payment_vouchers')->find($keep));
+        $this->assertEquals(30, DB::table('customer_wallets')->where('workspace_id', $other->id)->value('balance'));
     }
 
     /** A deposit with part of it paid back; returns the voucher id. */
     private function walletWithVoucher(Workspace $workspace, User $customer, User $actor): string
     {
-        $ledger = app(\App\Services\Finance\WalletLedger::class);
-        $ledger->append($workspace->id, $customer->id, \App\Enums\WalletEntryType::DepositIn, '50.00', null, null, null, $actor);
-        $entry = $ledger->append($workspace->id, $customer->id, \App\Enums\WalletEntryType::DepositReturn, '20.00', 'Back', null, null, $actor);
+        $ledger = app(WalletLedger::class);
 
-        return app(\App\Services\Finance\PaymentVoucherService::class)
-            ->issueFor($entry, \App\Enums\PaymentMethod::Cash, null, null, $actor)->id;
+        return $ledger->locked($workspace->id, $customer->id, function (CustomerWallet $wallet) use ($ledger, $actor): string {
+            $ledger->append($wallet, new WalletMovement(WalletEntryType::DepositIn, '50.00'), $actor);
+            $entry = $ledger->append($wallet, new WalletMovement(WalletEntryType::DepositReturn, '20.00', 'Back'), $actor);
+
+            return app(PaymentVoucherService::class)->issueFor($entry, PaymentMethod::Cash, null, null, $actor)->id;
+        });
     }
 
     public function test_reset_forgets_import_batches_so_the_same_file_can_be_imported_again(): void
