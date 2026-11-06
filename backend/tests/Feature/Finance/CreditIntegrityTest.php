@@ -19,6 +19,7 @@ use App\Services\Admin\AdminInvoiceService;
 use App\Services\Finance\CreditNoteService;
 use App\Services\Finance\InvoiceBalanceService;
 use App\Services\Finance\InvoiceLifecycleService;
+use App\Services\Finance\LegacyPaymentImporter;
 use App\Services\Finance\ReceiptService;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
@@ -230,6 +231,22 @@ class CreditIntegrityTest extends ReceiptTestCase
         $queries = $this->queriesDuring(fn () => app(InvoiceService::class)->markPaid($invoice->fresh()));
 
         $this->assertLessThan($this->firstIndex($queries, self::LOCKED_SEQUENCE), $this->firstIndex($queries, self::LOCKED_INVOICE));
+    }
+
+    public function test_copying_a_legacy_payment_locks_the_invoice_before_taking_the_receipt_number(): void
+    {
+        $invoice = $this->legacyInvoice('50.00');
+        $invoice->payments()->create(['amount' => '20.00', 'paid_at' => now()]);
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(LegacyPaymentImporter::class)->run());
+
+        $this->assertSame(1, Receipt::query()->count());
+        $this->assertLessThan(
+            $this->firstIndex($queries, self::LOCKED_SEQUENCE),
+            $this->firstIndex($queries, self::LOCKED_INVOICE),
+            'The allocation insert takes a shared lock on the invoice; a payment holding it while it waits for the number would deadlock.',
+        );
     }
 
     public function test_a_new_receipt_locks_the_invoice_before_reading_what_is_allocated_or_held(): void

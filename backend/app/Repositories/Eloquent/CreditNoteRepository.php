@@ -16,8 +16,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class CreditNoteRepository
 {
-    // subscription_id lets the PDF find the workspace name.
-    private const WITH = ['invoice:id,invoice_number,customer_id,subscription_id', 'invoice.customer:id,name', 'issuer:id,name'];
+    private const WITH = ['invoice:id,invoice_number,customer_id', 'invoice.customer:id,name', 'issuer:id,name'];
 
     /**
      * @param  array<string, mixed>  $filters

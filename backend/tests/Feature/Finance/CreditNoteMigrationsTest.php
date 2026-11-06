@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Tests\Feature\Finance;
 
 use App\Models\CreditNote;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Runs the two credit-note migrations of this change down and up on a table
- * that holds a note. Schema changes commit implicitly on MariaDB, so the usual
- * wrapping transaction cannot undo these tests: each one forces a fresh
- * database for the next test, otherwise its rows would leak into it.
+ * Runs the migrations of this change down and up: the two credit-note ones on
+ * a table that holds a note, and the receipts source column. Schema changes
+ * commit implicitly on MariaDB, so the usual wrapping transaction cannot undo
+ * these tests: each one forces a fresh database for the next test, otherwise
+ * its rows would leak into it.
  */
 class CreditNoteMigrationsTest extends ReceiptTestCase
 {
@@ -58,5 +60,33 @@ class CreditNoteMigrationsTest extends ReceiptTestCase
         $kept = CreditNote::query()->findOrFail($note->id);
         $this->assertEquals(12.5, $kept->amount);
         $this->assertSame('Kept across the migrations', $kept->reason);
+
+        // The key is only a guard while the unique index is back as well.
+        $this->assertTrue(Schema::hasIndex('credit_notes', 'credit_notes_workspace_request_key_unique', 'unique'));
+        $kept->forceFill(['request_key' => 'form-1'])->save();
+        $this->expectException(UniqueConstraintViolationException::class);
+        CreditNote::query()->create([
+            'workspace_id' => $workspace->id,
+            'invoice_id' => $invoice->id,
+            'number' => 'CN-2',
+            'amount' => '1.00',
+            'reason' => 'Same key in the same workspace',
+            'request_key' => 'form-1',
+            'issued_at' => now(),
+        ]);
+    }
+
+    public function test_the_receipt_source_migration_runs_down_and_up(): void
+    {
+        $migration = require database_path('migrations/2026_11_10_100002_add_source_to_receipts.php');
+        $this->assertTrue(Schema::hasColumn('receipts', 'source'));
+
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn('receipts', 'source'));
+        $migration->down();
+
+        $migration->up();
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn('receipts', 'source'));
     }
 }
