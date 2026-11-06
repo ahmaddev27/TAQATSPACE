@@ -20,6 +20,7 @@ use App\Services\Audit\AuditLogger;
 use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -167,13 +168,29 @@ class ReceiptService
      */
     private function createInTransaction(Workspace $workspace, array $data, ?User $actor): array
     {
+        $receipt = $this->newReceipt($workspace, $data, $actor);
+        $rows = $this->normalise($data['allocations'] ?? []);
+
+        // Invoices before the receipt number. Paying an invoice and issuing a credit note
+        // hold the invoice lock while they take a number; taking the number first here
+        // would wait on the counter while they wait on our invoice (MariaDB 1213).
+        $invoices = $rows === [] ? null : $this->balances->lockPayable($receipt, array_keys($rows));
+
+        $receipt->number = $this->numbers->next($workspace, DocumentType::Receipt);
+        $receipt->save();
+
+        return [$receipt, $invoices === null ? [] : $this->applyToLocked($receipt, $invoices, $rows)];
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function newReceipt(Workspace $workspace, array $data, ?User $actor): Receipt
+    {
         $method = PaymentMethod::from((string) $data['method']);
         $receivedAt = isset($data['received_at']) ? Carbon::parse($data['received_at']) : Carbon::now();
 
-        $receipt = Receipt::query()->create([
+        return new Receipt([
             'workspace_id' => $workspace->id,
             'customer_id' => $data['customer_id'],
-            'number' => $this->numbers->next($workspace, DocumentType::Receipt),
             'method' => $method,
             'amount' => bcadd((string) $data['amount'], '0', 2),
             'received_at' => $receivedAt,
@@ -185,12 +202,10 @@ class ReceiptService
             'created_by' => $actor?->id,
             'legacy_payment_id' => $data['legacy_payment_id'] ?? null,
         ]);
-
-        return [$receipt, $this->applyAllocations($receipt, $data['allocations'] ?? [])];
     }
 
     /**
-     * Validate and store the allocations, and move the invoices if the money is already collected.
+     * Validate and store more allocations on an existing receipt.
      *
      * @param  array<int, AllocationInput>  $allocations
      * @return array<int, Invoice> the invoices that became fully paid
@@ -207,10 +222,22 @@ class ReceiptService
 
         $rows = $this->normalise($allocations);
 
-        // Lock first: on MariaDB (REPEATABLE READ) the first plain SELECT in a transaction fixes
-        // its snapshot, so reading allocations before waiting for the lock would miss a cheque
-        // another transaction committed meanwhile, and two cheques could claim the same balance.
-        $invoices = $this->balances->lockPayable($receipt, array_keys($rows));
+        return $this->applyToLocked($receipt, $this->balances->lockPayable($receipt, array_keys($rows)), $rows);
+    }
+
+    /**
+     * Store allocations on invoices the caller has locked, and move the invoices if the money is
+     * already collected. The lock must come first: on MariaDB (REPEATABLE READ) the first plain
+     * SELECT in a transaction fixes its snapshot, so reading allocations before waiting for the
+     * lock would miss a cheque another transaction committed meanwhile, and two cheques could
+     * claim the same balance.
+     *
+     * @param  Collection<string, Invoice>  $invoices
+     * @param  array<string, string>  $rows
+     * @return array<int, Invoice> the invoices that became fully paid
+     */
+    private function applyToLocked(Receipt $receipt, Collection $invoices, array $rows): array
+    {
         $this->assertFitsReceipt($receipt, $rows);
         $this->assertFitsInvoices($invoices, $rows);
         $this->storeAllocations($receipt, $rows);
@@ -325,6 +352,13 @@ class ReceiptService
             return [];
         }
 
+        // A plain read before the invoice lock is safe here, and a locking read would take gap
+        // locks that new allocations then queue behind. The caller holds this receipt's lock, and
+        // adding allocations needs it, so the rows cannot change under us; and because the caller
+        // started with that locking read, this is the transaction's first plain SELECT, so its
+        // snapshot is taken after the lock. A caller that wraps this in a larger transaction must
+        // not run a plain SELECT before locking the receipt. The invoice rows themselves come from
+        // the locking read below, which always sees the latest committed values.
         $rows = ReceiptAllocation::query()->where('receipt_id', $receipt->id)->pluck('amount', 'invoice_id')
             ->map(static fn (mixed $amount): string => bcadd((string) $amount, '0', 2))->all();
 

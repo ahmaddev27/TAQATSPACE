@@ -35,6 +35,12 @@ use RuntimeException;
  */
 class CreditIntegrityTest extends ReceiptTestCase
 {
+    /** A locking read of an invoice row (MariaDB `for update`, SQLite via exposeLocks). */
+    private const LOCKED_INVOICE = '/^select .* from [`"]invoices[`"] .*for update/is';
+
+    /** A locking read of a document number counter. */
+    private const LOCKED_SEQUENCE = '/^select .* from [`"]document_sequences[`"] .*for update/is';
+
     // ---- Defect 1: the amount owed back is derived, never stored ----------
 
     public function test_the_refund_owed_back_drops_to_zero_when_a_cleared_cheque_bounces(): void
@@ -151,6 +157,96 @@ class CreditIntegrityTest extends ReceiptTestCase
 
         $this->assertEquals(140, $invoice->fresh()->amount_paid);
         $this->assertSame('40.00', app(InvoiceBalanceService::class)->refundDue($invoice->fresh()));
+    }
+
+    // ---- Defects 4 and 6, review item 1: lock order ------------------------
+    // SQLite cannot run two transactions at once, so these tests read the SQL
+    // log: each asserts that the locking read (FOR UPDATE) of the invoice comes
+    // before the statement it must precede. Real deadlocks need MariaDB.
+
+    public function test_a_new_receipt_locks_its_invoices_before_taking_the_receipt_number(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(ReceiptService::class)->create(
+            $workspace,
+            $this->receiptPayload($customer, '40.00', ['allocations' => $this->allocation($invoice, '40.00')]),
+            $owner,
+        ));
+
+        $this->assertLessThan(
+            $this->firstIndex($queries, self::LOCKED_SEQUENCE),
+            $this->firstIndex($queries, self::LOCKED_INVOICE),
+            'Paying an invoice holds its lock while it takes the receipt number; a new receipt must lock in that order too.',
+        );
+    }
+
+    public function test_paying_an_invoice_locks_it_before_taking_the_receipt_number(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
+        Sanctum::actingAs($owner);
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(InvoiceService::class)->markPaid($invoice->fresh()));
+
+        $this->assertLessThan($this->firstIndex($queries, self::LOCKED_SEQUENCE), $this->firstIndex($queries, self::LOCKED_INVOICE));
+    }
+
+    public function test_a_new_receipt_locks_the_invoice_before_reading_what_is_allocated_or_held(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(ReceiptService::class)->create(
+            $workspace,
+            $this->receiptPayload($customer, '40.00', ['method' => 'cheque', 'allocations' => $this->allocation($invoice, '40.00')]),
+            $owner,
+        ));
+
+        $this->assertLessThan(
+            $this->firstIndex($queries, '/^select .*receipt_allocations/i'),
+            $this->firstIndex($queries, self::LOCKED_INVOICE),
+            'The invoice row must be locked before the allocations are read.',
+        );
+    }
+
+    public function test_allocating_to_an_existing_receipt_locks_the_invoice_before_reading_allocations(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $receipt = app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '40.00', ['method' => 'cheque']), $owner);
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(ReceiptService::class)->allocate($receipt, $this->allocation($invoice, '40.00'), $owner));
+
+        $this->assertLessThan(
+            $this->firstIndex($queries, '/^select .*receipt_allocations/i'),
+            $this->firstIndex($queries, self::LOCKED_INVOICE),
+        );
+    }
+
+    public function test_a_partial_payment_locks_the_invoice_before_inserting_the_payment_row(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
+        Sanctum::actingAs($owner);
+        $loaded = $invoice->fresh();
+        $this->exposeLocks();
+
+        $queries = $this->queriesDuring(fn () => app(InvoiceService::class)->recordPartialPayment($loaded, 40.0));
+
+        $this->assertLessThan(
+            $this->firstIndex($queries, '/^insert into [`"]invoice_payments[`"]/i'),
+            $this->firstIndex($queries, self::LOCKED_INVOICE),
+            'The payment row takes a shared FK lock on the invoice, so the exclusive lock must come first.',
+        );
     }
 
     // ---- Defect 7: void invoices -------------------------------------------

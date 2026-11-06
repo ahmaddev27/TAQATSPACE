@@ -49,10 +49,16 @@ abstract class ReceiptTestCase extends InvoiceV2TestCase
     /**
      * SQLite drops `FOR UPDATE`, so a lock-order test could not see it. This makes
      * the grammar keep the lock as a trailing SQL comment the query log can match.
+     * MariaDB already writes `for update` into the SQL, so its grammar stays.
      */
     protected function exposeLocks(): void
     {
         $connection = DB::connection();
+
+        if ($connection->getDriverName() !== 'sqlite') {
+            return;
+        }
+
         $connection->setQueryGrammar(new class($connection) extends SQLiteGrammar
         {
             protected function compileLock(Builder $query, $value): string
