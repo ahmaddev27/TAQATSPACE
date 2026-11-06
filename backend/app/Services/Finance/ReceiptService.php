@@ -8,6 +8,7 @@ use App\Enums\ChequeStatus;
 use App\Enums\DocumentType;
 use App\Enums\PaymentMethod;
 use App\Enums\WalletEntryType;
+use App\Exceptions\WalletException;
 use App\Exceptions\ReceiptException;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
@@ -19,6 +20,7 @@ use App\Notifications\InvoicePaidNotification;
 use App\Repositories\Eloquent\UnbilledChargeRepository;
 use App\Services\Audit\AuditLogger;
 use App\Services\FileUploadService;
+use App\Support\Finance\WalletMovement;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -43,6 +45,7 @@ class ReceiptService
         private readonly UnbilledChargeRepository $customers,
         private readonly FileUploadService $uploads,
         private readonly WalletLedger $wallet,
+        private readonly InvoiceRefundWallet $refunds,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -103,10 +106,11 @@ class ReceiptService
 
     /**
      * @throws ReceiptException when the receipt is not a cheque or the move is not allowed
+     * @throws WalletException (409) when a bounce must take back owed-back money the wallet no longer holds
      */
     public function changeChequeStatus(Receipt $receipt, ChequeStatus $target, ?User $actor, ?Carbon $collectedAt = null): Receipt
     {
-        [$receipt, $from, $paid] = DB::transaction(function () use ($receipt, $target, $collectedAt): array {
+        [$receipt, $from, $paid] = DB::transaction(function () use ($receipt, $target, $collectedAt, $actor): array {
             $locked = $this->lock($receipt);
 
             if (! $locked->isCheque()) {
@@ -125,7 +129,9 @@ class ReceiptService
                 'collected_at' => $target === ChequeStatus::Cleared ? ($collectedAt ?? Carbon::now()) : null,
             ])->save();
 
-            return [$locked, $from, $this->settleCollectionChange($locked, $wasCollected)];
+            $cause = "cheque {$locked->number} {$target->value}";
+
+            return [$locked, $from, $this->settleCollectionChange($locked, $wasCollected, $actor, $cause)];
         });
 
         $this->afterChange($receipt, $paid);
@@ -139,8 +145,10 @@ class ReceiptService
 
     /**
      * Void a receipt: its money comes back off the invoices and the file is kept.
+     * A receipt paid out of the wallet gives that money back to the wallet.
      *
      * @throws ReceiptException when it is already void
+     * @throws WalletException (409) when it must take back owed-back money the wallet no longer holds
      */
     public function void(Receipt $receipt, string $reason, ?User $actor): Receipt
     {
@@ -155,9 +163,7 @@ class ReceiptService
                 InvoicePayment::query()->whereKey($locked->legacy_payment_id)->delete();
             }
 
-            $this->returnWalletMoney($locked, $reason, $actor);
-
-            return [$locked, $this->settleCollectionChange($locked, $wasCollected)];
+            return [$locked, $this->settleCollectionChange($locked, $wasCollected, $actor, "receipt {$locked->number} voided")];
         });
 
         $this->afterChange($receipt, $paid);
@@ -239,6 +245,10 @@ class ReceiptService
      * SELECT in a transaction fixes its snapshot, so reading allocations before waiting for the
      * lock would miss a cheque another transaction committed meanwhile, and two cheques could
      * claim the same balance.
+     *
+     * No wallet sync here: an allocation takes at most what is still owed (assertFitsInvoices),
+     * so it never changes what an invoice owes back, and this path takes no wallet lock after
+     * the receipt's number.
      *
      * @param  Collection<string, Invoice>  $invoices
      * @param  array<string, string>  $rows
@@ -348,11 +358,13 @@ class ReceiptService
 
     /**
      * After a status change the receipt's allocations either start or stop
-     * counting as collected; move the invoices by exactly that.
+     * counting as collected; move the invoices by exactly that, then bring what
+     * each invoice moved to the customer's wallet back in line with what it now
+     * owes back. Locks receipt (the caller's), then invoices, then the wallet.
      *
      * @return array<int, Invoice> the invoices that became fully paid
      */
-    private function settleCollectionChange(Receipt $receipt, bool $wasCollected): array
+    private function settleCollectionChange(Receipt $receipt, bool $wasCollected, ?User $actor, string $cause): array
     {
         $isCollected = $receipt->isCollected();
 
@@ -360,6 +372,24 @@ class ReceiptService
             return [];
         }
 
+        [$rows, $invoices] = $this->lockAllocatedInvoices($receipt);
+        $paid = $isCollected ? $this->collectLocked($receipt, $invoices, $rows) : $this->uncollect($invoices, $rows);
+
+        if (! $isCollected) {
+            // First, so the wallet holds this money again before the invoices take back what they moved there.
+            $this->returnWalletMoney($receipt, $actor);
+        }
+
+        $this->refunds->syncAll($invoices, $actor, $cause);
+
+        return $paid;
+    }
+
+    /**
+     * @return array{0: array<string, string>, 1: Collection<string, Invoice>} allocations (invoice id => amount) and their invoices, locked in id order
+     */
+    private function lockAllocatedInvoices(Receipt $receipt): array
+    {
         // A plain read before the invoice lock is safe here, and a locking read would take gap
         // locks that new allocations then queue behind. The caller holds this receipt's lock, and
         // adding allocations needs it, so the rows cannot change under us; and because the caller
@@ -370,18 +400,36 @@ class ReceiptService
         $rows = ReceiptAllocation::query()->where('receipt_id', $receipt->id)->pluck('amount', 'invoice_id')
             ->map(static fn (mixed $amount): string => bcadd((string) $amount, '0', 2))->all();
 
+        $invoices = $rows === []
+            ? new Collection
+            : Invoice::query()->whereIn('id', array_keys($rows))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
+        return [$rows, $invoices];
+    }
+
+    /**
+     * @param  Collection<string, Invoice>  $invoices
+     * @param  array<string, string>  $rows
+     * @return array<int, Invoice>
+     */
+    private function collectLocked(Receipt $receipt, Collection $invoices, array $rows): array
+    {
         if ($rows === []) {
             return [];
         }
 
-        $invoices = Invoice::query()->whereIn('id', array_keys($rows))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        $this->balances->assertAllIssued($invoices);
 
-        if ($isCollected) {
-            $this->balances->assertAllIssued($invoices);
+        return $this->collect($receipt, $invoices, $rows);
+    }
 
-            return $this->collect($receipt, $invoices, $rows);
-        }
-
+    /**
+     * @param  Collection<string, Invoice>  $invoices
+     * @param  array<string, string>  $rows
+     * @return array<int, Invoice> always empty: taking money back never makes an invoice paid
+     */
+    private function uncollect(Collection $invoices, array $rows): array
+    {
         foreach ($rows as $invoiceId => $amount) {
             $this->balances->applyDelta($invoices[$invoiceId], bcmul($amount, '-1', 2), Carbon::now());
         }
@@ -389,23 +437,23 @@ class ReceiptService
         return [];
     }
 
-    /** A receipt paid out of the wallet gives that money back to it when voided. */
-    private function returnWalletMoney(Receipt $receipt, string $reason, ?User $actor): void
+    /** A voided receipt that was paid out of the wallet puts that money back on it. */
+    private function returnWalletMoney(Receipt $receipt, ?User $actor): void
     {
         if ($receipt->method !== PaymentMethod::Wallet || $receipt->customer_id === null) {
             return;
         }
 
-        $entry = $this->wallet->append(
-            $receipt->workspace_id,
-            $receipt->customer_id,
+        $wallet = $this->wallet->lock($receipt->workspace_id, $receipt->customer_id);
+        $reason = $receipt->void_reason ?? 'Receipt '.$receipt->number.' voided';
+        $entry = $this->wallet->append($wallet, new WalletMovement(
             WalletEntryType::Credit,
             (string) $receipt->amount,
             $reason,
             WalletLedger::RELATED_RECEIPT,
             $receipt->id,
-            $actor,
-        );
+        ), $actor);
+
         $this->audit->log('finance.wallet.settlement_reversed', $entry, reason: $reason, actor: $actor, changes: [
             'receipt' => $receipt->number,
             'amount' => $entry->amount,

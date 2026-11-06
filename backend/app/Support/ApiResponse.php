@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
  * Single, consistent JSON envelope for the whole API.
  *
  * Success: { "data": ..., "message"?: ... }
- * Error:   { "message": ..., "errors"?: { field: [..] } }
+ * Error:   { "message": ..., "errors"?: { field: [..] }, "code"?: ... }
  */
 final class ApiResponse
 {
@@ -36,13 +36,18 @@ final class ApiResponse
 
     /**
      * @param  array<string, array<int, string>>|null  $errors
+     * @param  string|null  $code  a stable machine-readable reason, for a client that must tell refusals apart
      */
-    public static function error(string $message, int $status = 400, ?array $errors = null): JsonResponse
+    public static function error(string $message, int $status = 400, ?array $errors = null, ?string $code = null): JsonResponse
     {
         $payload = ['message' => $message];
 
         if ($errors !== null) {
             $payload['errors'] = $errors;
+        }
+
+        if ($code !== null) {
+            $payload['code'] = $code;
         }
 
         return response()->json($payload, $status);

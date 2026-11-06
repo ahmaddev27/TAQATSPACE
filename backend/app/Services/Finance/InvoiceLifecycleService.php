@@ -187,9 +187,10 @@ class InvoiceLifecycleService
     }
 
     /**
-     * A credit note is a numbered document against this invoice, and a pending
-     * cheque is money promised to it; voiding underneath either would leave
-     * them pointing at a dead invoice. Void or bounce them first.
+     * A credit note is a numbered document against this invoice, a pending
+     * cheque is money promised to it, and a wallet receipt is the customer's
+     * wallet money spent on it; voiding underneath any of them would leave them
+     * pointing at a dead invoice. Void or bounce them first.
      */
     private function assertVoidable(Invoice $locked): void
     {
@@ -199,6 +200,10 @@ class InvoiceLifecycleService
 
         if ($this->balances->held([$locked->id]) !== []) {
             throw InvoiceLifecycleException::voidHasPendingCheques();
+        }
+
+        if ($this->balances->hasWalletPayment($locked)) {
+            throw InvoiceLifecycleException::voidHasWalletPayment();
         }
     }
 

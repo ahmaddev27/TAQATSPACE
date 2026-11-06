@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\PaymentMethod;
+use App\Models\PaymentVoucher;
+use App\Models\Receipt;
 use App\Models\User;
 use App\Models\WalletEntry;
 use App\Models\Workspace;
+use App\Services\Finance\WalletLedger;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -16,6 +20,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class WalletRepository
 {
+    /** How many documents a "money already used" refusal names. */
+    private const SPENT_BY_LIMIT = 5;
+
     public function __construct(private readonly UnbilledChargeRepository $customers) {}
 
     /**
@@ -48,11 +55,13 @@ class WalletRepository
     }
 
     /**
+     * A customer's entries, newest first, each marked when a later entry reversed it.
+     *
      * @return LengthAwarePaginator<int, WalletEntry>
      */
     public function paginateEntries(Workspace $workspace, string $customerId, int $perPage): LengthAwarePaginator
     {
-        return WalletEntry::query()
+        $page = WalletEntry::query()
             ->with('creator:id,name')
             ->where('workspace_id', $workspace->id)
             ->where('customer_id', $customerId)
@@ -60,17 +69,76 @@ class WalletRepository
             ->orderByDesc('id')
             ->paginate(max(1, min($perPage, 200)))
             ->withQueryString();
+
+        $reversed = $this->reversedAmong($workspace->id, $page->getCollection()->modelKeys());
+        $page->getCollection()->each(static function (WalletEntry $entry) use ($reversed): void {
+            $entry->reversed = isset($reversed[$entry->id]);
+        });
+
+        return $page;
     }
 
     /** A customer of the workspace, or one whose wallet has history there. */
     public function customer(Workspace $workspace, string $id): User
     {
         $user = User::query()->select('id', 'name')->find($id);
-        $known = $user !== null && (
-            $this->customers->isCustomerOf($workspace, $id)
-            || WalletEntry::query()->where('workspace_id', $workspace->id)->where('customer_id', $id)->exists()
-        );
 
-        return $known ? $user : throw (new ModelNotFoundException)->setModel(User::class, [$id]);
+        return $user !== null && $this->isKnownCustomer($workspace, $id)
+            ? $user
+            : throw (new ModelNotFoundException)->setModel(User::class, [$id]);
+    }
+
+    /** The rule every wallet movement but a deposit uses: a customer of the workspace, or someone with wallet history there. */
+    public function isKnownCustomer(Workspace $workspace, string $id): bool
+    {
+        return $this->customers->isCustomerOf($workspace, $id)
+            || WalletEntry::query()->where('workspace_id', $workspace->id)->where('customer_id', $id)->exists();
+    }
+
+    /** One entry of the customer's wallet in the workspace. */
+    public function entryOf(Workspace $workspace, string $customerId, string $entryId): WalletEntry
+    {
+        return WalletEntry::query()->where('workspace_id', $workspace->id)->where('customer_id', $customerId)->find($entryId)
+            ?? throw (new ModelNotFoundException)->setModel(WalletEntry::class, [$entryId]);
+    }
+
+    public function isReversed(WalletEntry $entry): bool
+    {
+        return $this->reversedAmong($entry->workspace_id, [$entry->id]) !== [];
+    }
+
+    /**
+     * Numbers of the live documents that took money out of the wallet, newest
+     * first: payment vouchers, and receipts that paid an invoice from it.
+     *
+     * @return list<string>
+     */
+    public function spentBy(string $workspaceId, string $customerId): array
+    {
+        $vouchers = PaymentVoucher::query()->where('workspace_id', $workspaceId)->where('customer_id', $customerId)
+            ->whereNull('voided_at')->latest()->limit(self::SPENT_BY_LIMIT)->get(['number', 'created_at']);
+        $receipts = Receipt::query()->where('workspace_id', $workspaceId)->where('customer_id', $customerId)
+            ->where('method', PaymentMethod::Wallet->value)->whereNull('voided_at')->latest()->limit(self::SPENT_BY_LIMIT)->get(['number', 'created_at']);
+
+        return $vouchers->concat($receipts)->sortByDesc('created_at')->take(self::SPENT_BY_LIMIT)
+            ->pluck('number')->filter()->map(static fn (mixed $number): string => (string) $number)->values()->all();
+    }
+
+    /**
+     * @param  array<int, string>  $entryIds
+     * @return array<string, true> ids of the given entries that a reversal points at
+     */
+    private function reversedAmong(string $workspaceId, array $entryIds): array
+    {
+        if ($entryIds === []) {
+            return [];
+        }
+
+        return WalletEntry::query()->where('workspace_id', $workspaceId)
+            ->where('related_type', WalletLedger::RELATED_ENTRY)
+            ->whereIn('related_id', $entryIds)
+            ->pluck('related_id')
+            ->mapWithKeys(static fn (mixed $id): array => [(string) $id => true])
+            ->all();
     }
 }

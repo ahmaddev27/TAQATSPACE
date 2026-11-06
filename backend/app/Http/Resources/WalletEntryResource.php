@@ -28,6 +28,8 @@ class WalletEntryResource extends JsonResource
             'reason' => $this->reason,
             'related_type' => $this->related_type,
             'related_id' => $this->related_id,
+            'reversed' => $this->resource->reversed === true,
+            'reversible' => $this->resource->isReversible(),
             'created_by' => $this->whenLoaded('creator', fn (): ?array => $this->creator === null ? null : [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,

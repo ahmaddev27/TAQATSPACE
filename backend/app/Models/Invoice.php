@@ -37,6 +37,13 @@ class Invoice extends Model
      */
     public ?string $refundDue = null;
 
+    /**
+     * The part of $refundDue not yet moved to the customer's wallet (the rest
+     * is in `moved_to_wallet`), set alongside it, so a screen never shows the
+     * same money twice. Never saved.
+     */
+    public ?string $refundOpen = null;
+
     /** @var list<string> */
     protected $fillable = [
         'subscription_id',
@@ -90,6 +97,7 @@ class Invoice extends Model
             'amount' => 'decimal:2',
             'amount_paid' => 'decimal:2',
             'credited_amount' => 'decimal:2',
+            'moved_to_wallet' => 'decimal:2',
         ];
     }
 

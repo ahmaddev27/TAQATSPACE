@@ -27,6 +27,7 @@ use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use App\Services\Finance\DocumentNumberService;
 use App\Services\Finance\InvoiceBalanceService;
+use App\Services\Finance\InvoiceRefundWallet;
 use App\Services\Finance\ReceiptService;
 use App\Services\Finance\SubscriptionPricingService;
 use App\Support\Finance\InvoiceMoney;
@@ -52,6 +53,7 @@ class InvoiceService
         private readonly ReceiptService $receipts,
         private readonly SubscriptionPricingService $pricing,
         private readonly InvoiceBalanceService $balances,
+        private readonly InvoiceRefundWallet $refunds,
     ) {}
 
     /**
@@ -857,6 +859,12 @@ class InvoiceService
         // that shared lock while waiting for the exclusive one deadlock.
         $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
         $wasPaid = $locked->payment_status === PaymentStatus::Paid;
+        $actor = request()->user();
+
+        // A payment never changes what is owed back (it takes at most what is still owed), so a
+        // sync here only repairs an invoice left out of step, and does it before the receipt's
+        // number: the wallet lock always comes before a document number.
+        $this->refunds->sync($locked, $actor);
 
         if ($attributes !== []) {
             $locked->forceFill($attributes)->save();
@@ -866,6 +874,7 @@ class InvoiceService
 
         if ($amount === null) {
             $this->balances->reconcile($locked, $paidAt);
+            $this->refunds->sync($locked, $actor);
 
             return ['receipted' => false, 'paid_now' => false];
         }
@@ -880,10 +889,12 @@ class InvoiceService
             'legacy_payment_id' => $payment->id,
             'source' => ReceiptSource::InvoicePayment->value,
             'allocations' => [['invoice_id' => $locked->id, 'amount' => $amount]],
-        ] + $proof, request()->user(), notify: false);
+        ] + $proof, $actor, notify: false);
 
-        // The receipt moved its own copy of the row; read the status it left.
-        $isPaid = Invoice::query()->whereKey($locked->id)->first(['id', 'payment_status'])?->payment_status === PaymentStatus::Paid;
+        // The receipt moved its own copy of the row; read what it left (the row is ours already).
+        $after = Invoice::query()->lockForUpdate()->findOrFail($locked->id);
+        $this->refunds->sync($after, $actor);
+        $isPaid = $after->payment_status === PaymentStatus::Paid;
 
         return ['receipted' => true, 'paid_now' => ! $wasPaid && $isPaid];
     }

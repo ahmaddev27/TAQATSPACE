@@ -8,13 +8,29 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * The customer wallet: an append-only ledger (the balance is the SUM of a
- * customer's entries) and the numbered vouchers that document money paid back.
- * Money is held in the workspace's currency; no payment gateway is involved.
+ * customer's entries), one row per wallet that serialises its movements and
+ * carries the running balance, and the numbered vouchers that document money
+ * paid back. Money is held in the workspace's currency; no payment gateway is
+ * involved.
  */
 return new class extends Migration
 {
     public function up(): void
     {
+        // The wallet row is the lock every movement takes (SELECT ... FOR UPDATE), so movements
+        // of one wallet queue up and never lock the customer's users row.
+        Schema::create('customer_wallets', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('workspace_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('customer_id')->constrained('users')->cascadeOnDelete();
+            // Always equal to the SUM of the wallet's entries; updated in the entry's transaction.
+            $table->decimal('balance', 12, 2)->default(0);
+            $table->timestamps();
+
+            $table->unique(['workspace_id', 'customer_id']);
+            $table->index('customer_id');
+        });
+
         Schema::create('wallet_entries', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('workspace_id')->constrained()->cascadeOnDelete();
@@ -22,7 +38,7 @@ return new class extends Migration
             $table->string('type', 20);
             // Signed: positive adds to the balance, negative takes from it.
             $table->decimal('amount', 12, 2);
-            // How a deposit was received (cash, transfer, cheque); empty for the other types.
+            // How a deposit was received (cash, transfer, card); empty for the other types.
             $table->string('method', 20)->nullable();
             $table->string('reason', 500)->nullable();
             $table->string('related_type', 60)->nullable();
@@ -63,5 +79,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('payment_vouchers');
         Schema::dropIfExists('wallet_entries');
+        Schema::dropIfExists('customer_wallets');
     }
 };

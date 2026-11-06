@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Route;
 | Behind the `finance_v2` flag (404 when off). Reading needs `finance_collect`,
 | `finance_reports` or `finance_issue_void`; taking a deposit and paying an
 | invoice from the wallet need `finance_collect`. Paying money back (a return)
-| needs `finance_issue_void` and a recent two-factor check; keeping it (a forfeit)
-| and voiding a voucher need the same.
-| The wallet only records money handled by cash,
-| bank or cheque; no payment provider is involved.
+| needs `finance_issue_void` and a recent two-factor check; keeping it (a
+| forfeit), reversing a wrong deposit or forfeit, and voiding a voucher need
+| the same. The wallet only records money handled in cash, by card or by bank;
+| no payment provider is involved.
 */
 Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidden'])
     ->prefix('workspace/finance')
@@ -35,6 +35,8 @@ Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidd
                 ->whereUuid('customer')->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,wallet-return']);
             Route::post('/{customer}/forfeits', [WalletController::class, 'forfeit'])
                 ->whereUuid('customer')->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,wallet-forfeit']);
+            Route::post('/{customer}/entries/{entry}/reverse', [WalletController::class, 'reverse'])
+                ->whereUuid(['customer', 'entry'])->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,wallet-reverse']);
         });
 
         Route::prefix('payment-vouchers')->group(function (): void {
@@ -45,6 +47,6 @@ Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidd
 
             Route::post('/{id}/void', [PaymentVoucherController::class, 'void'])
                 ->whereUuid('id')
-                ->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent']);
+                ->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,payment-voucher-void']);
         });
     });

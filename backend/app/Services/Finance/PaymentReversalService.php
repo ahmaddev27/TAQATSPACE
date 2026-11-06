@@ -7,6 +7,7 @@ namespace App\Services\Finance;
 use App\Enums\ReceiptSource;
 use App\Exceptions\InvoiceLifecycleException;
 use App\Exceptions\ReceiptException;
+use App\Exceptions\WalletException;
 use App\Models\Invoice;
 use App\Models\Receipt;
 use App\Models\User;
@@ -31,12 +32,14 @@ class PaymentReversalService
         private readonly ReceiptRepository $receiptRepository,
         private readonly ReceiptService $receipts,
         private readonly InvoiceBalanceService $balances,
+        private readonly InvoiceRefundWallet $refunds,
         private readonly AuditLogger $audit,
     ) {}
 
     /**
      * @throws InvoiceLifecycleException when credit notes leave nothing owed, or legacy payment rows are not on receipts yet
      * @throws ReceiptException when a receipt was recorded by the workspace, or holds money beyond this invoice
+     * @throws WalletException (409) when the owed-back money the payment put on the wallet was already used
      */
     public function reverse(Invoice $invoice, ?User $actor): void
     {
@@ -118,6 +121,8 @@ class PaymentReversalService
         }
 
         $this->balances->reconcile($locked, $now);
+        // Each void above synced its own change; this covers the money cleared without a receipt.
+        $this->refunds->sync($locked, $actor, 'marked unpaid');
 
         if ($receipts->isEmpty() && $this->moneyState($locked) === $before) {
             return;

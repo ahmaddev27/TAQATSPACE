@@ -34,9 +34,10 @@ final class FinanceResetStep implements WorkspaceResetStep
         $this->deletePrivateProofsAfterCommit($workspace);
         $this->deleteParkedImportsAfterCommit($workspace);
 
-        // Vouchers point at wallet entries, so they go first.
+        // Vouchers point at wallet entries, so they go first; the wallet rows hold the balances.
         DB::table('payment_vouchers')->where('workspace_id', $workspace->id)->delete();
         DB::table('wallet_entries')->where('workspace_id', $workspace->id)->delete();
+        DB::table('customer_wallets')->where('workspace_id', $workspace->id)->delete();
         DB::table('receipts')->where('workspace_id', $workspace->id)->delete();
         DB::table('unbilled_charges')->where('workspace_id', $workspace->id)->delete();
         DB::table('import_batches')->where('workspace_id', $workspace->id)->delete();

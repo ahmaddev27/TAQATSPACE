@@ -27,7 +27,8 @@ class ReturnDepositRequest extends FormRequest
             'method' => ['required', Rule::in(PaymentMethod::manualValues())],
             'reason' => ['required', 'string', 'min:3', 'max:500'],
             'reference' => ['nullable', 'string', 'max:100'],
-            'paid_at' => ['nullable', 'date'],
+            // A voucher records money already handed over, so it cannot be dated ahead.
+            'paid_at' => ['nullable', 'date', 'before_or_equal:now'],
         ];
     }
 }

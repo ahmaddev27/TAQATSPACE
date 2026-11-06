@@ -37,7 +37,7 @@
         <tr><td class="label">رقم السند / Number</td><td>{{ $voucher->number }}</td></tr>
         <tr><td class="label">تاريخ الصرف / Paid</td><td>{{ $voucher->paid_at?->format('Y-m-d') }}</td></tr>
         <tr><td class="label">العميل / Customer</td><td>{{ $customer?->name }}</td></tr>
-        <tr><td class="label">طريقة الدفع / Method</td><td>{{ $voucher->method->value }}</td></tr>
+        <tr><td class="label">طريقة الدفع / Method</td><td>{{ $voucher->method->label('ar') }} / {{ $voucher->method->label('en') }}</td></tr>
         @if($voucher->reference)
             <tr><td class="label">المرجع / Reference</td><td>{{ $voucher->reference }}</td></tr>
         @endif

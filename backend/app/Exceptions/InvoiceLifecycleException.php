@@ -49,6 +49,11 @@ class InvoiceLifecycleException extends RuntimeException
         return new self(__('messages.invoice_void_has_pending_cheques'), 409);
     }
 
+    public static function voidHasWalletPayment(): self
+    {
+        return new self(__('messages.invoice_void_has_wallet_payment'), 409);
+    }
+
     /** Credit notes cover the invoice: there is no payment to take back, and "unpaid" would be false. */
     public static function nothingOwedCannotUnpaid(): self
     {

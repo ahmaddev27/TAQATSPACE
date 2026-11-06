@@ -143,8 +143,20 @@ class InvoiceBalanceService
     }
 
     /**
-     * Attach the current refundDue() to invoices about to be shown, so the
-     * response carries it without the resource computing money itself.
+     * What is owed back and not yet on the customer's wallet: refundDue() less
+     * `moved_to_wallet`, never negative. Money moved to the wallet is shown as
+     * the wallet's, so the two figures never count the same money twice.
+     */
+    public function refundOpen(Invoice $invoice): string
+    {
+        $open = bcsub($this->refundDue($invoice), (string) ($invoice->moved_to_wallet ?? '0'), 2);
+
+        return bccomp($open, '0', 2) > 0 ? $open : '0.00';
+    }
+
+    /**
+     * Attach the current refundDue() and refundOpen() to invoices about to be
+     * shown, so the response carries them without the resource computing money.
      *
      * @param  iterable<Invoice>  $invoices
      */
@@ -152,7 +164,23 @@ class InvoiceBalanceService
     {
         foreach ($invoices as $invoice) {
             $invoice->refundDue = $this->refundDue($invoice);
+            $invoice->refundOpen = $this->refundOpen($invoice);
         }
+    }
+
+    /**
+     * Whether a live receipt paid out of the customer's wallet carries money on
+     * the invoice. Voiding the invoice would strand that money; voiding the
+     * receipt puts it back on the wallet.
+     */
+    public function hasWalletPayment(Invoice $invoice): bool
+    {
+        return ReceiptAllocation::query()
+            ->join('receipts', 'receipts.id', '=', 'receipt_allocations.receipt_id')
+            ->where('receipt_allocations.invoice_id', $invoice->id)
+            ->whereNull('receipts.voided_at')
+            ->where('receipts.method', PaymentMethod::Wallet->value)
+            ->exists();
     }
 
     /**

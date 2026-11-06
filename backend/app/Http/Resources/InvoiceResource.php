@@ -33,6 +33,10 @@ class InvoiceResource extends JsonResource
             'remaining_amount' => $this->remainingAmount(),
             // Owed back to the customer, invoice-level and current; set by the service on the owner list and detail, else null.
             'refund_due' => $this->resource->refundDue,
+            // The part of refund_due not on the customer's wallet yet; set with it, else null.
+            'refund_open' => $this->resource->refundOpen,
+            // Owed-back money already moved to the customer's wallet, where it is spent or paid out.
+            'moved_to_wallet' => bcadd((string) ($this->moved_to_wallet ?? '0'), '0', 2),
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,

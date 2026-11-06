@@ -29,4 +29,21 @@ enum PaymentMethod: string
     {
         return array_values(array_diff(self::values(), [self::Wallet->value]));
     }
+
+    /**
+     * Money that is in hand the moment it is recorded. A cheque is not: it
+     * can still bounce, so it may not become a wallet balance that is paid out.
+     *
+     * @return array<int, string>
+     */
+    public static function inHandValues(): array
+    {
+        return [self::Cash->value, self::Transfer->value, self::Card->value];
+    }
+
+    /** The method's name in `$locale` (the app locale when null), for documents. */
+    public function label(?string $locale = null): string
+    {
+        return __('messages.payment_method_'.$this->value, [], $locale);
+    }
 }

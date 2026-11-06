@@ -202,7 +202,8 @@ class FinanceV2Step implements DemoSeedStep
 
         $this->wallets->receiveDeposit($workspace, $first->id, '200.00', PaymentMethod::Cash, 'Security deposit', null, $owner);
         $this->wallets->returnDeposit($workspace, $first->id, '50.00', PaymentMethod::Transfer, 'Part of the deposit returned', 'DEMO-TRF-1', null, null, $owner);
-        $this->wallets->receiveDeposit($workspace, $second->id, '100.00', PaymentMethod::Cheque, 'Equipment deposit', null, $owner);
+        // A deposit is money in hand: cash, card or transfer, never a cheque that could still bounce.
+        $this->wallets->receiveDeposit($workspace, $second->id, '100.00', PaymentMethod::Card, 'Equipment deposit', null, $owner);
         $this->wallets->forfeit($workspace, $second->id, '15.00', 'Damaged equipment in the demo data.', null, $owner);
     }
 

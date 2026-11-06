@@ -42,6 +42,7 @@ class DemoCleaner
             // The cascade clears wallets with the workspace; naming them here keeps a schema change from leaving ledgers behind.
             DB::table('payment_vouchers')->whereIn('workspace_id', $workspaceIds)->delete();
             DB::table('wallet_entries')->whereIn('workspace_id', $workspaceIds)->delete();
+            DB::table('customer_wallets')->whereIn('workspace_id', $workspaceIds)->delete();
 
             // Items restrict deleting their category, so the workspace's cascade would fail on them.
             DB::table('catalog_items')->whereIn('workspace_id', $workspaceIds)->delete();

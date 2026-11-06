@@ -26,4 +26,18 @@ enum WalletEntryType: string
             self::DepositReturn, self::Settlement, self::Forfeit, self::Debit => false,
         };
     }
+
+    /**
+     * The entry that undoes a wrong one, or null when the type is not undone by
+     * hand: a return, a settlement and an invoice's own movements are undone by
+     * voiding their document (voucher, receipt) instead.
+     */
+    public function reversal(): ?self
+    {
+        return match ($this) {
+            self::DepositIn => self::Debit,
+            self::Forfeit => self::Credit,
+            default => null,
+        };
+    }
 }

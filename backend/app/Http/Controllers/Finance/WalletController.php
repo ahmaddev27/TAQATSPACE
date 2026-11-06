@@ -10,9 +10,12 @@ use App\Http\Requests\Finance\ForfeitWalletRequest;
 use App\Http\Requests\Finance\ListWalletsRequest;
 use App\Http\Requests\Finance\ReceiveDepositRequest;
 use App\Http\Requests\Finance\ReturnDepositRequest;
+use App\Http\Requests\Finance\ReverseWalletEntryRequest;
 use App\Http\Requests\Finance\SettleWalletRequest;
+use App\Http\Requests\Finance\ShowWalletRequest;
 use App\Http\Resources\PaymentVoucherResource;
 use App\Http\Resources\ReceiptResource;
+use App\Http\Resources\WalletBalanceResource;
 use App\Http\Resources\WalletEntryResource;
 use App\Repositories\Eloquent\WalletRepository;
 use App\Services\Finance\WalletService;
@@ -20,7 +23,6 @@ use App\Support\ApiResponse;
 use App\Support\Tenancy\CurrentWorkspaceContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
@@ -44,21 +46,17 @@ class WalletController extends Controller
 
         return ApiResponse::success([
             'currency' => $workspace->currency,
-            'items' => array_map(static fn ($row): array => [
-                'customer' => ['id' => $row->customer_id, 'name' => $row->customer_name],
-                'balance' => number_format((float) $row->balance, 2, '.', ''),
-                'last_entry_at' => $row->last_entry_at,
-            ], $paginator->items()),
+            'items' => WalletBalanceResource::collection($paginator->items()),
             'meta' => $this->meta($paginator),
         ]);
     }
 
     /** GET /api/workspace/finance/wallet/{customer} */
-    public function show(Request $request, string $customer): JsonResponse
+    public function show(ShowWalletRequest $request, string $customer): JsonResponse
     {
         $workspace = $this->context->workspace();
         $user = $this->repository->customer($workspace, $customer);
-        $entries = $this->repository->paginateEntries($workspace, $user->id, $request->integer('per_page', 50));
+        $entries = $this->repository->paginateEntries($workspace, $user->id, (int) ($request->validated()['per_page'] ?? 50));
 
         return ApiResponse::success([
             'currency' => $workspace->currency,
@@ -139,6 +137,23 @@ class WalletController extends Controller
         );
 
         return ApiResponse::success(new WalletEntryResource($entry), __('messages.wallet_forfeited'), 201);
+    }
+
+    /** POST /api/workspace/finance/wallet/{customer}/entries/{entry}/reverse */
+    public function reverse(ReverseWalletEntryRequest $request, string $customer, string $entry): JsonResponse
+    {
+        $data = $request->validated();
+
+        $reversal = $this->wallets->reverseEntry(
+            $this->context->workspace(),
+            $customer,
+            $entry,
+            $data['reason'],
+            $data['request_key'] ?? null,
+            $request->user(),
+        );
+
+        return ApiResponse::success(new WalletEntryResource($reversal), __('messages.wallet_entry_reversed'), 201);
     }
 
     /**

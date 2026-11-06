@@ -20,13 +20,15 @@ use Illuminate\Support\Facades\DB;
 /**
  * Credit notes: the way to correct an issued invoice (BR-FIN-01). The invoice
  * itself never changes; the credit lowers what is owed, and any part of it the
- * customer had already paid is owed back (InvoiceBalanceService::refundDue).
+ * customer had already paid is owed back (InvoiceBalanceService::refundDue),
+ * which InvoiceRefundWallet moves to the customer's wallet.
  */
 class CreditNoteService
 {
     public function __construct(
         private readonly DocumentNumberService $numbers,
         private readonly InvoiceBalanceService $balances,
+        private readonly InvoiceRefundWallet $refunds,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -76,7 +78,12 @@ class CreditNoteService
         $this->assertFits($locked, $amount);
         $now = Carbon::now();
 
-        $note = CreditNote::query()->create([
+        // The credit and the wallet move it causes come before the note's number: every money
+        // path locks invoice, then wallet, then the number counter, so none of them can deadlock.
+        $this->balances->applyCredit($locked, $amount, $now);
+        $this->refunds->sync($locked, $actor, 'credit note');
+
+        return CreditNote::query()->create([
             'workspace_id' => $locked->workspace_id,
             'invoice_id' => $locked->id,
             'number' => $this->numbers->next(Workspace::query()->findOrFail($locked->workspace_id), DocumentType::CreditNote),
@@ -86,10 +93,6 @@ class CreditNoteService
             'issued_by' => $actor?->id,
             'issued_at' => $now,
         ]);
-
-        $this->balances->applyCredit($locked, $amount, $now);
-
-        return $note;
     }
 
     private function noteForKey(Invoice $invoice, string $requestKey): ?CreditNote

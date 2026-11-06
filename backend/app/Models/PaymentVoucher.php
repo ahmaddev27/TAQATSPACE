@@ -37,8 +37,17 @@ class PaymentVoucher extends Model
         'void_reason',
     ];
 
+    /** What the numbered document says was paid, to whom and how; it never changes once issued. */
+    private const FROZEN = ['workspace_id', 'customer_id', 'number', 'method', 'amount'];
+
     protected static function booted(): void
     {
+        static::updating(static function (PaymentVoucher $voucher): void {
+            if ($voucher->isDirty(self::FROZEN)) {
+                throw new LogicException('A payment voucher is voided, never edited.');
+            }
+        });
+
         static::deleting(static function (): never {
             throw new LogicException('A payment voucher is voided, never deleted.');
         });

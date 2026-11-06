@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Finance\ListPaymentVouchersRequest;
-use App\Http\Requests\Finance\VoidReceiptRequest;
+use App\Http\Requests\Finance\VoidPaymentVoucherRequest;
 use App\Http\Resources\PaymentVoucherResource;
 use App\Repositories\Eloquent\PaymentVoucherRepository;
 use App\Services\Finance\PaymentVoucherService;
@@ -52,7 +52,7 @@ class PaymentVoucherController extends Controller
     }
 
     /** POST /api/workspace/finance/payment-vouchers/{id}/void */
-    public function void(VoidReceiptRequest $request, string $id): JsonResponse
+    public function void(VoidPaymentVoucherRequest $request, string $id): JsonResponse
     {
         $voucher = $this->repository->find($this->context->workspace(), $id);
 

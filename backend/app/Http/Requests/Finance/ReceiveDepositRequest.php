@@ -24,7 +24,8 @@ class ReceiveDepositRequest extends FormRequest
     {
         return [
             ...$this->walletAmountRules(),
-            'method' => ['required', Rule::in(PaymentMethod::manualValues())],
+            // Money in hand only: a cheque deposit would count, and could be paid out, before it clears.
+            'method' => ['required', Rule::in(PaymentMethod::inHandValues())],
             'reason' => ['nullable', 'string', 'max:500'],
         ];
     }
