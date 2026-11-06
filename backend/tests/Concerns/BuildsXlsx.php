@@ -33,6 +33,7 @@ trait BuildsXlsx
         $zip->addFromString('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>');
         $zip->addFromString('xl/workbook.xml', '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'.$sheetTags.'</sheets></workbook>');
         $zip->addFromString('xl/_rels/workbook.xml.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'.$rels.'</Relationships>');
+        $this->freezeEntryTimes($zip);
         $zip->close();
 
         return new UploadedFile($path, $name, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -59,6 +60,7 @@ trait BuildsXlsx
         $zip->addFromString('xl/workbook.xml', '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="S1" sheetId="1" r:id="rId1"/></sheets></workbook>');
         $zip->addFromString('xl/_rels/workbook.xml.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'.$rels.'</Relationships>');
         $zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'.$sheetNamespaces.'><sheetData>'.$sheetData.'</sheetData>'.$afterSheetData.'</worksheet>');
+        $this->freezeEntryTimes($zip);
         $zip->close();
 
         return new UploadedFile($path, 'import.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
@@ -91,6 +93,14 @@ trait BuildsXlsx
         }
 
         return $this->xlsxFromXml($sheetData, implode('', $items));
+    }
+
+    /** Entry times would make two builds of the same rows differ by hash whenever the clock ticks between them. */
+    private function freezeEntryTimes(ZipArchive $zip): void
+    {
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $zip->setMtimeIndex($index, 946684800);
+        }
     }
 
     /** @param  list<list<string>>  $rows */

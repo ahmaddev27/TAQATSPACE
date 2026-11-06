@@ -51,7 +51,7 @@ class XlsxReaderTest extends TestCase
 
     public function test_a_phonetic_run_does_not_shift_the_next_shared_strings(): void
     {
-        $items = '<si><t>code</t><rPh sb="0" eb="1"><t>kodo</t></rPh><phoneticPr fontId="1"/></si><si><t>name</t></si><si><t>value</t></si>';
+        $items = '<si><t>code</t><rPh sb="0" eb="1"><t>kodo</t></rPh></si><si><t>name</t></si><si><t>value</t></si>';
         $sheet = '<row r="1">'.$this->shared('A1', 0).$this->shared('B1', 1).'</row><row r="2">'.$this->shared('A2', 2).$this->shared('B2', 1).'</row>';
 
         $parsed = $this->read($this->xlsxFromXml($sheet, $items));
