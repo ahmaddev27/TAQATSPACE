@@ -10,6 +10,8 @@ use App\Enums\PaymentMethod;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceFeature;
 use App\Exceptions\InvoiceLifecycleException;
+use App\Exceptions\ReceiptException;
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
 use App\Models\Subscription;
@@ -22,6 +24,7 @@ use App\Notifications\InvoiceReceiptRejectedNotification;
 use App\Notifications\InvoiceReceiptSubmittedNotification;
 use App\Notifications\InvoiceReminderNotification;
 use App\Services\Finance\DocumentNumberService;
+use App\Services\Finance\InvoiceBalanceService;
 use App\Services\Finance\ReceiptService;
 use App\Services\Finance\SubscriptionPricingService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -44,6 +47,7 @@ class InvoiceService
         private readonly DocumentNumberService $documentNumbers,
         private readonly ReceiptService $receipts,
         private readonly SubscriptionPricingService $pricing,
+        private readonly InvoiceBalanceService $balances,
     ) {}
 
     /**
@@ -93,8 +97,8 @@ class InvoiceService
 
         $invoice->forceFill(['receipt_reviewed_at' => Carbon::now()])->save();
 
-        if ($this->financeV2($invoice->workspace_id) && $this->outstanding($invoice) > 0) {
-            return $this->payThroughReceipt($invoice, $this->outstanding($invoice), PaymentMethod::Transfer, $paidAt ?? Carbon::now(), proof: [
+        if ($this->financeV2($invoice->workspace_id) && bccomp($this->outstanding($invoice), '0', 2) > 0) {
+            return $this->payThroughReceipt($invoice, null, PaymentMethod::Transfer,$paidAt ?? Carbon::now(), proof: [
                 'receipt_path' => $invoice->receipt_path,
                 'receipt_disk' => (string) config('filesystems.media', 'public'),
             ]);
@@ -146,6 +150,11 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
+        // Pays only what is open and not held by a pending cheque, with the proof kept on the receipt.
+        if ($this->financeV2($invoice->workspace_id)) {
+            return $this->payThroughReceipt($invoice, null, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), $receipt);
+        }
+
         $invoice->forceFill([
             'receipt_path' => $this->uploads->upload(
                 $receipt,
@@ -181,6 +190,11 @@ class InvoiceService
         // Issued invoices are voided, never deleted, once finance v2 is on.
         if (! $invoice->isDraft() && $this->financeV2($invoice->workspace_id)) {
             throw InvoiceLifecycleException::immutable();
+        }
+
+        // Credit notes are numbered documents; the foreign key would silently cascade them away.
+        if (CreditNote::query()->where('invoice_id', $invoice->id)->exists()) {
+            throw InvoiceLifecycleException::hasCreditNotes();
         }
 
         $disk = Storage::disk((string) config('filesystems.media', 'public'));
@@ -345,6 +359,11 @@ class InvoiceService
             throw new RuntimeException(__('messages.invoice_already_paid'));
         }
 
+        // Pays only what is open and not held by a pending cheque, so a clearing cheque cannot overpay.
+        if ($this->financeV2($invoice->workspace_id)) {
+            return $this->payThroughReceipt($invoice, null, PaymentMethod::Cash, $paidAt ?? Carbon::now());
+        }
+
         $invoice->forceFill([
             'status' => InvoiceStatus::Paid->value,
             'amount_paid' => $this->netPayable($invoice),
@@ -373,62 +392,13 @@ class InvoiceService
      */
     public function recordPartialPayment(Invoice $invoice, float $amount, ?Carbon $paidAt = null): Invoice
     {
-        $this->assertIssued($invoice);
-
-        if ($invoice->status === InvoiceStatus::Paid) {
-            throw new RuntimeException(__('messages.invoice_already_paid'));
-        }
-
-        if ($amount <= 0) {
-            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
-        }
-
-        $total = (float) $invoice->amount - (float) $invoice->credited_amount;
-        $remaining = round($total - (float) $invoice->amount_paid, 2);
-
-        if ($amount > $remaining + 0.001) {
-            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
-                'remaining' => number_format($remaining, 2),
-            ]));
-        }
+        $payment = $this->assertPayableAmount($invoice, $amount);
 
         if ($this->financeV2($invoice->workspace_id)) {
-            return $this->payThroughReceipt($invoice, $amount, PaymentMethod::Cash, $paidAt ?? Carbon::now());
+            return $this->payThroughReceipt($invoice, $payment, PaymentMethod::Cash, $paidAt ?? Carbon::now());
         }
 
-        $newPaid = (float) $invoice->amount_paid + $amount;
-        $fullyPaid = $newPaid >= $total;
-        $paymentDate = $paidAt ?? Carbon::now();
-
-        DB::transaction(function () use ($invoice, $amount, $paymentDate, $fullyPaid, $newPaid): void {
-            $invoice->forceFill([
-                'amount_paid' => $fullyPaid ? $this->netPayable($invoice) : round($newPaid, 2),
-                'status' => $fullyPaid
-                    ? InvoiceStatus::Paid->value
-                    : InvoiceStatus::PartiallyPaid->value,
-                'paid_at' => $fullyPaid ? $paymentDate : null,
-            ])->save();
-
-            $invoice->payments()->create([
-                'amount' => round($amount, 2),
-                'receipt_path' => null,
-                'paid_at' => $paymentDate,
-            ]);
-        });
-
-        $invoice->loadMissing('subscription.member', 'subscription.workspace');
-
-        if ($fullyPaid) {
-            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
-        }
-
-        $workspaceId = $invoice->subscription?->workspace_id;
-
-        if ($workspaceId !== null) {
-            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
-        }
-
-        return $invoice;
+        return $this->recordLegacyPayment($invoice, $payment, $paidAt ?? Carbon::now());
     }
 
     /**
@@ -441,32 +411,11 @@ class InvoiceService
      */
     public function recordPayment(Invoice $invoice, float $amount, UploadedFile $receipt, ?Carbon $paidAt = null): Invoice
     {
-        $this->assertIssued($invoice);
-
-        if ($invoice->status === InvoiceStatus::Paid) {
-            throw new RuntimeException(__('messages.invoice_already_paid'));
-        }
-
-        if ($amount <= 0) {
-            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
-        }
-
-        $total = (float) $invoice->amount - (float) $invoice->credited_amount;
-        $remaining = round($total - (float) $invoice->amount_paid, 2);
-
-        if ($amount > $remaining + 0.001) {
-            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
-                'remaining' => number_format($remaining, 2),
-            ]));
-        }
+        $payment = $this->assertPayableAmount($invoice, $amount);
 
         if ($this->financeV2($invoice->workspace_id)) {
-            return $this->payThroughReceipt($invoice, $amount, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), $receipt);
+            return $this->payThroughReceipt($invoice, $payment, PaymentMethod::Transfer, $paidAt ?? Carbon::now(), $receipt);
         }
-
-        $newPaid = (float) $invoice->amount_paid + $amount;
-        $fullyPaid = $newPaid >= $total;
-        $paymentDate = $paidAt ?? Carbon::now();
 
         $receiptPath = $this->uploads->upload(
             $receipt,
@@ -475,38 +424,11 @@ class InvoiceService
             'public',
         );
 
-        DB::transaction(function () use ($invoice, $amount, $receiptPath, $paymentDate, $fullyPaid, $newPaid): void {
-            $invoice->forceFill([
-                'receipt_path' => $receiptPath,
-                'amount_paid' => $fullyPaid ? $this->netPayable($invoice) : round($newPaid, 2),
-                'status' => $fullyPaid
-                    ? InvoiceStatus::Paid->value
-                    : InvoiceStatus::PartiallyPaid->value,
-                'paid_at' => $fullyPaid ? $paymentDate : null,
-                // An owner-recorded payment supersedes any prior receipt rejection.
-                'receipt_rejected_reason' => null,
-            ])->save();
-
-            $invoice->payments()->create([
-                'amount' => round($amount, 2),
-                'receipt_path' => $receiptPath,
-                'paid_at' => $paymentDate,
-            ]);
-        });
-
-        $invoice->loadMissing('subscription.member', 'subscription.workspace');
-
-        if ($fullyPaid) {
-            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
-        }
-
-        $workspaceId = $invoice->subscription?->workspace_id;
-
-        if ($workspaceId !== null) {
-            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
-        }
-
-        return $invoice;
+        // An owner-recorded payment supersedes any prior receipt rejection.
+        return $this->recordLegacyPayment($invoice, $payment, $paidAt ?? Carbon::now(), $receiptPath, [
+            'receipt_path' => $receiptPath,
+            'receipt_rejected_reason' => null,
+        ]);
     }
 
     /**
@@ -785,9 +707,76 @@ class InvoiceService
      * than the platform's. Locks the latest row for that prefix to keep the
      * sequence collision-safe under concurrent generation.
      */
-    private function outstanding(Invoice $invoice): float
+    private function outstanding(Invoice $invoice): string
     {
-        return round((float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid, 2);
+        return bcsub($this->netPayable($invoice), (string) $invoice->amount_paid, 2);
+    }
+
+    /**
+     * The checks every manual payment shares; returns the amount as a two-place decimal.
+     *
+     * @throws RuntimeException when the invoice is paid, the amount is not positive or exceeds what is left
+     */
+    private function assertPayableAmount(Invoice $invoice, float $amount): string
+    {
+        $this->assertIssued($invoice);
+
+        if ($invoice->status === InvoiceStatus::Paid) {
+            throw new RuntimeException(__('messages.invoice_already_paid'));
+        }
+
+        $payment = number_format($amount, 2, '.', '');
+
+        if (bccomp($payment, '0', 2) <= 0) {
+            throw new RuntimeException(__('messages.invoice_partial_amount_invalid'));
+        }
+
+        $remaining = $this->outstanding($invoice);
+
+        if (bccomp($payment, $remaining, 2) > 0) {
+            throw new RuntimeException(__('messages.invoice_payment_exceeds_remaining', [
+                'remaining' => number_format((float) $remaining, 2),
+            ]));
+        }
+
+        return $payment;
+    }
+
+    /**
+     * The pre-finance-v2 way: the amount goes straight onto the invoice and a
+     * payment row. Unchanged in behaviour, but the sums are exact.
+     *
+     * @param  array<string, mixed>  $attributes  extra invoice columns to set with the payment
+     */
+    private function recordLegacyPayment(Invoice $invoice, string $amount, Carbon $paidAt, ?string $receiptPath = null, array $attributes = []): Invoice
+    {
+        $total = $this->netPayable($invoice);
+        $newPaid = bcadd((string) $invoice->amount_paid, $amount, 2);
+        $fullyPaid = bccomp($newPaid, $total, 2) >= 0;
+
+        DB::transaction(function () use ($invoice, $amount, $receiptPath, $paidAt, $fullyPaid, $newPaid, $total, $attributes): void {
+            $invoice->forceFill($attributes + [
+                'amount_paid' => $fullyPaid ? $total : $newPaid,
+                'status' => $fullyPaid ? InvoiceStatus::Paid->value : InvoiceStatus::PartiallyPaid->value,
+                'paid_at' => $fullyPaid ? $paidAt : null,
+            ])->save();
+
+            $invoice->payments()->create(['amount' => $amount, 'receipt_path' => $receiptPath, 'paid_at' => $paidAt]);
+        });
+
+        $invoice->loadMissing('subscription.member', 'subscription.workspace');
+
+        if ($fullyPaid) {
+            $invoice->subscription?->member?->notify(new InvoicePaidNotification($invoice));
+        }
+
+        $workspaceId = $invoice->subscription?->workspace_id;
+
+        if ($workspaceId !== null) {
+            Cache::forget("workspace:{$workspaceId}:dashboard_stats");
+        }
+
+        return $invoice;
     }
 
     /**
@@ -796,15 +785,24 @@ class InvoiceService
      * The legacy payment row is still written, and linked, so existing payment
      * history keeps working; its proof file lives on the receipt, privately.
      *
+     * A null `$amount` pays everything that is open and not held by a pending cheque.
+     *
      * @param  array{receipt_path?: string|null, receipt_disk?: string}  $proof  an already stored proof file
+     *
+     * @throws ReceiptException when nothing is open to pay or the amount does not fit
      */
-    private function payThroughReceipt(Invoice $invoice, float $amount, PaymentMethod $method, Carbon $paidAt, ?UploadedFile $file = null, array $proof = []): Invoice
+    private function payThroughReceipt(Invoice $invoice, ?string $amount, PaymentMethod $method, Carbon $paidAt, ?UploadedFile $file = null, array $proof = []): Invoice
     {
-        $amount = number_format($amount, 2, '.', '');
         $workspace = Workspace::query()->findOrFail($invoice->workspace_id);
 
         DB::transaction(function () use ($invoice, $workspace, $amount, $method, $paidAt, $file, $proof): void {
-            $payment = $invoice->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
+            // The exclusive lock comes before the payment row: inserting it takes a shared lock on
+            // the invoice through the foreign key, and two overlapping payments that each hold
+            // that shared lock while waiting for the exclusive one deadlock.
+            $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+            $amount ??= $this->openToPay($locked);
+
+            $payment = $locked->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
 
             $this->receipts->create($workspace, [
                 'customer_id' => $invoice->customer_id,
@@ -833,9 +831,21 @@ class InvoiceService
     }
 
     /** Amount actually collectable once credit notes are deducted. */
-    private function netPayable(Invoice $invoice): float
+    private function netPayable(Invoice $invoice): string
     {
-        return round((float) $invoice->amount - (float) $invoice->credited_amount, 2);
+        return bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
+    }
+
+    /**
+     * What is open on the (locked) invoice once pending cheques are counted as spoken for.
+     *
+     * @throws ReceiptException when nothing is left to pay
+     */
+    private function openToPay(Invoice $locked): string
+    {
+        $open = $this->balances->outstanding(collect([$locked->id => $locked]))[$locked->id];
+
+        return bccomp($open, '0', 2) > 0 ? $open : throw ReceiptException::nothingOpen();
     }
 
     private function nextInvoiceNumber(Workspace $workspace): string

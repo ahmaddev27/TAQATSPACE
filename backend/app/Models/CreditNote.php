@@ -10,8 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A numbered correction of an issued invoice. It never edits the invoice; it
- * lowers what the customer owes and, when part of that was already paid,
- * records the amount owed back as `refund_amount`.
+ * lowers what the customer owes. Any part of it the customer had already paid
+ * is owed back; that is derived from the invoice on every read
+ * (InvoiceBalanceService::refundDue), never stored, because a later reversal
+ * of the payment changes it.
  *
  * @property string $workspace_id
  * @property string $invoice_id
@@ -26,7 +28,6 @@ class CreditNote extends Model
         'invoice_id',
         'number',
         'amount',
-        'refund_amount',
         'reason',
         'issued_by',
         'issued_at',
@@ -40,7 +41,6 @@ class CreditNote extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'refund_amount' => 'decimal:2',
             'issued_at' => 'datetime',
             'voided_at' => 'datetime',
         ];

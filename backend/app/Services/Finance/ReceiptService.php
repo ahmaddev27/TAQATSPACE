@@ -206,9 +206,12 @@ class ReceiptService
         }
 
         $rows = $this->normalise($allocations);
-        $this->assertFitsReceipt($receipt, $rows);
 
+        // Lock first: on MariaDB (REPEATABLE READ) the first plain SELECT in a transaction fixes
+        // its snapshot, so reading allocations before waiting for the lock would miss a cheque
+        // another transaction committed meanwhile, and two cheques could claim the same balance.
         $invoices = $this->balances->lockPayable($receipt, array_keys($rows));
+        $this->assertFitsReceipt($receipt, $rows);
         $this->assertFitsInvoices($invoices, $rows);
         $this->storeAllocations($receipt, $rows);
 
@@ -332,6 +335,8 @@ class ReceiptService
         $invoices = Invoice::query()->whereIn('id', array_keys($rows))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
         if ($isCollected) {
+            $this->balances->assertAllIssued($invoices);
+
             return $this->collect($receipt, $invoices, $rows);
         }
 

@@ -416,5 +416,11 @@ return [
     'credit_note_exceeds_invoice' => 'The credit note exceeds what the invoice can still be credited (:remaining).',
     'credit_note_held_by_cheques' => 'A cheque is pending on this invoice, so only :creditable can be credited for now.',
     'credit_note_amount_invalid' => 'The credit note amount must be greater than zero.',
+    'credit_note_duplicate' => 'The same credit note was just issued. If you meant to issue it again, wait a few seconds.',
+    'invoice_void_has_credit_notes' => 'An invoice with credit notes cannot be voided.',
+    'invoice_void_has_pending_cheques' => 'An invoice with a pending cheque cannot be voided; clear or bounce the cheque first.',
+    'invoice_has_receipts' => 'This invoice has receipts. Void the receipt to take the payment back instead.',
+    'invoice_has_credit_notes' => 'An invoice with credit notes cannot be deleted.',
+    'invoice_nothing_open_to_pay' => 'Nothing is open to pay on this invoice: the rest is covered by pending cheques.',
 
 ];

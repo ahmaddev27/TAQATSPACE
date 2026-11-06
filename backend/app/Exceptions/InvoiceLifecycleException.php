@@ -39,6 +39,27 @@ class InvoiceLifecycleException extends RuntimeException
         return new self(__('messages.invoice_not_payable'), 409);
     }
 
+    public static function voidHasCreditNotes(): self
+    {
+        return new self(__('messages.invoice_void_has_credit_notes'), 409);
+    }
+
+    public static function voidHasPendingCheques(): self
+    {
+        return new self(__('messages.invoice_void_has_pending_cheques'), 409);
+    }
+
+    /** Marking paid back to unpaid would leave receipts behind; voiding the receipt is the way back. */
+    public static function hasReceipts(): self
+    {
+        return new self(__('messages.invoice_has_receipts'), 409);
+    }
+
+    public static function hasCreditNotes(): self
+    {
+        return new self(__('messages.invoice_has_credit_notes'), 409);
+    }
+
     public static function noLines(): self
     {
         return new self(__('messages.invoice_no_lines'), 422);

@@ -29,6 +29,12 @@ class ReceiptException extends RuntimeException
         return new self(__('messages.invoice_payment_exceeds_remaining', ['remaining' => $remaining]), 422);
     }
 
+    /** Everything left on the invoice is already covered by pending cheques. */
+    public static function nothingOpen(): self
+    {
+        return new self(__('messages.invoice_nothing_open_to_pay'), 422);
+    }
+
     public static function invoiceMismatch(): self
     {
         return new self(__('messages.receipt_invoice_mismatch'), 422);

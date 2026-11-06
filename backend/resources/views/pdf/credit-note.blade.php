@@ -3,6 +3,8 @@
     $invoice = $creditNote->invoice;
     $workspace = $invoice?->subscription?->workspace;
     $customer = $invoice?->customer;
+    // Current, not frozen at issue: a bounced cheque or voided receipt changes what is owed back.
+    $refundDue = $invoice === null ? '0.00' : app(\App\Services\Finance\InvoiceBalanceService::class)->refundDue($invoice);
 
     // Cairo lacks the shekel glyph (U+20AA); render it in DejaVu Sans like the invoice does.
     $money = static fn ($value): string =>
@@ -36,8 +38,8 @@
         <tr><td class="label">الفاتورة الأصلية / Invoice</td><td>{{ $invoice?->invoice_number }}</td></tr>
         <tr><td class="label">العميل / Customer</td><td>{{ $customer?->name }}</td></tr>
         <tr><td class="label">السبب / Reason</td><td>{{ $creditNote->reason }}</td></tr>
-        @if((float) $creditNote->refund_amount > 0)
-            <tr><td class="label">المبلغ المستحق للعميل / Owed back</td><td>{!! $money($creditNote->refund_amount) !!}</td></tr>
+        @if(bccomp($refundDue, '0', 2) > 0)
+            <tr><td class="label">المبلغ المستحق للعميل / Owed back</td><td>{!! $money($refundDue) !!}</td></tr>
         @endif
         <tr class="total"><td class="label">مبلغ الإشعار / Credit amount</td><td>{!! $money($creditNote->amount) !!}</td></tr>
     </table>

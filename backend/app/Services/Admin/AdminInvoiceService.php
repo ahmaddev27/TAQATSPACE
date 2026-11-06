@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Services\Admin;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\WorkspaceFeature;
+use App\Exceptions\InvoiceLifecycleException;
 use App\Models\Invoice;
+use App\Services\FeatureFlagService;
 use App\Services\FileUploadService;
+use App\Services\Finance\InvoiceBalanceService;
 use App\Services\InvoiceService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,6 +32,8 @@ class AdminInvoiceService
     public function __construct(
         private readonly InvoiceService $invoices,
         private readonly FileUploadService $uploads,
+        private readonly FeatureFlagService $features,
+        private readonly InvoiceBalanceService $balances,
     ) {}
 
     /**
@@ -69,14 +75,32 @@ class AdminInvoiceService
      */
     public function markUnpaid(Invoice $invoice): Invoice
     {
-        if ($invoice->status !== InvoiceStatus::Pending || $invoice->paid_at !== null) {
+        $this->assertNoReceipts($invoice);
+
+        if ($invoice->status !== InvoiceStatus::Pending || $invoice->paid_at !== null || bccomp((string) $invoice->amount_paid, '0', 2) > 0) {
             $invoice->forceFill([
                 'status' => InvoiceStatus::Pending->value,
+                // Pending with money still recorded would show as unpaid yet owe less than the invoice.
+                'amount_paid' => '0.00',
                 'paid_at' => null,
             ])->save();
         }
 
         return $invoice->load(self::RELATIONS);
+    }
+
+    /**
+     * With finance v2 on, the money lives on receipts; flipping the invoice back
+     * would leave them counted. Voiding the receipt is the way back.
+     */
+    private function assertNoReceipts(Invoice $invoice): void
+    {
+        $financeV2 = $invoice->workspace_id !== null
+            && $this->features->isEnabled($invoice->workspace_id, WorkspaceFeature::FinanceV2);
+
+        if ($financeV2 && $this->balances->hasLiveReceipts($invoice)) {
+            throw InvoiceLifecycleException::hasReceipts();
+        }
     }
 
     /**

@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CreditNoteService
 {
+    private const REPEAT_WINDOW_SECONDS = 10;
+
     public function __construct(
         private readonly DocumentNumberService $numbers,
         private readonly InvoiceBalanceService $balances,
@@ -47,7 +49,8 @@ class CreditNoteService
             'number' => $note->number,
             'invoice_id' => $note->invoice_id,
             'amount' => $note->amount,
-            'refund_amount' => $note->refund_amount,
+            // A snapshot for the trail only; the live figure is InvoiceBalanceService::refundDue.
+            'refund_due_after' => $this->balances->refundDue($note->invoice),
         ]);
 
         return $note->load('invoice:id,invoice_number,amount,credited_amount,amount_paid,payment_status,customer_id', 'invoice.customer:id,name');
@@ -61,16 +64,15 @@ class CreditNoteService
             throw CreditNoteException::notIssued();
         }
 
+        $this->assertNotRepeated($locked, $amount, $reason, $actor);
         $this->assertFits($locked, $amount);
-        $refund = bcsub($amount, $this->balances->unpaid($locked), 2);
         $now = Carbon::now();
 
         $note = CreditNote::query()->create([
             'workspace_id' => $locked->workspace_id,
             'invoice_id' => $locked->id,
-            'number' => $this->numbers->next(Workspace::query()->findOrFail($locked->workspace_id),DocumentType::CreditNote),
+            'number' => $this->numbers->next(Workspace::query()->findOrFail($locked->workspace_id), DocumentType::CreditNote),
             'amount' => $amount,
-            'refund_amount' => bccomp($refund, '0', 2) > 0 ? $refund : '0.00',
             'reason' => $reason,
             'issued_by' => $actor?->id,
             'issued_at' => $now,
@@ -79,6 +81,25 @@ class CreditNoteService
         $this->balances->applyCredit($locked, $amount, $now);
 
         return $note;
+    }
+
+    /**
+     * Checked inside the invoice lock, so two clicks racing each other cannot
+     * both pass: the second one sees the first one's note.
+     */
+    private function assertNotRepeated(Invoice $invoice, string $amount, string $reason, ?User $actor): void
+    {
+        $repeated = CreditNote::query()
+            ->where('invoice_id', $invoice->id)
+            ->where('amount', $amount)
+            ->where('reason', $reason)
+            ->where('issued_by', $actor?->id)
+            ->where('issued_at', '>=', Carbon::now()->subSeconds(self::REPEAT_WINDOW_SECONDS))
+            ->exists();
+
+        if ($repeated) {
+            throw CreditNoteException::duplicate();
+        }
     }
 
     /**

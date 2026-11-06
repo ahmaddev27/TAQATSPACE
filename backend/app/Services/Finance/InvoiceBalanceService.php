@@ -50,6 +50,23 @@ class InvoiceBalanceService
     }
 
     /**
+     * Money is never applied to a draft or void invoice, even by a cheque that
+     * clears later.
+     *
+     * @param  Collection<string, Invoice>  $invoices
+     *
+     * @throws InvoiceLifecycleException when any invoice is not issued
+     */
+    public function assertAllIssued(Collection $invoices): void
+    {
+        foreach ($invoices as $invoice) {
+            if ($invoice->doc_status !== DocStatus::Issued) {
+                throw InvoiceLifecycleException::notPayable();
+            }
+        }
+    }
+
+    /**
      * What each invoice still has open once uncleared cheques are counted as
      * spoken for, so two cheques can never both claim the same balance.
      *
@@ -78,6 +95,21 @@ class InvoiceBalanceService
     }
 
     /**
+     * What the customer is owed back on this invoice right now: the money paid
+     * above what is still payable after credit notes. It is derived on every
+     * read and never stored, so it follows a bounced cheque or a voided receipt.
+     *
+     * @return string decimal with two places, never negative
+     */
+    public function refundDue(Invoice $invoice): string
+    {
+        $payable = bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
+        $overpaid = bcsub((string) $invoice->amount_paid, $payable, 2);
+
+        return bccomp($overpaid, '0', 2) > 0 ? $overpaid : '0.00';
+    }
+
+    /**
      * What uncleared cheques are holding on each invoice.
      *
      * @param  array<int, string>  $invoiceIds
@@ -86,6 +118,16 @@ class InvoiceBalanceService
     public function held(array $invoiceIds): array
     {
         return $this->heldByPendingCheques($invoiceIds);
+    }
+
+    /** Whether any receipt that is not void is allocated to the invoice. */
+    public function hasLiveReceipts(Invoice $invoice): bool
+    {
+        return ReceiptAllocation::query()
+            ->join('receipts', 'receipts.id', '=', 'receipt_allocations.receipt_id')
+            ->where('receipt_allocations.invoice_id', $invoice->id)
+            ->whereNull('receipts.voided_at')
+            ->exists();
     }
 
     /** Move an invoice's paid total by `$delta` (negative to take money back) and re-derive its status. */

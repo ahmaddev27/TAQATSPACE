@@ -8,9 +8,20 @@ use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
 
-/** A credit note that cannot be issued. Renders itself as a 422 API error. */
+/** A credit note that cannot be issued. Renders itself as a 422 API error, or 409 for a repeat. */
 class CreditNoteException extends RuntimeException
 {
+    private function __construct(string $message, private readonly int $status = 422)
+    {
+        parent::__construct($message);
+    }
+
+    /** The same credit, by the same person, a moment ago: almost certainly a double click. */
+    public static function duplicate(): self
+    {
+        return new self(__('messages.credit_note_duplicate'), 409);
+    }
+
     public static function notIssued(): self
     {
         return new self(__('messages.credit_note_invoice_not_issued'));
@@ -33,6 +44,6 @@ class CreditNoteException extends RuntimeException
 
     public function render(): JsonResponse
     {
-        return ApiResponse::error($this->getMessage(), 422);
+        return ApiResponse::error($this->getMessage(), $this->status);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\CreditNote;
+use App\Services\Finance\InvoiceBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,7 +29,8 @@ class CreditNoteResource extends JsonResource
                 'name' => $this->invoice->customer->name,
             ],
             'amount' => (string) $this->amount,
-            'refund_amount' => (string) $this->refund_amount,
+            // Invoice-level and current: what the customer is owed back right now, not a snapshot from issue time.
+            'refund_amount' => $this->invoice === null ? '0.00' : app(InvoiceBalanceService::class)->refundDue($this->invoice),
             'reason' => $this->reason,
             'issued_by' => $this->issuer === null ? null : ['id' => $this->issuer->id, 'name' => $this->issuer->name],
             'issued_at' => $this->issued_at?->toIso8601String(),
