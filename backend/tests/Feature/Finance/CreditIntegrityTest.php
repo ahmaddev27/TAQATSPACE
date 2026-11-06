@@ -87,6 +87,44 @@ class CreditIntegrityTest extends ReceiptTestCase
         $this->assertSame('0.00', $service->refundDue(new Invoice(['amount' => '100.00', 'credited_amount' => '0.00', 'amount_paid' => '20.00'])));
     }
 
+    // ---- Review item 7: what is owed back belongs to the invoice ----------
+
+    public function test_the_invoice_list_shows_what_is_owed_back_and_credit_notes_do_not(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '60.00', [
+            'allocations' => $this->allocation($invoice, '60.00'),
+        ]), $owner);
+        app(CreditNoteService::class)->issue($invoice->fresh(), '100.00', 'Service cancelled', $owner);
+        $this->actAsOwner($owner);
+
+        $this->getJson('/api/workspace/invoices')->assertOk()->assertJsonPath('data.invoices.0.refund_due', '60.00');
+
+        $notes = $this->getJson('/api/workspace/finance/credit-notes')->assertOk();
+        $this->assertArrayNotHasKey('refund_amount', $notes->json('data.items.0'));
+    }
+
+    public function test_the_credit_note_pdf_still_renders_and_never_prints_a_figure_that_can_change(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '60.00', [
+            'allocations' => $this->allocation($invoice, '60.00'),
+        ]), $owner);
+        $note = app(CreditNoteService::class)->issue($invoice->fresh(), '100.00', 'Service cancelled', $owner);
+        $this->actAsOwner($owner);
+
+        $this->get("/api/workspace/finance/credit-notes/{$note->id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        // A numbered fiscal document must read the same after a cheque bounces or a receipt is voided.
+        $html = view('pdf.credit-note', ['creditNote' => $note->fresh()->load('invoice.customer', 'invoice.subscription.workspace')])->render();
+        $this->assertStringContainsString($note->number, $html);
+        $this->assertStringNotContainsString('Owed back', $html);
+    }
+
     // ---- Defect 2: legacy payment actions respect pending cheques ---------
 
     public function test_mark_paid_only_pays_what_a_pending_cheque_does_not_hold(): void

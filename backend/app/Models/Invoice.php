@@ -29,6 +29,13 @@ class Invoice extends Model
     /** @use HasFactory<\Database\Factories\InvoiceFactory> */
     use HasFactory, HasUuids;
 
+    /**
+     * What the customer is owed back, set by InvoiceBalanceService::withRefundDue
+     * for a response. A plain property, not an attribute: it is never saved,
+     * because it changes whenever a payment does.
+     */
+    public ?string $refundDue = null;
+
     /** @var list<string> */
     protected $fillable = [
         'subscription_id',

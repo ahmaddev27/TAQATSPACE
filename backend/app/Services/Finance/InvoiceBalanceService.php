@@ -147,6 +147,19 @@ class InvoiceBalanceService
     }
 
     /**
+     * Attach the current refundDue() to invoices about to be shown, so the
+     * response carries it without the resource computing money itself.
+     *
+     * @param  iterable<Invoice>  $invoices
+     */
+    public function withRefundDue(iterable $invoices): void
+    {
+        foreach ($invoices as $invoice) {
+            $invoice->refundDue = $this->refundDue($invoice);
+        }
+    }
+
+    /**
      * What uncleared cheques are holding on each invoice.
      *
      * @param  array<int, string>  $invoiceIds

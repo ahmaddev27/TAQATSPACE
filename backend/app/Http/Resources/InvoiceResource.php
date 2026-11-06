@@ -30,6 +30,8 @@ class InvoiceResource extends JsonResource
             'amount_paid' => $this->amount_paid,
             'credited_amount' => (string) $this->credited_amount,
             'remaining_amount' => $this->remainingAmount(),
+            // Owed back to the customer, invoice-level and current; set by the service on the owner list and detail, else null.
+            'refund_due' => $this->resource->refundDue,
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,

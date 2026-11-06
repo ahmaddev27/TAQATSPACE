@@ -561,12 +561,16 @@ class InvoiceService
      */
     public function paginateForWorkspace(Workspace $workspace, array $filters): LengthAwarePaginator
     {
-        return $this->filteredQuery($filters)
+        $paginator = $this->filteredQuery($filters)
             ->forWorkspace($workspace->id)
             ->with(['subscription.member', 'subscription.seat', 'payments.receipt', 'customer:id,name'])
             ->orderByDesc('due_date')
             ->paginate($this->perPage($filters))
             ->withQueryString();
+
+        $this->balances->withRefundDue($paginator->items());
+
+        return $paginator;
     }
 
     /**
@@ -637,10 +641,14 @@ class InvoiceService
      */
     public function findForWorkspace(Workspace $workspace, string $invoiceId): ?Invoice
     {
-        return Invoice::query()
+        $invoice = Invoice::query()
             ->forWorkspace($workspace->id)
             ->with(['subscription.member', 'subscription.seat', 'subscription.workspace', 'customer:id,name', 'lines'])
             ->find($invoiceId);
+
+        $this->balances->withRefundDue($invoice === null ? [] : [$invoice]);
+
+        return $invoice;
     }
 
     /**
