@@ -47,11 +47,15 @@ class StatsRepository
             ->get(['subscriber_id', 'started_at', 'ended_at', 'last_seen_at', 'bytes_in', 'bytes_out']);
     }
 
-    /** @return Collection<int, object> member_id, start_date, end_date of subscriptions overlapping the date range */
-    public function membershipSpans(string $workspaceId, string $fromDate, string $toDate): Collection
+    /**
+     * @param  list<string>|null  $memberIds  only these members; every member of the workspace when null
+     * @return Collection<int, object> member_id, start_date, end_date of subscriptions overlapping the date range
+     */
+    public function membershipSpans(string $workspaceId, string $fromDate, string $toDate, ?array $memberIds = null): Collection
     {
         return Subscription::query()
             ->where('workspace_id', $workspaceId)
+            ->when($memberIds !== null, fn (Builder $query) => $query->whereIn('member_id', $memberIds))
             ->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::Expired->value, SubscriptionStatus::Suspended->value])
             ->whereDate('start_date', '<=', $toDate)
             ->where(fn (Builder $query) => $query->whereNull('end_date')->orWhereDate('end_date', '>=', $fromDate))

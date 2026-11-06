@@ -137,6 +137,7 @@ export function RecalculateCard() {
           {status.state === "completed" &&
             status.written &&
             ` · ${t("written", { days: status.written.days, months: status.written.subscriber_months })}`}
+          {status.state === "completed" && status.scoring_failed && ` · ${t("scoringFailed")}`}
         </p>
       )}
     </div>

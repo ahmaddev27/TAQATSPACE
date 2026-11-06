@@ -16,6 +16,7 @@ use App\Services\Hotspot\HotspotSyncService;
 use App\Services\Hotspot\SyncPayload;
 use App\Services\Hotspot\SyncWireParser;
 use App\Services\Network\AttendanceRebuilder;
+use App\Services\Network\ScoringService;
 use App\Services\Network\GapDetector;
 use App\Services\Network\StatsAggregator;
 use App\Services\Router\RouterService;
@@ -58,6 +59,7 @@ class NetworkStep implements DemoSeedStep
         private readonly SyncWireParser $parser,
         private readonly AttendanceRebuilder $attendance,
         private readonly StatsAggregator $stats,
+        private readonly ScoringService $scoring,
         private readonly GapDetector $gaps,
         private readonly LocalDays $days = new LocalDays,
     ) {}
@@ -89,6 +91,8 @@ class NetworkStep implements DemoSeedStep
         $today = $this->days->dateOf(Date::now()->getTimestamp(), $this->days->zone($workspace->timezone));
 
         $this->stats->aggregate($workspace, Date::parse($today)->subDay()->toDateString(), $today);
+        // subscriber_scores cascade with the workspace and the users like the stats tables.
+        $this->scoring->compute($workspace);
     }
 
     private function createRouters(Workspace $workspace, DemoContext $context): Router

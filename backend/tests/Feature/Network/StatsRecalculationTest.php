@@ -15,9 +15,11 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\FeatureFlagService;
 use App\Services\Network\StatsAggregator;
+use App\Services\Network\ScoringService;
 use App\Services\Network\StatsRecalculationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -261,5 +263,44 @@ class StatsRecalculationTest extends TestCase
         $this->artisan('stats:recalculate', ['--from' => '2026-11-01'])->assertExitCode(2);
         $this->artisan('stats:recalculate', ['--from' => '2026-11-06', '--to' => '2026-11-01'])->assertExitCode(2);
         $this->artisan('stats:recalculate', ['workspace' => '00000000-0000-0000-0000-000000000000'])->assertFailed();
+    }
+
+    public function test_a_scoring_failure_leaves_the_aggregation_stored_and_is_reported_on_its_own(): void
+    {
+        $this->mock(ScoringService::class)->shouldReceive('compute')->once()->andThrow(new RuntimeException('scoring boom'));
+        Log::spy();
+
+        app(StatsRecalculationService::class)->request($this->workspace, '2026-11-01', '2026-11-06', $this->owner, true, true);
+
+        $this->assertSame(6, StatsDailyWorkspace::query()->withoutWorkspaceScope()->count());
+        $this->assertSame(1, StatsMonthlySubscriber::query()->withoutWorkspaceScope()->count());
+        $this->getJson('/api/workspace/tools/recalculate/status')
+            ->assertOk()
+            ->assertJsonPath('data.state', 'completed')
+            ->assertJsonPath('data.written.days', 6)
+            ->assertJsonPath('data.scoring_failed', true);
+        Log::shouldHaveReceived('error')->once()->withArgs(fn (string $message, array $context): bool => $context['workspace_id'] === $this->workspace->id);
+        // The lock is released, so the owner can run it again.
+        Queue::fake();
+        $this->postJson('/api/workspace/tools/recalculate', $this->range())->assertStatus(202);
+    }
+
+    public function test_a_clean_run_reports_no_scoring_failure(): void
+    {
+        $this->postJson('/api/workspace/tools/recalculate', $this->range())->assertStatus(202);
+
+        $this->getJson('/api/workspace/tools/recalculate/status')->assertJsonPath('data.scoring_failed', false);
+    }
+
+    public function test_a_worker_killed_while_scoring_does_not_relabel_the_finished_figures_as_failed(): void
+    {
+        $service = app(StatsRecalculationService::class);
+        $service->request($this->workspace, '2026-11-01', '2026-11-06', $this->owner, true, true);
+
+        $service->fail($this->workspace);
+
+        $status = $service->status($this->workspace);
+        $this->assertSame('completed', $status->state);
+        $this->assertTrue($status->scoringFailed);
     }
 }

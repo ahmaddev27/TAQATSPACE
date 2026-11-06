@@ -200,7 +200,7 @@ test.describe("statistics recalculation (M3.5)", () => {
   test.describe.configure({ mode: "serial" });
   test.setTimeout(300_000);
 
-  type Status = { data: { state: string; active: boolean; written: { days: number } | null } };
+  type Status = { data: { state: string; active: boolean; written: { days: number } | null; scoring_failed?: boolean } };
   const RANGE = { from: dateFromNow(-10), to: dateFromNow(0) };
 
   const status = async (): Promise<Status> => owner.json<Status>(await owner.get("workspace/tools/recalculate/status"));
@@ -246,6 +246,7 @@ test.describe("statistics recalculation (M3.5)", () => {
     const finished = await waitUntilIdle();
     expect(finished.data.state).toBe("completed");
     expect(finished.data.written?.days).toBe(11);
+    expect(finished.data.scoring_failed ?? false).toBe(false);
   });
 
   test.describe("in the browser", () => {
