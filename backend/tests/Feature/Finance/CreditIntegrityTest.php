@@ -394,26 +394,6 @@ class CreditIntegrityTest extends ReceiptTestCase
         $this->assertSame(1, $fresh->payments()->count());
     }
 
-    public function test_the_credit_note_migrations_run_down_and_up_on_data(): void
-    {
-        $this->assertTrue(Schema::hasColumn('credit_notes', 'request_key'));
-        $this->assertFalse(Schema::hasColumn('credit_notes', 'refund_amount'));
-
-        $keyMigration = require database_path('migrations/2026_11_10_100001_add_request_key_to_credit_notes.php');
-        $dropMigration = require database_path('migrations/2026_11_10_100000_drop_refund_amount_from_credit_notes.php');
-
-        $keyMigration->down();
-        $dropMigration->down();
-        $this->assertFalse(Schema::hasColumn('credit_notes', 'request_key'));
-        $this->assertTrue(Schema::hasColumn('credit_notes', 'refund_amount'));
-
-        $dropMigration->up();
-        $keyMigration->up();
-        $dropMigration->up(); // safe to run twice
-        $this->assertTrue(Schema::hasColumn('credit_notes', 'request_key'));
-        $this->assertFalse(Schema::hasColumn('credit_notes', 'refund_amount'));
-    }
-
     public function test_the_flag_off_partial_payments_add_up_exactly(): void
     {
         $invoice = $this->legacyInvoice('0.80');

@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Audit\AuditLogger;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +20,10 @@ use Illuminate\Support\Facades\DB;
 /**
  * Credit notes: the way to correct an issued invoice (BR-FIN-01). The invoice
  * itself never changes; the credit lowers what is owed, and any part of it the
- * customer had already paid is recorded as a refund owed back.
+ * customer had already paid is owed back (InvoiceBalanceService::refundDue).
  */
 class CreditNoteService
 {
-    private const REPEAT_WINDOW_SECONDS = 10;
-
     public function __construct(
         private readonly DocumentNumberService $numbers,
         private readonly InvoiceBalanceService $balances,
@@ -32,9 +31,12 @@ class CreditNoteService
     ) {}
 
     /**
-     * @throws CreditNoteException when the invoice is not issued or the amount does not fit
+     * A repeat of a request with the same `$requestKey` returns the note the
+     * first one issued (check `wasRecentlyCreated`) instead of a second credit.
+     *
+     * @throws CreditNoteException when the invoice is not issued, the amount does not fit, or the key issued a different note
      */
-    public function issue(Invoice $invoice, string $amount, string $reason, ?User $actor): CreditNote
+    public function issue(Invoice $invoice, string $amount, string $reason, ?User $actor, ?string $requestKey = null): CreditNote
     {
         $amount = bcadd($amount, '0', 2);
 
@@ -42,29 +44,35 @@ class CreditNoteService
             throw CreditNoteException::invalidAmount();
         }
 
-        $note = DB::transaction(fn (): CreditNote => $this->issueInTransaction($invoice, $amount, $reason, $actor));
+        try {
+            $note = DB::transaction(fn (): CreditNote => $this->issueInTransaction($invoice, $amount, $reason, $actor, $requestKey));
+        } catch (UniqueConstraintViolationException $e) {
+            // Two requests with one key on two invoices both passed the lookup; the index kept the first.
+            throw $requestKey === null ? $e : CreditNoteException::requestKeyReused();
+        }
 
-        Cache::forget("workspace:{$note->workspace_id}:dashboard_stats");
-        $this->audit->log('finance.credit_note.issued', $note, reason: $reason, actor: $actor, changes: [
-            'number' => $note->number,
-            'invoice_id' => $note->invoice_id,
-            'amount' => $note->amount,
-            // A snapshot for the trail only; the live figure is InvoiceBalanceService::refundDue.
-            'refund_due_after' => $this->balances->refundDue($note->invoice),
-        ]);
+        if ($note->wasRecentlyCreated) {
+            $this->afterIssue($note, $reason, $actor);
+        }
 
         return $note->load('invoice:id,invoice_number,amount,credited_amount,amount_paid,payment_status,customer_id', 'invoice.customer:id,name');
     }
 
-    private function issueInTransaction(Invoice $invoice, string $amount, string $reason, ?User $actor): CreditNote
+    private function issueInTransaction(Invoice $invoice, string $amount, string $reason, ?User $actor, ?string $requestKey): CreditNote
     {
+        // The lock comes first: the key lookup below is then the transaction's first plain read, so
+        // on MariaDB it sees a note that a racing repeat committed while this one waited.
         $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+        $repeat = $requestKey === null ? null : $this->noteForKey($locked, $requestKey);
+
+        if ($repeat !== null) {
+            return $this->assertSameRequest($repeat, $locked, $amount, $reason);
+        }
 
         if ($locked->doc_status !== DocStatus::Issued) {
             throw CreditNoteException::notIssued();
         }
 
-        $this->assertNotRepeated($locked, $amount, $reason, $actor);
         $this->assertFits($locked, $amount);
         $now = Carbon::now();
 
@@ -74,6 +82,7 @@ class CreditNoteService
             'number' => $this->numbers->next(Workspace::query()->findOrFail($locked->workspace_id), DocumentType::CreditNote),
             'amount' => $amount,
             'reason' => $reason,
+            'request_key' => $requestKey,
             'issued_by' => $actor?->id,
             'issued_at' => $now,
         ]);
@@ -83,23 +92,31 @@ class CreditNoteService
         return $note;
     }
 
-    /**
-     * Checked inside the invoice lock, so two clicks racing each other cannot
-     * both pass: the second one sees the first one's note.
-     */
-    private function assertNotRepeated(Invoice $invoice, string $amount, string $reason, ?User $actor): void
+    private function noteForKey(Invoice $invoice, string $requestKey): ?CreditNote
     {
-        $repeated = CreditNote::query()
-            ->where('invoice_id', $invoice->id)
-            ->where('amount', $amount)
-            ->where('reason', $reason)
-            ->where('issued_by', $actor?->id)
-            ->where('issued_at', '>=', Carbon::now()->subSeconds(self::REPEAT_WINDOW_SECONDS))
-            ->exists();
+        return CreditNote::query()->where('workspace_id', $invoice->workspace_id)->where('request_key', $requestKey)->first();
+    }
 
-        if ($repeated) {
-            throw CreditNoteException::duplicate();
-        }
+    /** A key stands for one request: the same invoice, amount and reason, or it was reused by mistake. */
+    private function assertSameRequest(CreditNote $note, Invoice $invoice, string $amount, string $reason): CreditNote
+    {
+        $same = $note->invoice_id === $invoice->id
+            && bccomp((string) $note->amount, $amount, 2) === 0
+            && $note->reason === $reason;
+
+        return $same ? $note : throw CreditNoteException::requestKeyReused();
+    }
+
+    private function afterIssue(CreditNote $note, string $reason, ?User $actor): void
+    {
+        Cache::forget("workspace:{$note->workspace_id}:dashboard_stats");
+        $this->audit->log('finance.credit_note.issued', $note, reason: $reason, actor: $actor, changes: [
+            'number' => $note->number,
+            'invoice_id' => $note->invoice_id,
+            'amount' => $note->amount,
+            // A snapshot for the trail only; the live figure is InvoiceBalanceService::refundDue.
+            'refund_due_after' => $this->balances->refundDue($note->invoice),
+        ]);
     }
 
     /**

@@ -29,6 +29,8 @@ class CreditNote extends Model
         'number',
         'amount',
         'reason',
+        // The client's key for the form that issued it: a repeat with the same key returns this note.
+        'request_key',
         'issued_by',
         'issued_at',
         'voided_at',
