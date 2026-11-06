@@ -90,8 +90,9 @@ class OwnerExportServiceTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
 
         $rows = $this->rows($csv);
+        // The credit columns are appended so existing spreadsheets keep their column positions.
         $this->assertSame(
-            ['invoice_number', 'member_name', 'amount', 'status', 'due_date', 'paid_at'],
+            ['invoice_number', 'member_name', 'amount', 'status', 'due_date', 'paid_at', 'credited_amount', 'net_amount'],
             $rows[0],
         );
         $this->assertCount(2, $rows); // header + one scoped invoice
