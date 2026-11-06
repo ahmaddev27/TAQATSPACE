@@ -41,7 +41,8 @@ export function ReceiptUploadModal({ invoice, onClose }: ReceiptUploadModalProps
     startTransition(async () => {
       const res = await uploadInvoiceReceipt(invoice.id, file, paidAt || null);
       if (res.ok) {
-        toast({ tone: "ok", title: t("toast.receiptUploaded") });
+        // The backend words the result: a pending cheque can leave the invoice only partly paid.
+        toast({ tone: "ok", title: res.message ?? t("toast.receiptUploaded") });
         onClose();
       } else {
         toast({

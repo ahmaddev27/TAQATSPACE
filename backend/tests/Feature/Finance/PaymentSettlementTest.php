@@ -253,6 +253,26 @@ class PaymentSettlementTest extends ReceiptTestCase
         $this->assertSame([], Storage::disk('public')->allFiles());
     }
 
+    public function test_uploading_proof_for_the_whole_balance_writes_a_numbered_receipt_and_tells_the_member(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        Sanctum::actingAs($owner);
+
+        $this->post(self::INVOICES."/{$invoice->id}/receipt", ['receipt' => UploadedFile::fake()->image('p.png')], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'paid')
+            ->assertJsonPath('message', __('messages.invoice_marked_paid'));
+
+        $receipt = $this->receiptOf($invoice);
+        $this->assertStringContainsString('-REC-', $receipt->number);
+        $this->assertEquals(100, $receipt->amount);
+        $this->assertSame($invoice->payments()->sole()->id, $receipt->legacy_payment_id);
+        $this->assertTrue(AuditLog::query()->where('action', 'finance.receipt.created')->where('actor_id', $owner->id)->exists());
+        Notification::assertSentTo($customer, InvoicePaidNotification::class);
+    }
+
     public function test_a_refused_proof_payment_leaves_no_file_behind(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();

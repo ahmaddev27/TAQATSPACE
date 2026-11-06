@@ -101,6 +101,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const runUnpaid = (invoice: AdminInvoice) => {
     setBusyId(invoice.id);
     startTransition(async () => {
+      // With finance v2 this voids the receipts that paid only this invoice; a refusal explains why.
       const res = await markInvoiceUnpaid(invoice.id);
       if (res.ok) {
         toast({ tone: "ok", title: t("toast.markedUnpaid") });
