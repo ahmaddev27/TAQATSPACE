@@ -15,6 +15,7 @@ export async function issueCreditNote(
   amount: string,
   reason: string,
   twoFactorCode?: string,
+  requestKey?: string,
 ): Promise<ActionResult<CreditNote>> {
   if (twoFactorCode) {
     const verified = await authedMutate("/auth/two-factor/verify", { body: { code: twoFactorCode } });
@@ -22,7 +23,7 @@ export async function issueCreditNote(
   }
 
   const result = await authedMutate<CreditNote>(`/workspace/invoices/${invoiceId}/credit-notes`, {
-    body: { amount, reason },
+    body: { amount, reason, ...(requestKey ? { request_key: requestKey } : {}) },
   });
   if (result.ok) {
     revalidatePath("/[locale]/(dashboard)/owner/invoices", "page");

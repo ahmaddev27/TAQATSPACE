@@ -7,6 +7,9 @@ namespace Tests\Feature\Finance;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Grammars\SQLiteGrammar;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 /** Shared fixtures for the receipt tests. */
@@ -41,6 +44,46 @@ abstract class ReceiptTestCase extends InvoiceV2TestCase
             'method' => 'cash',
             'amount' => $amount,
         ], ...$override];
+    }
+
+    /**
+     * SQLite drops `FOR UPDATE`, so a lock-order test could not see it. This makes
+     * the grammar keep the lock as a trailing SQL comment the query log can match.
+     */
+    protected function exposeLocks(): void
+    {
+        $connection = DB::connection();
+        $connection->setQueryGrammar(new class($connection) extends SQLiteGrammar
+        {
+            protected function compileLock(Builder $query, $value): string
+            {
+                return is_string($value) ? " /* {$value} */" : ($value ? ' /* for update */' : ' /* lock in share mode */');
+            }
+        });
+    }
+
+    /** @return array<int, string> the SQL of every query the action ran, in order */
+    protected function queriesDuring(callable $action): array
+    {
+        $queries = [];
+        DB::listen(static function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+        $action();
+
+        return $queries;
+    }
+
+    /** @param  array<int, string>  $queries */
+    protected function firstIndex(array $queries, string $pattern): int
+    {
+        foreach ($queries as $index => $sql) {
+            if (preg_match($pattern, $sql) === 1) {
+                return $index;
+            }
+        }
+
+        $this->fail("No query matched {$pattern}");
     }
 
     /** @return array<int, array{invoice_id: string, amount: string}> */

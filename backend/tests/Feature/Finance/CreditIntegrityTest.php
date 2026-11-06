@@ -25,7 +25,6 @@ use App\Services\Finance\ReceiptService;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use RuntimeException;
@@ -36,8 +35,6 @@ use RuntimeException;
  */
 class CreditIntegrityTest extends ReceiptTestCase
 {
-    private const LIST = '/api/workspace/finance/credit-notes';
-
     // ---- Defect 1: the amount owed back is derived, never stored ----------
 
     public function test_the_refund_owed_back_drops_to_zero_when_a_cleared_cheque_bounces(): void
@@ -156,59 +153,6 @@ class CreditIntegrityTest extends ReceiptTestCase
         $this->assertSame('40.00', app(InvoiceBalanceService::class)->refundDue($invoice->fresh()));
     }
 
-    // ---- Defects 4 and 6: lock the invoice before any plain read ----------
-
-    public function test_a_new_receipt_locks_the_invoice_before_reading_what_is_allocated_or_held(): void
-    {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $customer = $this->subscriber($workspace);
-        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-
-        $queries = $this->queriesDuring(fn () => app(ReceiptService::class)->create(
-            $workspace,
-            $this->receiptPayload($customer, '40.00', ['method' => 'cheque', 'allocations' => $this->allocation($invoice, '40.00')]),
-            $owner,
-        ));
-
-        $this->assertLessThan(
-            $this->firstIndex($queries, '/^select .*receipt_allocations/i'),
-            $this->firstIndex($queries, '/^select .* from [`"]invoices[`"]/i'),
-            'The invoice row must be locked before the allocations are read.',
-        );
-    }
-
-    public function test_allocating_to_an_existing_receipt_locks_the_invoice_before_reading_allocations(): void
-    {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $customer = $this->subscriber($workspace);
-        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-        $receipt = app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '40.00', ['method' => 'cheque']), $owner);
-
-        $queries = $this->queriesDuring(fn () => app(ReceiptService::class)->allocate($receipt, $this->allocation($invoice, '40.00'), $owner));
-
-        $this->assertLessThan(
-            $this->firstIndex($queries, '/^select .*receipt_allocations/i'),
-            $this->firstIndex($queries, '/^select .* from [`"]invoices[`"]/i'),
-        );
-    }
-
-    public function test_a_partial_payment_locks_the_invoice_before_inserting_the_payment_row(): void
-    {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
-        Sanctum::actingAs($owner);
-
-        $loaded = $invoice->fresh();
-
-        $queries = $this->queriesDuring(fn () => app(InvoiceService::class)->recordPartialPayment($loaded, 40.0));
-
-        $this->assertLessThan(
-            $this->firstIndex($queries, '/^insert into [`"]invoice_payments[`"]/i'),
-            $this->firstIndex($queries, '/^select .* from [`"]invoices[`"]/i'),
-            'The payment row takes a shared FK lock on the invoice, so the exclusive lock must come first.',
-        );
-    }
-
     // ---- Defect 7: void invoices -------------------------------------------
 
     public function test_an_invoice_with_credit_notes_cannot_be_voided(): void
@@ -246,7 +190,7 @@ class CreditIntegrityTest extends ReceiptTestCase
 
     public function test_the_refusal_messages_exist_in_both_languages(): void
     {
-        $keys = ['invoice_void_has_credit_notes', 'invoice_void_has_pending_cheques', 'invoice_has_receipts', 'invoice_has_credit_notes', 'invoice_nothing_open_to_pay', 'credit_note_duplicate'];
+        $keys = ['invoice_void_has_credit_notes', 'invoice_void_has_pending_cheques', 'invoice_has_receipts', 'invoice_has_credit_notes', 'invoice_nothing_open_to_pay', 'credit_note_request_key_reused', 'invoice_marked_partially_paid', 'invoice_nothing_owed_cannot_unpaid', 'receipt_shared_allocation', 'invoice_unpaid_receipt_void_reason'];
 
         foreach ($keys as $key) {
             foreach (['en', 'ar'] as $locale) {
@@ -289,28 +233,21 @@ class CreditIntegrityTest extends ReceiptTestCase
         $this->assertSame('0.00', $data['remaining_amount']);
     }
 
-    // ---- Defect 8 -----------------------------------------------------------
-
-    public function test_mark_unpaid_is_refused_while_finance_v2_receipts_exist(): void
+    public function test_a_cancelled_legacy_invoice_has_nothing_remaining(): void
     {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $customer = $this->subscriber($workspace);
-        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-        app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '100.00', [
-            'allocations' => $this->allocation($invoice, '100.00'),
-        ]), $owner);
+        $invoice = $this->legacyInvoice('50.00');
+        $invoice->forceFill(['status' => InvoiceStatus::Cancelled])->save();
 
-        try {
-            app(AdminInvoiceService::class)->markUnpaid($invoice->fresh());
-            $this->fail('mark-unpaid must be refused while receipts exist.');
-        } catch (InvoiceLifecycleException $e) {
-            $this->assertSame(409, $e->render()->getStatusCode());
-        }
+        $data = (new InvoiceResource($invoice->fresh()))->toArray(Request::create('/'));
 
-        $this->assertEquals(100, $invoice->fresh()->amount_paid);
+        $this->assertSame(DocStatus::Void, $invoice->fresh()->doc_status);
+        $this->assertSame('0.00', $data['remaining_amount']);
     }
 
-    public function test_mark_unpaid_resets_the_paid_amount_with_finance_v2_off(): void
+    // ---- Defect 8 -----------------------------------------------------------
+
+    /** Known issue, kept as dev has it: the payment rows stay although the invoice reads unpaid. */
+    public function test_mark_unpaid_with_finance_v2_off_behaves_exactly_as_before(): void
     {
         $invoice = $this->legacyInvoice('50.00');
         app(InvoiceService::class)->recordPartialPayment($invoice->fresh(), 20.0);
@@ -320,36 +257,29 @@ class CreditIntegrityTest extends ReceiptTestCase
 
         $fresh = $invoice->fresh();
         $this->assertSame(InvoiceStatus::Pending, $fresh->status);
-        $this->assertEquals(0, $fresh->amount_paid);
         $this->assertNull($fresh->paid_at);
+        $this->assertEquals(50, $fresh->amount_paid);
+        $this->assertSame(1, $fresh->payments()->count());
     }
 
-    public function test_an_identical_credit_note_a_moment_later_is_refused_as_a_double_click(): void
+    public function test_the_credit_note_migrations_run_down_and_up_on_data(): void
     {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
-        $this->actAsOwner($owner);
-        $url = "/api/workspace/invoices/{$invoice->id}/credit-notes";
+        $this->assertTrue(Schema::hasColumn('credit_notes', 'request_key'));
+        $this->assertFalse(Schema::hasColumn('credit_notes', 'refund_amount'));
 
-        $this->postJson($url, ['amount' => '10.00', 'reason' => 'Discount'])->assertCreated();
-        $this->postJson($url, ['amount' => '10.00', 'reason' => 'Discount'])->assertStatus(409);
-        $this->postJson($url, ['amount' => '10.00', 'reason' => 'A different reason'])->assertCreated();
-        $this->postJson($url, ['amount' => '11.00', 'reason' => 'Discount'])->assertCreated();
+        $keyMigration = require database_path('migrations/2026_11_10_100001_add_request_key_to_credit_notes.php');
+        $dropMigration = require database_path('migrations/2026_11_10_100000_drop_refund_amount_from_credit_notes.php');
 
-        $this->assertSame(3, CreditNote::query()->count());
-    }
+        $keyMigration->down();
+        $dropMigration->down();
+        $this->assertFalse(Schema::hasColumn('credit_notes', 'request_key'));
+        $this->assertTrue(Schema::hasColumn('credit_notes', 'refund_amount'));
 
-    public function test_an_identical_credit_note_after_ten_seconds_is_allowed(): void
-    {
-        [$owner, $workspace] = $this->owningWorkspace();
-        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
-        $service = app(CreditNoteService::class);
-
-        $service->issue($invoice->fresh(), '10.00', 'Discount', $owner);
-        $this->travel(11)->seconds();
-        $service->issue($invoice->fresh(), '10.00', 'Discount', $owner);
-
-        $this->assertSame(2, CreditNote::query()->count());
+        $dropMigration->up();
+        $keyMigration->up();
+        $dropMigration->up(); // safe to run twice
+        $this->assertTrue(Schema::hasColumn('credit_notes', 'request_key'));
+        $this->assertFalse(Schema::hasColumn('credit_notes', 'refund_amount'));
     }
 
     public function test_the_flag_off_partial_payments_add_up_exactly(): void
@@ -455,35 +385,9 @@ class CreditIntegrityTest extends ReceiptTestCase
         app(TwoFactorService::class)->markVerified($owner);
     }
 
-    /** The refund the credit-note list reports for the invoice's first note. */
+    /** The amount owed back, as the invoice page reports it. */
     private function listedRefund(Invoice $invoice): mixed
     {
-        $items = $this->getJson(self::LIST.'?invoice_id='.$invoice->id)->assertOk()->json('data.items');
-
-        return $items[0]['refund_amount'];
-    }
-
-    /** @return array<int, string> */
-    private function queriesDuring(callable $action): array
-    {
-        $queries = [];
-        DB::listen(static function ($query) use (&$queries): void {
-            $queries[] = $query->sql;
-        });
-        $action();
-
-        return $queries;
-    }
-
-    /** @param  array<int, string>  $queries */
-    private function firstIndex(array $queries, string $pattern): int
-    {
-        foreach ($queries as $index => $sql) {
-            if (preg_match($pattern, $sql) === 1) {
-                return $index;
-            }
-        }
-
-        $this->fail("No query matched {$pattern}");
+        return $this->getJson("/api/workspace/invoices/{$invoice->id}")->assertOk()->json('data.refund_due');
     }
 }

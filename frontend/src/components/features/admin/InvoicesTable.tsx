@@ -122,7 +122,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
     startTransition(async () => {
       const res = await markInvoicePaid(payTarget.id, payDate || null, payReceipt);
       if (res.ok) {
-        toast({ tone: "ok", title: t("toast.markedPaid") });
+        // The backend words the result: a pending cheque can leave the invoice only partly paid.
+        toast({ tone: "ok", title: res.message ?? t("toast.markedPaid") });
         closePayModal();
       } else {
         toast({ tone: "err", title: t("toast.markFailed"), body: res.message });

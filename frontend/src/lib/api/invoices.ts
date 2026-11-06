@@ -57,6 +57,8 @@ export interface Invoice {
   amount_paid: string;
   /** Sum of the invoice's credit notes (finance v2); the invoice amount itself never changes. */
   credited_amount?: string;
+  /** Finance v2: what the customer is owed back right now (paid above what is still payable). */
+  refund_due?: string;
   remaining_amount: string;
   amount_formatted: string;
   currency: string;
