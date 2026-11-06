@@ -218,11 +218,15 @@ class WorkspaceResetTest extends TestCase
             'id' => (string) Str::uuid(), 'workspace_id' => $workspace->id, 'subscriber_id' => $subscription->member_id,
             'loyalty_score' => 80, 'strength_score' => 70, 'segment' => 'champion', 'computed_at' => now(),
         ]);
+        DB::table('router_gaps')->insert([
+            'id' => (string) Str::uuid(), 'router_id' => $router->id, 'workspace_id' => $workspace->id,
+            'started_at' => now()->subHour(), 'reason' => 'no_sync', 'created_at' => now(), 'updated_at' => now(),
+        ]);
         RouterCommand::factory()->create(['router_id' => $router->id, 'workspace_id' => $workspace->id, 'payload' => ['username' => 'old']]);
 
         $this->reset($owner, $workspace)->assertOk();
 
-        foreach (['hotspot_accounts', 'hotspot_events', 'devices', 'attendance_daily', 'subscriber_scores'] as $table) {
+        foreach (['hotspot_accounts', 'hotspot_events', 'devices', 'attendance_daily', 'subscriber_scores', 'router_gaps'] as $table) {
             $this->assertSame(0, DB::table($table)->where('workspace_id', $workspace->id)->count(), $table);
         }
         $this->assertNotNull(Router::query()->withoutWorkspaceScope()->find($router->id));

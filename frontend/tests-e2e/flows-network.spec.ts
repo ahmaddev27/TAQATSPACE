@@ -267,3 +267,48 @@ test.describe("statistics recalculation (M3.5)", () => {
     });
   });
 });
+
+test.describe("router gaps (M3.6)", () => {
+  type Gap = { id: string; router_id: string; ended_at: string | null; reason: string; is_open: boolean };
+  type GapList = { data: { gaps: Gap[]; meta: { total: number; per_page: number } } };
+
+  test("the owner reads the main router's gaps: the seeded one is there and every gap has a known reason", async () => {
+    const mainId = routerId(MAIN_ROUTER);
+    const response = await owner.get("workspace/network/gaps", { router_id: mainId, per_page: 100 });
+    const status = response.status();
+    const body = await owner.json<GapList>(response);
+
+    expect(status).toBe(200);
+    // The demo seed records one closed no_sync gap; the scheduler may have opened more since, so only a floor is asserted.
+    expect(body.data.meta.total).toBeGreaterThanOrEqual(1);
+    expect(body.data.gaps.every((gap) => ["no_sync", "reboot", "clock_jump"].includes(gap.reason))).toBe(true);
+    expect(body.data.gaps.every((gap) => gap.router_id === mainId)).toBe(true);
+    expect(body.data.gaps.some((gap) => gap.reason === "no_sync" && !gap.is_open && gap.ended_at !== null)).toBe(true);
+  });
+
+  test("the open filter and the page size are honoured", async () => {
+    const response = await owner.get("workspace/network/gaps", { open: 0, per_page: 1 });
+    const body = await owner.json<GapList>(response);
+
+    expect(response.status()).toBe(200);
+    expect(body.data.meta.per_page).toBe(1);
+    expect(body.data.gaps.length).toBeLessThanOrEqual(1);
+    expect(body.data.gaps.every((gap) => !gap.is_open)).toBe(true);
+  });
+
+  test("a router id that is not the workspace's own is refused", async () => {
+    const response = await owner.get("workspace/network/gaps", { router_id: "00000000-0000-4000-8000-000000000000" });
+    await response.body();
+
+    expect(response.status()).toBe(422);
+  });
+
+  test("a member cannot read the gaps", async () => {
+    const member = await ApiClient.login("freelancer1");
+    const response = await member.get("workspace/network/gaps");
+    await response.body();
+    await member.dispose();
+
+    expect(response.status()).toBe(403);
+  });
+});

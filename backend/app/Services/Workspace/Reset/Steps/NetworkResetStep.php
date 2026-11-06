@@ -29,6 +29,7 @@ final class NetworkResetStep implements WorkspaceResetStep
         'device_presence',
         'devices',
         'hotspot_events',
+        'router_gaps',
     ];
 
     /** Tables holding recorded data, reached through the router. */
