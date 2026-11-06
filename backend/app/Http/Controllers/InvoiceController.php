@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentMethod;
 use App\Enums\WorkspaceFeature;
 use App\Exceptions\InvoiceLifecycleException;
 use App\Http\Requests\Invoice\DeleteInvoiceRequest;
@@ -141,7 +140,7 @@ class InvoiceController extends Controller
             $updated = $this->invoices->markPaid(
                 $invoice,
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
-                isset($data['method']) ? PaymentMethod::from((string) $data['method']) : null,
+                $request->paymentMethod(),
             );
         } catch (InvoiceLifecycleException $e) {
             throw $e;

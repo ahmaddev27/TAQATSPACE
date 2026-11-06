@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Finance;
 
+use App\Enums\ReceiptSource;
 use App\Exceptions\InvoiceLifecycleException;
 use App\Exceptions\ReceiptException;
 use App\Models\Invoice;
@@ -17,10 +18,12 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Takes the payments back off an invoice that was marked paid by mistake
- * (finance v2): each collected receipt that paid only this invoice is voided
- * through ReceiptService::void, money recorded before receipts existed is
- * cleared, and the status is re-derived from what is left. Pending cheques are
- * not payments yet and stay as they are.
+ * (finance v2). Only receipts a pay action on the invoice wrote are voided,
+ * through ReceiptService::void, and only when all their money is on this
+ * invoice; money recorded before receipts existed is cleared; the status is
+ * re-derived from what is left. Anything the workspace recorded itself (the
+ * receipts page, a cheque) is refused: only the workspace may void it.
+ * Pending cheques are not payments yet and stay as they are.
  */
 class PaymentReversalService
 {
@@ -33,7 +36,7 @@ class PaymentReversalService
 
     /**
      * @throws InvoiceLifecycleException when credit notes leave nothing owed, or legacy payment rows are not on receipts yet
-     * @throws ReceiptException when a receipt also paid another invoice
+     * @throws ReceiptException when a receipt was recorded by the workspace, or holds money beyond this invoice
      */
     public function reverse(Invoice $invoice, ?User $actor): void
     {
@@ -46,12 +49,13 @@ class PaymentReversalService
             $receipts = $this->receiptRepository->lockByIds($candidates)->filter(static fn (Receipt $receipt): bool => $receipt->isCollected());
             $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
             $unbacked = $this->assertReversible($locked, $receipts);
+            $before = $this->moneyState($locked);
 
             foreach ($receipts as $receipt) {
                 $this->receipts->void($receipt, __('messages.invoice_unpaid_receipt_void_reason'), $actor);
             }
 
-            $this->settle($invoice, $unbacked, $receipts, $actor);
+            $this->settle($invoice, $unbacked, $receipts, $actor, $before);
         });
     }
 
@@ -65,9 +69,7 @@ class PaymentReversalService
             throw InvoiceLifecycleException::nothingOwedCannotUnpaid();
         }
 
-        if ($this->receiptRepository->anyAllocatedElsewhere($receipts->modelKeys(), $locked)) {
-            throw ReceiptException::sharedAllocation();
-        }
+        $this->assertOnlyPayActionReceipts($locked, $receipts);
 
         $unbacked = bcsub((string) $locked->amount_paid, $this->receiptRepository->collectedTotalFor($locked), 2);
 
@@ -78,8 +80,33 @@ class PaymentReversalService
         return $this->receiptRepository->hasPaymentsWithoutReceipt($locked) ? throw InvoiceLifecycleException::paymentsWithoutReceipt() : $unbacked;
     }
 
-    /** @param  Collection<int, Receipt>  $receipts */
-    private function settle(Invoice $invoice, string $unbacked, Collection $receipts, ?User $actor): void
+    /**
+     * A receipt the workspace recorded is its document to void. One that also
+     * pays another invoice, or keeps money on account, would take that money
+     * back too, so it is refused even when a pay action wrote it.
+     *
+     * @param  Collection<int, Receipt>  $receipts
+     */
+    private function assertOnlyPayActionReceipts(Invoice $locked, Collection $receipts): void
+    {
+        if ($receipts->contains(static fn (Receipt $receipt): bool => $receipt->source !== ReceiptSource::InvoicePayment)) {
+            throw ReceiptException::recordedByWorkspace();
+        }
+
+        $onInvoice = $this->receiptRepository->allocatedTo($receipts->modelKeys(), $locked);
+
+        foreach ($receipts as $receipt) {
+            if (bccomp($onInvoice[$receipt->id] ?? '0.00', (string) $receipt->amount, 2) !== 0) {
+                throw ReceiptException::sharedAllocation();
+            }
+        }
+    }
+
+    /**
+     * @param  Collection<int, Receipt>  $receipts
+     * @param  array{status: string, payment_status: string, paid_at: string|null, amount_paid: string}  $before
+     */
+    private function settle(Invoice $invoice, string $unbacked, Collection $receipts, ?User $actor, array $before): void
     {
         // Re-read: the voids above moved the paid total on their own copies of the row.
         $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
@@ -92,10 +119,28 @@ class PaymentReversalService
 
         $this->balances->reconcile($locked, $now);
 
+        if ($receipts->isEmpty() && $this->moneyState($locked) === $before) {
+            return;
+        }
+
         $this->audit->log('finance.invoice.marked_unpaid', $locked, actor: $actor, changes: [
             'voided_receipts' => $receipts->pluck('number')->values()->all(),
             'cleared_without_receipt' => $unbacked,
+            'status_before' => $before['status'],
+            'paid_at_before' => $before['paid_at'],
+            'amount_paid_before' => $before['amount_paid'],
             'amount_paid_after' => (string) $locked->amount_paid,
         ]);
+    }
+
+    /** @return array{status: string, payment_status: string, paid_at: string|null, amount_paid: string} */
+    private function moneyState(Invoice $invoice): array
+    {
+        return [
+            'status' => $invoice->status->value,
+            'payment_status' => $invoice->payment_status->value,
+            'paid_at' => $invoice->paid_at?->toIso8601String(),
+            'amount_paid' => (string) $invoice->amount_paid,
+        ];
     }
 }

@@ -48,9 +48,12 @@ class ReceiptService
      * @param  array<string, mixed>  $data  customer_id, method, amount, received_at?, collected_at?, reference?,
      *                                      allocations?; internally also receipt_path, receipt_disk, legacy_payment_id
      *
+     * `$notify` false leaves the "invoice paid" message to a caller that wraps
+     * this in its own transaction and sends it once that has committed.
+     *
      * @throws ReceiptException when the customer is unknown or the allocations do not fit
      */
-    public function create(Workspace $workspace, array $data, ?User $actor, ?UploadedFile $file = null): Receipt
+    public function create(Workspace $workspace, array $data, ?User $actor, ?UploadedFile $file = null, bool $notify = true): Receipt
     {
         if (! $this->customers->isCustomerOf($workspace, (string) $data['customer_id'])) {
             throw ReceiptException::unknownCustomer();
@@ -65,7 +68,7 @@ class ReceiptService
             throw $e;
         }
 
-        $this->afterChange($receipt, $paid);
+        $this->afterChange($receipt, $notify ? $paid : []);
         $this->audit->log('finance.receipt.created', $receipt, actor: $actor, changes: [
             'number' => $receipt->number,
             'method' => $receipt->method->value,
@@ -201,6 +204,7 @@ class ReceiptService
             'receipt_disk' => $data['receipt_disk'] ?? null,
             'created_by' => $actor?->id,
             'legacy_payment_id' => $data['legacy_payment_id'] ?? null,
+            'source' => $data['source'] ?? null,
         ]);
     }
 

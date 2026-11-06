@@ -427,7 +427,8 @@ return [
     'invoice_nothing_owed_cannot_unpaid' => 'Credit notes cover this whole invoice, so nothing is owed and it cannot be marked unpaid.',
     'invoice_unpaid_legacy_payments' => 'This invoice has payments recorded before receipts were introduced that are not on a receipt yet, so they cannot be undone here.',
     'invoice_unpaid_receipt_void_reason' => 'Invoice marked unpaid by an administrator.',
-    'receipt_shared_allocation' => 'A receipt on this invoice also pays other invoices, so it cannot be undone here. The workspace owner can void that receipt from the receipts page.',
+    'receipt_shared_allocation' => 'A receipt on this invoice also pays other invoices or keeps money on account, so it cannot be undone here. The workspace must void that receipt from its receipts page.',
     'credit_note_request_key_reused' => 'This request key was already used for a different credit note.',
+    'receipt_recorded_by_workspace' => 'A payment on this invoice was recorded by the workspace (on its receipts page, or as a cheque), so it cannot be undone here. The workspace must void that receipt.',
 
 ];

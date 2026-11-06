@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
+use App\Enums\ReceiptSource;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkspaceFeature;
 use App\Exceptions\InvoiceLifecycleException;
@@ -796,9 +798,10 @@ class InvoiceService
 
     /**
      * With finance v2 on, a payment is a numbered receipt allocated to the
-     * invoice (the receipt moves the invoice's totals and notifies the member).
-     * The legacy payment row is still written, and linked, so existing payment
-     * history keeps working; its proof file lives on the receipt, privately.
+     * invoice (the receipt moves the invoice's totals). The legacy payment row
+     * is still written, and linked, so existing payment history keeps working;
+     * its proof file lives on the receipt, privately. The receipt is marked as
+     * written by a pay action, which is what the admin's mark-unpaid may undo.
      *
      * A null `$amount` pays what is left (InvoiceBalanceService::openToPay).
      * An uploaded `$file` is stored first and removed again when the payment
@@ -816,32 +819,44 @@ class InvoiceService
         $stored = $file === null ? [] : $this->receipts->storeProof($file, $workspace);
 
         try {
-            $receipted = DB::transaction(fn (): bool => $this->payLocked($invoice, $workspace, $amount, $method, $paidAt, $stored + $proof, $attributes));
+            $outcome = DB::transaction(fn (): array => $this->payLocked($invoice, $workspace, $amount, $method, $paidAt, $stored + $proof, $attributes));
         } catch (Throwable $e) {
             $this->receipts->discardProof($stored);
             throw $e;
         }
 
-        if (! $receipted) {
+        if (! $outcome['receipted']) {
             // Credit notes already covered it: no receipt was written to keep the file.
             $this->receipts->discardProof($stored);
-            $this->afterSettledWithoutPayment($invoice->refresh());
         }
 
-        return $invoice->refresh();
+        $invoice->refresh();
+        Cache::forget("workspace:{$invoice->workspace_id}:dashboard_stats");
+
+        // Only once it has committed, and only when this call's money is what made it paid.
+        if ($outcome['paid_now']) {
+            $invoice->customer?->notify(new InvoicePaidNotification($invoice));
+        }
+
+        return $invoice;
     }
 
     /**
+     * Compares the payment status before and after under the invoice lock, so
+     * two racing requests cannot both see "became paid": the second finds it
+     * paid already. A settlement by credit notes alone takes no money.
+     *
      * @param  array<string, mixed>  $proof
      * @param  array<string, mixed>  $attributes
-     * @return bool whether a receipt took money (false: nothing was owed, so the status was settled instead)
+     * @return array{receipted: bool, paid_now: bool} whether a receipt took money, and whether that money made the invoice paid
      */
-    private function payLocked(Invoice $invoice, Workspace $workspace, ?string $amount, PaymentMethod $method, Carbon $paidAt, array $proof, array $attributes): bool
+    private function payLocked(Invoice $invoice, Workspace $workspace, ?string $amount, PaymentMethod $method, Carbon $paidAt, array $proof, array $attributes): array
     {
         // The exclusive lock comes before the payment row: inserting it takes a shared lock on
         // the invoice through the foreign key, and two overlapping payments that each hold
         // that shared lock while waiting for the exclusive one deadlock.
         $locked = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+        $wasPaid = $locked->payment_status === PaymentStatus::Paid;
 
         if ($attributes !== []) {
             $locked->forceFill($attributes)->save();
@@ -852,7 +867,7 @@ class InvoiceService
         if ($amount === null) {
             $this->balances->reconcile($locked, $paidAt);
 
-            return false;
+            return ['receipted' => false, 'paid_now' => false];
         }
 
         $payment = $locked->payments()->create(['amount' => $amount, 'receipt_path' => null, 'paid_at' => $paidAt]);
@@ -863,20 +878,14 @@ class InvoiceService
             'amount' => $amount,
             'received_at' => $paidAt,
             'legacy_payment_id' => $payment->id,
+            'source' => ReceiptSource::InvoicePayment->value,
             'allocations' => [['invoice_id' => $locked->id, 'amount' => $amount]],
-        ] + $proof, request()->user());
+        ] + $proof, request()->user(), notify: false);
 
-        return true;
-    }
+        // The receipt moved its own copy of the row; read the status it left.
+        $isPaid = Invoice::query()->whereKey($locked->id)->first(['id', 'payment_status'])?->payment_status === PaymentStatus::Paid;
 
-    /**
-     * openToPay() only lets nothing through when the invoice is covered, so it
-     * is paid now: the member hears so, as after a receipt that settles it.
-     */
-    private function afterSettledWithoutPayment(Invoice $invoice): void
-    {
-        $invoice->customer?->notify(new InvoicePaidNotification($invoice));
-        Cache::forget("workspace:{$invoice->workspace_id}:dashboard_stats");
+        return ['receipted' => true, 'paid_now' => ! $wasPaid && $isPaid];
     }
 
     /**

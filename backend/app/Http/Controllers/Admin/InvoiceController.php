@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\PaymentMethod;
 use App\Exceptions\InvoiceLifecycleException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\MarkInvoicePaidRequest;
@@ -50,7 +49,7 @@ class InvoiceController extends Controller
                 $invoice,
                 $paidAt !== null ? Carbon::parse((string) $paidAt) : null,
                 $request->file('receipt'),
-                isset($data['method']) ? PaymentMethod::from((string) $data['method']) : null,
+                $request->paymentMethod(),
             );
         } catch (InvoiceLifecycleException $e) {
             throw $e;

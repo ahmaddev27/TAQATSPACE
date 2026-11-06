@@ -78,13 +78,24 @@ class ReceiptRepository
         return $ids === [] ? new Collection : Receipt::query()->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
     }
 
-    /** @param  array<int, string>  $receiptIds */
-    public function anyAllocatedElsewhere(array $receiptIds, Invoice $invoice): bool
+    /**
+     * What each receipt has allocated to the invoice.
+     *
+     * @param  array<int, string>  $receiptIds
+     * @return array<string, string> receipt id => amount
+     */
+    public function allocatedTo(array $receiptIds, Invoice $invoice): array
     {
-        return $receiptIds !== [] && ReceiptAllocation::query()
+        if ($receiptIds === []) {
+            return [];
+        }
+
+        return ReceiptAllocation::query()
             ->whereIn('receipt_id', $receiptIds)
-            ->where('invoice_id', '!=', $invoice->id)
-            ->exists();
+            ->where('invoice_id', $invoice->id)
+            ->pluck('amount', 'receipt_id')
+            ->map(static fn (mixed $amount): string => bcadd((string) $amount, '0', 2))
+            ->all();
     }
 
     /** What live, collected receipts have paid on the invoice: the part of `amount_paid` a receipt backs. */

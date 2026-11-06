@@ -7,6 +7,7 @@ namespace Tests\Feature\Finance;
 use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ReceiptSource;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
@@ -128,7 +129,8 @@ class PaymentSettlementTest extends ReceiptTestCase
     public function test_approving_a_receipt_on_a_fully_credited_invoice_settles_it(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();
-        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
         app(CreditNoteService::class)->issue($invoice->fresh(), '100.00', 'Cancelled', $owner);
         $invoice->fresh()->forceFill(['status' => InvoiceStatus::Pending, 'paid_at' => null])->save();
         app(InvoiceService::class)->submitReceipt($invoice->fresh(), UploadedFile::fake()->image('member.png'));
@@ -140,6 +142,8 @@ class PaymentSettlementTest extends ReceiptTestCase
 
         $this->assertNotNull($invoice->fresh()->receipt_reviewed_at);
         $this->assertSame(0, Receipt::query()->count());
+        // No money came in, so there is no payment to announce.
+        Notification::assertNotSentTo($customer, InvoicePaidNotification::class);
     }
 
     public function test_approving_needs_a_receipt_under_review(): void
@@ -376,14 +380,14 @@ class PaymentSettlementTest extends ReceiptTestCase
         $this->assertSame([], Storage::disk('local')->allFiles(), 'Nothing was paid, so no receipt keeps the proof.');
     }
 
-    // ---- Review item 5: the admin can undo a mistaken mark-paid ------------
+    // ---- Review item 5, second review A and B: the admin undo -------------
 
     public function test_admin_mark_unpaid_voids_the_receipt_that_paid_the_invoice(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();
         $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
         Sanctum::actingAs($owner);
-        $this->putJson(self::INVOICES."/{$invoice->id}/pay")->assertOk();
+        $this->putJson(self::INVOICES."/{$invoice->id}/pay", ['paid_at' => '2026-11-01'])->assertOk();
         $admin = $this->billingAdmin();
         Sanctum::actingAs($admin);
 
@@ -398,6 +402,95 @@ class PaymentSettlementTest extends ReceiptTestCase
         $this->assertSame(__('messages.invoice_unpaid_receipt_void_reason'), $receipt->void_reason);
         $this->assertSame(0, InvoicePayment::query()->count());
         $this->assertTrue(AuditLog::query()->where('action', 'finance.receipt.voided')->where('actor_id', $admin->id)->exists());
+
+        $entry = AuditLog::query()->where('action', 'finance.invoice.marked_unpaid')->sole();
+        $this->assertSame('paid', $entry->changes['status_before']);
+        $this->assertStringStartsWith('2026-11-01', (string) $entry->changes['paid_at_before']);
+        $this->assertSame([$receipt->number], $entry->changes['voided_receipts']);
+    }
+
+    public function test_every_pay_action_marks_its_receipt_and_the_receipts_page_does_not(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $paid = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $proof = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $partial = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $admin = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $approved = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $manual = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        app(InvoiceService::class)->submitReceipt($approved->fresh(), UploadedFile::fake()->image('member.png'));
+        $this->actAsOwner($owner);
+
+        $this->putJson(self::INVOICES."/{$paid->id}/pay")->assertOk();
+        $this->post(self::INVOICES."/{$proof->id}/receipt", ['receipt' => UploadedFile::fake()->image('p.png')], ['Accept' => 'application/json'])->assertOk();
+        $this->putJson(self::INVOICES."/{$partial->id}/partial-payment", ['amount' => 40])->assertOk();
+        $this->putJson(self::INVOICES."/{$approved->id}/approve-receipt")->assertOk();
+        $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '100.00', ['allocations' => $this->allocation($manual, '100.00')]))->assertCreated();
+        Sanctum::actingAs($this->billingAdmin());
+        $this->putJson(self::ADMIN."/{$admin->id}/mark-paid")->assertOk();
+
+        foreach ([$paid, $proof, $partial, $admin, $approved] as $invoice) {
+            $this->assertSame(ReceiptSource::InvoicePayment, $this->receiptOf($invoice)->source);
+        }
+        $this->assertNull($this->receiptOf($manual)->source);
+    }
+
+    public function test_admin_mark_unpaid_refuses_a_receipt_recorded_on_the_receipts_page_and_keeps_its_money_on_account(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $this->actAsOwner($owner);
+        // Cash 150: 100 pays the invoice, 50 stays on account.
+        $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '150.00', ['allocations' => $this->allocation($invoice, '100.00')]))->assertCreated();
+        Sanctum::actingAs($this->billingAdmin());
+
+        $this->putJson(self::ADMIN."/{$invoice->id}/mark-unpaid")
+            ->assertStatus(409)
+            ->assertJsonPath('message', __('messages.receipt_recorded_by_workspace'));
+
+        $receipt = Receipt::query()->sole();
+        $this->assertNull($receipt->voided_at);
+        $this->assertEquals(150, $receipt->amount);
+        $this->assertEquals(100, $invoice->fresh()->amount_paid);
+        $this->assertSame(0, AuditLog::query()->where('action', 'finance.invoice.marked_unpaid')->count());
+    }
+
+    public function test_admin_mark_unpaid_refuses_a_cleared_cheque(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        $cheque = $this->clearedCheque($owner, $workspace, $customer, $invoice, '100.00');
+        Sanctum::actingAs($this->billingAdmin());
+
+        $this->putJson(self::ADMIN."/{$invoice->id}/mark-unpaid")
+            ->assertStatus(409)
+            ->assertJsonPath('message', __('messages.receipt_recorded_by_workspace'));
+
+        $this->assertNull($cheque->fresh()->voided_at);
+        $this->assertEquals(100, $invoice->fresh()->amount_paid);
+    }
+
+    public function test_admin_mark_unpaid_refuses_a_pay_action_receipt_that_holds_money_on_account(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        // The pay actions never write this; the check must still hold if a receipt ever carries more.
+        app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '150.00', [
+            'source' => ReceiptSource::InvoicePayment->value,
+            'allocations' => $this->allocation($invoice, '100.00'),
+        ]), $owner);
+        Sanctum::actingAs($this->billingAdmin());
+
+        $this->putJson(self::ADMIN."/{$invoice->id}/mark-unpaid")
+            ->assertStatus(409)
+            ->assertJsonPath('message', __('messages.receipt_shared_allocation'));
+
+        $this->assertNull(Receipt::query()->sole()->voided_at);
+        $this->assertEquals(100, $invoice->fresh()->amount_paid);
     }
 
     public function test_admin_mark_unpaid_refuses_a_receipt_that_also_pays_another_invoice(): void
@@ -407,6 +500,7 @@ class PaymentSettlementTest extends ReceiptTestCase
         $first = $this->invoiceOf($owner, $workspace, $customer, '100.00');
         $second = $this->invoiceOf($owner, $workspace, $customer, '50.00');
         app(ReceiptService::class)->create($workspace, $this->receiptPayload($customer, '150.00', [
+            'source' => ReceiptSource::InvoicePayment->value,
             'allocations' => [...$this->allocation($first, '100.00'), ...$this->allocation($second, '50.00')],
         ]), $owner);
         Sanctum::actingAs($this->billingAdmin());
@@ -452,6 +546,18 @@ class PaymentSettlementTest extends ReceiptTestCase
         $entry = AuditLog::query()->where('action', 'finance.invoice.marked_unpaid')->sole();
         $this->assertSame($admin->id, $entry->actor_id);
         $this->assertSame('100.00', $entry->changes['cleared_without_receipt']);
+        $this->assertSame('paid', $entry->changes['status_before']);
+    }
+
+    public function test_admin_mark_unpaid_writes_no_audit_entry_when_nothing_changes(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $invoice = $this->invoiceOf($owner, $workspace, $this->subscriber($workspace), '100.00');
+        Sanctum::actingAs($this->billingAdmin());
+
+        $this->putJson(self::ADMIN."/{$invoice->id}/mark-unpaid")->assertOk()->assertJsonPath('data.status', 'pending');
+
+        $this->assertSame(0, AuditLog::query()->where('action', 'finance.invoice.marked_unpaid')->count());
     }
 
     public function test_admin_mark_unpaid_refuses_payments_not_yet_copied_into_receipts(): void
@@ -468,6 +574,74 @@ class PaymentSettlementTest extends ReceiptTestCase
 
         $this->assertEquals(40, $invoice->fresh()->amount_paid);
         $this->assertSame(1, InvoicePayment::query()->count());
+    }
+
+    // ---- Second review C and D: who hears "payment received" -------------
+
+    public function test_settling_by_credit_notes_alone_sends_no_payment_notification(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        app(CreditNoteService::class)->issue($invoice->fresh(), '100.00', 'Cancelled', $owner);
+        $invoice->fresh()->forceFill(['status' => InvoiceStatus::Pending, 'paid_at' => null])->save();
+        Sanctum::actingAs($owner);
+
+        $this->putJson(self::INVOICES."/{$invoice->id}/pay")->assertOk()->assertJsonPath('data.status', 'paid');
+
+        Notification::assertNotSentTo($customer, InvoicePaidNotification::class);
+    }
+
+    public function test_a_second_pay_request_that_finds_the_invoice_paid_sends_no_second_notification(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        Sanctum::actingAs($owner);
+        // Both requests read the invoice before either took the lock.
+        $first = $invoice->fresh();
+        $second = $invoice->fresh();
+
+        app(InvoiceService::class)->markPaid($first);
+        app(InvoiceService::class)->markPaid($second);
+
+        Notification::assertSentToTimes($customer, InvoicePaidNotification::class, 1);
+        $this->assertSame(1, Receipt::query()->count());
+        $this->assertEquals(100, $invoice->fresh()->amount_paid);
+    }
+
+    public function test_a_payment_that_settles_the_invoice_tells_the_member_once(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
+        Sanctum::actingAs($owner);
+
+        $this->putJson(self::INVOICES."/{$invoice->id}/partial-payment", ['amount' => 40])->assertOk();
+        Notification::assertNotSentTo($customer, InvoicePaidNotification::class);
+        $this->putJson(self::INVOICES."/{$invoice->id}/pay")->assertOk();
+
+        Notification::assertSentToTimes($customer, InvoicePaidNotification::class, 1);
+    }
+
+    // ---- Second review G: with finance v2 off, `method` is ignored as on dev
+
+    public function test_with_finance_v2_off_the_method_field_is_ignored(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace(financeV2: false);
+        $subscription = Subscription::factory()->create(['workspace_id' => $workspace->id]);
+        $owned = Invoice::factory()->create(['subscription_id' => $subscription->id, 'amount' => '50.00', 'status' => InvoiceStatus::Pending]);
+        $tracked = Invoice::factory()->create(['subscription_id' => $subscription->id, 'amount' => '50.00', 'status' => InvoiceStatus::Pending]);
+        Sanctum::actingAs($owner);
+
+        $this->putJson(self::INVOICES."/{$owned->id}/pay", ['method' => 'cheque'])->assertOk()->assertJsonPath('data.status', 'paid');
+
+        Sanctum::actingAs($this->billingAdmin());
+        $this->put(self::ADMIN."/{$tracked->id}/mark-paid", ['method' => 'card', 'receipt' => UploadedFile::fake()->image('p.png')], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'paid');
+
+        $this->assertSame(0, Receipt::query()->count());
     }
 
     // ---- Helpers ------------------------------------------------------------
