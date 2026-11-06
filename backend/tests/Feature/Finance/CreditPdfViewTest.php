@@ -10,6 +10,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\InvoicePdfService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -34,7 +35,7 @@ class CreditPdfViewTest extends TestCase
 
     private function html(Invoice $invoice): string
     {
-        return view('pdf.invoice', ['invoice' => $invoice])->render();
+        return view('pdf.invoice', app(InvoicePdfService::class)->invoiceViewData($invoice))->render();
     }
 
     public function test_unpaid_invoice_shows_the_credit_and_the_remaining_after_it(): void
