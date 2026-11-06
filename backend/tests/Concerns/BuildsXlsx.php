@@ -44,7 +44,7 @@ trait BuildsXlsx
      * use shared strings (the part is wired in through workbook.xml.rels at
      * $sharedPath), and the caller controls every element of <sheetData>.
      */
-    protected function xlsxFromXml(string $sheetData, ?string $sharedItems = null, string $afterSheetData = '', string $sharedPath = 'xl/sharedStrings.xml', string $sheetNamespaces = ''): UploadedFile
+    protected function xlsxFromXml(string $sheetData, ?string $sharedItems = null, string $afterSheetData = '', string $sharedPath = 'xl/sharedStrings.xml', string $sheetNamespaces = '', bool $relateShared = true): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'tst');
         $zip = new ZipArchive;
@@ -52,7 +52,7 @@ trait BuildsXlsx
 
         $rels = '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>';
         if ($sharedItems !== null) {
-            $rels .= '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="'.preg_replace('#^xl/#', '', $sharedPath).'"/>';
+            $rels .= $relateShared ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="'.preg_replace('#^xl/#', '', $sharedPath).'"/>' : '';
             $zip->addFromString($sharedPath, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.$sharedItems.'</sst>');
         }
 

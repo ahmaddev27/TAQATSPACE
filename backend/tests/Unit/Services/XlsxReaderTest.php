@@ -197,6 +197,34 @@ class XlsxReaderTest extends TestCase
         $this->assertRejected($this->xlsxFromXml($sheet), 'import_damaged_file');
     }
 
+    public function test_shared_strings_without_a_relationship_are_read_from_the_default_part(): void
+    {
+        $items = '<si><t>code</t></si><si><t>v</t></si>';
+        $sheet = '<row r="1">'.$this->shared('A1', 0).'</row><row r="2">'.$this->shared('A2', 1).'</row>';
+        $file = $this->xlsxFromXml($sheet, $items, '', 'xl/sharedStrings.xml', '', false);
+
+        $this->assertSame('v', $this->read($file)['rows'][0]['values']['code']);
+    }
+
+    public function test_the_default_shared_strings_part_is_capped_too(): void
+    {
+        $items = str_repeat('<si/>', XlsxReader::MAX_SHARED_STRINGS + 1);
+        $sheet = '<row r="1">'.$this->inline('A1', 'code').'</row>';
+
+        $this->assertRejected($this->xlsxFromXml($sheet, $items, '', 'xl/sharedStrings.xml', '', false), 'import_file_too_complex');
+    }
+
+    public function test_rows_written_out_of_order_are_read_by_row_number(): void
+    {
+        $sheet = '<row r="3">'.$this->inline('A3', 'third').'</row><row r="1">'.$this->inline('A1', 'code').'</row><row r="2">'.$this->inline('A2', 'second').'</row>';
+
+        $parsed = $this->read($this->xlsxFromXml($sheet));
+
+        $this->assertSame(['code'], $parsed['headers']);
+        $this->assertSame([2, 3], array_column($parsed['rows'], 'row'));
+        $this->assertSame(['second', 'third'], array_map(static fn (array $row): string => $row['values']['code'], $parsed['rows']));
+    }
+
     public function test_the_shared_strings_part_is_found_through_the_relationships(): void
     {
         $items = '<si><t>code</t></si><si><t>v</t></si>';

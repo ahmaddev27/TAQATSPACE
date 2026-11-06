@@ -48,6 +48,8 @@ class XlsxReader
 
     private const REL_SHARED_STRINGS = '/sharedStrings';
 
+    private const DEFAULT_SHARED_STRINGS = 'xl/sharedStrings.xml';
+
     /** @var list<string> */
     private array $tempFiles = [];
 
@@ -213,7 +215,8 @@ class XlsxReader
     }
 
     /**
-     * The shared-strings part is whatever the workbook relationships say it is.
+     * The shared-strings part is whatever the workbook relationships say it is,
+     * or xl/sharedStrings.xml when they name none.
      *
      * @param  list<array{id: string, type: string, target: string}>  $relationships
      * @return list<string>
@@ -224,6 +227,11 @@ class XlsxReader
             if (str_ends_with($relationship['type'], self::REL_SHARED_STRINGS)) {
                 return $this->sharedStrings($this->xmlPart($zip, $this->partName($relationship['target']), self::MAX_PART_BYTES));
             }
+        }
+
+        // Some generators omit the relationship but still write the default part.
+        if ($zip->locateName(self::DEFAULT_SHARED_STRINGS) !== false) {
+            return $this->sharedStrings($this->xmlPart($zip, self::DEFAULT_SHARED_STRINGS, self::MAX_PART_BYTES));
         }
 
         return [];
@@ -287,8 +295,7 @@ class XlsxReader
      */
     private function readSheet(XMLReader $reader, array $shared): array
     {
-        $headers = null;
-        $rows = [];
+        $found = [];
         $rowElements = 0;
         $rowNumber = 0;
         $column = -1;
@@ -329,15 +336,11 @@ class XlsxReader
                 $cells[$cell['column']] = $this->cellValue($cell, $shared);
                 $cell = null;
             } elseif ($type === XMLReader::END_ELEMENT && $name === 'row') {
-                $this->collectRow($cells, $rowNumber, $headers, $rows);
+                $this->keepRow($cells, $rowNumber, $found);
             }
         }
 
-        if ($headers === null) {
-            throw ImportException::empty();
-        }
-
-        return ['headers' => $headers, 'rows' => $rows];
+        return $this->assemble($found);
     }
 
     /**
@@ -355,26 +358,51 @@ class XlsxReader
     }
 
     /**
+     * Keeps a row that holds something. The cap (header + MAX_ROWS) bounds memory,
+     * which is why rows can be held until they are put in row-number order.
+     *
      * @param  array<int, array{value: string, numeric: bool}>  $cells
-     * @param  list<string>|null  $headers
-     * @param  list<array{row: int, values: array<string, string>, numeric: list<string>}>  $rows
+     * @param  list<array{row: int, cells: array<int, array{value: string, numeric: bool}>}>  $found
      */
-    private function collectRow(array $cells, int $rowNumber, ?array &$headers, array &$rows): void
+    private function keepRow(array $cells, int $rowNumber, array &$found): void
     {
         if (array_filter($cells, static fn (array $cell): bool => $cell['value'] !== '') === []) {
             return;
         }
 
-        if ($headers === null) {
-            $headers = array_map('strtolower', $this->headerTexts($cells));
-
-            return;
-        }
-
-        if (count($rows) >= self::MAX_ROWS) {
+        if (count($found) > self::MAX_ROWS) {
             throw ImportException::tooManyRows(self::MAX_ROWS);
         }
 
+        $found[] = ['row' => $rowNumber, 'cells' => $cells];
+    }
+
+    /**
+     * The header is the lowest-numbered non-empty row, whatever order the file
+     * wrote its rows in.
+     *
+     * @param  list<array{row: int, cells: array<int, array{value: string, numeric: bool}>}>  $found
+     * @return array{headers: list<string>, rows: list<array{row: int, values: array<string, string>, numeric: list<string>}>}
+     */
+    private function assemble(array $found): array
+    {
+        if ($found === []) {
+            throw ImportException::empty();
+        }
+
+        usort($found, static fn (array $a, array $b): int => $a['row'] <=> $b['row']);
+        $headers = array_map('strtolower', $this->headerTexts(array_shift($found)['cells']));
+
+        return ['headers' => $headers, 'rows' => array_map(fn (array $row): array => $this->dataRow($row['cells'], $row['row'], $headers), $found)];
+    }
+
+    /**
+     * @param  array<int, array{value: string, numeric: bool}>  $cells
+     * @param  list<string>  $headers
+     * @return array{row: int, values: array<string, string>, numeric: list<string>}
+     */
+    private function dataRow(array $cells, int $rowNumber, array $headers): array
+    {
         $values = [];
         $numeric = [];
         foreach ($headers as $index => $header) {
@@ -386,7 +414,8 @@ class XlsxReader
                 $numeric[] = $header;
             }
         }
-        $rows[] = ['row' => $rowNumber, 'values' => $values, 'numeric' => $numeric];
+
+        return ['row' => $rowNumber, 'values' => $values, 'numeric' => $numeric];
     }
 
     /**
