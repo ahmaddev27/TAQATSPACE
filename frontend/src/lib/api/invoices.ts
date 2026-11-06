@@ -62,6 +62,10 @@ export interface Invoice {
    * still payable after credit notes). Sent on the owner list and detail only.
    */
   refund_due?: string | null;
+  /** Part of `refund_due` not yet moved to the customer's wallet; null when `refund_due` is. */
+  refund_open?: string | null;
+  /** Owed-back money already moved to the customer's wallet. */
+  moved_to_wallet?: string;
   remaining_amount: string;
   amount_formatted: string;
   currency: string;

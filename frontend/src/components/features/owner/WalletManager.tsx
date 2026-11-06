@@ -15,6 +15,7 @@ import { voidPaymentVoucher } from "@/lib/actions/financeWallet";
 import type { OpenInvoice, ReceiptCustomer } from "@/lib/types/financeReceipts";
 import type { PaymentVoucher, WalletAction, WalletRow } from "@/lib/types/financeWallet";
 import { WalletActionModal } from "./WalletActionModal";
+import { WalletEntriesModal } from "./WalletEntriesModal";
 import { money, shortDate } from "./format";
 
 interface Props {
@@ -36,6 +37,7 @@ export function WalletManager({ wallets, vouchers, customers, invoices }: Props)
   const [pending, startTransition] = useTransition();
   const [active, setActive] = useState<Active | null>(null);
   const [voiding, setVoiding] = useState<PaymentVoucher | null>(null);
+  const [viewing, setViewing] = useState<WalletRow | null>(null);
   const [reason, setReason] = useState("");
   const [code, setCode] = useState("");
 
@@ -66,6 +68,7 @@ export function WalletManager({ wallets, vouchers, customers, invoices }: Props)
           <Button variant="secondary" size="sm" disabled={!hasBalance(r)} onClick={() => setActive({ action: "return", row: r })}>{t("return")}</Button>
           <Button variant="secondary" size="sm" disabled={!hasBalance(r)} onClick={() => setActive({ action: "settle", row: r })}>{t("settle")}</Button>
           <Button variant="ghost" size="sm" disabled={!hasBalance(r)} onClick={() => setActive({ action: "forfeit", row: r })}>{t("forfeit")}</Button>
+          <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>{t("entries")}</Button>
         </div>
       ),
     },
@@ -135,6 +138,8 @@ export function WalletManager({ wallets, vouchers, customers, invoices }: Props)
           onClose={() => setActive(null)}
         />
       )}
+
+      {viewing && <WalletEntriesModal row={viewing} onClose={() => setViewing(null)} />}
 
       {voiding && (
         <Modal

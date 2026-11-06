@@ -157,8 +157,18 @@
         "deposit": "تم تسجيل التأمين",
         "return": "تم إرجاع المال وإصدار السند",
         "settle": "تم سداد الفاتورة من المحفظة",
-        "forfeit": "تمت مصادرة التأمين"
+        "forfeit": "تمت مصادرة التأمين",
+        "reverse": "تم عكس الحركة"
       },
+      "entries": "الحركات",
+      "close": "إغلاق",
+      "loading": "جارٍ التحميل...",
+      "entriesTitle": "حركات المحفظة: {name}",
+      "entriesEmpty": "لا توجد حركات بعد.",
+      "reverse": "عكس",
+      "reverseTitle": "عكس حركة",
+      "reverseHint": "يُسجَّل قيد جديد يلغي أثر {amount}. يبقى القيد الأصلي محفوظاً.",
+      "entryTypes": {"deposit_in": "تأمين مستلم", "deposit_return": "تأمين مُرجَع", "settlement": "سداد فاتورة", "forfeit": "مصادرة", "credit": "محوَّل من فاتورة", "debit": "مسترجع إلى فاتورة", "reversal": "عكس"},
       "voidTitle": "إلغاء سند الصرف",
       "voidHint": "إلغاء {number} يعيد المال إلى المحفظة، ويبقى السند محفوظاً.",
       "voidReason": "السبب",
@@ -166,6 +176,7 @@
       "voided": "تم إلغاء سند الصرف",
       "statuses": {
         "active": "ساري",
+        "reversed": "معكوسة",
         "voided": "ملغى"
       },
       "fields": {
@@ -180,13 +191,16 @@
         "twoFactor": "رمز التحقق بخطوتين",
         "number": "الرقم",
         "paidAt": "تاريخ الصرف",
+        "type": "النوع",
+        "date": "التاريخ",
         "status": "الحالة"
       },
       "methods": {
         "cash": "نقداً",
         "transfer": "حوالة",
         "cheque": "شيك",
-        "card": "بطاقة"
+        "card": "بطاقة",
+        "wallet": "من المحفظة"
       },
       "cancel": "إلغاء",
       "save": "تأكيد",
@@ -235,7 +249,8 @@
         "cash": "نقداً",
         "card": "بطاقة",
         "transfer": "تحويل",
-        "cheque": "شيك"
+        "cheque": "شيك",
+        "wallet": "من المحفظة"
       },
       "statuses": {
         "collected": "محصّل",

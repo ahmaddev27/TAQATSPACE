@@ -400,6 +400,16 @@ test.describe("wallet and payment vouchers (M5)", () => {
     expect((await deposit("6.00", { request_key: key })).status()).toBe(409);
   });
 
+  test("a cheque deposit is refused, because it could be paid out before it clears", async () => {
+    const before = await balanceOf(customer);
+
+    const response = await deposit("25.00", { method: "cheque", request_key: unique("wallet-key") });
+
+    expect(response.status()).toBe(422);
+    expect(await response.json()).toHaveProperty("errors.method");
+    expect(await balanceOf(customer), "nothing moved").toBeCloseTo(before, 2);
+  });
+
   test("a zero or negative deposit and someone who is not a customer are refused", async () => {
     expect((await deposit("0")).status()).toBe(422);
     expect((await deposit("-5.00")).status()).toBe(422);
@@ -412,14 +422,14 @@ test.describe("wallet and payment vouchers (M5)", () => {
     const invoice = await issuedInvoice(customer, 30);
     const before = await balanceOf(customer);
 
-    const settled = await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: invoice, amount: "30.00" });
+    const settled = await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: invoice, amount: "30.00", request_key: unique("wallet-key") });
     expect(settled.status()).toBe(201);
 
     expect(await balanceOf(customer)).toBeCloseTo(before - 30, 2);
     expect(await field(`workspace/invoices/${invoice}`, "payment_status")).toBe("paid");
 
     const huge = await issuedInvoice(customer, 90000);
-    expect((await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: huge, amount: "90000.00" })).status(), "more than the wallet holds").toBe(422);
+    expect((await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: huge, amount: "90000.00", request_key: unique("wallet-key") })).status(), "more than the wallet holds").toBe(422);
   });
 
   test("returning and forfeiting need the two-factor enrolment of the person doing it", async () => {

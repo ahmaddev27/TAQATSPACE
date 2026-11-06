@@ -34,7 +34,8 @@
         "status": "Status",
         "actions": "Actions",
         "remaining": "{amount} remaining",
-        "refundDue": "Owed back to customer: {amount}"
+        "refundDue": "Owed back to customer: {amount}",
+        "movedToWallet": "Moved to wallet: {amount}"
       },
       "actions": {
         "markPaid": "Mark paid",

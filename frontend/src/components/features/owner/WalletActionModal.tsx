@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { forfeitWallet, receiveDeposit, returnDeposit, settleWallet } from "@/lib/actions/financeWallet";
 import type { ActionResult } from "@/lib/actions/client";
 import type { OpenInvoice, ReceiptCustomer } from "@/lib/types/financeReceipts";
-import { WALLET_METHODS, type WalletAction, type WalletMethod } from "@/lib/types/financeWallet";
+import { DEPOSIT_METHODS, WALLET_METHODS, type DepositMethod, type WalletAction, type WalletMethod } from "@/lib/types/financeWallet";
 import { money } from "./format";
 
 interface Props {
@@ -30,6 +30,8 @@ export function WalletActionModal({ action, customerId: fixedCustomer, balance, 
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  // One key per opened modal (it mounts on click, so no hydration issue): a double submit posts once.
+  const [requestKey] = useState(() => crypto.randomUUID());
 
   const [customerId, setCustomerId] = useState(fixedCustomer ?? "");
   const [amount, setAmount] = useState("");
@@ -48,13 +50,13 @@ export function WalletActionModal({ action, customerId: fixedCustomer, balance, 
     const twoFactor = code.trim() || undefined;
     switch (action) {
       case "deposit":
-        return receiveDeposit(customerId, { amount, method, reason: reason || undefined });
+        return receiveDeposit(customerId, { amount, method: method as DepositMethod, reason: reason || undefined, request_key: requestKey });
       case "return":
-        return returnDeposit(customerId, { amount, method, reason, reference: reference || undefined }, twoFactor);
+        return returnDeposit(customerId, { amount, method, reason, reference: reference || undefined, request_key: requestKey }, twoFactor);
       case "settle":
-        return settleWallet(customerId, { invoice_id: invoiceId, amount });
+        return settleWallet(customerId, { invoice_id: invoiceId, amount, request_key: requestKey });
       case "forfeit":
-        return forfeitWallet(customerId, { amount, reason }, twoFactor);
+        return forfeitWallet(customerId, { amount, reason, request_key: requestKey }, twoFactor);
     }
   };
 
@@ -104,8 +106,8 @@ export function WalletActionModal({ action, customerId: fixedCustomer, balance, 
         {balance !== undefined && <p className="muted" style={{ margin: 0 }}>{t("balanceHint", { amount: money(balance) })}</p>}
 
         {action === "settle" && (
-          <Field label={t("fields.invoice")} error={errors.invoice_id?.[0]} hint={open.length === 0 ? t("noInvoices") : undefined}>
-            <Select value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)}>
+          <Field label={t("fields.invoice")} htmlFor="wallet-invoice" error={errors.invoice_id?.[0]} hint={open.length === 0 ? t("noInvoices") : undefined}>
+            <Select id="wallet-invoice" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)}>
               <option value="">{t("chooseInvoice")}</option>
               {open.map((i) => (
                 <option key={i.id} value={i.id}>{i.invoice_number} ({money(i.remaining_amount)})</option>
@@ -119,9 +121,9 @@ export function WalletActionModal({ action, customerId: fixedCustomer, balance, 
             <Input id="wallet-amount" type="number" min={0} step="0.01" className="ltr" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </Field>
           {needsMethod && (
-            <Field label={t("fields.method")} error={errors.method?.[0]} className="grow">
-              <Select value={method} onChange={(e) => setMethod(e.target.value as WalletMethod)}>
-                {WALLET_METHODS.map((m) => (
+            <Field label={t("fields.method")} htmlFor="wallet-method" error={errors.method?.[0]} className="grow">
+              <Select id="wallet-method" value={method} onChange={(e) => setMethod(e.target.value as WalletMethod)}>
+                {(action === "deposit" ? DEPOSIT_METHODS : WALLET_METHODS).map((m) => (
                   <option key={m} value={m}>{t(`methods.${m}`)}</option>
                 ))}
               </Select>

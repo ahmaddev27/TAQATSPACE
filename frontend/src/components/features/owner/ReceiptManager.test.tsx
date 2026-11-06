@@ -61,6 +61,14 @@ describe("ReceiptManager", () => {
     expect(screen.getByRole("link", { name: "viewProof" })).toHaveAttribute("href", base.receipt_url);
   });
 
+  it("labels a wallet receipt instead of showing the raw method", () => {
+    render(
+      <ReceiptManager receipts={[{ ...base, method: "wallet", cheque_status: null }]} sort="received_at" customers={[]} invoices={[]} />,
+    );
+
+    expect(screen.getByText("methods.wallet")).toBeInTheDocument();
+  });
+
   it("hides actions on a voided receipt", () => {
     render(
       <ReceiptManager

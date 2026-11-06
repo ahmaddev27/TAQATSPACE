@@ -157,8 +157,18 @@
         "deposit": "Deposit recorded",
         "return": "Money returned and voucher issued",
         "settle": "Invoice paid from the wallet",
-        "forfeit": "Deposit forfeited"
+        "forfeit": "Deposit forfeited",
+        "reverse": "Entry reversed"
       },
+      "entries": "Entries",
+      "close": "Close",
+      "loading": "Loading...",
+      "entriesTitle": "Wallet entries: {name}",
+      "entriesEmpty": "No entries yet.",
+      "reverse": "Reverse",
+      "reverseTitle": "Reverse an entry",
+      "reverseHint": "Posts a new entry that undoes {amount}. The original entry stays on file.",
+      "entryTypes": {"deposit_in": "Deposit received", "deposit_return": "Deposit returned", "settlement": "Paid an invoice", "forfeit": "Forfeited", "credit": "Moved from an invoice", "debit": "Taken back to an invoice", "reversal": "Reversal"},
       "voidTitle": "Void payment voucher",
       "voidHint": "Voiding {number} puts the money back on the wallet; the voucher stays on file.",
       "voidReason": "Reason",
@@ -166,6 +176,7 @@
       "voided": "Payment voucher voided",
       "statuses": {
         "active": "Active",
+        "reversed": "Reversed",
         "voided": "Voided"
       },
       "fields": {
@@ -180,13 +191,16 @@
         "twoFactor": "Two-factor code",
         "number": "Number",
         "paidAt": "Paid",
+        "type": "Type",
+        "date": "Date",
         "status": "Status"
       },
       "methods": {
         "cash": "Cash",
         "transfer": "Transfer",
         "cheque": "Cheque",
-        "card": "Card"
+        "card": "Card",
+        "wallet": "From wallet"
       },
       "cancel": "Cancel",
       "save": "Confirm",
@@ -235,7 +249,8 @@
         "cash": "Cash",
         "card": "Card",
         "transfer": "Transfer",
-        "cheque": "Cheque"
+        "cheque": "Cheque",
+        "wallet": "From wallet"
       },
       "statuses": {
         "collected": "Collected",

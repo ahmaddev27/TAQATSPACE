@@ -197,6 +197,24 @@ test.describe("credit notes (M5)", () => {
     expect(deepFind(after, "doc_status")).toBe("issued");
   });
 
+  test("a credit note on a fully paid invoice moves the owed-back money to the wallet", async () => {
+    const invoice = await issue("80.00");
+    expect((await enroller.post("workspace/finance/receipts", {
+      customer_id: customer, method: "cash", amount: "80.00", allocations: [{ invoice_id: invoice, amount: "80.00" }],
+    })).status()).toBe(201);
+    const walletBalance = async (): Promise<number> =>
+      Number(deepFind(await creditToken.json(await creditToken.get(`workspace/finance/wallet/${customer}`)), "balance"));
+    const before = await walletBalance();
+
+    await verify(creditToken);
+    expect((await creditToken.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "30.00", reason: "E2E partial credit" })).status()).toBe(201);
+
+    const after = await creditToken.json(await creditToken.get(`workspace/invoices/${invoice}`));
+    expect(Number(deepFind(after, "moved_to_wallet")), "the credit went to the wallet").toBeCloseTo(30, 2);
+    expect(Number(deepFind(after, "refund_open")), "nothing is left owed back").toBeCloseTo(0, 2);
+    expect(await walletBalance()).toBeCloseTo(before + 30, 2);
+  });
+
   test("a credit above what the invoice carries, an empty reason and a draft are refused", async () => {
     const invoice = await issue("30.00");
     const draft = idOf(await created(enroller, await enroller.post("workspace/invoices/drafts", {
@@ -214,25 +232,25 @@ test.describe("wallet (M5)", () => {
   const balance = async (): Promise<number> => Number(deepFind(await walletToken.json(await walletToken.get(WALLET())), "balance"));
 
   test("returning and forfeiting need a recent code, then work; a voucher is numbered and can be voided", async () => {
-    expect((await walletToken.post(`${WALLET()}/deposits`, { amount: "100.00", method: "cash", reason: "E2E deposit" })).status()).toBe(201);
+    expect((await walletToken.post(`${WALLET()}/deposits`, { amount: "100.00", method: "cash", reason: "E2E deposit", request_key: unique("wallet-key") })).status()).toBe(201);
     const start = await balance();
 
-    const staleReturn = await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return" });
+    const staleReturn = await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return", request_key: unique("wallet-key") });
     expect(staleReturn.status()).toBe(403);
     expect(await staleReturn.json()).toMatchObject({ code: TWO_FACTOR_REQUIRED });
-    const staleForfeit = await walletToken.post(`${WALLET()}/forfeits`, { amount: "10.00", reason: "E2E forfeit" });
+    const staleForfeit = await walletToken.post(`${WALLET()}/forfeits`, { amount: "10.00", reason: "E2E forfeit", request_key: unique("wallet-key") });
     expect(staleForfeit.status()).toBe(403);
     expect(await balance(), "a refused step-up moves no money").toBeCloseTo(start, 2);
 
     await verify(walletToken);
-    const returned = await walletToken.json(await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return" }));
+    const returned = await walletToken.json(await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return", request_key: unique("wallet-key") }));
     const voucher = idOf(returned);
     expect(deepFind(returned, "number")).toBeTruthy();
-    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "E2E forfeit" })).status()).toBe(201);
+    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "E2E forfeit", request_key: unique("wallet-key") })).status()).toBe(201);
     expect(await balance()).toBeCloseTo(start - 15, 2);
 
-    expect((await walletToken.post(`${WALLET()}/returns`, { amount: "100000.00", method: "cash", reason: "Too much" })).status()).toBe(422);
-    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "" })).status()).toBe(422);
+    expect((await walletToken.post(`${WALLET()}/returns`, { amount: "100000.00", method: "cash", reason: "Too much", request_key: unique("wallet-key") })).status()).toBe(422);
+    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "", request_key: unique("wallet-key") })).status()).toBe(422);
 
     expect((await walletToken.post(`workspace/finance/payment-vouchers/${voucher}/void`, { reason: "E2E void" })).status()).toBe(200);
     expect(await balance(), "voiding puts the money back").toBeCloseTo(start - 5, 2);

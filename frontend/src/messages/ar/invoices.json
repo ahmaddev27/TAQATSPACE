@@ -34,7 +34,8 @@
         "status": "الحالة",
         "actions": "إجراءات",
         "remaining": "المتبقّي {amount}",
-        "refundDue": "مستحق للعميل: {amount}"
+        "refundDue": "مستحق للعميل: {amount}",
+        "movedToWallet": "حُوِّل إلى المحفظة: {amount}"
       },
       "actions": {
         "markPaid": "تحديد كمدفوعة",

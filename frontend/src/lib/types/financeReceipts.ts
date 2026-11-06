@@ -4,7 +4,8 @@
  */
 import type { SimpleMeta } from "@/lib/types";
 
-export type ReceiptMethod = "cash" | "card" | "transfer" | "cheque";
+/** "wallet" is only ever created by a wallet settlement, never picked by hand. */
+export type ReceiptMethod = "cash" | "card" | "transfer" | "cheque" | "wallet";
 
 export const RECEIPT_METHODS: ReceiptMethod[] = ["cash", "card", "transfer", "cheque"];
 

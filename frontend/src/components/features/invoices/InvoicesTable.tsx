@@ -162,9 +162,14 @@ export function InvoicesTable({ invoices, members, financeV2 = false }: Invoices
               })}
             </span>
           )}
-          {Number(inv.refund_due ?? 0) > 0 && (
+          {Number(inv.refund_open ?? 0) > 0 && (
             <span style={{ fontSize: "var(--fs-xs)", color: "var(--danger)" }}>
-              {t("table.refundDue", { amount: invoiceMoney(inv.refund_due, inv.currency) })}
+              {t("table.refundDue", { amount: invoiceMoney(inv.refund_open, inv.currency) })}
+            </span>
+          )}
+          {Number(inv.moved_to_wallet ?? 0) > 0 && (
+            <span className="muted-3" style={{ fontSize: "var(--fs-xs)" }}>
+              {t("table.movedToWallet", { amount: invoiceMoney(inv.moved_to_wallet, inv.currency) })}
             </span>
           )}
         </span>

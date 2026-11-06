@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/api";
 import { TOKEN_COOKIE } from "@/lib/auth";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * GET /api/payment-vouchers/{id}/pdf
  *
@@ -14,6 +16,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const { id } = await params;
+
+  // Refuse before any upstream call: the id goes straight into the upstream path.
+  if (!UUID.test(id)) {
+    return NextResponse.json({ message: "Payment voucher not found." }, { status: 404 });
+  }
 
   const token = (await cookies()).get(TOKEN_COOKIE)?.value;
   if (!token) {
