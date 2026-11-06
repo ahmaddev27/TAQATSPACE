@@ -17,6 +17,6 @@ Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidd
     ->prefix('workspace/finance/imports')
     ->group(function (): void {
         Route::post('/preview', [ImportController::class, 'preview'])->middleware('throttle:20,1,import-preview');
-        Route::post('/{id}/commit', [ImportController::class, 'commit'])->whereUuid('id');
+        Route::post('/{id}/commit', [ImportController::class, 'commit'])->whereUuid('id')->middleware('throttle:10,1,import-commit');
         Route::get('/template/{type}', [ImportController::class, 'template']);
     });

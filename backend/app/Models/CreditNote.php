@@ -54,6 +54,12 @@ class CreditNote extends Model
         return $this->belongsTo(Invoice::class);
     }
 
+    /** @return BelongsTo<Workspace, $this> */
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
+
     /** @return BelongsTo<User, $this> */
     public function issuer(): BelongsTo
     {

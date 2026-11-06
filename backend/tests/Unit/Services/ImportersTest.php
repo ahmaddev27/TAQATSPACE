@@ -11,6 +11,7 @@ use App\Models\Workspace;
 use App\Services\Finance\Import\CatalogItemImporter;
 use App\Services\Finance\Import\WithdrawalImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ImportersTest extends TestCase
@@ -82,13 +83,14 @@ class ImportersTest extends TestCase
 
     /**
      * @param  array<string, string>  $override
-     * @return array{row: int, values: array<string, string>}
+     * @param  list<string>  $numeric  columns read from numeric-typed cells
+     * @return array{row: int, values: array<string, string>, numeric: list<string>}
      */
-    private function withdrawalRow(int $row, string $email, array $override = []): array
+    private function withdrawalRow(int $row, string $email, array $override = [], array $numeric = []): array
     {
         return ['row' => $row, 'values' => [...[
             'source_ref' => 'R'.$row, 'customer_email' => $email, 'description' => 'x', 'qty' => '1', 'unit_price' => '2', 'occurred_at' => '',
-        ], ...$override]];
+        ], ...$override], 'numeric' => $numeric];
     }
 
     public function test_withdrawal_rows_validate_amounts_dates_and_customers(): void
@@ -104,10 +106,57 @@ class ImportersTest extends TestCase
             $this->withdrawalRow(4, $stranger->email),
             $this->withdrawalRow(5, 'nobody@example.test'),
             $this->withdrawalRow(6, $member->email, ['occurred_at' => '2026-03-01 10:30']),
-            $this->withdrawalRow(7, $member->email, ['occurred_at' => '46000']),
+            $this->withdrawalRow(7, $member->email, ['occurred_at' => '46000'], ['occurred_at']),
             $this->withdrawalRow(8, $member->email, ['source_ref' => '']),
         ];
 
         $this->assertSame(['2:occurred_at', '3:qty', '4:customer_email', '5:customer_email', '8:source_ref'], $this->columnsOf($importer->validate($this->workspace, $rows)));
+    }
+
+    /** @return array<string, array{string, list<string>, bool}> */
+    public static function dateCells(): array
+    {
+        return [
+            'text year is not a serial' => ['2026', [], false],
+            'text five is not a serial' => ['5', [], false],
+            'text serial is not accepted' => ['46052', [], false],
+            'numeric serial in range' => ['46052', ['occurred_at'], true],
+            'numeric serial with time' => ['46052.5', ['occurred_at'], true],
+            'numeric year is out of range' => ['2026', ['occurred_at'], false],
+            'numeric five is out of range' => ['5', ['occurred_at'], false],
+            'numeric far future' => ['99999', ['occurred_at'], false],
+            'explicit text date' => ['2026-03-01', [], true],
+            'blank means now' => ['', [], true],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $numeric
+     */
+    #[DataProvider('dateCells')]
+    public function test_occurred_at_takes_a_serial_only_from_a_plausible_numeric_cell(string $value, array $numeric, bool $accepted): void
+    {
+        $member = User::factory()->create();
+        Subscription::factory()->create(['member_id' => $member->id, 'workspace_id' => $this->workspace->id]);
+
+        $errors = app(WithdrawalImporter::class)->validate($this->workspace, [$this->withdrawalRow(2, $member->email, ['occurred_at' => $value], $numeric)]);
+
+        $this->assertSame($accepted ? [] : ['2:occurred_at'], $this->columnsOf($errors));
+    }
+
+    public function test_a_charge_amount_that_overflows_the_column_is_a_row_error(): void
+    {
+        $member = User::factory()->create();
+        Subscription::factory()->create(['member_id' => $member->id, 'workspace_id' => $this->workspace->id]);
+
+        $errors = app(WithdrawalImporter::class)->validate($this->workspace, [
+            $this->withdrawalRow(2, $member->email, ['qty' => '100000', 'unit_price' => '100000']),
+            $this->withdrawalRow(3, $member->email, ['qty' => '99999.99', 'unit_price' => '100000']),
+            $this->withdrawalRow(4, $member->email, ['qty' => '1', 'unit_price' => '9999999999.99']),
+            $this->withdrawalRow(5, $member->email, ['qty' => '2', 'unit_price' => '9999999999.99']),
+            $this->withdrawalRow(6, $member->email, ['qty' => '0', 'unit_price' => '100000']),
+        ]);
+
+        $this->assertSame(['2:unit_price', '5:unit_price', '6:qty'], $this->columnsOf($errors));
     }
 }

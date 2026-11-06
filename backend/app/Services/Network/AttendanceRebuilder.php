@@ -8,6 +8,8 @@ use App\Models\AttendanceAffectedDay;
 use App\Models\HotspotSession;
 use App\Models\Workspace;
 use App\Repositories\Eloquent\AttendanceRepository;
+use App\Repositories\Eloquent\RouterGapRepository;
+use App\Support\Network\GapDays;
 use App\Support\Network\LocalDays;
 use App\Support\Network\SessionWindow;
 use Carbon\CarbonImmutable;
@@ -26,7 +28,9 @@ class AttendanceRebuilder
     public function __construct(
         private readonly AttendanceRepository $repository,
         private readonly AttendanceCalculator $calculator,
+        private readonly RouterGapRepository $gaps,
         private readonly LocalDays $days = new LocalDays,
+        private readonly GapDays $gapDays = new GapDays,
     ) {}
 
     /**
@@ -41,7 +45,8 @@ class AttendanceRebuilder
         $windowEnd = CarbonImmutable::createFromTimestampUTC($this->days->startOf($this->days->next($to), $zone));
 
         $sessions = $this->repository->sessionsTouching($workspace->getKey(), $windowStart, $windowEnd);
-        $rows = $this->rowsFor($workspace, $this->intervalsBySubscriber($sessions), $from, $to);
+        $gapMinutes = $this->gapDays->minutesByDate($this->gaps->touching($workspace->getKey(), $windowStart, $windowEnd), $zone, $from, $to, now());
+        $rows = $this->rowsFor($workspace, $this->intervalsBySubscriber($sessions), $from, $to, $gapMinutes);
 
         $this->repository->replaceRange($workspace->getKey(), $from, $to, $rows);
 
@@ -102,16 +107,17 @@ class AttendanceRebuilder
 
     /**
      * @param  array<string, list<array{0: CarbonInterface, 1: CarbonInterface}>>  $bySubscriber
+     * @param  array<string, int>  $gapMinutes  local date => minutes without router data
      * @return list<array<string, mixed>>
      */
-    private function rowsFor(Workspace $workspace, array $bySubscriber, string $from, string $to): array
+    private function rowsFor(Workspace $workspace, array $bySubscriber, string $from, string $to, array $gapMinutes): array
     {
         $rows = [];
 
         foreach ($bySubscriber as $subscriberId => $intervals) {
             foreach ($this->calculator->calculate($intervals, (string) $workspace->timezone) as $day) {
                 if ($day->date >= $from && $day->date <= $to) {
-                    $rows[] = $this->row($workspace->getKey(), (string) $subscriberId, $day);
+                    $rows[] = $this->row($workspace->getKey(), (string) $subscriberId, $day, isset($gapMinutes[$day->date]));
                 }
             }
         }
@@ -120,7 +126,7 @@ class AttendanceRebuilder
     }
 
     /** @return array<string, mixed> */
-    private function row(string $workspaceId, string $subscriberId, AttendanceDay $day): array
+    private function row(string $workspaceId, string $subscriberId, AttendanceDay $day, bool $hasGap): array
     {
         return [
             'workspace_id' => $workspaceId,
@@ -133,7 +139,7 @@ class AttendanceRebuilder
             'half_hour_slots' => $day->halfHourSlots,
             'first_seen_at' => $day->firstSeenAt->format('Y-m-d H:i:s'),
             'last_seen_at' => $day->lastSeenAt->format('Y-m-d H:i:s'),
-            'has_gap' => false,
+            'has_gap' => $hasGap,
         ];
     }
 

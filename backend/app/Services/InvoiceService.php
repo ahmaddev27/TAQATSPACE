@@ -27,6 +27,7 @@ use App\Services\Finance\DocumentNumberService;
 use App\Services\Finance\InvoiceBalanceService;
 use App\Services\Finance\ReceiptService;
 use App\Services\Finance\SubscriptionPricingService;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -607,7 +608,9 @@ class InvoiceService
     }
 
     /**
-     * Summary tiles for the owner invoices dashboard.
+     * Summary tiles for the owner invoices dashboard. Outstanding and overdue
+     * are what is still owed (partial payments and credits subtracted), so
+     * total_outstanding equals the owner aging report's total.
      *
      * @return array{total_outstanding: string, total_overdue: string, paid_this_month: string}
      */
@@ -615,19 +618,14 @@ class InvoiceService
     {
         $base = fn (): Builder => Invoice::query()->forWorkspace($workspace->id)->notDraft();
 
-        $outstanding = (clone $base())
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
-            ->sum('amount');
+        $outstanding = InvoiceMoney::sumReceivable($base()->receivable());
 
-        $overdue = (clone $base())
-            ->where('status', InvoiceStatus::Overdue->value)
-            ->sum('amount');
+        $overdue = InvoiceMoney::sumReceivable($base()->overdueReceivable());
 
-        $paidThisMonth = (clone $base())
+        $paidThisMonth = InvoiceMoney::sumNet((clone $base())
             ->where('status', InvoiceStatus::Paid->value)
             ->whereYear('paid_at', Carbon::today()->year)
-            ->whereMonth('paid_at', Carbon::today()->month)
-            ->sum('amount');
+            ->whereMonth('paid_at', Carbon::today()->month));
 
         return [
             'total_outstanding' => number_format((float) $outstanding, 2, '.', ''),

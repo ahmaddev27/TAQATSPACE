@@ -1,7 +1,8 @@
 @php
     /** @var \App\Models\CreditNote $creditNote */
     $invoice = $creditNote->invoice;
-    $workspace = $invoice?->subscription?->workspace;
+    // credit_notes.workspace_id always exists; the subscription is null for ad-hoc invoices.
+    $workspace = $creditNote->workspace;
     $customer = $invoice?->customer;
     // Only what was fixed when the note was issued: a numbered fiscal document must not change
     // afterwards. What the customer is owed back moves with payments, so it is shown on the invoice.

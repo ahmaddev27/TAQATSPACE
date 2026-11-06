@@ -8,6 +8,7 @@ use App\Enums\DocStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentStatus;
 use App\Observers\InvoiceImmutabilityObserver;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -189,6 +190,38 @@ class Invoice extends Model
     public function scopeNotDraft(Builder $query): void
     {
         $query->where('doc_status', '!=', DocStatus::Draft->value);
+    }
+
+    /**
+     * Invoices that can still be owed money, the same statuses the owner aging
+     * report counts. Qualified, so it also works on queries joined to subscriptions.
+     *
+     * @param  Builder<Invoice>  $query
+     */
+    public function scopeReceivable(Builder $query): void
+    {
+        $query->whereIn($query->qualifyColumn('status'), InvoiceMoney::RECEIVABLE_STATUSES);
+    }
+
+    /**
+     * Receivables that are late: flagged overdue, or partially paid after the
+     * due date. markOverdue only flags pending invoices, so a part-paid one is
+     * never flagged however late it is (remindOverdue chases the same pair).
+     *
+     * @param  Builder<Invoice>  $query
+     */
+    public function scopeOverdueReceivable(Builder $query): void
+    {
+        $status = $query->qualifyColumn('status');
+        $dueDate = $query->qualifyColumn('due_date');
+
+        $query->where(static function (Builder $late) use ($status, $dueDate): void {
+            $late->where($status, InvoiceStatus::Overdue->value)
+                ->orWhere(static function (Builder $partial) use ($status, $dueDate): void {
+                    $partial->where($status, InvoiceStatus::PartiallyPaid->value)
+                        ->whereDate($dueDate, '<', Carbon::today()->toDateString());
+                });
+        });
     }
 
     // ---- Helpers ----

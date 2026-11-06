@@ -47,11 +47,15 @@ class StatsRepository
             ->get(['subscriber_id', 'started_at', 'ended_at', 'last_seen_at', 'bytes_in', 'bytes_out']);
     }
 
-    /** @return Collection<int, object> member_id, start_date, end_date of subscriptions overlapping the date range */
-    public function membershipSpans(string $workspaceId, string $fromDate, string $toDate): Collection
+    /**
+     * @param  list<string>|null  $memberIds  only these members; every member of the workspace when null
+     * @return Collection<int, object> member_id, start_date, end_date of subscriptions overlapping the date range
+     */
+    public function membershipSpans(string $workspaceId, string $fromDate, string $toDate, ?array $memberIds = null): Collection
     {
         return Subscription::query()
             ->where('workspace_id', $workspaceId)
+            ->when($memberIds !== null, fn (Builder $query) => $query->whereIn('member_id', $memberIds))
             ->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::Expired->value, SubscriptionStatus::Suspended->value])
             ->whereDate('start_date', '<=', $toDate)
             ->where(fn (Builder $query) => $query->whereNull('end_date')->orWhereDate('end_date', '>=', $fromDate))
@@ -73,7 +77,7 @@ class StatsRepository
     /** @param list<array<string, mixed>> $rows one row for every day of the range, so nothing stale survives */
     public function upsertDaily(array $rows): void
     {
-        $update = ['active_members', 'dau', 'active_minutes', 'hour_bucket_hours', 'bytes_in', 'bytes_out', 'peak_concurrent', 'peak_hour', 'hourly_presence'];
+        $update = ['active_members', 'dau', 'active_minutes', 'hour_bucket_hours', 'bytes_in', 'bytes_out', 'peak_concurrent', 'peak_hour', 'hourly_presence', 'has_gap', 'gap_minutes'];
 
         DB::transaction(function () use ($rows, $update): void {
             foreach (array_chunk($rows, self::WRITE_CHUNK) as $chunk) {

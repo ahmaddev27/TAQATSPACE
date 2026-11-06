@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\InvoiceStatus;
 use App\Enums\PosOrderStatus;
 use App\Models\Expense;
 use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\PosOrder;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Carbon;
 
 /**
@@ -56,11 +56,8 @@ class OwnerReportsService
         $invoices = Invoice::query()
             ->forWorkspace($workspace->id)
             ->notDraft()
-            ->whereIn('status', [
-                InvoiceStatus::Pending->value,
-                InvoiceStatus::Overdue->value,
-                InvoiceStatus::PartiallyPaid->value,
-            ])
+            // Shared with every outstanding figure, so the dashboards add up to this report.
+            ->receivable()
             ->whereNotNull('due_date')
             ->get(['amount', 'credited_amount', 'amount_paid', 'due_date']);
 
@@ -75,7 +72,7 @@ class OwnerReportsService
         $total = 0.0;
 
         foreach ($invoices as $invoice) {
-            $outstanding = max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid);
+            $outstanding = InvoiceMoney::receivable($invoice);
 
             if ($outstanding <= 0) {
                 continue;
@@ -124,7 +121,7 @@ class OwnerReportsService
             ->forWorkspace($workspace->id)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(amount_paid) as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::collectedSql().') as total')
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
