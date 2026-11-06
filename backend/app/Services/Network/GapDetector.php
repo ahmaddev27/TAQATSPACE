@@ -11,6 +11,8 @@ use App\Models\RouterGap;
 use App\Repositories\Eloquent\RouterGapRepository;
 use App\Services\FeatureFlagService;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -35,29 +37,59 @@ class GapDetector
     public function detectSilent(): int
     {
         $now = now();
-        $routers = $this->gaps->silentWithoutGap($now->copy()->subMinutes($this->thresholdMinutes()));
+        $cutoff = $now->copy()->subMinutes($this->thresholdMinutes());
+        $opened = $this->openGaps($this->gaps->silentWithoutGap($cutoff), $cutoff, $now);
 
-        if ($routers->isEmpty()) {
-            return 0;
+        foreach ($opened->groupBy('workspace_id') as $workspaceId => $routers) {
+            $this->affectedDays->markSpans((string) $workspaceId, $routers->map(fn (Router $router): array => [$router->last_seen_at->getTimestamp(), $now->getTimestamp()])->all());
         }
 
-        RouterGap::query()->withoutWorkspaceScope()->insert($routers->map(fn (Router $router): array => [
-            'id' => (string) Str::uuid(),
-            'router_id' => $router->getKey(),
-            'workspace_id' => $router->workspace_id,
-            'started_at' => $router->last_seen_at,
-            'ended_at' => null,
-            'reason' => GapReason::NoSync->value,
-            'resolved_at' => null,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ])->all());
+        return $opened->count();
+    }
 
-        foreach ($routers->groupBy('workspace_id') as $workspaceId => $silent) {
-            $this->affectedDays->markSpans((string) $workspaceId, $silent->map(fn (Router $router): array => [$router->last_seen_at->getTimestamp(), $now->getTimestamp()])->all());
+    /**
+     * Opens a gap for each candidate that is still silent and still has none. The check and the
+     * insert run under a lock on the router rows, so a sync or a second detector run that
+     * overlaps this one cannot open a second gap for the same router.
+     *
+     * @param  Collection<int, Router>  $candidates
+     * @return Collection<int, Router> the routers a gap was opened for
+     */
+    public function openGaps(Collection $candidates, CarbonInterface $cutoff, CarbonInterface $now): Collection
+    {
+        if ($candidates->isEmpty()) {
+            return $candidates;
         }
 
-        return $routers->count();
+        return DB::transaction(function () use ($candidates, $cutoff, $now): Collection {
+            $locked = $this->gaps->lockRouters($candidates->pluck('id')->all());
+            $taken = array_flip($this->gaps->routerIdsWithOpenGap($locked->pluck('id')->all()));
+            $routers = $locked->filter(fn (Router $router): bool => ! isset($taken[$router->getKey()]) && $router->last_seen_at !== null && $router->last_seen_at->lte($cutoff))->values();
+
+            if ($routers->isNotEmpty()) {
+                RouterGap::query()->withoutWorkspaceScope()->insert($routers->map(fn (Router $router): array => $this->openRow($router, $now))->all());
+            }
+
+            return $routers;
+        });
+    }
+
+    /**
+     * An ongoing gap grows every day, but its days are otherwise marked only when it closes; the
+     * nightly pass marks them again so attendance and the daily gap minutes follow the gap.
+     *
+     * @return int open gaps re-marked
+     */
+    public function remarkOpenGaps(): int
+    {
+        $now = now()->getTimestamp();
+        $open = $this->gaps->openInNetworkWorkspaces();
+
+        foreach ($open->groupBy('workspace_id') as $workspaceId => $gaps) {
+            $this->affectedDays->markSpans((string) $workspaceId, $gaps->map(fn (RouterGap $gap): array => [$gap->started_at->getTimestamp(), $now])->all());
+        }
+
+        return $open->count();
     }
 
     /**
@@ -71,13 +103,33 @@ class GapDetector
         }
 
         $reason = $this->reasonFor($router, $bootId, $clockOffset, $receivedAt);
-        $open = $this->gaps->openFor((string) $router->getKey());
 
-        if ($open !== null) {
-            $this->close($open, $reason ?? $open->reason, $receivedAt);
-        } elseif ($reason !== null) {
-            $this->record($router, $reason, $router->last_seen_at, $receivedAt);
-        }
+        DB::transaction(function () use ($router, $reason, $receivedAt): void {
+            $this->gaps->lockRouters([(string) $router->getKey()]);
+            $open = $this->gaps->openFor((string) $router->getKey());
+
+            if ($open !== null) {
+                $this->close($open, $reason ?? $open->reason, $receivedAt);
+            } elseif ($reason !== null) {
+                $this->record($router, $reason, $router->last_seen_at, $receivedAt);
+            }
+        });
+    }
+
+    /** @return array<string, mixed> */
+    private function openRow(Router $router, CarbonInterface $now): array
+    {
+        return [
+            'id' => (string) Str::uuid(),
+            'router_id' => $router->getKey(),
+            'workspace_id' => $router->workspace_id,
+            'started_at' => $router->last_seen_at,
+            'ended_at' => null,
+            'reason' => GapReason::NoSync->value,
+            'resolved_at' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
     }
 
     /** A gap that is already over, noticed only now. */

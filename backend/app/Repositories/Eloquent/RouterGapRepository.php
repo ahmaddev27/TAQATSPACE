@@ -42,6 +42,50 @@ class RouterGapRepository
     }
 
     /**
+     * Locks the routers' rows until the surrounding transaction ends, so two writers deciding
+     * whether to open a gap for the same router take turns. Only effective inside a transaction.
+     *
+     * @param  list<string>  $routerIds
+     * @return Collection<int, Router>
+     */
+    public function lockRouters(array $routerIds): Collection
+    {
+        return Router::query()->withoutWorkspaceScope()->whereIn('id', $routerIds)->lockForUpdate()->get(['id', 'workspace_id', 'last_seen_at']);
+    }
+
+    /**
+     * @param  list<string>  $routerIds
+     * @return list<string> ids of the routers that already have an open gap
+     */
+    public function routerIdsWithOpenGap(array $routerIds): array
+    {
+        return RouterGap::query()->withoutWorkspaceScope()->whereIn('router_id', $routerIds)->open()->pluck('router_id')->all();
+    }
+
+    /**
+     * Gaps still open in workspaces with the network module.
+     *
+     * @return Collection<int, RouterGap>
+     */
+    public function openInNetworkWorkspaces(): Collection
+    {
+        return RouterGap::query()
+            ->withoutWorkspaceScope()
+            ->open()
+            ->whereIn('workspace_id', WorkspaceFeatureFlag::query()
+                ->where('feature', WorkspaceFeature::Network->value)
+                ->where('enabled', true)
+                ->select('workspace_id'))
+            ->get(['id', 'workspace_id', 'started_at']);
+    }
+
+    /** Start of the oldest gap still open in the workspace, or null when none is. */
+    public function oldestOpenStart(string $workspaceId): ?CarbonInterface
+    {
+        return RouterGap::query()->withoutWorkspaceScope()->where('workspace_id', $workspaceId)->open()->orderBy('started_at')->value('started_at');
+    }
+
+    /**
      * Syncing routers of workspaces with the network module that have been silent since before `$cutoff`
      * and have no open gap yet. A router that never synced has nothing to be missing, and a disabled
      * one is silent on purpose.
@@ -67,7 +111,7 @@ class RouterGapRepository
     }
 
     /**
-     * @param  array<string, mixed>  $filters  router_id, open (bool), from/to (Y-m-d, on started_at), per_page
+     * @param  array<string, mixed>  $filters  router_id, open (bool), from/to (Y-m-d, a gap matches when it overlaps the range), per_page
      */
     public function paginate(string $workspaceId, array $filters): LengthAwarePaginator
     {
@@ -76,7 +120,7 @@ class RouterGapRepository
             ->where('workspace_id', $workspaceId)
             ->when($filters['router_id'] ?? null, fn (Builder $q, string $v) => $q->where('router_id', $v))
             ->when(isset($filters['open']), fn (Builder $q) => filter_var($filters['open'], FILTER_VALIDATE_BOOLEAN) ? $q->open() : $q->whereNotNull('ended_at'))
-            ->when($filters['from'] ?? null, fn (Builder $q, string $v) => $q->where('started_at', '>=', $v.' 00:00:00'))
+            ->when($filters['from'] ?? null, fn (Builder $q, string $v) => $q->where(fn (Builder $range) => $range->whereNull('ended_at')->orWhere('ended_at', '>=', $v.' 00:00:00')))
             ->when($filters['to'] ?? null, fn (Builder $q, string $v) => $q->where('started_at', '<=', $v.' 23:59:59'))
             ->orderByDesc('started_at')
             ->orderByDesc('id')

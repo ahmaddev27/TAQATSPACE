@@ -7,6 +7,8 @@ namespace Tests\Feature\Network;
 use App\Enums\GapReason;
 use App\Enums\RouterStatus;
 use App\Enums\WorkspaceFeature;
+use App\Jobs\RecalculateStatsJob;
+use App\Models\AttendanceAffectedDay;
 use App\Models\Router;
 use App\Models\RouterGap;
 use App\Models\Workspace;
@@ -15,6 +17,7 @@ use App\Services\Network\GapDetector;
 use App\Support\Router\RouterKeyHasher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 /** Task 3.6: open a gap when a router goes quiet, close it when it syncs again. */
@@ -228,5 +231,73 @@ class GapDetectorTest extends TestCase
         $this->artisan('routers:detect-gaps')->expectsOutput('Opened 1 gap(s).')->assertSuccessful();
 
         $this->assertDatabaseHas('attendance_affected_days', ['workspace_id' => $this->workspace->id, 'date' => '2026-11-06']);
+    }
+
+    public function test_a_second_open_for_a_router_that_already_has_one_is_refused(): void
+    {
+        $this->router->update(['last_seen_at' => now()->subMinutes(12)]);
+        $stale = collect([$this->router->fresh()]);
+        $cutoff = now()->subMinutes(5);
+
+        $this->assertCount(1, $this->detector()->openGaps($stale, $cutoff, now()));
+        $this->assertCount(0, $this->detector()->openGaps($stale, $cutoff, now()));
+        $this->assertCount(1, $this->gaps());
+    }
+
+    public function test_a_candidate_that_synced_before_the_lock_was_taken_gets_no_gap(): void
+    {
+        $this->router->update(['last_seen_at' => now()->subMinutes(12)]);
+        $stale = collect([$this->router->fresh()]);
+        $this->router->update(['last_seen_at' => now()]);
+
+        $this->assertCount(0, $this->detector()->openGaps($stale, now()->subMinutes(5), now()));
+        $this->assertCount(0, $this->gaps());
+    }
+
+    public function test_the_nightly_pass_marks_every_day_of_an_open_gap_again(): void
+    {
+        $this->router->update(['last_seen_at' => now()->subDays(3)]);
+        $this->detector()->detectSilent();
+        AttendanceAffectedDay::query()->delete();
+
+        $this->artisan('attendance:rebuild', ['--recent' => true])->assertSuccessful();
+
+        $this->assertSame(
+            ['2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06'],
+            AttendanceAffectedDay::query()->orderBy('date')->get()->map(fn ($mark) => $mark->date->toDateString())->all(),
+        );
+    }
+
+    public function test_the_nightly_pass_ignores_closed_gaps_and_workspaces_without_the_module(): void
+    {
+        $other = Workspace::factory()->create(['timezone' => 'UTC']);
+        $silent = $this->routerSeenMinutesAgo(0, $other);
+        RouterGap::query()->withoutWorkspaceScope()->create(['router_id' => $silent->id, 'workspace_id' => $other->id, 'started_at' => now()->subDays(2), 'ended_at' => null, 'reason' => GapReason::NoSync]);
+        $this->detector()->record($this->router, GapReason::Reboot, now()->subDays(2), now()->subDay());
+        AttendanceAffectedDay::query()->delete();
+
+        $this->artisan('attendance:rebuild', ['--recent' => true])->assertSuccessful();
+
+        $this->assertSame(0, AttendanceAffectedDay::query()->count());
+    }
+
+    public function test_the_nightly_statistics_reach_back_to_where_an_open_gap_began(): void
+    {
+        Queue::fake();
+        $this->router->update(['last_seen_at' => now()->subDays(5)]);
+        $this->detector()->detectSilent();
+
+        $this->artisan('stats:recalculate')->assertSuccessful();
+
+        Queue::assertPushed(RecalculateStatsJob::class, fn (RecalculateStatsJob $job): bool => $job->workspaceId === $this->workspace->id && $job->from === '2026-11-01' && $job->to === '2026-11-06');
+    }
+
+    public function test_the_nightly_statistics_keep_the_two_day_window_without_an_open_gap(): void
+    {
+        Queue::fake();
+
+        $this->artisan('stats:recalculate')->assertSuccessful();
+
+        Queue::assertPushed(RecalculateStatsJob::class, fn (RecalculateStatsJob $job): bool => $job->from === '2026-11-05' && $job->to === '2026-11-06');
     }
 }

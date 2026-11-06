@@ -77,6 +77,19 @@ class RouterGapEndpointTest extends TestCase
         $this->assertSame(1, $this->getJson('/api/workspace/network/gaps?from=2026-11-02&to=2026-11-04')->json('data.meta.total'));
     }
 
+    public function test_the_range_filter_includes_gaps_that_began_before_it_and_overlap_it(): void
+    {
+        $this->gap($this->router, '2026-10-30 22:00:00', '2026-11-02 08:00:00');
+        $this->gap($this->router, '2026-10-20 10:00:00', '2026-10-21 10:00:00');
+        $this->gap($this->router, '2026-10-31 10:00:00', null);
+        $this->gap($this->router, '2026-11-09 10:00:00', null);
+        Sanctum::actingAs($this->owner);
+
+        $ids = collect($this->getJson('/api/workspace/network/gaps?from=2026-11-02&to=2026-11-04')->assertOk()->json('data.gaps'));
+
+        $this->assertSame(['2026-10-31 10:00:00', '2026-10-30 22:00:00'], $ids->pluck('started_at')->map(fn (string $at) => \Illuminate\Support\Carbon::parse($at)->format('Y-m-d H:i:s'))->all());
+    }
+
     public function test_gaps_of_another_workspace_are_invisible_and_cannot_be_filtered_by(): void
     {
         $otherOwner = User::factory()->owner()->create();
