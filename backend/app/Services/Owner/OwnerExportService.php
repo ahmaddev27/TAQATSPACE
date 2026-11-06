@@ -11,6 +11,7 @@ use App\Models\Workspace;
 use App\Services\ExpenseService;
 use App\Services\InvoiceService;
 use App\Services\MemberService;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -82,7 +83,7 @@ class OwnerExportService
                     $workspace,
                     $this->only($filters, ['status', 'month']),
                 ),
-                ['invoice_number', 'member_name', 'amount', 'status', 'due_date', 'paid_at'],
+                ['invoice_number', 'member_name', 'amount', 'status', 'due_date', 'paid_at', 'credited_amount', 'net_amount'],
                 fn (Invoice $invoice): array => [
                     $invoice->invoice_number,
                     $invoice->subscription?->member?->name,
@@ -90,6 +91,8 @@ class OwnerExportService
                     $invoice->status->value,
                     $invoice->due_date?->toDateString(),
                     $invoice->paid_at?->toDateTimeString(),
+                    $invoice->credited_amount,
+                    number_format(InvoiceMoney::net($invoice), 2, '.', ''),
                 ],
             ],
             'members' => [

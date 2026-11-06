@@ -1,7 +1,8 @@
 @php
     /** @var \App\Models\CreditNote $creditNote */
     $invoice = $creditNote->invoice;
-    $workspace = $invoice?->subscription?->workspace;
+    // credit_notes.workspace_id always exists; the subscription is null for ad-hoc invoices.
+    $workspace = $creditNote->workspace;
     $customer = $invoice?->customer;
 
     // Cairo lacks the shekel glyph (U+20AA); render it in DejaVu Sans like the invoice does.

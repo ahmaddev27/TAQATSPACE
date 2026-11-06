@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Models\Invoice;
 use App\Notifications\Concerns\RendersWorkspaceMail;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -39,8 +40,8 @@ class InvoiceReminderNotification extends Notification implements ShouldQueue
             $this->invoice->subscription?->workspace,
             'تذكير بسداد الفاتورة / Payment reminder',
             [
-                "تذكير: الفاتورة رقم {$this->invoice->invoice_number} بمبلغ ₪{$this->invoice->amount} مستحقة.",
-                "Reminder: invoice {$this->invoice->invoice_number} for ₪{$this->invoice->amount} is due.",
+                "تذكير: الفاتورة رقم {$this->invoice->invoice_number} بمبلغ ₪{$this->owed()} مستحقة.",
+                "Reminder: invoice {$this->invoice->invoice_number} for ₪{$this->owed()} is due.",
                 "تاريخ الاستحقاق / Due date: {$this->invoice->due_date?->toDateString()}",
             ],
         );
@@ -56,8 +57,14 @@ class InvoiceReminderNotification extends Notification implements ShouldQueue
             'type' => 'invoice_reminder',
             'invoice_id' => $this->invoice->id,
             'invoice_number' => $this->invoice->invoice_number,
-            'amount' => $this->invoice->amount,
+            'amount' => $this->owed(),
             'due_date' => $this->invoice->due_date?->toDateString(),
         ];
+    }
+
+    /** What is still owed after credits and payments, not the frozen invoice total. */
+    private function owed(): string
+    {
+        return number_format(InvoiceMoney::receivable($this->invoice), 2, '.', '');
     }
 }

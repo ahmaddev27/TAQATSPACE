@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Models\Invoice;
 use App\Notifications\Concerns\RendersWorkspaceMail;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -65,7 +66,7 @@ class InvoiceOverdueNotification extends Notification implements ShouldQueue
             'audience' => $this->audience,
             'invoice_id' => $this->invoice->id,
             'invoice_number' => $this->invoice->invoice_number,
-            'amount' => $this->invoice->amount,
+            'amount' => number_format(InvoiceMoney::receivable($this->invoice), 2, '.', ''),
             'due_date' => $this->invoice->due_date?->toDateString(),
         ];
     }

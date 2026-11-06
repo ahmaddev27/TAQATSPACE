@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Hotspot\HotspotAccountService;
 use App\Services\Owner\ProfileCompletionService;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -368,6 +369,7 @@ class MemberService
             'id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
             'amount' => $invoice->amount,
+            'net_amount' => number_format(InvoiceMoney::net($invoice), 2, '.', ''),
             'status' => $invoice->status->value,
             'due_date' => $invoice->due_date?->toDateString(),
             'paid_at' => $invoice->paid_at?->toIso8601String(),

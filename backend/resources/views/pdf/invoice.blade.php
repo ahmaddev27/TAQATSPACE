@@ -21,7 +21,13 @@
 
     $isPartiallyPaid = $status === \App\Enums\InvoiceStatus::PartiallyPaid;
     $amountPaid = (float) ($invoice->amount_paid ?? 0);
-    $remaining = max(0, (float) $invoice->amount - (float) $invoice->credited_amount - $amountPaid);
+    $credited = (float) ($invoice->credited_amount ?? 0);
+    $remaining = max(0, (float) $invoice->amount - $credited - $amountPaid);
+
+    // Fully credited and never paid: the invoice settles to "paid" with the credit
+    // date in paid_at, but no money was received, so it must not read as paid.
+    $settledByCredit = $isPaid && $credited > 0.001 && $amountPaid <= 0.001;
+    $pdfText = static fn (string $key, string $locale): string => __('invoice_pdf.' . $key, [], $locale);
 
     // When a receipt has been uploaded but the stored status is still pending or
     // overdue (e.g. a lag before the status transition completed), the PDF should
@@ -35,6 +41,9 @@
     }
 
     $statusLabel = $statusLabels[$displayStatusValue] ?? $statusLabels['pending'];
+    if ($settledByCredit) {
+        $statusLabel = $pdfText('settled_by_credit_note', 'ar');
+    }
 
     $startDate = $subscription?->start_date?->format('Y-m-d') ?? '—';
     $endDate = $subscription?->end_date?->format('Y-m-d') ?? '—';
@@ -418,12 +427,21 @@
             <td class="t-label">الإجمالي المستحق</td>
             <td class="t-value">{!! $money($invoice->amount) !!}</td>
         </tr>
-        @if ($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001))
+        @if ($credited > 0.001)
             <tr>
                 <td class="spacer"></td>
-                <td class="t-label">المدفوع</td>
-                <td class="t-value">{!! $money($amountPaid) !!}</td>
+                <td class="t-label">{{ $pdfText('credit_notes', 'ar') }}<div class="en">{{ $pdfText('credit_notes', 'en') }}</div></td>
+                <td class="t-value">- {!! $money($credited) !!}</td>
             </tr>
+        @endif
+        @if (($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001)) || $credited > 0.001)
+            @if ($amountPaid > 0)
+                <tr>
+                    <td class="spacer"></td>
+                    <td class="t-label">المدفوع</td>
+                    <td class="t-value">{!! $money($amountPaid) !!}</td>
+                </tr>
+            @endif
             <tr>
                 <td class="spacer"></td>
                 <td class="t-label" style="color:#B54708;">المتبقّي</td>
@@ -441,10 +459,13 @@
                     <div class="meta-label">حالة الدفع</div>
                     <div class="meta-label-en">Payment status</div>
                     <div class="meta-value">{{ $statusLabel }}</div>
+                    @if ($settledByCredit)
+                        <div class="en">{{ $pdfText('settled_by_credit_note', 'en') }}</div>
+                    @endif
                 </td>
                 <td>
-                    <div class="meta-label">تاريخ الدفع</div>
-                    <div class="meta-label-en">Paid on</div>
+                    <div class="meta-label">{{ $settledByCredit ? $pdfText('settled_on', 'ar') : 'تاريخ الدفع' }}</div>
+                    <div class="meta-label-en">{{ $settledByCredit ? $pdfText('settled_on', 'en') : 'Paid on' }}</div>
                     <div class="meta-value"><span class="num">{{ $invoice->paid_at?->format('Y-m-d') ?? '—' }}</span></div>
                 </td>
                 <td>
@@ -466,7 +487,7 @@
                 </td>
                 <td style="text-align: left;">
                     @if ($isPaid && $invoice->paid_at)
-                        تاريخ الدفع: <span class="num">{{ $invoice->paid_at->format('Y-m-d') }}</span>
+                        {{ $settledByCredit ? $pdfText('settled_on', 'ar') : 'تاريخ الدفع' }}: <span class="num">{{ $invoice->paid_at->format('Y-m-d') }}</span>
                     @else
                         تاريخ الاستحقاق: <span class="num">{{ $invoice->due_date?->format('Y-m-d') ?? '—' }}</span>
                     @endif
