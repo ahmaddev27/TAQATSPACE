@@ -1,5 +1,6 @@
 @php
     /** @var \App\Models\Invoice $invoice */
+    /** @var string $owedBack from InvoicePdfService::invoiceViewData() */
     $subscription = $invoice->subscription;
     $member = $subscription?->member;
     $workspace = $subscription?->workspace;
@@ -23,6 +24,9 @@
     $amountPaid = (float) ($invoice->amount_paid ?? 0);
     $credited = (float) ($invoice->credited_amount ?? 0);
     $remaining = max(0, (float) $invoice->amount - $credited - $amountPaid);
+    // Paid above what is payable, after a credit note or an overpayment: without
+    // this row "remaining 0" would hide that the workspace owes the customer money.
+    $isOwedBack = (float) $owedBack > 0;
 
     // Fully credited and never paid: the invoice settles to "paid" with the credit
     // date in paid_at, but no money was received, so it must not read as paid.
@@ -434,7 +438,7 @@
                 <td class="t-value">- {!! $money($credited) !!}</td>
             </tr>
         @endif
-        @if (($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001)) || $credited > 0.001)
+        @if (($amountPaid > 0 && ($isPartiallyPaid || $remaining > 0.001)) || $credited > 0.001 || $isOwedBack)
             @if ($amountPaid > 0)
                 <tr>
                     <td class="spacer"></td>
@@ -447,6 +451,13 @@
                 <td class="t-label" style="color:#B54708;">المتبقّي</td>
                 <td class="t-value" style="color:#B54708;">{!! $money($remaining) !!}</td>
             </tr>
+            @if ($isOwedBack)
+                <tr>
+                    <td class="spacer"></td>
+                    <td class="t-label">{{ $pdfText('owed_back', 'ar') }}<div class="en">{{ $pdfText('owed_back', 'en') }}</div></td>
+                    <td class="t-value">{!! $money($owedBack) !!}</td>
+                </tr>
+            @endif
         @endif
     </table>
 

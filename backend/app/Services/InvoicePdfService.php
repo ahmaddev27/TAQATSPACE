@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\CreditNote;
 use App\Models\Invoice;
+use App\Services\Finance\InvoiceBalanceService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Mpdf\Mpdf;
@@ -20,7 +21,9 @@ class InvoicePdfService
      * previously-cached PDF — old invoices regenerate with the new template
      * instead of serving a stale render.
      */
-    private const TEMPLATE_VERSION = 6;
+    private const TEMPLATE_VERSION = 7;
+
+    public function __construct(private readonly InvoiceBalanceService $balances) {}
 
     /**
      * Stream the invoice PDF as an attachment, generating + caching it on the
@@ -78,7 +81,22 @@ class InvoicePdfService
      */
     private function render(Invoice $invoice): string
     {
-        return $this->renderView('pdf.invoice', ['invoice' => $invoice]);
+        return $this->renderView('pdf.invoice', $this->invoiceViewData($invoice));
+    }
+
+    /**
+     * What the invoice template is rendered with. Money the template prints
+     * beyond the stored columns is derived here, from the same definition the
+     * invoice API and the credit-note trail use, so the PDF cannot disagree.
+     *
+     * @return array{invoice: Invoice, owedBack: string}
+     */
+    public function invoiceViewData(Invoice $invoice): array
+    {
+        return [
+            'invoice' => $invoice,
+            'owedBack' => $this->balances->refundDue($invoice),
+        ];
     }
 
     /**
