@@ -75,7 +75,7 @@ class ReportsService
             ->where('status', InvoiceStatus::Paid->value)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as bucket, SUM(".InvoiceMoney::netSql().") as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as bucket, SUM(".InvoiceMoney::netSql().') as total')
             ->groupBy('bucket')
             ->pluck('total', 'bucket');
 
@@ -83,7 +83,7 @@ class ReportsService
             ->notDraft()
             ->receivable()
             ->where('due_date', '>=', $start)
-            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(".InvoiceMoney::receivableSql().") as total")
+            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(".InvoiceMoney::receivableSql().') as total')
             ->groupBy('bucket')
             ->pluck('total', 'bucket');
 

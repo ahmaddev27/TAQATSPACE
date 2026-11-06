@@ -30,8 +30,8 @@ use Tests\TestCase;
  */
 class ReceivablesNetOfPaymentsTest extends TestCase
 {
-    use RefreshDatabase;
     use EmulatesMysqlDateFormat;
+    use RefreshDatabase;
 
     private Workspace $workspace;
 

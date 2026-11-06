@@ -121,7 +121,7 @@ class OwnerReportsService
             ->forWorkspace($workspace->id)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::collectedSql().") as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::collectedSql().') as total')
             ->groupBy('ym')
             ->pluck('total', 'ym');
 

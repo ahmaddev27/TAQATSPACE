@@ -28,8 +28,8 @@ use Tests\TestCase;
  */
 class FiguresNetOfCreditsTest extends TestCase
 {
-    use RefreshDatabase;
     use EmulatesMysqlDateFormat;
+    use RefreshDatabase;
 
     private Workspace $workspace;
 

@@ -195,7 +195,7 @@ class OwnerDashboardService
         $totals = $this->workspaceInvoices($workspace)
             ->where('invoices.status', InvoiceStatus::Paid->value)
             ->where('invoices.paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(invoices.paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::netSql().") as total")
+            ->selectRaw("DATE_FORMAT(invoices.paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::netSql().') as total')
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
