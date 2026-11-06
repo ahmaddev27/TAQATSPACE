@@ -13,6 +13,7 @@ use App\Exceptions\ReceiptException;
 use App\Models\Invoice;
 use App\Models\Receipt;
 use App\Models\ReceiptAllocation;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -50,6 +51,23 @@ class InvoiceBalanceService
     }
 
     /**
+     * Money is never applied to a draft or void invoice, even by a cheque that
+     * clears later.
+     *
+     * @param  Collection<string, Invoice>  $invoices
+     *
+     * @throws InvoiceLifecycleException when any invoice is not issued
+     */
+    public function assertAllIssued(Collection $invoices): void
+    {
+        foreach ($invoices as $invoice) {
+            if ($invoice->doc_status !== DocStatus::Issued) {
+                throw InvoiceLifecycleException::notPayable();
+            }
+        }
+    }
+
+    /**
      * What each invoice still has open once uncleared cheques are counted as
      * spoken for, so two cheques can never both claim the same balance.
      *
@@ -72,9 +90,69 @@ class InvoiceBalanceService
     /** What the customer still owes: the invoice total less credit notes and money collected. */
     public function unpaid(Invoice $invoice): string
     {
-        $balance = bcsub(bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2), (string) $invoice->amount_paid, 2);
+        return InvoiceMoney::stillOwed($invoice);
+    }
 
-        return bccomp($balance, '0', 2) > 0 ? $balance : '0.00';
+    /** What the invoice asks for once credit notes are deducted; zero when fully credited. */
+    public function payable(Invoice $invoice): string
+    {
+        return bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
+    }
+
+    /**
+     * What a "pay what is left" action may take from a locked invoice: what is
+     * owed and not already promised by a pending cheque. Null when nothing is
+     * owed at all (credit notes or earlier payments cover it), which the caller
+     * settles with reconcile() instead of paying.
+     *
+     * @throws ReceiptException when pending cheques hold everything that is owed
+     */
+    public function openToPay(Invoice $locked): ?string
+    {
+        $open = $this->outstanding(new Collection([$locked->id => $locked]))[$locked->id];
+
+        if (bccomp($open, '0', 2) > 0) {
+            return $open;
+        }
+
+        return bccomp($this->unpaid($locked), '0', 2) > 0 ? throw ReceiptException::nothingOpen() : null;
+    }
+
+    /**
+     * The one step that derives a locked invoice's payment status from its money:
+     * paid against payable. Pending cheques are not money yet, so they never
+     * change the status; they only limit what openToPay() lets an action take.
+     * Every action that used to force a status (mark paid, mark unpaid, approve
+     * a receipt) ends here instead.
+     */
+    public function reconcile(Invoice $locked, Carbon $at): void
+    {
+        $this->settle($locked, (string) $locked->amount_paid, (string) $locked->credited_amount, $at);
+    }
+
+    /**
+     * What the customer is owed back on this invoice right now: the money paid
+     * above what is still payable after credit notes. It is derived on every
+     * read and never stored, so it follows a bounced cheque or a voided receipt.
+     *
+     * @return string decimal with two places, never negative
+     */
+    public function refundDue(Invoice $invoice): string
+    {
+        return InvoiceMoney::owedBack($invoice);
+    }
+
+    /**
+     * Attach the current refundDue() to invoices about to be shown, so the
+     * response carries it without the resource computing money itself.
+     *
+     * @param  iterable<Invoice>  $invoices
+     */
+    public function withRefundDue(iterable $invoices): void
+    {
+        foreach ($invoices as $invoice) {
+            $invoice->refundDue = $this->refundDue($invoice);
+        }
     }
 
     /**

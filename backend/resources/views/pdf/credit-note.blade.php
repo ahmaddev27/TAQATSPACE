@@ -4,6 +4,8 @@
     // credit_notes.workspace_id always exists; the subscription is null for ad-hoc invoices.
     $workspace = $creditNote->workspace;
     $customer = $invoice?->customer;
+    // Only what was fixed when the note was issued: a numbered fiscal document must not change
+    // afterwards. What the customer is owed back moves with payments, so it is shown on the invoice.
 
     // Cairo lacks the shekel glyph (U+20AA); render it in DejaVu Sans like the invoice does.
     $money = static fn ($value): string =>
@@ -37,9 +39,6 @@
         <tr><td class="label">الفاتورة الأصلية / Invoice</td><td>{{ $invoice?->invoice_number }}</td></tr>
         <tr><td class="label">العميل / Customer</td><td>{{ $customer?->name }}</td></tr>
         <tr><td class="label">السبب / Reason</td><td>{{ $creditNote->reason }}</td></tr>
-        @if((float) $creditNote->refund_amount > 0)
-            <tr><td class="label">المبلغ المستحق للعميل / Owed back</td><td>{!! $money($creditNote->refund_amount) !!}</td></tr>
-        @endif
         <tr class="total"><td class="label">مبلغ الإشعار / Credit amount</td><td>{!! $money($creditNote->amount) !!}</td></tr>
     </table>
 </body>

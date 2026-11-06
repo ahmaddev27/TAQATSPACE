@@ -29,6 +29,24 @@ class ReceiptException extends RuntimeException
         return new self(__('messages.invoice_payment_exceeds_remaining', ['remaining' => $remaining]), 422);
     }
 
+    /** Everything left on the invoice is already covered by pending cheques. */
+    public static function nothingOpen(): self
+    {
+        return new self(__('messages.invoice_nothing_open_to_pay'), 422);
+    }
+
+    /** Voiding it would also take back what it paid on other invoices or holds on account. */
+    public static function sharedAllocation(): self
+    {
+        return new self(__('messages.receipt_shared_allocation'), 409);
+    }
+
+    /** The workspace recorded it (receipts page, cheque): only the workspace may void it. */
+    public static function recordedByWorkspace(): self
+    {
+        return new self(__('messages.receipt_recorded_by_workspace'), 409);
+    }
+
     public static function invoiceMismatch(): self
     {
         return new self(__('messages.receipt_invoice_mismatch'), 422);

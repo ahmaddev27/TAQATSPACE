@@ -39,6 +39,33 @@ class InvoiceLifecycleException extends RuntimeException
         return new self(__('messages.invoice_not_payable'), 409);
     }
 
+    public static function voidHasCreditNotes(): self
+    {
+        return new self(__('messages.invoice_void_has_credit_notes'), 409);
+    }
+
+    public static function voidHasPendingCheques(): self
+    {
+        return new self(__('messages.invoice_void_has_pending_cheques'), 409);
+    }
+
+    /** Credit notes cover the invoice: there is no payment to take back, and "unpaid" would be false. */
+    public static function nothingOwedCannotUnpaid(): self
+    {
+        return new self(__('messages.invoice_nothing_owed_cannot_unpaid'), 409);
+    }
+
+    /** Payment rows from before finance v2 that no receipt carries yet: clearing the paid amount would orphan them. */
+    public static function paymentsWithoutReceipt(): self
+    {
+        return new self(__('messages.invoice_unpaid_legacy_payments'), 409);
+    }
+
+    public static function hasCreditNotes(): self
+    {
+        return new self(__('messages.invoice_has_credit_notes'), 409);
+    }
+
     public static function noLines(): self
     {
         return new self(__('messages.invoice_no_lines'), 422);

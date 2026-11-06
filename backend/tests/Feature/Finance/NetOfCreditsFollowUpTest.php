@@ -71,13 +71,14 @@ class NetOfCreditsFollowUpTest extends TestCase
         );
     }
 
-    public function test_pl_revenue_keeps_amount_paid_above_amount_when_there_are_no_credits(): void
+    public function test_pl_revenue_leaves_out_an_overpayment_without_credits_as_owed_back(): void
     {
+        // Paid 130 on a 100 invoice (imported or demo data): the 30 is owed back, as it would be after a credit.
         $this->invoice(['status' => InvoiceStatus::Paid->value, 'paid_at' => now(), 'amount' => '100.00', 'amount_paid' => '130.00']);
 
         $rows = app(OwnerReportsService::class)->build($this->workspace)['profit_loss'];
 
-        $this->assertEquals(130, end($rows)['revenue']);
+        $this->assertEquals(100, end($rows)['revenue']);
     }
 
     public function test_pl_revenue_drops_only_the_part_owed_back_when_credited(): void

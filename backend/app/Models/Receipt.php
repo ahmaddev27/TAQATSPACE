@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ChequeStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ReceiptSource;
 use Database\Factories\ReceiptFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\URL;
  * @property string $workspace_id
  * @property PaymentMethod $method
  * @property ChequeStatus|null $cheque_status
+ * @property ReceiptSource|null $source
  */
 class Receipt extends Model
 {
@@ -44,6 +46,8 @@ class Receipt extends Model
         'void_reason',
         'created_by',
         'legacy_payment_id',
+        // Set only by the invoice pay actions; NULL means the workspace recorded it.
+        'source',
     ];
 
     /**
@@ -54,6 +58,7 @@ class Receipt extends Model
         return [
             'method' => PaymentMethod::class,
             'cheque_status' => ChequeStatus::class,
+            'source' => ReceiptSource::class,
             'amount' => 'decimal:2',
             'received_at' => 'datetime',
             'collected_at' => 'datetime',

@@ -419,5 +419,16 @@ return [
     'credit_note_exceeds_invoice' => 'The credit note exceeds what the invoice can still be credited (:remaining).',
     'credit_note_held_by_cheques' => 'A cheque is pending on this invoice, so only :creditable can be credited for now.',
     'credit_note_amount_invalid' => 'The credit note amount must be greater than zero.',
+    'invoice_void_has_credit_notes' => 'An invoice with credit notes cannot be voided. To cancel it, issue a credit note for the rest of it.',
+    'invoice_void_has_pending_cheques' => 'An invoice with a pending cheque cannot be voided; clear or bounce the cheque first.',
+    'invoice_has_credit_notes' => 'An invoice with credit notes cannot be deleted.',
+    'invoice_nothing_open_to_pay' => 'Nothing is open to pay on this invoice: the rest is covered by pending cheques.',
+    'invoice_marked_partially_paid' => 'Payment recorded. A pending cheque still covers part of this invoice, so it stays partially paid until the cheque clears.',
+    'invoice_nothing_owed_cannot_unpaid' => 'Credit notes cover this whole invoice, so nothing is owed and it cannot be marked unpaid.',
+    'invoice_unpaid_legacy_payments' => 'This invoice has payments recorded before receipts were introduced that are not on a receipt yet, so they cannot be undone here.',
+    'invoice_unpaid_receipt_void_reason' => 'Invoice marked unpaid by an administrator.',
+    'receipt_shared_allocation' => 'A receipt on this invoice also pays other invoices or keeps money on account, so it cannot be undone here. The workspace must void that receipt from its receipts page.',
+    'credit_note_request_key_reused' => 'This request key was already used for a different credit note.',
+    'receipt_recorded_by_workspace' => 'A payment on this invoice was recorded by the workspace (on its receipts page, or as a cheque), so it cannot be undone here. The workspace must void that receipt.',
 
 ];

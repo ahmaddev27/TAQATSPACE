@@ -24,6 +24,8 @@ class StoreCreditNoteRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'gt:0', 'max:'.self::MAX_AMOUNT, 'decimal:0,2'],
             'reason' => ['required', 'string', 'min:3', 'max:500'],
+            // One per opened form: repeating the request with it returns the first note.
+            'request_key' => ['nullable', 'string', 'max:64'],
         ];
     }
 }

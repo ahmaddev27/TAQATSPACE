@@ -51,7 +51,7 @@ class CreditNoteController extends Controller
         $target = $this->repository->findInvoice($this->context->workspace(), $invoice);
         $data = $request->validated();
 
-        $note = $this->creditNotes->issue($target, (string) $data['amount'], $data['reason'], $request->user());
+        $note = $this->creditNotes->issue($target, (string) $data['amount'], $data['reason'], $request->user(), $data['request_key'] ?? null);
 
         return ApiResponse::success(new CreditNoteResource($note), __('messages.credit_note_issued'), 201);
     }

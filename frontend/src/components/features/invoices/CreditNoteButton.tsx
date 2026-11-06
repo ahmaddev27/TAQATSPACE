@@ -36,6 +36,14 @@ export function CreditNoteButton({ invoiceId, invoiceNumber, creditable }: Credi
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // One key per opened form: a double click or a retry repeats the same request, never a second credit.
+  const [requestKey, setRequestKey] = useState("");
+
+  const openForm = () => {
+    setRequestKey(crypto.randomUUID());
+    setOpen(true);
+  };
+
   const close = () => {
     if (pending) return;
     setOpen(false);
@@ -57,7 +65,7 @@ export function CreditNoteButton({ invoiceId, invoiceNumber, creditable }: Credi
     }
     setError(null);
     startTransition(async () => {
-      const res = await issueCreditNote(invoiceId, amount, reason.trim(), code.trim() || undefined);
+      const res = await issueCreditNote(invoiceId, amount, reason.trim(), code.trim() || undefined, requestKey);
       if (res.ok) {
         toast({ tone: "ok", title: t("done") });
         close();
@@ -75,7 +83,7 @@ export function CreditNoteButton({ invoiceId, invoiceNumber, creditable }: Credi
       <button
         type="button"
         className="btn btn-ghost btn-sm"
-        onClick={() => setOpen(true)}
+        onClick={openForm}
         aria-label={t("title")}
         title={t("title")}
       >
