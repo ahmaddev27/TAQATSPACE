@@ -48,6 +48,16 @@ class ImportException extends RuntimeException
         return self::make('import_not_xlsx');
     }
 
+    public static function damaged(): self
+    {
+        return self::make('import_damaged_file');
+    }
+
+    public static function tooComplex(): self
+    {
+        return self::make('import_file_too_complex');
+    }
+
     public static function singleSheetOnly(): self
     {
         return self::make('import_single_sheet_only');

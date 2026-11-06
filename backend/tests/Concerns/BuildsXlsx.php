@@ -38,6 +38,61 @@ trait BuildsXlsx
         return new UploadedFile($path, $name, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
     }
 
+    /**
+     * Writes a workbook from raw part XML, as Excel lays it out: the sheet may
+     * use shared strings (the part is wired in through workbook.xml.rels at
+     * $sharedPath), and the caller controls every element of <sheetData>.
+     */
+    protected function xlsxFromXml(string $sheetData, ?string $sharedItems = null, string $afterSheetData = '', string $sharedPath = 'xl/sharedStrings.xml', string $sheetNamespaces = ''): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'tst');
+        $zip = new ZipArchive;
+        $zip->open($path, ZipArchive::OVERWRITE);
+
+        $rels = '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>';
+        if ($sharedItems !== null) {
+            $rels .= '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="'.preg_replace('#^xl/#', '', $sharedPath).'"/>';
+            $zip->addFromString($sharedPath, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.$sharedItems.'</sst>');
+        }
+
+        $zip->addFromString('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>');
+        $zip->addFromString('xl/workbook.xml', '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="S1" sheetId="1" r:id="rId1"/></sheets></workbook>');
+        $zip->addFromString('xl/_rels/workbook.xml.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'.$rels.'</Relationships>');
+        $zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'.$sheetNamespaces.'><sheetData>'.$sheetData.'</sheetData>'.$afterSheetData.'</worksheet>');
+        $zip->close();
+
+        return new UploadedFile($path, 'import.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+    }
+
+    /**
+     * Lays rows out like Excel does: every text goes into the shared-string
+     * table and cells point at it with t="s"; numbers stay numeric cells.
+     * A value written as ['n' => '5'] is a numeric cell.
+     *
+     * @param  list<list<string|array{n: string}>>  $rows
+     */
+    protected function xlsxShared(array $rows): UploadedFile
+    {
+        $items = [];
+        $sheetData = '';
+        foreach ($rows as $rowIndex => $row) {
+            $sheetData .= '<row r="'.($rowIndex + 1).'">';
+            foreach ($row as $columnIndex => $value) {
+                $reference = chr(65 + $columnIndex).($rowIndex + 1);
+                if (is_array($value)) {
+                    $sheetData .= '<c r="'.$reference.'"><v>'.$value['n'].'</v></c>';
+
+                    continue;
+                }
+                $items[] = '<si><t>'.htmlspecialchars($value, ENT_XML1).'</t></si>';
+                $sheetData .= '<c r="'.$reference.'" t="s"><v>'.(count($items) - 1).'</v></c>';
+            }
+            $sheetData .= '</row>';
+        }
+
+        return $this->xlsxFromXml($sheetData, implode('', $items));
+    }
+
     /** @param  list<list<string>>  $rows */
     private function sheetXml(array $rows, ?string $doctype): string
     {

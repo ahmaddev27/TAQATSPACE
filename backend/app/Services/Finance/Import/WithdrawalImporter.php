@@ -23,6 +23,14 @@ class WithdrawalImporter implements RowImporter
 {
     use ChecksImportCells;
 
+    /** `unbilled_charges.amount` is decimal(12,2). */
+    private const MAX_AMOUNT = 9999999999.99;
+
+    /** Excel serials for 2000-01-01 up to 2099-12-31: a bare "5" or "2026" is a mistake, not a date. */
+    private const SERIAL_MIN = 36526;
+
+    private const SERIAL_MAX = 73050;
+
     public function __construct(
         private readonly ImportRepository $repository,
         private readonly UnbilledChargeService $charges,
@@ -71,7 +79,7 @@ class WithdrawalImporter implements RowImporter
                 'unit_price' => $values['unit_price'],
                 'source' => UnbilledChargeSource::Import->value,
                 'source_ref' => $values['source_ref'],
-                'occurred_at' => $this->occurredAt($values['occurred_at']) ?? now(),
+                'occurred_at' => $this->occurredAt($values['occurred_at'], $this->isNumeric($row, 'occurred_at')) ?? now(),
             ], $actor);
         }
 
@@ -79,7 +87,7 @@ class WithdrawalImporter implements RowImporter
     }
 
     /**
-     * @param  array{row: int, values: array<string, string>}  $row
+     * @param  array{row: int, values: array<string, string>, numeric?: list<string>}  $row
      * @param  array<string, true>  $existing
      * @param  array<string, string>  $customers
      * @return list<array{row: int, column: string|null, message: string}>
@@ -95,10 +103,43 @@ class WithdrawalImporter implements RowImporter
             $this->checkText($number, 'customer_email', $values['customer_email'], 255)
                 ?? (isset($customers[strtolower($values['customer_email'])]) ? null : $this->error($number, 'customer_email', 'import_row_unknown_customer')),
             $this->checkText($number, 'description', $values['description'], 255),
-            $this->checkAmount($number, 'qty', $values['qty'], true),
-            $this->checkAmount($number, 'unit_price', $values['unit_price'], false),
-            $values['occurred_at'] !== '' && $this->occurredAt($values['occurred_at']) === null ? $this->error($number, 'occurred_at', 'import_row_invalid_date') : null,
+            ...$this->amountErrors($number, $values),
+            $this->dateError($row),
         ]));
+    }
+
+    /**
+     * The product is checked only when both factors are valid, so one bad cell
+     * is reported once.
+     *
+     * @param  array<string, string>  $values
+     * @return list<array{row: int, column: string|null, message: string}|null>
+     */
+    private function amountErrors(int $number, array $values): array
+    {
+        $qty = $this->checkAmount($number, 'qty', $values['qty'], true);
+        $price = $this->checkAmount($number, 'unit_price', $values['unit_price'], false);
+        $tooLarge = $qty === null && $price === null && round((float) $values['qty'] * (float) $values['unit_price'], 2) > self::MAX_AMOUNT;
+
+        return [$qty, $price, $tooLarge ? $this->error($number, 'unit_price', 'import_row_amount_too_large') : null];
+    }
+
+    /**
+     * @param  array{row: int, values: array<string, string>, numeric?: list<string>}  $row
+     * @return array{row: int, column: string|null, message: string}|null
+     */
+    private function dateError(array $row): ?array
+    {
+        $value = $row['values']['occurred_at'];
+        $unreadable = $value !== '' && $this->occurredAt($value, $this->isNumeric($row, 'occurred_at')) === null;
+
+        return $unreadable ? $this->error($row['row'], 'occurred_at', 'import_row_invalid_date') : null;
+    }
+
+    /** @param  array{row: int, values: array<string, string>, numeric?: list<string>}  $row */
+    private function isNumeric(array $row, string $column): bool
+    {
+        return in_array($column, $row['numeric'] ?? [], true);
     }
 
     /**
@@ -110,17 +151,21 @@ class WithdrawalImporter implements RowImporter
         return array_values(array_unique(array_map('strtolower', $this->column($rows, 'customer_email'))));
     }
 
-    /** Accepts `Y-m-d`, `Y-m-d H:i[:s]` or a spreadsheet date serial; null when blank or unreadable. */
-    private function occurredAt(string $value): ?Carbon
+    /**
+     * Accepts `Y-m-d`, `Y-m-d H:i[:s]` text, or a date serial from a numeric
+     * cell inside a plausible range; null when blank or unreadable. Text such as
+     * "2026" is never read as a serial. A blank date means "now" (see apply()).
+     */
+    private function occurredAt(string $value, bool $numericCell): ?Carbon
     {
         if ($value === '') {
             return null;
         }
 
-        if (is_numeric($value)) {
+        if ($numericCell && is_numeric($value)) {
             $serial = (float) $value;
 
-            return $serial >= 1 && $serial < 80000 ? Carbon::create(1899, 12, 30)->addSeconds((int) round($serial * 86400)) : null;
+            return $serial >= self::SERIAL_MIN && $serial <= self::SERIAL_MAX ? Carbon::create(1899, 12, 30)->addSeconds((int) round($serial * 86400)) : null;
         }
 
         foreach (['Y-m-d', 'Y-m-d H:i', 'Y-m-d H:i:s'] as $format) {
