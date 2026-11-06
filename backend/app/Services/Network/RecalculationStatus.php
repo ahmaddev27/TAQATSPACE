@@ -27,6 +27,7 @@ final class RecalculationStatus
         public readonly ?string $requestedAt = null,
         public readonly ?string $finishedAt = null,
         public readonly ?array $written = null,
+        public readonly bool $scoringFailed = false,
     ) {}
 
     public static function idle(): self
@@ -50,6 +51,12 @@ final class RecalculationStatus
         return new self(self::COMPLETED, $this->from, $this->to, $this->requestedAt, now()->toIso8601String(), $written);
     }
 
+    /** The figures were written, only the follow-up scoring did not finish. */
+    public function withScoringFailed(): self
+    {
+        return new self($this->state, $this->from, $this->to, $this->requestedAt, $this->finishedAt, $this->written, true);
+    }
+
     public function failed(): self
     {
         return new self(self::FAILED, $this->from, $this->to, $this->requestedAt, now()->toIso8601String());
@@ -71,6 +78,7 @@ final class RecalculationStatus
             'requested_at' => $this->requestedAt,
             'finished_at' => $this->finishedAt,
             'written' => $this->written,
+            'scoring_failed' => $this->scoringFailed,
         ];
     }
 
@@ -84,6 +92,7 @@ final class RecalculationStatus
             $data['requested_at'] ?? null,
             $data['finished_at'] ?? null,
             $data['written'] ?? null,
+            (bool) ($data['scoring_failed'] ?? false),
         );
     }
 }

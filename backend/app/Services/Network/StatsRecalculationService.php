@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -28,6 +29,7 @@ class StatsRecalculationService
     public function __construct(
         private readonly AttendanceRebuilder $attendance,
         private readonly StatsAggregator $aggregator,
+        private readonly ScoringService $scoring,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -63,7 +65,10 @@ class StatsRecalculationService
 
         try {
             $this->attendance->rebuild($workspace, $from, $to);
-            $this->store($workspace, $status->running()->completed($this->aggregator->aggregate($workspace, $from, $to)));
+            $completed = $status->running()->completed($this->aggregator->aggregate($workspace, $from, $to));
+            // Stored before the scoring starts: from here on the figures are final whatever happens to the scores.
+            $this->store($workspace, $completed);
+            $this->score($workspace, $completed);
         } catch (Throwable $e) {
             $this->fail($workspace);
 
@@ -73,10 +78,27 @@ class StatsRecalculationService
         }
     }
 
+    /** Scores read the monthly figures just written. Their failure is reported on its own and never undoes the aggregation. */
+    private function score(Workspace $workspace, RecalculationStatus $completed): void
+    {
+        try {
+            $this->scoring->compute($workspace);
+        } catch (Throwable $e) {
+            Log::error('Subscriber scoring failed after a statistics recalculation; the figures were written.', [
+                'workspace_id' => $workspace->getKey(),
+                'exception' => $e,
+            ]);
+            $this->store($workspace, $completed->withScoringFailed());
+        }
+    }
+
     /** Idempotent: also reached from the job's failure hook when a worker was killed mid-run. */
     public function fail(Workspace $workspace): void
     {
-        $this->store($workspace, $this->status($workspace)->failed());
+        $status = $this->status($workspace);
+
+        // A worker killed while scoring leaves finished figures behind; they must not be labelled failed.
+        $this->store($workspace, $status->state === RecalculationStatus::COMPLETED ? $status->withScoringFailed() : $status->failed());
         Cache::forget($this->lockKey($workspace));
     }
 

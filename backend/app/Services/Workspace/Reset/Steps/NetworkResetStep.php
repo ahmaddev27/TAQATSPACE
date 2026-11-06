@@ -24,10 +24,12 @@ final class NetworkResetStep implements WorkspaceResetStep
         'attendance_affected_days',
         'stats_daily_workspace',
         'stats_monthly_subscriber',
+        'subscriber_scores',
         'hotspot_sessions',
         'device_presence',
         'devices',
         'hotspot_events',
+        'router_gaps',
     ];
 
     /** Tables holding recorded data, reached through the router. */

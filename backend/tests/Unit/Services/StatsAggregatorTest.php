@@ -75,6 +75,33 @@ class StatsAggregatorTest extends TestCase
         $this->makeSession($this->first, '2026-11-06 10:00:00', '2026-11-06 10:30:00', 10, 5);
     }
 
+    private function subscribe(User $member, string $start, ?string $end = null): void
+    {
+        Subscription::factory()->create(['workspace_id' => $this->workspace->id, 'member_id' => $member->id, 'start_date' => $start, 'end_date' => $end]);
+    }
+
+    /** The workspace has attendance on these local days of November 2026, so they are its operating days. */
+    private function operateOn(string ...$days): void
+    {
+        foreach ($days as $day) {
+            $this->makeSession($this->second, "2026-11-{$day} 10:00:00", "2026-11-{$day} 10:30:00", mac: 'AA:AA:AA:AA:AA:02');
+        }
+    }
+
+    private function attend(User $member, string ...$days): void
+    {
+        foreach ($days as $day) {
+            $this->makeSession($member, "2026-11-{$day} 10:00:00", "2026-11-{$day} 10:30:00");
+        }
+    }
+
+    private function monthlyRate(User $member): ?float
+    {
+        $rate = StatsMonthlySubscriber::query()->withoutWorkspaceScope()->where('subscriber_id', $member->id)->firstOrFail()->attendance_rate;
+
+        return $rate === null ? null : (float) $rate;
+    }
+
     private function aggregate(string $from = '2026-11-05', string $to = '2026-11-06'): array
     {
         app(AttendanceRebuilder::class)->rebuild($this->workspace, $from, $to);
@@ -134,6 +161,7 @@ class StatsAggregatorTest extends TestCase
     public function test_a_subscriber_month_counts_days_and_traffic(): void
     {
         $this->seedDay();
+        $this->subscribe($this->first, '2026-10-01');
 
         $this->aggregate();
 
@@ -150,6 +178,7 @@ class StatsAggregatorTest extends TestCase
     public function test_attendance_rate_is_relative_to_the_days_the_workspace_had_attendance(): void
     {
         $this->seedDay();
+        $this->subscribe($this->second, '2026-10-01');
 
         $this->aggregate();
 
@@ -218,5 +247,75 @@ class StatsAggregatorTest extends TestCase
         $this->assertSame(['2026-10-26', 1, 1, 1], [$weeks[0]['week_start'], $weeks[0]['days'], $weeks[0]['dau_total'], $weeks[0]['peak_concurrent']]);
         $this->assertSame(['2026-11-02', 2, 2, 6], [$weeks[1]['week_start'], $weeks[1]['days'], $weeks[1]['dau_total'], $weeks[1]['bytes_in']]);
         $this->assertSame(1.0, $weeks[1]['dau_average']);
+    }
+
+    public function test_a_member_who_joined_mid_month_and_attended_every_operating_day_since_is_at_100(): void
+    {
+        $this->operateOn('02', '04', '06', '10', '12');
+        $this->subscribe($this->first, '2026-11-10');
+        $this->attend($this->first, '10', '12');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        $this->assertSame(100.0, $this->monthlyRate($this->first));
+    }
+
+    public function test_a_member_present_for_the_whole_month_keeps_the_rate_the_old_definition_gave(): void
+    {
+        $this->operateOn('02', '04', '06', '10', '12');
+        $this->subscribe($this->first, '2026-10-01');
+        $this->attend($this->first, '02', '04');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        // 2 attended days of 5 operating days.
+        $this->assertSame(40.0, $this->monthlyRate($this->first));
+    }
+
+    public function test_a_member_with_no_operating_day_in_the_period_has_an_empty_rate_not_zero(): void
+    {
+        $this->operateOn('02', '04', '06', '10', '12');
+        $this->subscribe($this->first, '2026-11-20');
+        $this->attend($this->first, '02');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        $this->assertNull($this->monthlyRate($this->first));
+        $this->assertSame(1, StatsMonthlySubscriber::query()->withoutWorkspaceScope()->where('subscriber_id', $this->first->id)->value('attendance_days'));
+    }
+
+    public function test_a_member_without_any_subscription_has_an_empty_rate(): void
+    {
+        $this->operateOn('02', '04');
+        $this->attend($this->first, '02');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        $this->assertNull($this->monthlyRate($this->first));
+    }
+
+    public function test_attendance_outside_the_period_does_not_count_and_the_rate_never_exceeds_100(): void
+    {
+        $this->operateOn('02', '04', '06', '10', '12');
+        $this->subscribe($this->first, '2026-11-10');
+        $this->attend($this->first, '02', '04', '06', '10');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        // Only day 10 of the period's two operating days (10 and 12) counts.
+        $this->assertSame(50.0, $this->monthlyRate($this->first));
+    }
+
+    public function test_a_month_spanning_two_subscriptions_with_a_gap_counts_only_the_days_inside_them(): void
+    {
+        $this->operateOn('02', '04', '06', '10', '12');
+        $this->subscribe($this->first, '2026-10-01', '2026-11-04');
+        $this->subscribe($this->first, '2026-11-10');
+        $this->attend($this->first, '02', '06', '10');
+
+        $this->aggregate('2026-11-01', '2026-11-30');
+
+        // Operating days inside the periods: 02, 04, 10, 12. Attended inside them: 02 and 10. Day 06 is in the gap.
+        $this->assertSame(50.0, $this->monthlyRate($this->first));
     }
 }

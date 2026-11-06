@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $peak_concurrent
  * @property int|null $peak_hour
  * @property list<int>|null $hourly_presence
+ * @property bool $has_gap
+ * @property int $gap_minutes
  */
 class StatsDailyWorkspace extends Model
 {
@@ -46,6 +48,8 @@ class StatsDailyWorkspace extends Model
         'peak_concurrent',
         'peak_hour',
         'hourly_presence',
+        'has_gap',
+        'gap_minutes',
     ];
 
     /**
@@ -64,6 +68,8 @@ class StatsDailyWorkspace extends Model
             'peak_concurrent' => 'integer',
             'peak_hour' => 'integer',
             'hourly_presence' => 'array',
+            'has_gap' => 'boolean',
+            'gap_minutes' => 'integer',
         ];
     }
 }

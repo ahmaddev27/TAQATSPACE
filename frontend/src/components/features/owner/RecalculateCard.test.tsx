@@ -60,6 +60,16 @@ describe("RecalculateCard", () => {
     expect(screen.getByTestId("recalculate-summary")).toBeInTheDocument();
   });
 
+  it("says so when the figures were written but the scoring failed", async () => {
+    getRecalculationStatus.mockResolvedValue({
+      ok: true,
+      data: status("completed", { written: { days: 6, subscriber_months: 2 }, scoring_failed: true }),
+    });
+    render(<RecalculateCard />);
+
+    expect(await screen.findByTestId("recalculate-summary")).toHaveTextContent("scoringFailed");
+  });
+
   it("keeps the button disabled until both dates are chosen", async () => {
     const { container } = render(<RecalculateCard />);
     const button = screen.getByRole("button", { name: "recalculate" });
