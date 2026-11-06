@@ -17,6 +17,7 @@ use App\Services\InvoiceService;
 use App\Services\MemberDashboardService;
 use App\Services\OwnerDashboardService;
 use App\Services\OwnerReportsService;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\Concerns\EmulatesMysqlDateFormat;
@@ -185,8 +186,9 @@ class FiguresNetOfCreditsTest extends TestCase
      * Every revenue and per-status figure equals the pre-credit expression,
      * computed inline (SUM(amount) over the same filter, SUM(amount_paid) for
      * the P&L), over paid, legacy paid, overpaid, partly paid, partially_paid,
-     * overdue and pending invoices without any credit. The receivable figures
-     * change on purpose: see the next test.
+     * overdue and pending invoices without any credit. Two figures change on
+     * purpose: the P&L leaves out what an overpaid invoice owes back (below),
+     * and the receivables (the next test).
      */
     public function test_figures_without_credits_are_unchanged(): void
     {
@@ -216,8 +218,12 @@ class FiguresNetOfCreditsTest extends TestCase
         $this->assertEquals($paid, end($report['revenue_by_month'])['paid']);
         $this->assertEquals($paid, $report['top_workspaces'][0]['paid_total']);
 
+        // The P&L is the one figure that moves without credits: an overpayment (60 billed, 90 paid,
+        // imported or demo data) is owed back, so only the 60 billed counts as revenue.
+        $overpaid = (float) Invoice::query()->whereColumn('amount_paid', '>', 'amount')->sum(new Expression('amount_paid - amount'));
+        $this->assertEquals(30, $overpaid);
         $pl = app(OwnerReportsService::class)->build($this->workspace)['profit_loss'];
-        $this->assertEquals($oldRevenue, end($pl)['revenue']);
+        $this->assertEquals($oldRevenue - $overpaid, end($pl)['revenue']);
     }
 
     /**

@@ -17,7 +17,9 @@ use Illuminate\Database\Query\Expression;
  * An invoice keeps its frozen total `amount`; credit notes accumulate in
  * `credited_amount`. Every expression uses portable CASE WHEN (the test DB is
  * SQLite, production is MariaDB) and equals a plain `amount` / `amount_paid`
- * whenever `credited_amount` is 0.
+ * whenever `credited_amount` is 0, except that collected money never exceeds
+ * the net amount: an overpayment is owed back. The PHP twins (bcmath) are the
+ * one definition the services and the API resource use.
  */
 final class InvoiceMoney
 {
@@ -49,17 +51,16 @@ final class InvoiceMoney
     }
 
     /**
-     * Money actually kept on the invoice: amount_paid minus the part owed back
-     * to the customer after credits. Without credits it is exactly amount_paid,
-     * even when that exceeds amount (imported or demo rows).
+     * Money actually kept on the invoice: the smaller of amount_paid and the
+     * net amount, i.e. amount_paid less what is owed back. Anything paid above
+     * the net amount is owed back to the customer, with or without credits
+     * (an overpaid imported or demo row included). SQL twin of {@see collected()}.
      */
     public static function collectedSql(string $table = 'invoices'): string
     {
         $net = self::netSql($table);
-        $owedBack = "(CASE WHEN {$table}.credited_amount > 0 AND {$table}.amount_paid > {$net}"
-            ." THEN {$table}.amount_paid - {$net} ELSE 0 END)";
 
-        return "({$table}.amount_paid - {$owedBack})";
+        return "(CASE WHEN {$table}.amount_paid > {$net} THEN {$net} ELSE {$table}.amount_paid END)";
     }
 
     /**
@@ -92,11 +93,44 @@ final class InvoiceMoney
         return max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount);
     }
 
-    /** What one loaded invoice still owes (PHP twin of {@see receivableSql()}). */
+    /** What one loaded invoice still owes, as a float for display ({@see stillOwed()}). */
     public static function receivable(Invoice $invoice): float
     {
-        $open = round((float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid, 2);
+        return (float) self::stillOwed($invoice);
+    }
 
-        return max(0.0, $open);
+    /**
+     * What one loaded invoice still owes: amount - credited - paid, never below
+     * zero. The single PHP definition (bcmath), twin of {@see receivableSql()}.
+     */
+    public static function stillOwed(Invoice $invoice): string
+    {
+        return self::positive(bcsub(self::payable($invoice), (string) $invoice->amount_paid, 2));
+    }
+
+    /**
+     * What the customer is owed back: paid - (amount - credited), never below
+     * zero. It follows every payment and is never stored.
+     */
+    public static function owedBack(Invoice $invoice): string
+    {
+        return self::positive(bcsub((string) $invoice->amount_paid, self::payable($invoice), 2));
+    }
+
+    /** What the invoice kept: paid less owed back, twin of {@see collectedSql()}. */
+    public static function collected(Invoice $invoice): string
+    {
+        return bcsub((string) $invoice->amount_paid, self::owedBack($invoice), 2);
+    }
+
+    /** The invoice total less its credit notes (credits never exceed the total). */
+    private static function payable(Invoice $invoice): string
+    {
+        return bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
+    }
+
+    private static function positive(string $amount): string
+    {
+        return bccomp($amount, '0', 2) > 0 ? $amount : '0.00';
     }
 }

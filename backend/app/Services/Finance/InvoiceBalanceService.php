@@ -13,6 +13,7 @@ use App\Exceptions\ReceiptException;
 use App\Models\Invoice;
 use App\Models\Receipt;
 use App\Models\ReceiptAllocation;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -89,9 +90,7 @@ class InvoiceBalanceService
     /** What the customer still owes: the invoice total less credit notes and money collected. */
     public function unpaid(Invoice $invoice): string
     {
-        $balance = bcsub($this->payable($invoice), (string) $invoice->amount_paid, 2);
-
-        return bccomp($balance, '0', 2) > 0 ? $balance : '0.00';
+        return InvoiceMoney::stillOwed($invoice);
     }
 
     /** What the invoice asks for once credit notes are deducted; zero when fully credited. */
@@ -140,10 +139,7 @@ class InvoiceBalanceService
      */
     public function refundDue(Invoice $invoice): string
     {
-        $payable = bcsub((string) $invoice->amount, (string) $invoice->credited_amount, 2);
-        $overpaid = bcsub((string) $invoice->amount_paid, $payable, 2);
-
-        return bccomp($overpaid, '0', 2) > 0 ? $overpaid : '0.00';
+        return InvoiceMoney::owedBack($invoice);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Enums\DocStatus;
 use App\Models\Invoice;
+use App\Support\Finance\InvoiceMoney;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -122,13 +123,7 @@ class InvoiceResource extends JsonResource
     /** What can still be collected; nothing, for a void invoice. */
     private function remainingAmount(): string
     {
-        if ($this->doc_status === DocStatus::Void) {
-            return '0.00';
-        }
-
-        $open = bcsub(bcsub((string) $this->amount, (string) $this->credited_amount, 2), (string) $this->amount_paid, 2);
-
-        return bccomp($open, '0', 2) > 0 ? $open : '0.00';
+        return $this->doc_status === DocStatus::Void ? '0.00' : InvoiceMoney::stillOwed($this->resource);
     }
 
     /**
