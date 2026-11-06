@@ -10,6 +10,7 @@ use App\Repositories\Eloquent\SubscriberScoreRepository;
 use App\Support\Network\LocalDays;
 use Carbon\CarbonImmutable;
 use DateTimeZone;
+use Generator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -41,19 +42,36 @@ class ScoringService
         $today = $this->days->dateOf($now->getTimestamp(), $zone);
         $windowStart = CarbonImmutable::parse($today)->startOfMonth()->subMonths($config->windowMonths() - 1)->toDateString();
 
-        $window = $this->scores->window($workspaceId, $windowStart, substr($today, 0, 7).'-01')->groupBy('subscriber_id');
-        $spans = $this->stats->membershipSpans($workspaceId, $windowStart, $today)->groupBy('member_id');
         $computedAt = $now->utc()->format('Y-m-d H:i:s');
 
-        $rows = $this->scores->lifetime($workspaceId)->map(function (object $lifetime) use ($workspaceId, $config, $zone, $today, $windowStart, $window, $spans, $computedAt): array {
+        return $this->scores->replace($workspaceId, $this->rowChunks($workspaceId, $config, $zone, $today, $windowStart, $computedAt));
+    }
+
+    /** @return Generator<int, list<array<string, mixed>>> */
+    private function rowChunks(string $workspaceId, ScoringConfig $config, DateTimeZone $zone, string $today, string $windowStart, string $computedAt): Generator
+    {
+        foreach ($this->scores->lifetimeChunks($workspaceId) as $lifetimes) {
+            yield $this->scoreChunk($workspaceId, $lifetimes, $config, $zone, $today, $windowStart, $computedAt);
+        }
+    }
+
+    /**
+     * One chunk of subscribers costs three reads whatever its size.
+     *
+     * @param  Collection<int, object>  $lifetimes
+     * @return list<array<string, mixed>>
+     */
+    private function scoreChunk(string $workspaceId, Collection $lifetimes, ScoringConfig $config, DateTimeZone $zone, string $today, string $windowStart, string $computedAt): array
+    {
+        $ids = $lifetimes->pluck('subscriber_id')->all();
+        $window = $this->scores->window($workspaceId, $windowStart, substr($today, 0, 7).'-01', $ids)->groupBy('subscriber_id');
+        $spans = $this->stats->membershipSpans($workspaceId, $windowStart, $today, $ids)->groupBy('member_id');
+
+        return $lifetimes->map(function (object $lifetime) use ($workspaceId, $config, $zone, $today, $windowStart, $window, $spans, $computedAt): array {
             $activity = $this->activity($lifetime, $window->get($lifetime->subscriber_id, collect()), $spans->get($lifetime->subscriber_id, collect()), $zone, $today, $windowStart);
 
             return ['id' => (string) Str::uuid(), 'workspace_id' => $workspaceId, 'subscriber_id' => $lifetime->subscriber_id, 'computed_at' => $computedAt] + $this->encode($this->score($activity, $config));
         })->values()->all();
-
-        $this->scores->replace($workspaceId, $rows);
-
-        return count($rows);
     }
 
     /**
@@ -89,11 +107,22 @@ class ScoringService
         $minutesPerDay = $activity->attendanceDays > 0 ? $activity->activeMinutes / $activity->attendanceDays : 0;
 
         return [
-            'regularity' => $this->capped($activity->attendanceRateSum / $activity->spanMonths),
+            'regularity' => $this->regularity($activity),
             'recency' => $this->capped(100 * (1 - $activity->daysSinceLastActivity / $config->target('recency_zero_days'))),
             'tenure' => $this->capped(100 * $activity->tenureDays / $config->target('tenure_full_days')),
             'engagement' => $this->capped(100 * $minutesPerDay / $config->target('engagement_minutes_per_day')),
         ];
+    }
+
+    /**
+     * Average AR% over the months it could be measured. A month whose AR% is empty (no operating day
+     * in the subscriber's period) says nothing about regularity, so it is left out, not counted as 0.
+     */
+    private function regularity(SubscriberActivity $activity): float
+    {
+        $measured = $activity->spanMonths - $activity->unmeasuredMonths;
+
+        return $measured > 0 ? $this->capped($activity->attendanceRateSum / $measured) : 0.0;
     }
 
     /** @return array<string, float> */
@@ -138,8 +167,10 @@ class ScoringService
         return new SubscriberActivity(
             daysSinceLastActivity: max(0, $this->daysBetween($this->localDate($lifetime->last_activity_at, $zone), $today)),
             tenureDays: max(0, $this->daysBetween($first, $today)),
-            spanMonths: $this->monthIndex($today) - $this->monthIndex($from) + 1,
+            // A first activity dated after today (clock skew) must not shrink the span to zero or below.
+            spanMonths: max(1, $this->monthIndex($today) - $this->monthIndex($from) + 1),
             attendanceRateSum: (float) $months->sum('attendance_rate'),
+            unmeasuredMonths: $months->whereNull('attendance_rate')->count(),
             attendanceDays: (int) $months->sum('attendance_days'),
             activeMinutes: (int) $months->sum('active_actual_minutes'),
             hourBucketHours: (int) $months->sum('hour_bucket_hours'),
@@ -167,6 +198,11 @@ class ScoringService
     {
         $start = $this->dayIndex($from);
         $end = $this->dayIndex($to);
+
+        if ($end < $start) {
+            return 0.0;
+        }
+
         $covered = 0;
         $reached = $start - 1;
 

@@ -624,7 +624,8 @@
         "failed": "Failed"
       },
       "lastRun": "Range {from} to {to}",
-      "written": "{days} days and {months} subscriber-months written"
+      "written": "{days} days and {months} subscriber-months written",
+      "scoringFailed": "The figures were saved but the scores could not be updated; the nightly run will retry"
     },
     "common": {
       "currency": "₪",

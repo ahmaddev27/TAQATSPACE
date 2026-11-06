@@ -624,7 +624,8 @@
         "failed": "فشلت"
       },
       "lastRun": "الفترة من {from} إلى {to}",
-      "written": "كُتب {days} يوم و{months} شهر اشتراك"
+      "written": "كُتب {days} يوم و{months} شهر اشتراك",
+      "scoringFailed": "تم حفظ الأرقام لكن تعذّر تحديث التقييمات، سيُعاد حسابها في التشغيل الليلي"
     },
     "common": {
       "currency": "₪",

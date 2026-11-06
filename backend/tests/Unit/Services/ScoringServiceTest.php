@@ -20,7 +20,7 @@ class ScoringServiceTest extends TestCase
         return new ScoringService(new SubscriberScoreRepository, new StatsRepository, new SegmentClassifier);
     }
 
-    private function activity(int $inactive = 1, float $rateSum = 270.0, float $contract = 1.0): SubscriberActivity
+    private function activity(int $inactive = 1, float $rateSum = 270.0, float $contract = 1.0, int $unmeasured = 0): SubscriberActivity
     {
         return new SubscriberActivity(
             daysSinceLastActivity: $inactive,
@@ -31,6 +31,7 @@ class ScoringServiceTest extends TestCase
             activeMinutes: 54 * 300,
             hourBucketHours: 180,
             contractCoverage: $contract,
+            unmeasuredMonths: $unmeasured,
         );
     }
 
@@ -82,5 +83,21 @@ class ScoringServiceTest extends TestCase
 
         $this->assertEqualsWithDelta(0.40, $zero->weights('strength')['hours'], 0.0001);
         $this->assertSame(40.0, $zero->target('hours_per_month'));
+    }
+
+    public function test_months_without_a_measurable_attendance_rate_are_not_averaged_in_as_zero(): void
+    {
+        $config = ScoringConfig::forWorkspace(new Workspace);
+
+        $score = $this->service()->score($this->activity(rateSum: 160.0, unmeasured: 1), $config);
+
+        $this->assertSame(80.0, $score['components']['loyalty']['regularity']);
+    }
+
+    public function test_when_no_month_is_measurable_regularity_is_zero(): void
+    {
+        $score = $this->service()->score($this->activity(rateSum: 0.0, unmeasured: 3), ScoringConfig::forWorkspace(new Workspace));
+
+        $this->assertSame(0.0, $score['components']['loyalty']['regularity']);
     }
 }

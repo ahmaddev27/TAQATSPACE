@@ -6,6 +6,7 @@ namespace App\Services\Network;
 
 use App\Models\Workspace;
 use App\Repositories\Eloquent\StatsRepository;
+use App\Support\Network\AttendanceRate;
 use App\Support\Network\ConcurrencySweep;
 use App\Support\Network\LocalDays;
 use Carbon\CarbonImmutable;
@@ -161,27 +162,46 @@ class StatsAggregator
      */
     private function monthlyRows(string $workspaceId, Collection $attendance, SessionDayIndex $sessions): array
     {
-        // A month's denominator is the days the workspace actually had attendance, so a quiet or
+        if ($attendance->isEmpty()) {
+            return [];
+        }
+
+        // AR% compares a subscriber with the days the workspace actually had attendance, so a quiet or
         // unfinished month is not punished for days nobody could have attended.
-        $operatingDays = $attendance->groupBy(fn (object $row): string => $this->monthOf($row->date))
-            ->map(fn (Collection $rows): int => $rows->pluck('date')->map(fn ($date): string => $this->dateOf($date))->unique()->count());
+        $operatingDates = $attendance->groupBy(fn (object $row): string => $this->monthOf($row->date))
+            ->map(fn (Collection $rows): array => $rows->pluck('date')->map(fn ($date): string => $this->dateOf($date))->unique()->values()->all());
+        $periods = $this->subscriptionPeriods($workspaceId, $this->dateOf($attendance->min('date')), $this->dateOf($attendance->max('date')));
 
         return $attendance
             ->groupBy(fn (object $row): string => $row->subscriber_id.'|'.$this->monthOf($row->date))
-            ->map(function (Collection $rows, string $key) use ($workspaceId, $operatingDays, $sessions): array {
+            ->map(function (Collection $rows, string $key) use ($workspaceId, $operatingDates, $periods, $sessions): array {
                 [$subscriberId, $month] = explode('|', $key);
+                $rate = AttendanceRate::percent($operatingDates->get($month, []), $rows->map(fn (object $row): string => $this->dateOf($row->date))->all(), $periods->get($subscriberId, []));
 
-                return $this->monthlyRow($workspaceId, $subscriberId, $month, $rows, $operatingDays->get($month, 1), $sessions);
+                return $this->monthlyRow($workspaceId, $subscriberId, $month, $rows, $rate, $sessions);
             })
             ->values()
             ->all();
     }
 
     /**
+     * The date ranges of each member's subscriptions, picked the way `covers()` picks the active members of a day.
+     *
+     * @return Collection<string, list<array{0: string, 1: string|null}>> member id => [start, end] ranges
+     */
+    private function subscriptionPeriods(string $workspaceId, string $firstDate, string $lastDate): Collection
+    {
+        return $this->repository->membershipSpans($workspaceId, $firstDate, $lastDate)
+            ->groupBy('member_id')
+            ->map(fn (Collection $spans): array => $spans->map(fn (object $span): array => [$this->dateOf($span->start_date), $span->end_date === null ? null : $this->dateOf($span->end_date)])->values()->all());
+    }
+
+    /**
      * @param  Collection<int, object>  $rows  the subscriber's days of the month
+     * @param  float|null  $attendanceRate  AR%, null when the subscriber's period holds no operating day
      * @return array<string, mixed>
      */
-    private function monthlyRow(string $workspaceId, string $subscriberId, string $month, Collection $rows, int $operatingDays, SessionDayIndex $sessions): array
+    private function monthlyRow(string $workspaceId, string $subscriberId, string $month, Collection $rows, ?float $attendanceRate, SessionDayIndex $sessions): array
     {
         [$bytesIn, $bytesOut] = $sessions->subscriberTraffic($subscriberId, $month);
 
@@ -190,7 +210,7 @@ class StatsAggregator
             'subscriber_id' => $subscriberId,
             'month' => $month,
             'attendance_days' => $rows->count(),
-            'attendance_rate' => round(min(100, $rows->count() / max(1, $operatingDays) * 100), 2),
+            'attendance_rate' => $attendanceRate,
             'active_actual_minutes' => (int) $rows->sum('active_actual_minutes'),
             'day_span_minutes' => (int) $rows->sum('day_span_minutes'),
             'hour_bucket_hours' => (int) $rows->sum('hour_bucket_hours'),

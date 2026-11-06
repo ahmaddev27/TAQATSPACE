@@ -216,8 +216,8 @@ class ScoresComputeTest extends TestCase
         $large = $this->queriesFor(fn () => app(ScoringService::class)->compute($this->workspace));
 
         $this->assertSame(1000, SubscriberScore::query()->withoutWorkspaceScope()->count());
-        // The upsert is chunked by 500 rows, so 1000 subscribers add exactly one extra write.
-        $this->assertLessThanOrEqual($small + 1, $large);
+        // Reads and writes go in chunks of 500 subscribers: the count grows with the chunks (two here), never with the subscribers.
+        $this->assertLessThanOrEqual($small + 6, $large);
     }
 
     private function queriesFor(callable $work): int
@@ -228,5 +228,63 @@ class ScoresComputeTest extends TestCase
         DB::disableQueryLog();
 
         return count(DB::getQueryLog());
+    }
+
+    public function test_a_first_activity_in_the_future_does_not_divide_by_zero(): void
+    {
+        $user = User::factory()->create();
+        $future = now()->addMonths(2)->format('Y-m-d H:i:s');
+        DB::table('stats_monthly_subscriber')->insert($this->month($user->id, 0, ['first_activity_at' => $future, 'last_activity_at' => $future]));
+
+        $this->assertSame(1, app(ScoringService::class)->compute($this->workspace));
+
+        $score = $this->score($user);
+        $this->assertGreaterThanOrEqual(0, (float) $score->loyalty_score);
+        $this->assertLessThanOrEqual(100, (float) $score->strength_score);
+    }
+
+    public function test_months_with_an_empty_attendance_rate_are_left_out_of_regularity(): void
+    {
+        $measured = User::factory()->create();
+        $unmeasured = User::factory()->create();
+        DB::table('stats_monthly_subscriber')->insert([
+            ...array_map(fn (array $row): array => array_merge($row, ['attendance_rate' => 60]), $this->regularRows($measured->id)),
+            ...array_map(fn (array $row): array => array_merge($row, ['attendance_rate' => $row['month'] === now()->startOfMonth()->toDateString() ? null : 60]), $this->regularRows($unmeasured->id)),
+        ]);
+
+        app(ScoringService::class)->compute($this->workspace);
+
+        // The empty month is not averaged in as 0, so the two subscribers are equally regular.
+        $this->assertSame(60.0, (float) $this->score($measured)->components['loyalty']['regularity']);
+        $this->assertSame(60.0, (float) $this->score($unmeasured)->components['loyalty']['regularity']);
+    }
+
+    public function test_a_subscriber_with_only_empty_attendance_rates_has_zero_regularity(): void
+    {
+        $user = User::factory()->create();
+        DB::table('stats_monthly_subscriber')->insert($this->month($user->id, 0, ['attendance_rate' => null]));
+
+        app(ScoringService::class)->compute($this->workspace);
+
+        $this->assertSame(0.0, (float) $this->score($user)->components['loyalty']['regularity']);
+    }
+
+    public function test_stale_scores_are_dropped_across_chunks_with_a_query_not_an_id_list(): void
+    {
+        $users = User::factory()->count(600)->create();
+        foreach ($users->chunk(200) as $chunk) {
+            DB::table('stats_monthly_subscriber')->insert($chunk->map(fn (User $user): array => $this->month($user->id, 0))->values()->all());
+        }
+        app(ScoringService::class)->compute($this->workspace);
+        DB::table('stats_monthly_subscriber')->whereIn('subscriber_id', $users->take(550)->pluck('id'))->delete();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        app(ScoringService::class)->compute($this->workspace);
+        DB::disableQueryLog();
+
+        $this->assertSame(50, SubscriberScore::query()->withoutWorkspaceScope()->count());
+        $largest = max(array_map(fn (array $query): int => count($query['bindings']), DB::getQueryLog()));
+        $this->assertLessThan(600, $largest, 'No statement may carry the whole workspace as bindings.');
     }
 }
