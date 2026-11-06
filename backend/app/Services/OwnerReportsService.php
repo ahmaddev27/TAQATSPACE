@@ -11,6 +11,7 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\PosOrder;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Carbon;
 
 /**
@@ -124,7 +125,7 @@ class OwnerReportsService
             ->forWorkspace($workspace->id)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(amount_paid) as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::collectedSql().") as total")
             ->groupBy('ym')
             ->pluck('total', 'ym');
 

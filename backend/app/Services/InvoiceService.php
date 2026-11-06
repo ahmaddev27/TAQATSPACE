@@ -24,6 +24,7 @@ use App\Notifications\InvoiceReminderNotification;
 use App\Services\Finance\DocumentNumberService;
 use App\Services\Finance\ReceiptService;
 use App\Services\Finance\SubscriptionPricingService;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -675,19 +676,16 @@ class InvoiceService
     {
         $base = fn (): Builder => Invoice::query()->forWorkspace($workspace->id)->notDraft();
 
-        $outstanding = (clone $base())
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
-            ->sum('amount');
+        $outstanding = InvoiceMoney::sumNet((clone $base())
+            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value]));
 
-        $overdue = (clone $base())
-            ->where('status', InvoiceStatus::Overdue->value)
-            ->sum('amount');
+        $overdue = InvoiceMoney::sumNet((clone $base())
+            ->where('status', InvoiceStatus::Overdue->value));
 
-        $paidThisMonth = (clone $base())
+        $paidThisMonth = InvoiceMoney::sumNet((clone $base())
             ->where('status', InvoiceStatus::Paid->value)
             ->whereYear('paid_at', Carbon::today()->year)
-            ->whereMonth('paid_at', Carbon::today()->month)
-            ->sum('amount');
+            ->whereMonth('paid_at', Carbon::today()->month));
 
         return [
             'total_outstanding' => number_format((float) $outstanding, 2, '.', ''),

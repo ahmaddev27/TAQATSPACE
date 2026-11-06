@@ -11,6 +11,7 @@ use App\Models\Workspace;
 use App\Services\FeatureFlagService;
 use App\Services\WorkspaceService;
 use App\Support\MediaUrl;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -135,10 +136,10 @@ class AdminWorkspaceService
                 ->where('invoices.status', InvoiceStatus::Pending->value)->count(),
             'overdue_count' => $this->workspaceInvoices($workspace)
                 ->where('invoices.status', InvoiceStatus::Overdue->value)->count(),
-            'total_unpaid' => (string) $this->workspaceInvoices($workspace)
-                ->whereIn('invoices.status', $unpaidStatuses)->sum('invoices.amount'),
-            'total_overdue' => (string) $this->workspaceInvoices($workspace)
-                ->where('invoices.status', InvoiceStatus::Overdue->value)->sum('invoices.amount'),
+            'total_unpaid' => (string) InvoiceMoney::sumNet($this->workspaceInvoices($workspace)
+                ->whereIn('invoices.status', $unpaidStatuses)),
+            'total_overdue' => (string) InvoiceMoney::sumNet($this->workspaceInvoices($workspace)
+                ->where('invoices.status', InvoiceStatus::Overdue->value)),
         ];
     }
 

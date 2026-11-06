@@ -12,6 +12,7 @@ use App\Models\InternetPackage;
 use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\Finance\InvoiceMoney;
 
 class MemberDashboardService
 {
@@ -157,14 +158,14 @@ class MemberDashboardService
             ->whereHas('subscription', static fn ($query) => $query->where('member_id', $member->id))
             ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
             ->orderBy('due_date')
-            ->first(['id', 'amount', 'due_date']);
+            ->first(['id', 'amount', 'credited_amount', 'due_date']);
 
         if ($invoice === null) {
             return null;
         }
 
         return [
-            'amount' => (string) $invoice->amount,
+            'amount' => number_format(InvoiceMoney::net($invoice), 2, '.', ''),
             'due_date' => $invoice->due_date?->toDateString(),
         ];
     }

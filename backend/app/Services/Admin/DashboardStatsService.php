@@ -13,6 +13,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Collection;
 
 /**
@@ -79,14 +80,12 @@ class DashboardStatsService
      */
     private function revenue(): array
     {
-        $paid = Invoice::query()
-            ->where('status', InvoiceStatus::Paid->value)
-            ->sum('amount');
+        $paid = InvoiceMoney::sumNet(Invoice::query()
+            ->where('status', InvoiceStatus::Paid->value));
 
-        $outstanding = Invoice::query()
+        $outstanding = InvoiceMoney::sumNet(Invoice::query()
             ->notDraft()
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
-            ->sum('amount');
+            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value]));
 
         return [
             'paid' => number_format((float) $paid, 2, '.', ''),

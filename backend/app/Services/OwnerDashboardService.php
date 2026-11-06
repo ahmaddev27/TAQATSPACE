@@ -14,6 +14,7 @@ use App\Models\Invoice;
 use App\Models\Seat;
 use App\Models\Subscription;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -176,11 +177,10 @@ class OwnerDashboardService
 
     private function revenueForMonth(Workspace $workspace, Carbon $month): float
     {
-        return (float) $this->workspaceInvoices($workspace)
+        return InvoiceMoney::sumNet($this->workspaceInvoices($workspace)
             ->where('invoices.status', InvoiceStatus::Paid->value)
             ->whereYear('invoices.paid_at', $month->year)
-            ->whereMonth('invoices.paid_at', $month->month)
-            ->sum('invoices.amount');
+            ->whereMonth('invoices.paid_at', $month->month));
     }
 
     /**
@@ -195,7 +195,7 @@ class OwnerDashboardService
         $totals = $this->workspaceInvoices($workspace)
             ->where('invoices.status', InvoiceStatus::Paid->value)
             ->where('invoices.paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(invoices.paid_at, '%Y-%m') as ym, SUM(invoices.amount) as total")
+            ->selectRaw("DATE_FORMAT(invoices.paid_at, '%Y-%m') as ym, SUM(".InvoiceMoney::netSql().") as total")
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
