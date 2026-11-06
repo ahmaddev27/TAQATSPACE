@@ -18,6 +18,7 @@ class PaymentVoucherTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '100.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $response = $this->postJson($this->walletUrl($customer, 'returns'), [
             'amount' => '35.00', 'method' => 'transfer', 'reason' => 'Left early', 'reference' => 'TRF-9',
@@ -56,6 +57,7 @@ class PaymentVoucherTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '10.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'returns'), ['amount' => '11.00', 'method' => 'cash', 'reason' => 'Too much'])->assertUnprocessable();
         $ok = $this->postJson($this->walletUrl($customer, 'returns'), ['amount' => '10.00', 'method' => 'cash', 'reason' => 'All of it'])->assertCreated();
@@ -69,6 +71,7 @@ class PaymentVoucherTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '10.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'returns'), ['amount' => '5.00', 'method' => 'cash'])->assertUnprocessable()->assertJsonValidationErrors('reason');
         $this->postJson($this->walletUrl($customer, 'returns'), ['amount' => '5.00', 'method' => 'wallet', 'reason' => 'Nope'])->assertUnprocessable()->assertJsonValidationErrors('method');
@@ -86,6 +89,7 @@ class PaymentVoucherTest extends WalletTestCase
         $kept = $this->giveBack($workspace, $customer, '10.00', $owner);
         $this->giveBack($otherWorkspace, $foreign, '10.00', $otherOwner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $list = $this->getJson(self::VOUCHERS)->assertOk();
         $this->assertSame(1, $list->json('data.meta.total'));
@@ -163,6 +167,8 @@ class PaymentVoucherTest extends WalletTestCase
         $voucher = $this->giveBack($workspace, $customer, '10.00', $owner);
 
         Sanctum::actingAs($owner);
+
+        $this->twoFactor($owner);
         $this->get(self::VOUCHERS."/{$voucher->id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
 
         Sanctum::actingAs($otherOwner);

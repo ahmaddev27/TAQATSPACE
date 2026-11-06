@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Route;
 | Behind the `finance_v2` flag (404 when off). Reading needs `finance_collect`,
 | `finance_reports` or `finance_issue_void`; taking a deposit and paying an
 | invoice from the wallet need `finance_collect`. Paying money back (a return)
-| needs `finance_issue_void`; keeping it (a forfeit) and voiding a voucher also
-| need a recent two-factor check. The wallet only records money handled by cash,
+| needs `finance_issue_void` and a recent two-factor check; keeping it (a forfeit)
+| and voiding a voucher need the same.
+| The wallet only records money handled by cash,
 | bank or cheque; no payment provider is involved.
 */
 Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidden'])
@@ -31,7 +32,7 @@ Route::middleware(['auth:sanctum', 'workspace.current', 'feature:finance_v2,hidd
             Route::post('/{customer}/settlements', [WalletController::class, 'settle'])
                 ->whereUuid('customer')->middleware(['finance.permission:finance_collect', 'throttle:30,1,wallet-settle']);
             Route::post('/{customer}/returns', [WalletController::class, 'return'])
-                ->whereUuid('customer')->middleware(['finance.permission:finance_issue_void', 'throttle:30,1,wallet-return']);
+                ->whereUuid('customer')->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,wallet-return']);
             Route::post('/{customer}/forfeits', [WalletController::class, 'forfeit'])
                 ->whereUuid('customer')->middleware(['finance.permission:finance_issue_void', '2fa.enrolled', '2fa.recent', 'throttle:30,1,wallet-forfeit']);
         });

@@ -22,6 +22,22 @@ class WalletForfeitStepUpTest extends WalletTestCase
         $this->assertSame('100.00', $this->balanceOf($workspace, $customer));
     }
 
+    public function test_returning_money_needs_a_recent_two_factor_check(): void
+    {
+        [$owner, $workspace] = $this->owningWorkspace();
+        $customer = $this->subscriber($workspace);
+        $this->deposit($workspace, $customer, '100.00', $owner);
+        Sanctum::actingAs($owner);
+        $payload = ['amount' => '10.00', 'method' => 'cash', 'reason' => 'Leaving'];
+
+        $this->postJson($this->walletUrl($customer, 'returns'), $payload)->assertForbidden();
+        $this->assertSame('100.00', $this->balanceOf($workspace, $customer));
+
+        $this->twoFactor($owner);
+        $this->postJson($this->walletUrl($customer, 'returns'), $payload)->assertCreated();
+        $this->assertSame('90.00', $this->balanceOf($workspace, $customer));
+    }
+
     public function test_forfeiting_needs_a_reason(): void
     {
         [$owner, $workspace] = $this->owningWorkspace();

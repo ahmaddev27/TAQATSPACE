@@ -15,6 +15,7 @@ class WalletApiTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'deposits'), ['amount' => '150.50', 'method' => 'cash', 'reason' => 'Key deposit'])
             ->assertCreated()
@@ -33,6 +34,7 @@ class WalletApiTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'deposits'), ['amount' => '10.00', 'method' => 'wallet'])->assertUnprocessable()->assertJsonValidationErrors('method');
         $this->postJson($this->walletUrl($customer, 'deposits'), ['amount' => '0', 'method' => 'cash'])->assertUnprocessable()->assertJsonValidationErrors('amount');
@@ -46,6 +48,7 @@ class WalletApiTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '10.00', ['method' => 'wallet']))
             ->assertUnprocessable()->assertJsonValidationErrors('method');
@@ -57,6 +60,7 @@ class WalletApiTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '80.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'returns'), ['amount' => '80.01', 'method' => 'cash', 'reason' => 'Leaving'])->assertUnprocessable();
 
@@ -69,6 +73,7 @@ class WalletApiTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '80.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
         $payload = ['amount' => '80.00', 'method' => 'cash', 'reason' => 'Leaving'];
 
         $this->postJson($this->walletUrl($customer, 'returns'), $payload)->assertCreated();
@@ -83,6 +88,7 @@ class WalletApiTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '80.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
         $payload = ['amount' => '30.00', 'method' => 'cash', 'reason' => 'Leaving', 'request_key' => 'abc-123'];
 
         $first = $this->postJson($this->walletUrl($customer, 'returns'), $payload)->assertCreated();
@@ -99,6 +105,7 @@ class WalletApiTest extends WalletTestCase
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
         $this->deposit($workspace, $customer, '100.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $response = $this->postJson($this->walletUrl($customer, 'settlements'), ['invoice_id' => $invoice->id, 'amount' => '100.00'])->assertCreated();
 
@@ -116,6 +123,7 @@ class WalletApiTest extends WalletTestCase
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
         $this->deposit($workspace, $customer, '50.00', $owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'settlements'), ['invoice_id' => $invoice->id, 'amount' => '50.01'])->assertUnprocessable();
         $this->assertSame('unpaid', $invoice->fresh()->payment_status->value);
@@ -154,6 +162,7 @@ class WalletApiTest extends WalletTestCase
         $this->deposit($workspace, $mine, '20.00', $owner);
         $this->deposit($otherWorkspace, $theirs, '99.00', $otherOwner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $list = $this->getJson(self::WALLET)->assertOk();
 
