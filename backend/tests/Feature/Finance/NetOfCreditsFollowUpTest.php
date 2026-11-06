@@ -15,6 +15,7 @@ use App\Services\Admin\ExportService;
 use App\Services\MemberService;
 use App\Services\Owner\OwnerExportService;
 use App\Services\OwnerReportsService;
+use App\Support\NotificationPushContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,8 +25,8 @@ use Tests\TestCase;
 /** Review follow-ups: P&L identity, CSV exports, member payload and reminder amounts. */
 class NetOfCreditsFollowUpTest extends TestCase
 {
-    use RefreshDatabase;
     use EmulatesMysqlDateFormat;
+    use RefreshDatabase;
 
     private Workspace $workspace;
 
@@ -88,6 +89,16 @@ class NetOfCreditsFollowUpTest extends TestCase
         $this->assertEquals(70, end($rows)['revenue']);
     }
 
+    public function test_pl_revenue_keeps_a_partial_payment_on_a_credited_invoice(): void
+    {
+        // Net 70, paid 50: nothing is owed back, so all 50 is revenue.
+        $this->invoice(['status' => InvoiceStatus::PartiallyPaid->value, 'paid_at' => now(), 'amount_paid' => '50.00', 'credited_amount' => '30.00']);
+
+        $rows = app(OwnerReportsService::class)->build($this->workspace)['profit_loss'];
+
+        $this->assertEquals(50, end($rows)['revenue']);
+    }
+
     public function test_admin_invoice_export_appends_credited_and_net_columns(): void
     {
         $this->invoice(['invoice_number' => 'EXP-1', 'amount' => '100.00', 'credited_amount' => '100.00']);
@@ -96,6 +107,7 @@ class NetOfCreditsFollowUpTest extends TestCase
 
         $this->assertSame(['credited_amount', 'net_amount'], array_slice($rows[0], -2));
         $this->assertSame(['invoice_number', 'member_name', 'workspace_name', 'amount', 'status', 'due_date', 'paid_at'], array_slice($rows[0], 0, 7));
+        $this->assertSame(['EXP-1', '100.00', 'pending'], [$rows[1][0], $rows[1][3], $rows[1][4]]);
         $this->assertEquals(100, $rows[1][7]);
         $this->assertEquals(0, $rows[1][8]);
     }
@@ -108,6 +120,7 @@ class NetOfCreditsFollowUpTest extends TestCase
 
         $this->assertSame(['credited_amount', 'net_amount'], array_slice($rows[0], -2));
         $this->assertSame(['invoice_number', 'member_name', 'amount', 'status', 'due_date', 'paid_at'], array_slice($rows[0], 0, 6));
+        $this->assertSame(['EXP-2', '100.00', 'pending'], [$rows[1][0], $rows[1][2], $rows[1][3]]);
         $this->assertEquals(40, $rows[1][6]);
         $this->assertEquals(60, $rows[1][7]);
     }
@@ -131,15 +144,42 @@ class NetOfCreditsFollowUpTest extends TestCase
 
         $this->assertStringContainsString('₪50.00', $lines);
         $this->assertStringNotContainsString('₪100', $lines);
-        $this->assertEquals(50, $notification->toArray($this->member)['amount']);
+
+        $payload = $notification->toArray($this->member);
+        $this->assertSame('50.00', $payload['amount']);
+        // The database payload is also the push text the member reads, in both languages.
+        $this->assertPushBody($payload, [
+            'en' => "Invoice {$invoice->invoice_number} is due soon (50.00).",
+            'ar' => "موعد استحقاق الفاتورة {$invoice->invoice_number} قريب (50.00).",
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, string>  $expected  locale => push body
+     */
+    private function assertPushBody(array $payload, array $expected): void
+    {
+        foreach ($expected as $locale => $body) {
+            app()->setLocale($locale);
+            $this->assertSame($body, NotificationPushContent::resolve($payload)[1]);
+        }
     }
 
     public function test_overdue_notification_quotes_what_is_still_owed(): void
     {
-        $invoice = $this->invoice(['status' => InvoiceStatus::Overdue->value, 'amount' => '100.00', 'credited_amount' => '30.00']);
+        $invoice = $this->invoice([
+            'status' => InvoiceStatus::Overdue->value, 'amount' => '100.00', 'credited_amount' => '30.00', 'amount_paid' => '20.00',
+        ]);
 
-        $payload = (new InvoiceOverdueNotification($invoice))->toArray($this->member);
+        foreach (['member', 'owner'] as $audience) {
+            $payload = (new InvoiceOverdueNotification($invoice, $audience))->toArray($this->member);
 
-        $this->assertEquals(70, $payload['amount']);
+            $this->assertSame('50.00', $payload['amount']);
+            $this->assertPushBody($payload, [
+                'en' => "Invoice {$invoice->invoice_number} is overdue (50.00).",
+                'ar' => "الفاتورة {$invoice->invoice_number} متأخرة (50.00).",
+            ]);
+        }
     }
 }
