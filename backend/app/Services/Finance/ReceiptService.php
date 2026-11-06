@@ -7,6 +7,7 @@ namespace App\Services\Finance;
 use App\Enums\ChequeStatus;
 use App\Enums\DocumentType;
 use App\Enums\PaymentMethod;
+use App\Enums\WalletEntryType;
 use App\Exceptions\ReceiptException;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
@@ -41,6 +42,7 @@ class ReceiptService
         private readonly InvoiceBalanceService $balances,
         private readonly UnbilledChargeRepository $customers,
         private readonly FileUploadService $uploads,
+        private readonly WalletLedger $wallet,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -142,7 +144,7 @@ class ReceiptService
      */
     public function void(Receipt $receipt, string $reason, ?User $actor): Receipt
     {
-        [$receipt, $paid] = DB::transaction(function () use ($receipt, $reason): array {
+        [$receipt, $paid] = DB::transaction(function () use ($receipt, $reason, $actor): array {
             $locked = $this->lock($receipt);
             $wasCollected = $locked->isCollected();
 
@@ -152,6 +154,8 @@ class ReceiptService
             if ($locked->legacy_payment_id !== null) {
                 InvoicePayment::query()->whereKey($locked->legacy_payment_id)->delete();
             }
+
+            $this->returnWalletMoney($locked, $reason, $actor);
 
             return [$locked, $this->settleCollectionChange($locked, $wasCollected)];
         });
@@ -383,6 +387,29 @@ class ReceiptService
         }
 
         return [];
+    }
+
+    /** A receipt paid out of the wallet gives that money back to it when voided. */
+    private function returnWalletMoney(Receipt $receipt, string $reason, ?User $actor): void
+    {
+        if ($receipt->method !== PaymentMethod::Wallet || $receipt->customer_id === null) {
+            return;
+        }
+
+        $entry = $this->wallet->append(
+            $receipt->workspace_id,
+            $receipt->customer_id,
+            WalletEntryType::Credit,
+            (string) $receipt->amount,
+            $reason,
+            WalletLedger::RELATED_RECEIPT,
+            $receipt->id,
+            $actor,
+        );
+        $this->audit->log('finance.wallet.settlement_reversed', $entry, reason: $reason, actor: $actor, changes: [
+            'receipt' => $receipt->number,
+            'amount' => $entry->amount,
+        ]);
     }
 
     private function lock(Receipt $receipt): Receipt

@@ -30,13 +30,15 @@ use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\Finance\PlanService;
 use App\Services\Finance\ReceiptService;
 use App\Services\Finance\UnbilledChargeService;
+use App\Services\Finance\WalletService;
 
 /**
  * Finance v2 for the first tenant, written through the finance services as the
  * owner: a catalog, plans of every pricing method, a subscription with financial
  * terms, unbilled charges, invoices (draft, issued, void), receipts (a partial
  * allocation and an uncollected cheque), credit notes (partial, and full on an
- * unpaid invoice) and a voided expense.
+ * unpaid invoice), customer wallets (a deposit, a deposit returned with its
+ * payment voucher, and a partly forfeited one) and a voided expense.
  */
 class FinanceV2Step implements DemoSeedStep
 {
@@ -58,6 +60,7 @@ class FinanceV2Step implements DemoSeedStep
         private readonly ReceiptService $receipts,
         private readonly CreditNoteService $creditNotes,
         private readonly ExpenseService $expenses,
+        private readonly WalletService $wallets,
     ) {}
 
     public function seed(DemoContext $context): void
@@ -69,6 +72,7 @@ class FinanceV2Step implements DemoSeedStep
         $plan = $this->seedPlans($workspace, $owner);
         $this->seedFinancialTerms($context, $plan);
         $this->seedInvoicesAndReceipts($workspace, $owner, $context, $item);
+        $this->seedWallets($workspace, $owner, $context);
         $this->seedVoidedExpense($workspace, $owner);
     }
 
@@ -188,6 +192,18 @@ class FinanceV2Step implements DemoSeedStep
             'customer_id' => $customer->id, 'method' => $method->value, 'amount' => $amount.'.00',
             'allocations' => array_map(static fn (array $row): array => ['invoice_id' => $row['invoice_id'], 'amount' => $row['amount'].'.00'], $allocations),
         ], $owner);
+    }
+
+    /** One customer gets a deposit and a voucher for part of it back; another loses part of theirs. */
+    private function seedWallets(Workspace $workspace, User $owner, DemoContext $context): void
+    {
+        $first = $context->user('freelancer1');
+        $second = $context->user('freelancer2');
+
+        $this->wallets->receiveDeposit($workspace, $first->id, '200.00', PaymentMethod::Cash, 'Security deposit', null, $owner);
+        $this->wallets->returnDeposit($workspace, $first->id, '50.00', PaymentMethod::Transfer, 'Part of the deposit returned', 'DEMO-TRF-1', null, null, $owner);
+        $this->wallets->receiveDeposit($workspace, $second->id, '100.00', PaymentMethod::Cheque, 'Equipment deposit', null, $owner);
+        $this->wallets->forfeit($workspace, $second->id, '15.00', 'Damaged equipment in the demo data.', null, $owner);
     }
 
     private function seedVoidedExpense(Workspace $workspace, User $owner): void

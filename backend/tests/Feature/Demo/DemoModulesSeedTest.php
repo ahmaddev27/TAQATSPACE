@@ -191,6 +191,29 @@ class DemoModulesSeedTest extends TestCase
         $this->assertTrue($notes->every(fn (CreditNote $note): bool => $note->invoice->doc_status === DocStatus::Issued));
     }
 
+    public function test_wallets_hold_a_returned_deposit_with_its_voucher_and_a_forfeited_one(): void
+    {
+        $this->seedDemo();
+        $workspaceId = $this->workspace('almanara')->id;
+        $types = \App\Models\WalletEntry::query()->where('workspace_id', $workspaceId)->get()->groupBy(fn ($entry): string => $entry->type->value);
+        $voucher = \App\Models\PaymentVoucher::query()->where('workspace_id', $workspaceId)->firstOrFail();
+
+        $this->assertEqualsCanonicalizing(['deposit_in', 'deposit_return', 'forfeit'], $types->keys()->all());
+        $this->assertSame($types['deposit_return']->first()->id, $voucher->wallet_entry_id);
+        $this->assertCount(2, $types['deposit_in']);
+    }
+
+    public function test_cleaning_the_demo_data_removes_the_wallets_too(): void
+    {
+        $this->seedDemo();
+        $this->assertGreaterThan(0, \App\Models\WalletEntry::query()->count());
+
+        app(\App\Services\Demo\DemoCleaner::class)->clean();
+
+        $this->assertSame(0, \App\Models\WalletEntry::query()->count());
+        $this->assertSame(0, \App\Models\PaymentVoucher::query()->count());
+    }
+
     public function test_hour_packages_come_with_a_requested_purchase(): void
     {
         $this->seedDemo();

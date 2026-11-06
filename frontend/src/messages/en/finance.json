@@ -130,6 +130,68 @@
         "issuedAt": "Issued"
       }
     },
+    "wallet": {
+      "title": "Wallet and deposits",
+      "subtitle": "Money customers hold with you. Every movement is a permanent ledger entry; returning money issues a numbered payment voucher.",
+      "receive": "Receive deposit",
+      "return": "Return",
+      "settle": "Pay invoice",
+      "forfeit": "Forfeit",
+      "empty": "No wallets yet.",
+      "vouchersTitle": "Payment vouchers",
+      "vouchersEmpty": "No payment vouchers yet.",
+      "downloadPdf": "PDF",
+      "chooseCustomer": "Choose a customer",
+      "chooseInvoice": "Choose an invoice",
+      "noInvoices": "This customer has no open invoices.",
+      "balanceHint": "Balance: {amount}",
+      "twoFactorHint": "Needed if your recent check has expired.",
+      "optional": "optional",
+      "actionTitles": {
+        "deposit": "Receive a deposit",
+        "return": "Return money to the customer",
+        "settle": "Pay an invoice from the wallet",
+        "forfeit": "Forfeit part of the deposit"
+      },
+      "done": {
+        "deposit": "Deposit recorded",
+        "return": "Money returned and voucher issued",
+        "settle": "Invoice paid from the wallet",
+        "forfeit": "Deposit forfeited"
+      },
+      "voidTitle": "Void payment voucher",
+      "voidHint": "Voiding {number} puts the money back on the wallet; the voucher stays on file.",
+      "voidReason": "Reason",
+      "void": "Void",
+      "voided": "Payment voucher voided",
+      "statuses": {
+        "active": "Active",
+        "voided": "Voided"
+      },
+      "fields": {
+        "customer": "Customer",
+        "balance": "Balance",
+        "lastEntry": "Last movement",
+        "amount": "Amount",
+        "method": "Method",
+        "reason": "Reason",
+        "reference": "Reference",
+        "invoice": "Invoice",
+        "twoFactor": "Two-factor code",
+        "number": "Number",
+        "paidAt": "Paid",
+        "status": "Status"
+      },
+      "methods": {
+        "cash": "Cash",
+        "transfer": "Transfer",
+        "cheque": "Cheque",
+        "card": "Card"
+      },
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "error": "Something went wrong"
+    },
     "receipts": {
       "title": "Receipts",
       "subtitle": "Money received from customers, spread over their invoices. A cheque counts as paid once it clears.",

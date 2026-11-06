@@ -21,6 +21,7 @@ let routerToken: ApiClient;
 let invoiceToken: ApiClient;
 let receiptToken: ApiClient;
 let creditToken: ApiClient;
+let walletToken: ApiClient;
 let secret = "";
 let recoveryCodes: string[] = [];
 let customer = "";
@@ -36,7 +37,8 @@ async function verify(client: ApiClient): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  [enroller, routerToken, invoiceToken, receiptToken, creditToken] = await Promise.all([
+  [enroller, routerToken, invoiceToken, receiptToken, creditToken, walletToken] = await Promise.all([
+    ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
     ApiClient.login(ACCOUNT),
@@ -47,7 +49,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await Promise.all([enroller, routerToken, invoiceToken, receiptToken, creditToken].map((client) => client?.dispose()));
+  await Promise.all([enroller, routerToken, invoiceToken, receiptToken, creditToken, walletToken].map((client) => client?.dispose()));
 });
 
 test("without two-factor, the sensitive actions are refused for enrolment, not for a stale check", async () => {
@@ -204,6 +206,37 @@ test.describe("credit notes (M5)", () => {
     expect((await enroller.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "30.01", reason: "Too much" })).status()).toBe(422);
     expect((await enroller.post(`workspace/invoices/${invoice}/credit-notes`, { amount: "5.00", reason: "" })).status()).toBe(422);
     expect((await enroller.post(`workspace/invoices/${draft}/credit-notes`, { amount: "5.00", reason: "On a draft" })).status()).toBe(422);
+  });
+});
+
+test.describe("wallet (M5)", () => {
+  const WALLET = () => `workspace/finance/wallet/${customer}`;
+  const balance = async (): Promise<number> => Number(deepFind(await walletToken.json(await walletToken.get(WALLET())), "balance"));
+
+  test("returning and forfeiting need a recent code, then work; a voucher is numbered and can be voided", async () => {
+    expect((await walletToken.post(`${WALLET()}/deposits`, { amount: "100.00", method: "cash", reason: "E2E deposit" })).status()).toBe(201);
+    const start = await balance();
+
+    const staleReturn = await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return" });
+    expect(staleReturn.status()).toBe(403);
+    expect(await staleReturn.json()).toMatchObject({ code: TWO_FACTOR_REQUIRED });
+    const staleForfeit = await walletToken.post(`${WALLET()}/forfeits`, { amount: "10.00", reason: "E2E forfeit" });
+    expect(staleForfeit.status()).toBe(403);
+    expect(await balance(), "a refused step-up moves no money").toBeCloseTo(start, 2);
+
+    await verify(walletToken);
+    const returned = await walletToken.json(await walletToken.post(`${WALLET()}/returns`, { amount: "10.00", method: "cash", reason: "E2E return" }));
+    const voucher = idOf(returned);
+    expect(deepFind(returned, "number")).toBeTruthy();
+    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "E2E forfeit" })).status()).toBe(201);
+    expect(await balance()).toBeCloseTo(start - 15, 2);
+
+    expect((await walletToken.post(`${WALLET()}/returns`, { amount: "100000.00", method: "cash", reason: "Too much" })).status()).toBe(422);
+    expect((await walletToken.post(`${WALLET()}/forfeits`, { amount: "5.00", reason: "" })).status()).toBe(422);
+
+    expect((await walletToken.post(`workspace/finance/payment-vouchers/${voucher}/void`, { reason: "E2E void" })).status()).toBe(200);
+    expect(await balance(), "voiding puts the money back").toBeCloseTo(start - 5, 2);
+    expect((await walletToken.post(`workspace/finance/payment-vouchers/${voucher}/void`, { reason: "E2E void again" })).status()).toBe(409);
   });
 });
 

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\CreditNote;
 use App\Models\Invoice;
+use App\Models\PaymentVoucher;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Mpdf\Mpdf;
@@ -93,6 +94,17 @@ class InvoicePdfService
         return response()->streamDownload(static function () use ($pdf): void {
             echo $pdf;
         }, $creditNote->number.'.pdf', ['Content-Type' => 'application/pdf']);
+    }
+
+    /** Stream a payment voucher as a PDF attachment; rendered on demand like a credit note. */
+    public function streamPaymentVoucher(PaymentVoucher $voucher): StreamedResponse
+    {
+        $voucher->loadMissing('customer', 'workspace', 'creator');
+        $pdf = $this->renderView('pdf.payment-voucher', ['voucher' => $voucher]);
+
+        return response()->streamDownload(static function () use ($pdf): void {
+            echo $pdf;
+        }, $voucher->number.'.pdf', ['Content-Type' => 'application/pdf']);
     }
 
     /**

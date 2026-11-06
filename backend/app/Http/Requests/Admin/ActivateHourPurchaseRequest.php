@@ -26,7 +26,7 @@ class ActivateHourPurchaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', Rule::in(PaymentMethod::values())],
+            'payment_method' => ['required', Rule::in(PaymentMethod::manualValues())],
             'paid_at' => ['nullable', 'date', 'before_or_equal:tomorrow'],
             'receipt' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:'.self::RECEIPT_MAX_KILOBYTES],
         ];

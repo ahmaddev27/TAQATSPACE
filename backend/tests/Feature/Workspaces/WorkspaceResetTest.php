@@ -152,6 +152,35 @@ class WorkspaceResetTest extends TestCase
         Storage::disk('local')->assertMissing('receipts/private-proof.pdf');
     }
 
+    public function test_reset_clears_wallet_entries_and_payment_vouchers_of_the_workspace_only(): void
+    {
+        Storage::fake('public');
+        [$owner, $workspace] = $this->ownerWithWorkspace();
+        [$otherOwner, $other] = $this->ownerWithWorkspace();
+        $customer = User::factory()->freelancer()->create();
+        $keep = $this->walletWithVoucher($other, $customer, $otherOwner);
+        $gone = $this->walletWithVoucher($workspace, $customer, $owner);
+
+        $this->reset($owner, $workspace)->assertOk();
+
+        $this->assertSame(0, DB::table('wallet_entries')->where('workspace_id', $workspace->id)->count());
+        $this->assertSame(0, DB::table('payment_vouchers')->where('workspace_id', $workspace->id)->count());
+        $this->assertNull(DB::table('payment_vouchers')->find($gone));
+        $this->assertSame(2, DB::table('wallet_entries')->where('workspace_id', $other->id)->count());
+        $this->assertNotNull(DB::table('payment_vouchers')->find($keep));
+    }
+
+    /** A deposit with part of it paid back; returns the voucher id. */
+    private function walletWithVoucher(Workspace $workspace, User $customer, User $actor): string
+    {
+        $ledger = app(\App\Services\Finance\WalletLedger::class);
+        $ledger->append($workspace->id, $customer->id, \App\Enums\WalletEntryType::DepositIn, '50.00', null, null, null, $actor);
+        $entry = $ledger->append($workspace->id, $customer->id, \App\Enums\WalletEntryType::DepositReturn, '20.00', 'Back', null, null, $actor);
+
+        return app(\App\Services\Finance\PaymentVoucherService::class)
+            ->issueFor($entry, \App\Enums\PaymentMethod::Cash, null, null, $actor)->id;
+    }
+
     public function test_reset_forgets_import_batches_so_the_same_file_can_be_imported_again(): void
     {
         Storage::fake('public');

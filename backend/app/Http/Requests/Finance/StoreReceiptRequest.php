@@ -24,7 +24,7 @@ class StoreReceiptRequest extends FormRequest
     {
         return [
             'customer_id' => ['required', 'uuid'],
-            'method' => ['required', Rule::enum(PaymentMethod::class)],
+            'method' => ['required', Rule::in(PaymentMethod::manualValues())],
             'amount' => ['required', 'decimal:0,2', 'gt:0', 'max:9999999999.99'],
             'received_at' => ['nullable', 'date'],
             'collected_at' => ['nullable', 'date'],

@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
+import { statePath } from "./support/accounts";
 import { ApiClient, deepFind } from "./support/api";
 import { TINY_PDF, created, dateFromNow, idOf, memberUserId, num, unique } from "./support/data";
-import { firstArray } from "./support/ui";
+import { en } from "./support/messages";
+import { dialog, fieldInput, firstArray } from "./support/ui";
 import { XLSX_MIME, buildXlsx } from "./support/xlsx";
 
 // Finance v2 (M5) as owner1, whose workspace has the finance_v2 flag on. The
@@ -363,6 +365,92 @@ test.describe("credit notes (M5)", () => {
 
     expect(response.status()).toBe(403);
     expect(await response.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+  });
+});
+
+test.describe("wallet and payment vouchers (M5)", () => {
+  const WALLET = "workspace/finance/wallet";
+  const balanceOf = async (who: string): Promise<number> => num(deepFind(await owner.json(await owner.get(`${WALLET}/${who}`)), "balance"));
+  const deposit = (amount: string, extra: Record<string, unknown> = {}) =>
+    owner.post(`${WALLET}/${customer}/deposits`, { amount, method: "cash", reason: "E2E deposit", ...extra });
+
+  test("the demo wallets and vouchers are listed", async () => {
+    const wallets = firstArray(await owner.json(await owner.get(WALLET, { per_page: 100 }))) as Array<{ balance: string }>;
+    expect(wallets.length, "the demo customers with a deposit").toBeGreaterThanOrEqual(2);
+
+    const vouchers = firstArray(await owner.json(await owner.get("workspace/finance/payment-vouchers", { per_page: 100 }))) as Array<{ number: string }>;
+    expect(vouchers.length).toBeGreaterThanOrEqual(1);
+    for (const voucher of vouchers) expect(voucher.number, "every voucher is numbered").toBeTruthy();
+  });
+
+  test("a deposit raises the balance, and a repeated request key records it once", async () => {
+    const before = await balanceOf(customer);
+    const key = unique("wallet-key");
+
+    expect((await deposit("40.00", { request_key: key })).status()).toBe(201);
+    expect((await deposit("40.00", { request_key: key })).status()).toBe(201);
+
+    expect(await balanceOf(customer)).toBeCloseTo(before + 40, 2);
+  });
+
+  test("a request key cannot be reused for a different amount", async () => {
+    const key = unique("wallet-key");
+    expect((await deposit("5.00", { request_key: key })).status()).toBe(201);
+
+    expect((await deposit("6.00", { request_key: key })).status()).toBe(409);
+  });
+
+  test("a zero or negative deposit and someone who is not a customer are refused", async () => {
+    expect((await deposit("0")).status()).toBe(422);
+    expect((await deposit("-5.00")).status()).toBe(422);
+    expect((await owner.post(`${WALLET}/00000000-0000-4000-8000-000000000000/deposits`, { amount: "5.00", method: "cash" })).status()).toBe(422);
+    expect((await owner.get(`${WALLET}/00000000-0000-4000-8000-000000000000`)).status()).toBe(404);
+  });
+
+  test("an invoice is paid from the wallet through a receipt, and not beyond the balance", async () => {
+    expect((await deposit("30.00")).status()).toBe(201);
+    const invoice = await issuedInvoice(customer, 30);
+    const before = await balanceOf(customer);
+
+    const settled = await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: invoice, amount: "30.00" });
+    expect(settled.status()).toBe(201);
+
+    expect(await balanceOf(customer)).toBeCloseTo(before - 30, 2);
+    expect(await field(`workspace/invoices/${invoice}`, "payment_status")).toBe("paid");
+
+    const huge = await issuedInvoice(customer, 90000);
+    expect((await owner.post(`${WALLET}/${customer}/settlements`, { invoice_id: huge, amount: "90000.00" })).status(), "more than the wallet holds").toBe(422);
+  });
+
+  test("returning and forfeiting need the two-factor enrolment of the person doing it", async () => {
+    const before = await balanceOf(customer);
+
+    const returned = await owner.post(`${WALLET}/${customer}/returns`, { amount: "1.00", method: "cash", reason: "E2E return" });
+    const forfeited = await owner.post(`${WALLET}/${customer}/forfeits`, { amount: "1.00", reason: "E2E forfeit" });
+
+    for (const response of [returned, forfeited]) {
+      expect(response.status()).toBe(403);
+      expect(await response.json()).toMatchObject({ code: "two_factor_enrollment_required" });
+    }
+    expect(await balanceOf(customer), "nothing moved").toBeCloseTo(before, 2);
+  });
+
+  test.describe("in the browser", () => {
+    test.use({ storageState: statePath("owner1") });
+
+    test("the owner receives a deposit from the wallet page and the balance follows", async ({ page }) => {
+      const before = await balanceOf(customer);
+
+      await page.goto("/en/owner/finance/wallet");
+      await page.getByRole("button", { name: en("finance", "finance.wallet.receive"), exact: true }).first().click();
+      const form = dialog(page);
+      await fieldInput(form, en("finance", "finance.wallet.fields.customer")).selectOption(customer);
+      await fieldInput(form, en("finance", "finance.wallet.fields.amount")).fill("12.50");
+      await form.getByRole("button", { name: en("finance", "finance.wallet.save") }).click();
+
+      await expect(page.getByText(en("finance", "finance.wallet.done.deposit"))).toBeVisible();
+      expect(await balanceOf(customer)).toBeCloseTo(before + 12.5, 2);
+    });
   });
 });
 
