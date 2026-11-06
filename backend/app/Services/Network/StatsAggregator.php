@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Network;
 
 use App\Models\Workspace;
+use App\Repositories\Eloquent\RouterGapRepository;
 use App\Repositories\Eloquent\StatsRepository;
 use App\Support\Network\ConcurrencySweep;
+use App\Support\Network\GapDays;
 use App\Support\Network\LocalDays;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use DateTimeZone;
 use Illuminate\Support\Collection;
 
 /**
@@ -26,7 +29,9 @@ class StatsAggregator
 
     public function __construct(
         private readonly StatsRepository $repository,
+        private readonly RouterGapRepository $gaps,
         private readonly LocalDays $days = new LocalDays,
+        private readonly GapDays $gapDays = new GapDays,
     ) {}
 
     /**
@@ -54,13 +59,25 @@ class StatsAggregator
             $this->days,
         );
 
-        $daily = $this->dailyRows($workspaceId, $from, $to, $attendance, $sessions);
+        $daily = $this->dailyRows($workspaceId, $from, $to, $attendance, $sessions, $this->gapMinutes($workspace, $zone, $from, $to));
         $monthly = $this->monthlyRows($workspaceId, $attendance, $sessions);
 
         $this->repository->upsertDaily($daily);
         $this->repository->replaceMonthly($workspaceId, $firstMonth, CarbonImmutable::parse($to)->startOfMonth()->toDateString(), $monthly);
 
         return ['days' => count($daily), 'subscriber_months' => count($monthly)];
+    }
+
+    /** @return array<string, int> local date => minutes the routers sent no data; days without a gap are absent */
+    private function gapMinutes(Workspace $workspace, DateTimeZone $zone, string $from, string $to): array
+    {
+        $gaps = $this->gaps->touching(
+            (string) $workspace->getKey(),
+            CarbonImmutable::createFromTimestampUTC($this->days->startOf($from, $zone)),
+            CarbonImmutable::createFromTimestampUTC($this->days->startOf($this->days->next($to), $zone)),
+        );
+
+        return $this->gapDays->minutesByDate($gaps, $zone, $from, $to, now());
     }
 
     /**
@@ -84,21 +101,23 @@ class StatsAggregator
             'bytes_in' => $days->sum('bytes_in'),
             'bytes_out' => $days->sum('bytes_out'),
             'peak_concurrent' => $days->max('peak_concurrent'),
+            'gap_days' => $days->where('has_gap', true)->count(),
         ])->values()->all();
     }
 
     /**
      * @param  Collection<int, object>  $attendance
+     * @param  array<string, int>  $gapMinutes
      * @return list<array<string, mixed>>
      */
-    private function dailyRows(string $workspaceId, string $from, string $to, Collection $attendance, SessionDayIndex $sessions): array
+    private function dailyRows(string $workspaceId, string $from, string $to, Collection $attendance, SessionDayIndex $sessions, array $gapMinutes): array
     {
         $byDate = $attendance->groupBy(fn (object $row): string => $this->dateOf($row->date));
         $members = $this->repository->membershipSpans($workspaceId, $from, $to);
         $rows = [];
 
         for ($date = $from; $date <= $to; $date = $this->days->next($date)) {
-            $rows[] = $this->dailyRow($workspaceId, $date, $byDate->get($date, collect()), $sessions, $members);
+            $rows[] = $this->dailyRow($workspaceId, $date, $byDate->get($date, collect()), $sessions, $members, $gapMinutes[$date] ?? 0);
         }
 
         return $rows;
@@ -109,7 +128,7 @@ class StatsAggregator
      * @param  Collection<int, object>  $spans
      * @return array<string, mixed>
      */
-    private function dailyRow(string $workspaceId, string $date, Collection $attendance, SessionDayIndex $sessions, Collection $spans): array
+    private function dailyRow(string $workspaceId, string $date, Collection $attendance, SessionDayIndex $sessions, Collection $spans, int $gapMinutes): array
     {
         $presence = $this->hourlyPresence($attendance);
         [$bytesIn, $bytesOut] = $sessions->traffic($date);
@@ -126,6 +145,9 @@ class StatsAggregator
             'peak_concurrent' => ConcurrencySweep::peak($sessions->intervals($date)),
             'peak_hour' => $attendance->isEmpty() ? null : array_search(max($presence), $presence, true),
             'hourly_presence' => json_encode($presence),
+            // A day with a gap is not "quiet": the figures above may be missing data rather than zero.
+            'has_gap' => $gapMinutes > 0,
+            'gap_minutes' => $gapMinutes,
         ];
     }
 

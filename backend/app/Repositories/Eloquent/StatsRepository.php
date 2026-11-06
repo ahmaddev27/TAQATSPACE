@@ -73,7 +73,7 @@ class StatsRepository
     /** @param list<array<string, mixed>> $rows one row for every day of the range, so nothing stale survives */
     public function upsertDaily(array $rows): void
     {
-        $update = ['active_members', 'dau', 'active_minutes', 'hour_bucket_hours', 'bytes_in', 'bytes_out', 'peak_concurrent', 'peak_hour', 'hourly_presence'];
+        $update = ['active_members', 'dau', 'active_minutes', 'hour_bucket_hours', 'bytes_in', 'bytes_out', 'peak_concurrent', 'peak_hour', 'hourly_presence', 'has_gap', 'gap_minutes'];
 
         DB::transaction(function () use ($rows, $update): void {
             foreach (array_chunk($rows, self::WRITE_CHUNK) as $chunk) {

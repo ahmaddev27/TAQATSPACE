@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Demo\Steps;
 
+use App\Enums\GapReason;
 use App\Jobs\ProcessRouterBatch;
 use App\Models\Router;
 use App\Models\Subscription;
@@ -15,6 +16,7 @@ use App\Services\Hotspot\HotspotSyncService;
 use App\Services\Hotspot\SyncPayload;
 use App\Services\Hotspot\SyncWireParser;
 use App\Services\Network\AttendanceRebuilder;
+use App\Services\Network\GapDetector;
 use App\Services\Network\StatsAggregator;
 use App\Services\Router\RouterService;
 use App\Support\Network\LocalDays;
@@ -56,6 +58,7 @@ class NetworkStep implements DemoSeedStep
         private readonly SyncWireParser $parser,
         private readonly AttendanceRebuilder $attendance,
         private readonly StatsAggregator $stats,
+        private readonly GapDetector $gaps,
         private readonly LocalDays $days = new LocalDays,
     ) {}
 
@@ -67,10 +70,17 @@ class NetworkStep implements DemoSeedStep
         $usernames = $this->provisionAccounts($context);
         $this->pushBatch($main, $this->mainBatch($usernames));
         $this->pushBatch($this->probeRouter($workspace), $this->probeBatch());
+        $this->recordGap($main);
 
         ProcessRouterBatch::dispatchSync((string) $main->getKey());
         $this->attendance->rebuildAffected();
         $this->aggregateStats($workspace);
+    }
+
+    /** One closed gap inside the sessions' hours, so today shows as a day with missing data. The table cascades with the workspace. */
+    private function recordGap(Router $router): void
+    {
+        $this->gaps->record($router, GapReason::NoSync, Date::now('UTC')->subMinutes(90), Date::now('UTC')->subMinutes(75));
     }
 
     /** The stats tables cascade with the workspace, so the cleaner needs no step of its own for them. */

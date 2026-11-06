@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Workspace;
 use App\Services\Network\AttendanceRebuilder;
+use App\Services\Network\GapDetector;
 use Illuminate\Console\Command;
 
 /**
@@ -23,10 +24,14 @@ class RebuildAttendance extends Command
 
     protected $description = 'Rebuild attendance_daily from hotspot sessions.';
 
-    public function handle(AttendanceRebuilder $rebuilder): int
+    public function handle(AttendanceRebuilder $rebuilder, GapDetector $gaps): int
     {
         if ($this->option('workspace') !== null) {
             return $this->rebuildRange($rebuilder);
+        }
+
+        if ($this->option('recent')) {
+            $gaps->remarkOpenGaps();
         }
 
         $rows = $this->option('recent') ? $rebuilder->rebuildRecent() : $rebuilder->rebuildAffected();

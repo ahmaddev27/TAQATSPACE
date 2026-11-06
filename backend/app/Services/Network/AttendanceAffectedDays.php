@@ -53,6 +53,12 @@ class AttendanceAffectedDays
         }
     }
 
+    /** @param array<int, array{0: int, 1: int}> $spans timestamps; every local day each one touches is marked */
+    public function markSpans(string $workspaceId, array $spans): void
+    {
+        $this->mark($workspaceId, $spans);
+    }
+
     /**
      * @param  array<int, array{0: int, 1: int}>  $spans  timestamps
      */
