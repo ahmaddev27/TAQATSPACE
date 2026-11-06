@@ -20,8 +20,8 @@ class CreditNoteWalletTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
         $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '60.00', ['allocations' => $this->allocation($invoice, '60.00')]))->assertCreated();
 
         $this->postJson("/api/workspace/invoices/{$invoice->id}/credit-notes", ['amount' => '100.00', 'reason' => 'Service cancelled'])->assertCreated();
@@ -43,8 +43,8 @@ class CreditNoteWalletTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson("/api/workspace/invoices/{$invoice->id}/credit-notes", ['amount' => '100.00', 'reason' => 'Billed in error'])->assertCreated();
 
@@ -56,8 +56,8 @@ class CreditNoteWalletTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
         $this->postJson(self::RECEIPTS, $this->receiptPayload($customer, '100.00', ['allocations' => $this->allocation($invoice, '100.00')]))->assertCreated();
         $this->postJson("/api/workspace/invoices/{$invoice->id}/credit-notes", ['amount' => '25.00', 'reason' => 'Partial refund'])->assertCreated();
 

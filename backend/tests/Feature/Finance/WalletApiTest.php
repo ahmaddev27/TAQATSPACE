@@ -23,7 +23,7 @@ class WalletApiTest extends WalletTestCase
 
         $show = $this->getJson($this->walletUrl($customer))->assertOk();
         $this->assertSame('150.50', $show->json('data.balance'));
-        $this->assertSame($workspace->currency, $show->json('data.currency'));
+        $this->assertSame($workspace->fresh()->currency, $show->json('data.currency'));
         $this->assertCount(1, $show->json('data.items'));
         $this->assertTrue(AuditLog::query()->where('action', 'finance.wallet.deposit_received')->where('workspace_id', $workspace->id)->exists());
     }
@@ -131,8 +131,8 @@ class WalletApiTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $invoice = $this->invoiceOf($owner, $workspace, $customer, '100.00');
         $this->deposit($workspace, $customer, '100.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
         $receiptId = $this->postJson($this->walletUrl($customer, 'settlements'), ['invoice_id' => $invoice->id, 'amount' => '60.00'])->json('data.id');
 
         $this->postJson(self::RECEIPTS."/{$receiptId}/void", ['reason' => 'Wrong invoice'])->assertOk();
@@ -195,8 +195,8 @@ class WalletApiTest extends WalletTestCase
     {
         [$owner, $workspace] = $this->owningWorkspace(financeV2: false);
         $customer = $this->subscriber($workspace);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->getJson(self::WALLET)->assertNotFound();
         $this->getJson($this->walletUrl($customer))->assertNotFound();

@@ -101,8 +101,8 @@ class PaymentVoucherTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '100.00', $owner);
         $voucher = $this->giveBack($workspace, $customer, '40.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson(self::VOUCHERS."/{$voucher->id}/void", ['reason' => 'Paid by mistake'])
             ->assertOk()
@@ -122,8 +122,8 @@ class PaymentVoucherTest extends WalletTestCase
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '100.00', $owner);
         $voucher = $this->giveBack($workspace, $customer, '40.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson(self::VOUCHERS."/{$voucher->id}/void", ['reason' => 'First'])->assertOk();
         $this->postJson(self::VOUCHERS."/{$voucher->id}/void", ['reason' => 'Second'])->assertStatus(409);

@@ -27,8 +27,8 @@ class WalletForfeitStepUpTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '100.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'forfeits'), ['amount' => '10.00'])->assertUnprocessable()->assertJsonValidationErrors('reason');
         $this->postJson($this->walletUrl($customer, 'forfeits'), ['amount' => '10.00', 'reason' => ''])->assertUnprocessable();
@@ -42,8 +42,8 @@ class WalletForfeitStepUpTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '100.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'forfeits'), ['amount' => '40.00', 'reason' => 'Damaged desk'])
             ->assertCreated()
@@ -62,8 +62,8 @@ class WalletForfeitStepUpTest extends WalletTestCase
         [$owner, $workspace] = $this->owningWorkspace();
         $customer = $this->subscriber($workspace);
         $this->deposit($workspace, $customer, '20.00', $owner);
-        $this->twoFactor($owner);
         Sanctum::actingAs($owner);
+        $this->twoFactor($owner);
 
         $this->postJson($this->walletUrl($customer, 'forfeits'), ['amount' => '20.01', 'reason' => 'Too much'])->assertUnprocessable();
 
