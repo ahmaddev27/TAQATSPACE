@@ -35,15 +35,23 @@ final class InvoiceMoney
     }
 
     /**
-     * Money actually kept on the invoice: the smaller of what was paid and what
-     * is owed after credits. The excess of a paid-then-credited invoice is owed
-     * back to the customer, so it is not revenue.
+     * Money actually kept on the invoice: amount_paid minus the part owed back
+     * to the customer after credits. Without credits it is exactly amount_paid,
+     * even when that exceeds amount (imported or demo rows).
      */
     public static function collectedSql(string $table = 'invoices'): string
     {
         $net = self::netSql($table);
+        $owedBack = "(CASE WHEN {$table}.credited_amount > 0 AND {$table}.amount_paid > {$net}"
+            ." THEN {$table}.amount_paid - {$net} ELSE 0 END)";
 
-        return "(CASE WHEN {$table}.amount_paid < {$net} THEN {$table}.amount_paid ELSE {$net} END)";
+        return "({$table}.amount_paid - {$owedBack})";
+    }
+
+    /** What the customer still owes: amount - credited - paid, never below zero. */
+    public static function owed(Invoice $invoice): float
+    {
+        return max(0.0, (float) $invoice->amount - (float) $invoice->credited_amount - (float) $invoice->amount_paid);
     }
 
     /** SUM() of the net amount over the given invoice query. */
