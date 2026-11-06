@@ -87,7 +87,7 @@ class InvoicePdfService
      */
     public function streamCreditNote(CreditNote $creditNote): StreamedResponse
     {
-        $creditNote->loadMissing('invoice.customer', 'invoice.subscription.workspace', 'issuer');
+        $creditNote->loadMissing('invoice.customer', 'workspace', 'issuer');
         $pdf = $this->renderView('pdf.credit-note', ['creditNote' => $creditNote]);
 
         return response()->streamDownload(static function () use ($pdf): void {
