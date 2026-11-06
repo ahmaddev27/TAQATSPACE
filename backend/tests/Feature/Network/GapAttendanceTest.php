@@ -47,11 +47,14 @@ class GapAttendanceTest extends TestCase
         parent::tearDown();
     }
 
+    private int $devices = 0;
+
     private function makeSession(string $start, string $end): void
     {
         $device = Device::query()->withoutWorkspaceScope()->create([
             'workspace_id' => $this->workspace->id,
-            'mac' => 'AA:AA:AA:AA:AA:'.str_pad((string) random_int(1, 99), 2, '0', STR_PAD_LEFT),
+            // Unique per workspace by index; random MACs collided often enough to fail CI.
+            'mac' => sprintf('AA:AA:AA:AA:%02X:%02X', intdiv(++$this->devices, 256), $this->devices % 256),
             'status' => 'discovered',
             'first_seen_at' => $start,
             'last_seen_at' => $end,
