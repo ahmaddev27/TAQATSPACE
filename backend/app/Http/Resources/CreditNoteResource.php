@@ -28,7 +28,6 @@ class CreditNoteResource extends JsonResource
                 'name' => $this->invoice->customer->name,
             ],
             'amount' => (string) $this->amount,
-            'refund_amount' => (string) $this->refund_amount,
             'reason' => $this->reason,
             'issued_by' => $this->issuer === null ? null : ['id' => $this->issuer->id, 'name' => $this->issuer->name],
             'issued_at' => $this->issued_at?->toIso8601String(),

@@ -189,7 +189,6 @@ test.describe("credit notes (M5)", () => {
     expect(made.status()).toBe(201);
     const note = await creditToken.json(made);
     expect(deepFind(note, "number")).toBeTruthy();
-    expect(Number(deepFind(note, "refund_amount"))).toBeCloseTo(0, 2);
 
     const after = await creditToken.json(await creditToken.get(`workspace/invoices/${invoice}`));
     expect(Number(deepFind(after, "amount")), "the invoice total is untouched").toBeCloseTo(50, 2);

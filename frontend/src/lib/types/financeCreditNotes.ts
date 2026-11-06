@@ -12,8 +12,6 @@ export interface CreditNote {
   customer: { id: string; name: string } | null;
   /** Decimal strings, e.g. "150.50". */
   amount: string;
-  /** The part of the credit the customer had already paid: owed back to them. */
-  refund_amount: string;
   reason: string;
   issued_by: { id: string; name: string } | null;
   issued_at: string | null;

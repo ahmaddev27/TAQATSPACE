@@ -36,7 +36,8 @@ export function ReceiptReviewActions({
   const approve = () => {
     startTransition(async () => {
       const res = await approveReceipt(invoiceId);
-      if (res.ok) toast({ tone: "ok", title: t("approved") });
+      // The backend words the result: a pending cheque can leave the invoice only partly paid.
+      if (res.ok) toast({ tone: "ok", title: res.message ?? t("approved") });
       else toast({ tone: "err", title: t("approveFailed"), body: res.message });
     });
   };

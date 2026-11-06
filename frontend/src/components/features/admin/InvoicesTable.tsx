@@ -101,6 +101,7 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
   const runUnpaid = (invoice: AdminInvoice) => {
     setBusyId(invoice.id);
     startTransition(async () => {
+      // With finance v2 this voids the receipts that paid only this invoice; a refusal explains why.
       const res = await markInvoiceUnpaid(invoice.id);
       if (res.ok) {
         toast({ tone: "ok", title: t("toast.markedUnpaid") });
@@ -122,7 +123,8 @@ export function InvoicesTable({ invoices }: InvoicesTableProps) {
     startTransition(async () => {
       const res = await markInvoicePaid(payTarget.id, payDate || null, payReceipt);
       if (res.ok) {
-        toast({ tone: "ok", title: t("toast.markedPaid") });
+        // The backend words the result: a pending cheque can leave the invoice only partly paid.
+        toast({ tone: "ok", title: res.message ?? t("toast.markedPaid") });
         closePayModal();
       } else {
         toast({ tone: "err", title: t("toast.markFailed"), body: res.message });

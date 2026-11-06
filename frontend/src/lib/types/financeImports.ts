@@ -15,6 +15,17 @@ export interface ImportRowError {
   message: string;
 }
 
+/**
+ * The API reports a refused commit's rows as "5 (price): message" lines under
+ * `errors.rows`; this reads them back into the shape the preview returns.
+ */
+export function parseRowErrors(lines: string[] | undefined): ImportRowError[] {
+  return (lines ?? []).flatMap((line) => {
+    const match = /^(\d+)(?: \(([^)]*)\))?: ([\s\S]*)$/.exec(line);
+    return match ? [{ row: Number(match[1]), column: match[2] ?? null, message: match[3] }] : [];
+  });
+}
+
 export interface ImportBatch {
   id: string;
   type: ImportType;

@@ -25,7 +25,8 @@ class CreditNoteTest extends ReceiptTestCase
         $response = $this->postJson($this->url($invoice), ['amount' => '100.00', 'reason' => 'Billed in error'])->assertCreated();
 
         $response->assertJsonPath('data.reason', 'Billed in error');
-        $this->assertSame('0.00', $response->json('data.refund_amount'));
+        $response->assertJsonMissingPath('data.refund_amount');
+        $this->getJson("/api/workspace/invoices/{$invoice->id}")->assertJsonPath('data.refund_due', '0.00');
         $this->assertStringContainsString('-CRE-', $response->json('data.number'));
 
         $after = $invoice->fresh();
@@ -72,9 +73,10 @@ class CreditNoteTest extends ReceiptTestCase
             'allocations' => $this->allocation($invoice, '60.00'),
         ]))->assertCreated();
 
-        $response = $this->postJson($this->url($invoice), ['amount' => '100.00', 'reason' => 'Service cancelled'])->assertCreated();
+        $this->postJson($this->url($invoice), ['amount' => '100.00', 'reason' => 'Service cancelled'])->assertCreated();
 
-        $this->assertEquals(60, $response->json('data.refund_amount'));
+        // Owed back is the invoice's figure, current on every read.
+        $this->getJson("/api/workspace/invoices/{$invoice->id}")->assertJsonPath('data.refund_due', '60.00');
         $this->assertEquals(0, app(\App\Services\Finance\InvoiceBalanceService::class)->unpaid($invoice->fresh()));
     }
 

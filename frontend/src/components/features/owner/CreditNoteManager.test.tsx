@@ -10,7 +10,6 @@ const note: CreditNote = {
   invoice_number: "WS-INV-000007",
   customer: { id: "c1", name: "Lina" },
   amount: "30.00",
-  refund_amount: "0.00",
   reason: "Billed at the wrong price.",
   issued_by: { id: "o1", name: "Owner" },
   issued_at: "2026-02-01T10:00:00Z",

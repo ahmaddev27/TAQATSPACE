@@ -22,6 +22,7 @@ use App\Services\Finance\InvoiceLifecycleService;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Support\ApiResponse;
+use App\Support\Finance\PaymentResultMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -132,12 +133,14 @@ class InvoiceController extends Controller
             return ApiResponse::error(__('messages.invoice_not_found'), 404);
         }
 
-        $paidAt = $request->validated()['paid_at'] ?? null;
+        $data = $request->validated();
+        $paidAt = $data['paid_at'] ?? null;
 
         try {
             $updated = $this->invoices->markPaid(
                 $invoice,
                 $paidAt !== null ? Carbon::parse($paidAt) : null,
+                $request->paymentMethod(),
             );
         } catch (InvoiceLifecycleException $e) {
             throw $e;
@@ -147,7 +150,7 @@ class InvoiceController extends Controller
 
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
-        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+        return ApiResponse::success(new InvoiceResource($updated), PaymentResultMessage::for($updated));
     }
 
     /**
@@ -176,7 +179,7 @@ class InvoiceController extends Controller
 
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
-        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+        return ApiResponse::success(new InvoiceResource($updated), PaymentResultMessage::for($updated));
     }
 
     /**
@@ -199,7 +202,7 @@ class InvoiceController extends Controller
 
         $updated->load(['subscription.member', 'subscription.seat', 'subscription.workspace']);
 
-        return ApiResponse::success(new InvoiceResource($updated), __('messages.invoice_marked_paid'));
+        return ApiResponse::success(new InvoiceResource($updated), PaymentResultMessage::for($updated));
     }
 
     /**

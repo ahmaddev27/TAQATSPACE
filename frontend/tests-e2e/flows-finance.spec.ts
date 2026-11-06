@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { test, expect } from "@playwright/test";
 import { statePath } from "./support/accounts";
 import { ApiClient, deepFind } from "./support/api";
@@ -563,6 +565,20 @@ test.describe("XLSX import (M5)", () => {
 
     const tooMany = Array.from({ length: 2001 }, (_, index) => [`ROW-${index}`, category, "أ", "A", "piece", "1"]);
     expect((await upload("catalog_items", [ITEM_HEADERS, ...tooMany])).status(), "2,001 rows").toBe(422);
+  });
+
+  test("a file written the way Excel writes it (shared strings, phonetic run, empty string, no cell references) reads correctly", async () => {
+    // The fixture has no real data. It is previewed, never committed, so the test can run again.
+    await owner.post("workspace/finance/catalog/categories", { kind: "sales", code: "XLSXSS", name_ar: "فئة", name_en: "Fixture category" });
+    const buffer = readFileSync(path.join(__dirname, "fixtures", "excel-shared-strings.xlsx"));
+
+    const response = await owner.postUpload(`${IMPORTS}/preview`, "file", { type: "catalog_items" }, { name: "excel.xlsx", mimeType: XLSX_MIME, buffer });
+    expect(response.status(), "previewing an Excel-style file").toBe(201);
+    const batch = (await owner.json<Preview & { data: { row_count: number } }>(response)).data;
+
+    expect(batch.errors, "no cell was read from the wrong string").toEqual([]);
+    expect(batch.status).toBe("previewed");
+    expect(batch.row_count).toBe(2);
   });
 
   test("withdrawals import as on-account charges and an imported source_ref cannot come in twice", async () => {

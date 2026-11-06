@@ -16,9 +16,11 @@ use Throwable;
  * Receipts with their allocations, the customer wallets (ledger entries and the
  * payment vouchers that document money paid back), and unbilled charges. Must run before the
  * invoices step: deleting an invoice only removes its allocations, which would
- * leave the receipt looking like unspent customer credit. Import batches go too:
- * what they created is gone, so the same file must be importable again. The
- * catalog, plans and document numbering are configuration and stay.
+ * leave the receipt looking like unspent customer credit. Import batches go too,
+ * so a withdrawals file can be imported again: the charges it created are gone.
+ * A catalog file cannot, because the catalog it created stays and its codes
+ * would be rejected as existing. The catalog, plans and document numbering are
+ * configuration and stay.
  */
 final class FinanceResetStep implements WorkspaceResetStep
 {

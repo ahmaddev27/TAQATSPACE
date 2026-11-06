@@ -33,7 +33,8 @@
         "amount": "المبلغ",
         "status": "الحالة",
         "actions": "إجراءات",
-        "remaining": "المتبقّي {amount}"
+        "remaining": "المتبقّي {amount}",
+        "refundDue": "مستحق للعميل: {amount}"
       },
       "actions": {
         "markPaid": "تحديد كمدفوعة",

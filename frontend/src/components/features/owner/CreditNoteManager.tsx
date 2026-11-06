@@ -20,7 +20,6 @@ export function CreditNoteManager({ creditNotes }: Props) {
     { id: "invoice", header: t("fields.invoice"), cell: (c) => <span className="ltr">{c.invoice_number ?? "—"}</span> },
     { id: "customer", header: t("fields.customer"), cell: (c) => c.customer?.name ?? "—" },
     { id: "amount", header: t("fields.amount"), num: true, cell: (c) => money(c.amount) },
-    { id: "refund", header: t("fields.refund"), num: true, cell: (c) => money(c.refund_amount) },
     { id: "reason", header: t("fields.reason"), cell: (c) => c.reason },
     { id: "issuedAt", header: t("fields.issuedAt"), cell: (c) => (c.issued_at ? formatDate(c.issued_at) : "—") },
     {

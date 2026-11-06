@@ -46,28 +46,49 @@ class ImportService
     {
         $importer = $this->importer($type);
         $hash = hash_file('sha256', $file->getRealPath());
-        $existing = $this->repository->findByHash($workspace, $hash);
 
-        if ($existing?->isCommitted()) {
+        // Cheap early exit; the authoritative check repeats under the row lock below.
+        if ($this->repository->findByHash($workspace, $hash)?->isCommitted()) {
             throw ImportException::duplicateFile();
         }
 
         $parsed = $this->reader->read($file->getRealPath());
-        $this->assertShape($importer, $parsed);
+        $rows = $this->assertShape($importer, $parsed);
+        $errors = $importer->validate($workspace, $rows);
 
-        $errors = $importer->validate($workspace, $parsed['rows']);
-        $path = $this->storePayload($workspace, $hash, $errors === [] ? $parsed['rows'] : null);
+        return DB::transaction(fn (): ImportBatch => $this->saveBatch($workspace, $actor, $type, $hash, $rows, $errors));
+    }
 
-        return $this->saveBatch($existing ?? new ImportBatch, [
+    /**
+     * Reads the existing batch under a lock, so a preview racing a commit either
+     * waits for it and is refused, or finishes first; it can never set a
+     * committed batch back to "previewed".
+     *
+     * @param  list<array{row: int, values: array<string, string>, numeric: list<string>}>  $rows
+     * @param  list<array{row: int, column: string|null, message: string}>  $errors
+     */
+    private function saveBatch(Workspace $workspace, User $actor, ImportType $type, string $hash, array $rows, array $errors): ImportBatch
+    {
+        $existing = $this->repository->findByHash($workspace, $hash, lock: true);
+        if ($existing?->isCommitted()) {
+            throw ImportException::duplicateFile();
+        }
+
+        $previousPath = $existing?->payload_path;
+        $batch = $this->persistBatch($existing ?? new ImportBatch, [
             'workspace_id' => $workspace->id,
             'type' => $type,
             'file_hash' => $hash,
             'status' => $errors === [] ? ImportStatus::Previewed : ImportStatus::Failed,
-            'row_count' => count($parsed['rows']),
+            'row_count' => count($rows),
             'errors' => $errors,
-            'payload_path' => $path,
+            'payload_path' => $errors === [] ? $this->payloadPath($workspace, $hash) : null,
             'created_by' => $actor->id,
         ]);
+
+        $this->syncPayload($batch, $previousPath, $rows);
+
+        return $batch;
     }
 
     public function commit(Workspace $workspace, User $actor, string $batchId): ImportBatch
@@ -109,6 +130,24 @@ class ImportService
         return $batch;
     }
 
+    /**
+     * Removes previews nobody committed: their parked rows hold customer emails
+     * and must not outlive the upload. Returns how many were removed.
+     */
+    public function pruneAbandonedPreviews(int $olderThanDays): int
+    {
+        $pruned = 0;
+
+        $this->repository->eachAbandonedPreview(now()->subDays($olderThanDays), function (ImportBatch $batch) use (&$pruned): void {
+            if ($this->repository->deleteIfStillPreviewed($batch)) {
+                $this->deletePayloadFile($batch);
+                $pruned++;
+            }
+        });
+
+        return $pruned;
+    }
+
     /** The XLSX template for an import type, as file bytes. */
     public function template(ImportType $type): string
     {
@@ -117,17 +156,32 @@ class ImportService
         return $this->writer->build($importer->columns(), $importer->templateRows());
     }
 
-    /** @param  array{headers: list<string>, rows: list<array{row: int, values: array<string, string>}>}  $parsed */
-    private function assertShape(RowImporter $importer, array $parsed): void
+    /**
+     * Checks the header row and returns only the rows that hold something in a
+     * known column, reduced to those columns: a stray note elsewhere on the
+     * sheet is not a row of "required" errors, and unrelated cells (which can
+     * hold personal data) are never parked on disk.
+     *
+     * @param  array{headers: list<string>, rows: list<array{row: int, values: array<string, string>, numeric: list<string>}>}  $parsed
+     * @return list<array{row: int, values: array<string, string>, numeric: list<string>}>
+     */
+    private function assertShape(RowImporter $importer, array $parsed): array
     {
         $missing = array_diff($importer->columns(), $parsed['headers']);
         if ($missing !== []) {
             throw ImportException::missingColumns(implode(', ', $missing));
         }
 
-        if ($parsed['rows'] === []) {
-            throw ImportException::empty();
+        $known = array_flip($importer->columns());
+        $rows = [];
+        foreach ($parsed['rows'] as $row) {
+            $values = array_intersect_key($row['values'], $known);
+            if (implode('', $values) !== '') {
+                $rows[] = ['row' => $row['row'], 'values' => $values, 'numeric' => array_values(array_intersect($row['numeric'], $importer->columns()))];
+            }
         }
+
+        return $rows === [] ? throw ImportException::empty() : $rows;
     }
 
     private function assertCommittable(ImportBatch $batch): void
@@ -142,7 +196,7 @@ class ImportService
     }
 
     /** @param  array<string, mixed>  $attributes */
-    private function saveBatch(ImportBatch $batch, array $attributes): ImportBatch
+    private function persistBatch(ImportBatch $batch, array $attributes): ImportBatch
     {
         try {
             $batch->forceFill($attributes)->save();
@@ -154,20 +208,27 @@ class ImportService
         return $batch;
     }
 
-    /** @param  list<array{row: int, values: array<string, string>}>|null  $rows */
-    private function storePayload(Workspace $workspace, string $hash, ?array $rows): ?string
+    private function payloadPath(Workspace $workspace, string $hash): string
     {
-        if ($rows === null) {
-            return null;
-        }
-
-        $path = 'imports/'.$workspace->id.'/'.$hash.'.json';
-        Storage::disk('local')->put($path, json_encode($rows, JSON_THROW_ON_ERROR));
-
-        return $path;
+        return 'imports/'.$workspace->id.'/'.$hash.'.json';
     }
 
-    /** @return list<array{row: int, values: array<string, string>}> */
+    /**
+     * Parks the validated rows for the commit, or removes a file an earlier
+     * preview of the same upload left behind once this one has errors.
+     *
+     * @param  list<array{row: int, values: array<string, string>, numeric: list<string>}>  $rows
+     */
+    private function syncPayload(ImportBatch $batch, ?string $previousPath, array $rows): void
+    {
+        if ($batch->payload_path !== null) {
+            Storage::disk('local')->put($batch->payload_path, json_encode($rows, JSON_THROW_ON_ERROR));
+        } elseif ($previousPath !== null) {
+            Storage::disk('local')->delete($previousPath);
+        }
+    }
+
+    /** @return list<array{row: int, values: array<string, string>, numeric?: list<string>}> */
     private function loadPayload(ImportBatch $batch): array
     {
         $json = Storage::disk('local')->get((string) $batch->payload_path);
@@ -177,7 +238,14 @@ class ImportService
 
     private function deletePayload(ImportBatch $batch): void
     {
-        Storage::disk('local')->delete((string) $batch->payload_path);
+        $this->deletePayloadFile($batch);
         $batch->forceFill(['payload_path' => null])->save();
+    }
+
+    private function deletePayloadFile(ImportBatch $batch): void
+    {
+        if ($batch->payload_path !== null) {
+            Storage::disk('local')->delete($batch->payload_path);
+        }
     }
 }

@@ -162,6 +162,11 @@ export function InvoicesTable({ invoices, members, financeV2 = false }: Invoices
               })}
             </span>
           )}
+          {Number(inv.refund_due ?? 0) > 0 && (
+            <span style={{ fontSize: "var(--fs-xs)", color: "var(--danger)" }}>
+              {t("table.refundDue", { amount: invoiceMoney(inv.refund_due, inv.currency) })}
+            </span>
+          )}
         </span>
       ),
     },

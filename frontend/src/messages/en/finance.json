@@ -126,7 +126,6 @@
         "invoice": "Invoice",
         "customer": "Customer",
         "amount": "Credited",
-        "refund": "Owed back",
         "reason": "Reason",
         "issuedAt": "Issued"
       }

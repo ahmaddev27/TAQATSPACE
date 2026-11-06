@@ -7,6 +7,7 @@ namespace App\Services\Finance;
 use App\Enums\DocStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\InvoiceLifecycleException;
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
 use App\Models\Subscription;
@@ -37,6 +38,7 @@ class InvoiceLifecycleService
         private readonly UnbilledChargeService $charges,
         private readonly UnbilledChargeRepository $chargeRepository,
         private readonly AuditLogger $audit,
+        private readonly InvoiceBalanceService $balances,
     ) {}
 
     /**
@@ -161,6 +163,8 @@ class InvoiceLifecycleService
                 throw InvoiceLifecycleException::notIssued();
             }
 
+            $this->assertVoidable($locked);
+
             $locked->forceFill([
                 'doc_status' => DocStatus::Void,
                 'voided_at' => Carbon::now(),
@@ -180,6 +184,22 @@ class InvoiceLifecycleService
         $this->afterChange($voided);
 
         return $voided->load('lines', 'customer:id,name');
+    }
+
+    /**
+     * A credit note is a numbered document against this invoice, and a pending
+     * cheque is money promised to it; voiding underneath either would leave
+     * them pointing at a dead invoice. Void or bounce them first.
+     */
+    private function assertVoidable(Invoice $locked): void
+    {
+        if (bccomp((string) $locked->credited_amount, '0', 2) > 0 || CreditNote::query()->where('invoice_id', $locked->id)->exists()) {
+            throw InvoiceLifecycleException::voidHasCreditNotes();
+        }
+
+        if ($this->balances->held([$locked->id]) !== []) {
+            throw InvoiceLifecycleException::voidHasPendingCheques();
+        }
     }
 
     private function lockDraft(Invoice $invoice): Invoice

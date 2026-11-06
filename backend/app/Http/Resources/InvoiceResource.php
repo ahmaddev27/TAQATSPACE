@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\DocStatus;
 use App\Models\Invoice;
+use App\Support\Finance\InvoiceMoney;
 use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,12 +30,9 @@ class InvoiceResource extends JsonResource
             'amount' => $this->amount,
             'amount_paid' => $this->amount_paid,
             'credited_amount' => (string) $this->credited_amount,
-            'remaining_amount' => number_format(
-                max(0, (float) $this->amount - (float) $this->credited_amount - (float) $this->amount_paid),
-                2,
-                '.',
-                '',
-            ),
+            'remaining_amount' => $this->remainingAmount(),
+            // Owed back to the customer, invoice-level and current; set by the service on the owner list and detail, else null.
+            'refund_due' => $this->resource->refundDue,
             'amount_formatted' => $this->formattedAmount(),
             'currency' => self::CURRENCY,
             'status' => $this->status->value,
@@ -119,6 +118,12 @@ class InvoiceResource extends JsonResource
                     : null,
             ]),
         ];
+    }
+
+    /** What can still be collected; nothing, for a void invoice. */
+    private function remainingAmount(): string
+    {
+        return $this->doc_status === DocStatus::Void ? '0.00' : InvoiceMoney::stillOwed($this->resource);
     }
 
     /**

@@ -21,6 +21,7 @@ use App\Services\Audit\AuditLogger;
 use App\Services\FileUploadService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -49,9 +50,12 @@ class ReceiptService
      * @param  array<string, mixed>  $data  customer_id, method, amount, received_at?, collected_at?, reference?,
      *                                      allocations?; internally also receipt_path, receipt_disk, legacy_payment_id
      *
+     * `$notify` false leaves the "invoice paid" message to a caller that wraps
+     * this in its own transaction and sends it once that has committed.
+     *
      * @throws ReceiptException when the customer is unknown or the allocations do not fit
      */
-    public function create(Workspace $workspace, array $data, ?User $actor, ?UploadedFile $file = null): Receipt
+    public function create(Workspace $workspace, array $data, ?User $actor, ?UploadedFile $file = null, bool $notify = true): Receipt
     {
         if (! $this->customers->isCustomerOf($workspace, (string) $data['customer_id'])) {
             throw ReceiptException::unknownCustomer();
@@ -66,7 +70,7 @@ class ReceiptService
             throw $e;
         }
 
-        $this->afterChange($receipt, $paid);
+        $this->afterChange($receipt, $notify ? $paid : []);
         $this->audit->log('finance.receipt.created', $receipt, actor: $actor, changes: [
             'number' => $receipt->number,
             'method' => $receipt->method->value,
@@ -171,13 +175,29 @@ class ReceiptService
      */
     private function createInTransaction(Workspace $workspace, array $data, ?User $actor): array
     {
+        $receipt = $this->newReceipt($workspace, $data, $actor);
+        $rows = $this->normalise($data['allocations'] ?? []);
+
+        // Invoices before the receipt number. Paying an invoice and issuing a credit note
+        // hold the invoice lock while they take a number; taking the number first here
+        // would wait on the counter while they wait on our invoice (MariaDB 1213).
+        $invoices = $rows === [] ? null : $this->balances->lockPayable($receipt, array_keys($rows));
+
+        $receipt->number = $this->numbers->next($workspace, DocumentType::Receipt);
+        $receipt->save();
+
+        return [$receipt, $invoices === null ? [] : $this->applyToLocked($receipt, $invoices, $rows)];
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function newReceipt(Workspace $workspace, array $data, ?User $actor): Receipt
+    {
         $method = PaymentMethod::from((string) $data['method']);
         $receivedAt = isset($data['received_at']) ? Carbon::parse($data['received_at']) : Carbon::now();
 
-        $receipt = Receipt::query()->create([
+        return new Receipt([
             'workspace_id' => $workspace->id,
             'customer_id' => $data['customer_id'],
-            'number' => $this->numbers->next($workspace, DocumentType::Receipt),
             'method' => $method,
             'amount' => bcadd((string) $data['amount'], '0', 2),
             'received_at' => $receivedAt,
@@ -188,13 +208,12 @@ class ReceiptService
             'receipt_disk' => $data['receipt_disk'] ?? null,
             'created_by' => $actor?->id,
             'legacy_payment_id' => $data['legacy_payment_id'] ?? null,
+            'source' => $data['source'] ?? null,
         ]);
-
-        return [$receipt, $this->applyAllocations($receipt, $data['allocations'] ?? [])];
     }
 
     /**
-     * Validate and store the allocations, and move the invoices if the money is already collected.
+     * Validate and store more allocations on an existing receipt.
      *
      * @param  array<int, AllocationInput>  $allocations
      * @return array<int, Invoice> the invoices that became fully paid
@@ -210,9 +229,24 @@ class ReceiptService
         }
 
         $rows = $this->normalise($allocations);
-        $this->assertFitsReceipt($receipt, $rows);
 
-        $invoices = $this->balances->lockPayable($receipt, array_keys($rows));
+        return $this->applyToLocked($receipt, $this->balances->lockPayable($receipt, array_keys($rows)), $rows);
+    }
+
+    /**
+     * Store allocations on invoices the caller has locked, and move the invoices if the money is
+     * already collected. The lock must come first: on MariaDB (REPEATABLE READ) the first plain
+     * SELECT in a transaction fixes its snapshot, so reading allocations before waiting for the
+     * lock would miss a cheque another transaction committed meanwhile, and two cheques could
+     * claim the same balance.
+     *
+     * @param  Collection<string, Invoice>  $invoices
+     * @param  array<string, string>  $rows
+     * @return array<int, Invoice> the invoices that became fully paid
+     */
+    private function applyToLocked(Receipt $receipt, Collection $invoices, array $rows): array
+    {
+        $this->assertFitsReceipt($receipt, $rows);
         $this->assertFitsInvoices($invoices, $rows);
         $this->storeAllocations($receipt, $rows);
 
@@ -247,7 +281,7 @@ class ReceiptService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, Invoice>  $invoices
+     * @param  Collection<string, Invoice>  $invoices
      * @param  array<string, string>  $rows
      */
     private function assertFitsInvoices($invoices, array $rows): void
@@ -289,7 +323,7 @@ class ReceiptService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, Invoice>  $invoices
+     * @param  Collection<string, Invoice>  $invoices
      * @param  array<string, string>  $rows
      * @return array<int, Invoice>
      */
@@ -326,6 +360,13 @@ class ReceiptService
             return [];
         }
 
+        // A plain read before the invoice lock is safe here, and a locking read would take gap
+        // locks that new allocations then queue behind. The caller holds this receipt's lock, and
+        // adding allocations needs it, so the rows cannot change under us; and because the caller
+        // started with that locking read, this is the transaction's first plain SELECT, so its
+        // snapshot is taken after the lock. A caller that wraps this in a larger transaction must
+        // not run a plain SELECT before locking the receipt. The invoice rows themselves come from
+        // the locking read below, which always sees the latest committed values.
         $rows = ReceiptAllocation::query()->where('receipt_id', $receipt->id)->pluck('amount', 'invoice_id')
             ->map(static fn (mixed $amount): string => bcadd((string) $amount, '0', 2))->all();
 
@@ -336,6 +377,8 @@ class ReceiptService
         $invoices = Invoice::query()->whereIn('id', array_keys($rows))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
         if ($isCollected) {
+            $this->balances->assertAllIssued($invoices);
+
             return $this->collect($receipt, $invoices, $rows);
         }
 
@@ -393,26 +436,44 @@ class ReceiptService
 
     /**
      * Receipts are financial documents: the proof goes on the private disk and
-     * is only ever handed out through a short-lived signed URL.
+     * is only ever handed out through a short-lived signed URL. Pass the result
+     * to create() as `receipt_path` / `receipt_disk`, and to discardProof() if
+     * the payment then fails.
      *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
+     * @return array{receipt_path: string, receipt_disk: string}
      */
-    private function storeFile(UploadedFile $file, Workspace $workspace, array $data): array
+    public function storeProof(UploadedFile $file, Workspace $workspace): array
     {
         $disk = (string) config('filesystems.default');
 
-        return $data + [
+        return [
             'receipt_path' => $this->uploads->upload($file, 'finance/receipts/'.$workspace->id, $disk, 'private'),
             'receipt_disk' => $disk,
         ];
     }
 
+    /** @param  array<string, mixed>  $proof  what storeProof() returned; anything else is left alone */
+    public function discardProof(array $proof): void
+    {
+        if (isset($proof['receipt_path'], $proof['receipt_disk'])) {
+            Storage::disk($proof['receipt_disk'])->delete($proof['receipt_path']);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function storeFile(UploadedFile $file, Workspace $workspace, array $data): array
+    {
+        return $data + $this->storeProof($file, $workspace);
+    }
+
     /** @param  array<string, mixed>|null  $data */
     private function discardFile(?array $data): void
     {
-        if ($data !== null && isset($data['receipt_path'], $data['receipt_disk'])) {
-            Storage::disk($data['receipt_disk'])->delete($data['receipt_path']);
+        if ($data !== null) {
+            $this->discardProof($data);
         }
     }
 }

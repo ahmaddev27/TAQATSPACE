@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -59,9 +60,9 @@ class ReportsService
 
     /**
      * Continuous last-12-months revenue series. `paid` sums paid invoices by the
-     * month they were paid (paid_at); `outstanding` sums pending + overdue
-     * invoices by the month they are due (due_date). Missing months are filled
-     * with zeros in PHP so the series is always contiguous.
+     * month they were paid (paid_at); `outstanding` sums what is still owed on
+     * unpaid invoices by the month they are due (due_date). Missing months are
+     * filled with zeros in PHP so the series is always contiguous.
      *
      * @return array<int, array{month: string, paid: string, outstanding: string}>
      */
@@ -74,15 +75,15 @@ class ReportsService
             ->where('status', InvoiceStatus::Paid->value)
             ->whereNotNull('paid_at')
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as bucket, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as bucket, SUM(".InvoiceMoney::netSql().') as total')
             ->groupBy('bucket')
             ->pluck('total', 'bucket');
 
         $outstanding = Invoice::query()
             ->notDraft()
-            ->whereIn('status', [InvoiceStatus::Pending->value, InvoiceStatus::Overdue->value])
+            ->receivable()
             ->where('due_date', '>=', $start)
-            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(due_date, '%Y-%m') as bucket, SUM(".InvoiceMoney::receivableSql().') as total')
             ->groupBy('bucket')
             ->pluck('total', 'bucket');
 
@@ -107,7 +108,7 @@ class ReportsService
     private function invoicesByStatus(): array
     {
         $rows = Invoice::query()
-            ->selectRaw('status, COUNT(*) as aggregate, SUM(amount) as total')
+            ->selectRaw('status, COUNT(*) as aggregate, SUM('.InvoiceMoney::netSql().') as total')
             ->groupBy('status')
             ->get()
             ->keyBy('status');
@@ -177,7 +178,7 @@ class ReportsService
         $paidTotals = Invoice::query()
             ->join('subscriptions', 'invoices.subscription_id', '=', 'subscriptions.id')
             ->where('invoices.status', InvoiceStatus::Paid->value)
-            ->selectRaw('subscriptions.workspace_id as workspace_id, SUM(invoices.amount) as paid_total')
+            ->selectRaw('subscriptions.workspace_id as workspace_id, SUM('.InvoiceMoney::netSql().') as paid_total')
             ->groupBy('subscriptions.workspace_id')
             ->orderByDesc('paid_total')
             ->limit(10)

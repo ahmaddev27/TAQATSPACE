@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $subscriber_id
  * @property CarbonInterface $month
  * @property int $attendance_days
- * @property string $attendance_rate
+ * @property string|null $attendance_rate
  * @property int $active_actual_minutes
  * @property int $day_span_minutes
  * @property int $hour_bucket_hours

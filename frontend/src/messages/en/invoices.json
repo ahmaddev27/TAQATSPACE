@@ -33,7 +33,8 @@
         "amount": "Amount",
         "status": "Status",
         "actions": "Actions",
-        "remaining": "{amount} remaining"
+        "remaining": "{amount} remaining",
+        "refundDue": "Owed back to customer: {amount}"
       },
       "actions": {
         "markPaid": "Mark paid",

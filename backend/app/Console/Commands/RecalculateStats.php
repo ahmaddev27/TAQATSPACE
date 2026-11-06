@@ -8,6 +8,7 @@ use App\Enums\WorkspaceFeature;
 use App\Exceptions\RecalculationInProgressException;
 use App\Models\Workspace;
 use App\Models\WorkspaceFeatureFlag;
+use App\Repositories\Eloquent\RouterGapRepository;
 use App\Services\Network\StatsRecalculationService;
 use App\Support\Network\LocalDays;
 use Carbon\CarbonImmutable;
@@ -23,6 +24,9 @@ class RecalculateStats extends Command
 {
     private const ROUTINE_DAYS = 2;
 
+    // Bounds the nightly work when a router has been dead for months.
+    private const MAX_OPEN_GAP_DAYS = 31;
+
     protected $signature = 'stats:recalculate
         {workspace? : Workspace id; every workspace with the network module when omitted}
         {--from= : First local date, Y-m-d}
@@ -31,7 +35,7 @@ class RecalculateStats extends Command
 
     protected $description = 'Recalculate attendance and statistics for a date range.';
 
-    public function __construct(private readonly LocalDays $days = new LocalDays)
+    public function __construct(private readonly RouterGapRepository $gaps, private readonly LocalDays $days = new LocalDays)
     {
         parent::__construct();
     }
@@ -92,12 +96,25 @@ class RecalculateStats extends Command
         return Workspace::query()->whereIn('id', $enabled)->cursor();
     }
 
-    /** @return array{0: string, 1: string} */
+    /**
+     * The last two local days, reaching back to where an ongoing gap began: its daily gap minutes
+     * grow every night and would otherwise stay as the last recalculation left them.
+     *
+     * @return array{0: string, 1: string}
+     */
     private function routineRange(Workspace $workspace): array
     {
-        $today = $this->days->dateOf(now()->getTimestamp(), $this->days->zone($workspace->timezone));
+        $zone = $this->days->zone($workspace->timezone);
+        $today = $this->days->dateOf(now()->getTimestamp(), $zone);
+        $from = CarbonImmutable::parse($today)->subDays(self::ROUTINE_DAYS - 1)->toDateString();
+        $gapStart = $this->gaps->oldestOpenStart((string) $workspace->getKey());
 
-        return [CarbonImmutable::parse($today)->subDays(self::ROUTINE_DAYS - 1)->toDateString(), $today];
+        if ($gapStart !== null) {
+            $gapFrom = max($this->days->dateOf($gapStart->getTimestamp(), $zone), CarbonImmutable::parse($today)->subDays(self::MAX_OPEN_GAP_DAYS)->toDateString());
+            $from = min($from, $gapFrom);
+        }
+
+        return [$from, $today];
     }
 
     private function validRange(string $from, string $to): bool

@@ -75,6 +75,11 @@ class LegacyPaymentImporter
 
     private function copy(InvoicePayment $payment, Invoice $invoice, Workspace $workspace, ?string $customerId): void
     {
+        // Invoice before the receipt number, as every payment path locks: the allocation insert
+        // below takes a shared lock on the invoice, and a payment holding the invoice while it
+        // waits for the number would otherwise deadlock with this copy.
+        Invoice::query()->whereKey($invoice->id)->lockForUpdate()->first(['id']);
+
         $receipt = Receipt::query()->create([
             'workspace_id' => $workspace->id,
             'customer_id' => $customerId,

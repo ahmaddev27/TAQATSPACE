@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\Finance\InvoiceMoney;
 use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -76,7 +77,7 @@ class ExportService
         return match ($type) {
             'invoices' => [
                 $this->invoices->exportQuery($this->only($filters, ['status', 'search', 'date_from', 'date_to'])),
-                ['invoice_number', 'member_name', 'workspace_name', 'amount', 'status', 'due_date', 'paid_at'],
+                ['invoice_number', 'member_name', 'workspace_name', 'amount', 'status', 'due_date', 'paid_at', 'credited_amount', 'net_amount'],
                 fn (Invoice $invoice): array => [
                     $invoice->invoice_number,
                     $invoice->subscription?->member?->name,
@@ -85,6 +86,8 @@ class ExportService
                     $invoice->status->value,
                     $invoice->due_date?->toDateString(),
                     $invoice->paid_at?->toDateTimeString(),
+                    $invoice->credited_amount,
+                    number_format(InvoiceMoney::net($invoice), 2, '.', ''),
                 ],
             ],
             'subscriptions' => [
